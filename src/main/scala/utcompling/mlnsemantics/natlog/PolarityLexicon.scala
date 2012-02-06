@@ -24,7 +24,7 @@ object PolarityLexicon {
     def fromFile(filepath: String): PolarityLexicon = {
         val polarityEntries = new HashMap[String, ListBuffer[PolarityLexiconEntry]]
         Source.fromFile(filepath).getLines.map(println)
-        for (line <- Source.fromFile(filepath).getLines.map(_.trim).filter(line => line.nonEmpty && !line.startsWith("#"))) {
+        for (line <- Source.fromFile(filepath).getLines.map(_.split("#",2)(0).trim).filter(_.nonEmpty)) {
             val List(lemma, parcSubcat, pos, requiredRelationsString, relation, signature, example) = line.split("\t").toList
 
             val (posEnv: Option[Boolean], negEnv: Option[Boolean]) =
@@ -41,10 +41,7 @@ object PolarityLexicon {
     }
 
     private def isPosEntail(s: String): Option[Boolean] =
-        if (s == null)
-            None
-        else
-            Some(s == "p")
+        Option(s).map(_ == "p")
 
 }
 
