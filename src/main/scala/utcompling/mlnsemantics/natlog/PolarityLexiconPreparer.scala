@@ -26,6 +26,7 @@ import utcompling.mlnsemantics.natlog._
 import utcompling.mlnsemantics.datagen._
 import utcompling.scalalogic.util.SeqUtils
 import utcompling.scalalogic.util.FileUtils
+import utcompling.mlnsemantics.datagen.Tokenize
 
 object PolarityLexiconPreparer {
   def main(args: Array[String]): Unit = {
@@ -56,7 +57,7 @@ object PolarityLexiconPreparer {
               case "V-SUBJ-OBJ-COMPEXopt_extra" => ("VB", "ccomp+that", "theme")
               case "V-SUBJexpl-XCOMPinf" => ("VB", "xcomp+to", "theme")
               case "V-SUBJ-XCOMPinf_prt(on_)" => ("VB", "xcomp+to", "theme")
-              case "V-SUBJ-OBLto-COMPEXthat" =>  ("VB", "ccomp+that", "theme")
+              case "V-SUBJ-OBLto-COMPEXthat" => ("VB", "ccomp+that", "theme")
               case _ =>
                 println(example)
                 println(parcSubcat)
