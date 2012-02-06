@@ -1,0 +1,152 @@
+% RECOMMENDED %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[graybox]{styles/svmult}
+
+% choose options for [] as required from the list
+% in the Reference Guide
+
+\usepackage{mathptmx}       % selects Times Roman as basic font
+\usepackage{helvet}         % selects Helvetica as sans-serif font
+\usepackage{courier}        % selects Courier as typewriter font
+\usepackage{type1cm}        % activate if the above 3 fonts are
+                            % not available on your system
+%
+\usepackage{makeidx}         % allows index generation
+\usepackage{graphicx}        % standard LaTeX graphics tool
+                             % when including figure files
+\usepackage{multicol}        % used for the two-column index
+\usepackage[bottom]{footmisc}% places footnotes at page bottom
+
+% see the list of further useful packages
+% in the Reference Guide
+
+\makeindex             % used for the subject index
+                       % please use the style svind.ist with
+                       % your makeindex program
+
+
+
+
+
+%\usepackage{url}       %%% for including URLs
+\usepackage{natbib}
+%\usepackage[margin=25mm]{geometry}
+
+
+\usepackage{wrapfig}
+\usepackage{subfig}
+\usepackage{amsmath,amssymb}
+%\usepackage{styles/covington}
+
+
+\newcommand{\dhgdrs}[3]
+{
+    {
+    \begin{tabular}{rl}
+    \\
+	\hspace{-100ex}
+    #1 
+    \hspace{-3ex}
+	\vspace{-5ex}
+    \\ & 
+    \begin{tabular}{|l|}
+    \hline
+    ~ \vspace{-2.8ex} \\
+    #2
+    \\
+    ~ \vspace{-3ex} \\
+    \hline
+    ~ \vspace{-2.5ex} \\
+    #3
+    \\
+    ~ \\    % can't vspace here or the line will come out wrong
+    \hline
+    \end{tabular}
+    \hspace{-3ex}
+	\end{tabular}
+    }
+}
+\newcommand{\dhgnegdrs}[2]
+{
+  \mbox{{\huge $\neg$}\hspace{-3.5ex}\dhgdrs{}{#1}{#2}}
+}
+
+\newcommand{\dhgboxed}[1]
+{
+    {
+    \begin{tabular}{|l|}
+    \hline
+    ~ \vspace{-2ex} \\
+    #1
+    \\
+    ~ \\    % can't vspace here or the line will come out wrong
+    \hline
+    \end{tabular}
+    }
+}
+
+
+
+\begin{document}
+
+\title*{Integrating Logical Representations with\\ Probabilistic Information
+using Markov Logic}
+% Use \titlerunning{Short Title} for an abbreviated version of
+% your contribution title if the original one is too long
+\author{Dan Garrette, Katrin Erk, and Raymond Mooney}
+% Use \authorrunning{Short Title} for an abbreviated version of
+% your contribution title if the original one is too long
+\institute{Dan Garrette \at University of Texas at Austin, \email{dhg@cs.utexas.edu}
+\and Katrin Erk \at University of Texas at Austin \email{katrin.erk@mail.utexas.edu} 
+\and Raymond Mooney \at University of Texas at Austin \email{mooney@cs.utexas.edu}}
+%
+% Use the package "url.sty" to avoid
+% problems with special characters
+% used in your e-mail or web address
+%
+\maketitle
+
+
+\abstract*{
+  First-order logic provides a powerful and flexible mechanism for
+  representing natural language semantics.  However, it is an open
+  question of how best to integrate it with uncertain, probabilistic
+  knowledge, for example regarding word meaning. This paper describes
+  the first steps of an approach to recasting first-order semantics
+  into the probabilistic models that are part of Statistical
+  Relational AI.  Specifically, we show how Discourse Representation
+  Structures can be combined with distributional models for word
+  meaning inside a Markov Logic Network and used to successfully
+  perform inferences that take advantage of logical concepts such as
+  factivity as well as probabilistic information on word meaning in
+  context.}
+
+\abstract{
+  First-order logic provides a powerful and flexible mechanism for
+  representing natural language semantics.  However, it is an open
+  question of how best to integrate it with uncertain, probabilistic
+  knowledge, for example regarding word meaning. This paper describes
+  the first steps of an approach to recasting first-order semantics
+  into the probabilistic models that are part of Statistical
+  Relational AI.  Specifically, we show how Discourse Representation
+  Structures can be combined with distributional models for word
+  meaning inside a Markov Logic Network and used to successfully
+  perform inferences that take advantage of logical concepts such as
+  factivity as well as probabilistic information on word meaning in
+  context.}
+
+
+
+\input{1_introduction}
+\input{2_related}
+\input{3_data_eval}
+\input{4_logical_form}
+\input{5_phenomena}
+\input{6_evaluation}
+\input{7_conclusion}
+
+
+\bibliographystyle{styles/spbasic}
+\bibliography{mln-sem}
+
+\end{document}
+

@@ -1,0 +1,322 @@
+\section{Handling the phenomena}
+
+\subsection*{Implicatives and factives}
+
+\citet{nairn:icos2006} presented an approach to the treatment of inferences
+involving implicatives and factives.  Their approach identifies an ``implication
+signature'' for every implicative or factive verb that determines the truth
+conditions for the verb's nested proposition, whether in a positive or negative
+environment.  Implication signatures take the form ``$x/y$'' where $x$
+represents the implicativity in the the positive environment and $y$ represents
+the implicativity in the negative environment.  Both $x$ and $y$ have three
+possible values: ``+'' for positive entailment, meaning the nested proposition
+is entailed, ``-'' for negative entailment, meaning the negation of the proposition
+is entailed, and ``o'' for ``null'' entailment, meaning that neither the
+proposition nor its negation is entailed. Figure \ref{fig:imp-sig} gives
+concrete examples.% for two signatures.
+
+% For example, the verb ``managed to'' has positive entailment in the {\it true}
+% case and negative entailment under negation.  So, {\it he managed to escape
+% $\vDash$ he escaped} while {\it he did not manage to escape $\vDash$ he did not
+% escape}.  On the other hand, the verb ``refused to'' has negative entailment
+% in the positive case and ``null'' entailment under negation.  So, {\it he
+% refused to fight $\vDash$ he did not fight} but {\it he did not refuse to fight}
+% entails neither {\it he fought} nor {\it he did not fight}.
+
+\begin{figure}
+\begin{center}
+  \begin{tabular}{l c l}
+    \hline
+   	 & ~~~~~~signature~~~~~~ &  \multicolumn{1}{c}{example} \\
+   	\hline
+   	managed to       & +/- & he managed to escape $\vDash$ he escaped \\
+   	                 &     & he did not manage to escape $\vDash$ he did not escape \\
+   	\hline
+%    	was forced to    & +/o & he was forced to sell $\vDash$ he sold \\
+%    	                 &     & he was not forced to sell $?$ he sold \\
+%    	\hline
+%    	was permitted to & o/- & he was permitted to leave $?$ he left \\
+%    	                 &     & he was not permitted to leave $\vDash$ he did not leave \\
+%    	\hline
+%    	forgot to        & -/+ & he forgot to pay $\vDash$ he did not pay \\
+%    	                 &     & he did not forget to pay $\vDash$ he paid \\
+%    	\hline
+   	refused to       & -/o & he refused to fight $\vDash$ he did not fight \\
+   	                 &     & he did not refuse to fight $\nvDash$ \{he fought, he did not fight\} \\
+   	\hline
+%    	hesitated to     & o/+ & he hesitated to ask $?$ he asked\\
+%    	                 &     & he did not hesitate to ask $\vDash$ he asked \\
+%    	\hline
+%    	admitted that    & +/+ & he admitted that he knew $\vDash$ he knew \\
+%    	                 &     & he did not admit that he knew $\vDash$ he knew \\
+%    	\hline
+%    	pretended that   & -/- & he pretended he was sick $\vDash$ he was not sick \\
+%    	                 &     & he did not pretend he was sick $\vDash$ he was not sick\\
+%    	\hline
+%    	wanted to        & o/o & he wanted to fly $?$ he flew \\  
+%    	                 &     & he did not want to fly $?$ he flew \\
+%    	\hline
+  \end{tabular}
+\end{center}
+\caption{Implication Signatures}
+\label{fig:imp-sig}
+\end{figure}
+
+We use these implication signatures to automatically generate rules that
+license specific entailments in the MLN.  Since ``forget to'' has implication
+signature ``-/+'', we generate the two rules in 
+(\ref{ex:imp-fact-rules-managed}).
+
+\begin{small}
+\begin{example}\label{ex:imp-fact-rules-managed}
+\begin{itemize}
+   \item[(a)] $\forall~l_1~l_2~e.[(pred(l_1,``forget",e) \land true(l_1) \land rel(l_1,``theme",e,l_2) \land prop(l_1,l_2)) \rightarrow false(l_2)]]$\footnote{Occurrence-indexing on the predicate ``forget'' has been left out for brevity.}
+   \item[(b)] $\forall~l_1~l_2~e.[(pred(l_1,``forget",e) \land false(l_1) \land rel(l_1,``theme",e,l_2) \land prop(l_1,l_2)) \rightarrow true(l_2)]$
+\end{itemize}
+\end{example}
+\end{small}
+
+To understand these rules, consider (\ref{ex:imp-fact-rules-managed}a).  The rule
+says that if the atom for the verb ``forget to'' appears in a DRS that has been
+determined to be {\it true}, then the DRS representing any ``theme'' proposition
+of that verb should be considered {\it false}.  Likewise,
+(\ref{ex:imp-fact-rules-managed}b) says that if the occurrence of ``forget to''
+appears in a DRS determined to be {\it false}, then the theme DRS should be
+considered {\it true}.
+
+Note that when the implication signature indicates a ``null'' entailment, no
+rule is generated for that case.  This prevents the MLN from licensing
+entailments related directly to the nested proposition, but still allows for
+entailments that include the factive verb.  So {\it he wanted to fly} entails
+neither {\it he flew} nor {\it he did not fly}, but it does still license {\it
+he wanted to fly}.  
+
+% \textbf{KE: The next paragraphs can be cut or shortened severely if needs be.} 
+% This approach allows us to capture the consequences of the implication signature
+% simply and cleanly with first-order logical rules.  The rules are also generic
+% enough to work under various levels of nesting and negation.  Consider again
+% (\ref{ex:imp-fact-nested}), which involves nested proposition-introducing verbs
+% under negation.  The premise DRS and its flat
+% representation are given in Figure \ref{fig:boxer-conversion}.
+% The main premise DRS, {\it l0} always {\it true} and the negation modifier ``not''
+% entails that the sub-DRS {\it l1} is {\it false}.  Since the verb ``forget to'' is
+% positively entailing under negation, the nested DRS {\it l2} is judged as
+% {\it true}.  Finally, since the verb ``arrange'' is positively entailing in the
+% positive environment, its nested DRS {\it l3} is judged {\it true}. Since the
+% ``failing'' act referenced in the hypothesis occurs in a {\it true} DRS, the
+% entailment holds.
+
+
+
+\subsection*{Ambiguity in word meaning}
+
+In order for our system to be able to make correct natural language inference,
+it must be able to handle paraphrasing and deal with hypernymy.  For example,
+in order to license the entailment pair in (\ref{ex:syn-hyp-pos}), the system must
+recognize that ``owns'' is a valid paraphrase for ``has'', and that ``car'' is a hypernym
+of ``convertible''.
+
+\begin{example}\label{ex:syn-hyp-pos}
+{\it p:} Ed has a convertible \\
+{\it h:} Ed owns a car
+\end{example}
+
+In this section we discuss our probabilistic approach to paraphrasing.
+In the next section we discuss how this approach is extended to cover
+hypernymy. A central problem to solve in the context of paraphrases is
+that they are context-dependent. Consider again example
+\eqref{ex:prob-wordsense} and its two hypotheses.  The first
+hypothesis replaces the word ``sweeping'' with a paraphrase that is
+valid in the given context, while the second uses an incorrect
+paraphrase. 
+
+To incorporate paraphrasing information into our system, we first
+generate rules stating all paraphrase relationships that may
+\emph{possibly} apply to a given predicate/hypothesis pair, using
+WordNet  \citep{miller:wordnet2009} as a resource. Then we
+associate those rules with weights to signal contextual adequacy. For
+any two occurrence-indexed words $w_1, w_2$ occurring anywhere in the
+premise or hypothesis, we check
+whether they co-occur in a WordNet synset. If $w_1, w_2$ have a common synset, 
+we generate rules of the form $\forall~l~x.[pred(l,w_1,x) \leftrightarrow
+pred(l,w_2,x)]$ to connect them. For named entities, we perform a similar routine:
+for each pair of matching named entities found in the premise and hypothesis, we
+generate a rule  $\forall~l~x.[named(l,w_1,x) \leftrightarrow named(l,w_2,x)]$.
+
+We then use the distributional model of \citet{erk:acl2010} to compute
+paraphrase appropriateness. In the case of \eqref{ex:prob-wordsense}
+this means measuring the cosine similarity between the vectors for
+``sweep'' and ``cover'' (and between ``sweep'' and ``brush'') in the
+sentential context of the premise. MLN formula weights are expected
+to be log-odds (i.e., $\log (P/(1-P))$ for some probability $P$), so we
+rank all possible paraphrases of a given word $w$ by their cosine similarity
+to $w$ and then give them probabilities that decrease by rank according to a
+Zipfian distribution.  So, the $k^{th}$ closest paraphrase by cosine similarity
+will have probability $P_k$ given by \eqref{eq:zipf}:
+
+\begin{equation}\label{eq:zipf}
+P_k \sim 1/k
+\end{equation}
+
+% \begin{wrapfigure}{r}{.2\textheight}
+% \begin{center}
+% \begin{tabular}{lll}
+% \hline
+%       & P(p) & W(p)   \\
+% \hline
+% cover &  0.069 & -2.602  \\
+% brush &  0.021 & -3.842 \\ 
+% \hline
+% \end{tabular}
+% \end{center}
+% \caption{{\small Paraphrase probabilities (left) and log-odds weights (right)}}
+% \label{fig:para-weights}
+% \end{wrapfigure}
+
+The generated rules are given in \eqref{ex:paraphrase-rules} with the actual
+weights calculated for example \eqref{ex:prob-wordsense}.  Note that the
+valid paraphrase ``cover'' is given a higher weight than the incorrect 
+paraphrase ``brush'', which allows the MLN inference procedure to judge $h_1$ as
+a more likely entailment than $h_2$.\footnote{
+Because weights are calculated according to the equation $\log(P/(1-P))$, any
+paraphrase that has a probability of less than 0.5 will have a negative weight. 
+Since most paraphrases will have probabilities less than 0.5, most will yield
+negative rule weights.  However, the inferences are still handled properly in
+the MLN because the inference is dependent on the {\em relative} weights.}
+This same result would not be achieved if we did not take context into
+consideration because, without context, ``brush'' is a more likely paraphrase of
+``sweep'' than ``cover''.
+
+\begin{example}\label{ex:paraphrase-rules}
+\begin{itemize}
+  \item[(a)] -2.602~ $\forall~l~x.[pred(l,``v\_sweep\_p\_s0\_w4",x) \leftrightarrow pred(l,``v\_cover\_h\_s0\_w4",x)]$
+  \item[(b)] -3.842~ $\forall~l~x.[pred(l,``v\_sweep\_p\_s0\_w4",x) \leftrightarrow pred(l,``v\_brush\_h\_s0\_w4",x)]$
+\end{itemize}
+\end{example}
+
+Since Alchemy outputs a probability of entailment and not a binary judgment, it
+is necessary to specify a probability threshold indicating entailment.  
+An appropriate threshold between "entailment" and "non-entailment" will be one
+that separates the probability of an inference with the valid rule from the
+probability of an inference with the invalid rule.  
+While we plan to automatically induce a threshold in the future, our current
+implementation uses a value set manually.
+
+
+\subsection*{Hypernymy}
+
+Like paraphrasehood, hypernymy is context-dependent: In ``A bat flew
+out of the cave'', ``animal'' is an appropriate hypernym for ``bat'',
+but ``artifact'' is not. So we again use distributional similarity to
+determine contextual appropriateness. However, we do not directly
+compute cosine similarities between a word and its potential hypernym.
+We can hardly assume ``baseball bat'' and ``artifact'' to occur in
+similar distributional contexts. So instead of checking for similarity
+of ``bat'' and ``artifact'' in a given context, we check ``bat'' and
+``club''. That is, we pick a synonym or close hypernym of the word in
+question (``bat'') that is also a WordNet hyponym of the hypernym to
+check (``artifact'').
+
+A second problem to take into account is the interaction of hypernymy
+and polarity. While  \eqref{ex:syn-hyp-pos} is a valid pair, 
+\eqref{ex:syn-hyp-neg} is not, because ``have a convertible'' is under
+negation. So, we create weighted rules of the form $hypernym(w, h)$,
+along with inference rules to guide their interaction with polarity.
+We create these rules for all pairs of words $w, h$ in premise and
+hypothesis such that $h$ is a hypernym of $w$, again using WordNet to
+determine potential hypernymy. 
+
+\begin{example}\label{ex:syn-hyp-neg}
+{\it p:} Ed does not have a convertible \\
+{\it h:} Ed does not own a car
+\end{example}
+ 
+Our inference rules governing the interaction of hypernymy and
+polarity are given in (\ref{ex:hypernym-rules}).
+The rule in (\ref{ex:hypernym-rules}a) states that in a positive environment,
+the hyponym entails the hypernym while the rule in (\ref{ex:hypernym-rules}b)
+states that in a negative environment, the opposite is true: the hypernym
+entails the hyponym.
+
+\begin{example}\label{ex:hypernym-rules}
+\begin{itemize}
+  \item[(a)] $\forall~l~p_1~p_2~x.[(hypernym(p_1,p_2) \land true(l) \land pred(l,p_1,x)) \rightarrow pred(l,p_2,x)]]$
+  \item[(b)] $\forall~l~p_1~p_2~x.[(hypernym(p_1,p_2) \land false(l) \land pred(l,p_2,x)) \rightarrow pred(l,p_1,x)]]$
+\end{itemize}
+\end{example}
+
+
+
+\subsection*{Making use of coreference information}
+
+As a test case for incorporating additional resources into Boxer's logical form,
+we used the coreference data in OntoNotes \citep{hovy:naacl2006}.  However,
+the same mechanism would allow us to transfer information into Boxer output from
+arbitrary additional NLP tools such as 
+automatic coreference analysis tools or semantic role labelers. 
+Our system uses coreference information into two distinct ways.
+
+The first way we make use of coreference data is to copy atoms describing a
+particular variable to those variables that corefer. 
+% Making use of coreference information is often essential in natural language
+% inference.  Certain coreferring expressions, however, are more complex. 
+Consider again example (\ref{ex:coref}) which has a two-sentence premise. 
+This inference requires recognizing that the ``he'' in the second sentence of
+the premise refers to ``George Christopher'' from the first sentence.  Boxer
+alone is unable to make this connection, but if we receive this information as
+input, either from gold-labeled data or a third-party coreference tool, we are
+able to incorporate it.  Since Boxer is able to identify the index of the word
+that generated a particular predicate, we can tie each predicate to any related
+coreference chains.  Then, for each atom on the chain, we can inject copies
+of all of the coreferring atoms, replacing the variables to match.
+For example, the word ``he'' generates an atom  
+{\it pred(l0, male, z5)}\footnote{Atoms simplified for brevity} and
+``Christopher'' generates atom {\it named(l0, christopher, x0)}. So, we can
+create a new atom by taking the atom for ``christopher'' and replacing the 
+label and variable with that of the atom for ``he'',
+generating  {\it named(l0, christopher, x5)}.
+
+As a more complex example, the coreference information will inform us that
+``the new ballpark'' corefers with ``a replacement for Candlestick Park''.
+However, our system is currently unable to handle this coreference correctly at
+this time because, unlike the previous example, the expression ``a replacement
+for Candlestick Park'' results in a complex three-atom conjunct with two 
+separate variables: {\it pred(l2, replacement, x6)}, {\it rel(l2, for, x6, x7)}, and 
+{\it named(l2, candlestick\_park, x7)}.  Now, unifying with the atom for ``a
+ballpark'', {\it pred(l0, ballpark, x3)}, is not as simple as replacing the
+variable because there are two variables to choose from.  Note that it would 
+{\it not} be correct to replace
+both variables since this would result in a unification of ``ballpark'' with
+``candlestick\_park'' which is wrong.  Instead we must determine that {\it x6}
+should be the one to unify with {\it x3} while {\it x7} is replaced with a fresh
+variable.  The way that we can accomplish this is to look at the dependency
+parse of the sentence that is produced by the C\&C parser is a precursor to running
+Boxer.  By looking up both ``replacement'' and ``Candlestick Park'' in the
+parse, we can determine that ``replacement'' is the head of the phrase, and thus
+is the atom whose variable should be unified.  So, we would create new atoms,
+{\it pred(l0, replacement, x3)}, {\it rel(l0, for, x3, z0)}, and 
+{\it named(l0, candlestick\_park, z0)}, where {\it z0} is a fresh variable.
+
+
+The second way that we make use of coreference information is to extend the
+sentential contexts used for calculating the appropriateness of paraphrases in
+the distributional model.  In the simplest case, the sentential context of a
+word would simply be the other words in the sentence.  However, consider the
+context of the word ``lost'' in the second sentence of \eqref{ex:coref-context}.  
+
+\begin{example}\label{ex:coref-context}
+\begin{itemize}
+  \item[$p_1$:] In [the final game of the season]$_1$, [the team]$_2$ held on to their lead until overtime
+  \item[$p_2$:] But despite that, [they]$_2$ eventually {\bf lost} [it all]$_1$
+\end{itemize}
+\end{example}
+
+Here we would like to disambiguate ``lost'', but its immediate context, words
+like ``despite'' and ``eventually'', gives no indication as to its correct
+sense. Our procedure extends the context of the sentence by incorporating all of
+the words from all of the phrases that corefer with a word in the immediate
+context.  Since coreference chains 1 and 2 have words in $p_2$, the context of
+``lost'' ends up including ``final'', ``game'', ``season'', and ``team'' which
+give a strong indication of the sense of ``lost''.
+Note that using coreference data is stronger than simply expanding the window
+because coreferences can cover arbitrarily long distances.

@@ -1,0 +1,129 @@
+\section{Evaluation}
+
+As a preliminary evaluation of our system, we constructed a set of demonstrative
+examples to test our ability to handle the previously discussed phenomena and
+their interactions and ran each example with both a theorem prover and Alchemy. 
+Note that when running an example in the theorem prover, weights are not
+possible, so any rule that would be weighted in an MLN is simply treated as a
+``hard clause'' following \citet{bos:emnlp2005}.
+% We executed every example discussed in this paper and more.  
+
+\noindent\textbf{Checking the logical form.}
+We constructed a list of 72 simple examples  
+that exhaustively cover cases of implicativity (positive, negative, null entailments
+in both positive and negative environments), hypernymy,
+quantification, and the interaction between implicativity and 
+hypernymy.  The purpose of these simple tests is to ensure that our flattened
+logical form and truth condition rules correctly maintain the semantics of the
+underlying DRSs. Examples are given in \eqref{ex:regression}.
+
+\begin{example}\label{ex:regression}
+\begin{itemize}
+  \item[(a)] The mayor did not manage to build a stadium $\nvDash$ The mayor built a stadium
+%  \item[(b)] The mayor did not manage to build a stadium $\vDash$ The mayor did not build a stadium
+  \item[(b)] Fido is a dog and every dog walks $\vDash$ A dog walks
+%  \item[(d)] Fido is a dog and every dog walks $\nvDash$ No dogs walk
+\end{itemize}
+\end{example}
+
+
+\noindent\textbf{Examples in previous sections.}
+Examples 
+\eqref{ex:imp-fact-nested}, 
+\eqref{ex:hope-build}, 
+\eqref{ex:prob-wordsense}, 
+\eqref{ex:syn-hyp-pos}, and
+\eqref{ex:syn-hyp-neg} 
+all come out as expected.  Each of these examples demonstrates one of the
+phenomena in isolation. However, example (\ref{ex:coref}) returns ``not entailed'',
+the incorrect answer.  As discussed previously, this failure is a result of our
+system's inability to correctly incorporate the complex coreferring expression
+``a replacement for Candlestick Park''.  However, the system {\it is} able to
+correctly incorporate the coreference of ``he'' in the second sentence to
+``Christopher'' in the first.
+
+\noindent\textbf{Implicativity and word sense.}
+For example \eqref{ex:ws-imp-1}, ``fail to'' is a negatively entailing
+implicative in a positive environment.
+So, $p$ correctly entails $h_{good}$ in both the theorem prover and Alchemy. 
+However, the theorem prover incorrectly licenses the entailment of $h_{bad}$
+while Alchemy does not.  
+The probabilistic approach performs better in this situation because the
+categorial approach does not distinguish between a good paraphrase and a
+bad one.  This example also demonstrates the advantage of using a
+context-sensitive distributional model to calculate the probabilities of
+paraphrases because ``reward'' is an {\it a priori} better paraphrase than
+``observe'' according to WordNet since it appears in a higher ranked synset. 
+
+\begin{example}\label{ex:ws-imp-1}
+\begin{itemize}
+  \item[$p$:] The U.S. is watching closely as South Korea fails to honor
+  U.S. patents\footnote{Example \eqref{ex:ws-imp-1} is adapted from Penn
+  Treebank document wsj\_0020 while \eqref{ex:ws-imp-2} is adapted from document
+  wsj\_2358}
+  \item[$h_{good}$:] South Korea does not {\bf observe} U.S. patents
+  \item[$h_{bad}$:] South Korea does not {\bf reward} U.S. patents
+\end{itemize}
+\end{example}
+
+\noindent\textbf{Implicativity and hypernymy.}
+\citet{maccartney:iwcs2009} extended the work by \citet{nairn:icos2006} in order to
+correctly treat inference involving monotonicity and exclusion.  
+Our approaches to implicatives and factivity and hyper/hyponymy combine naturally
+to address these issues because of the structure of our logical representations
+and rules.  For example, no additional work is required to license the
+entailments in \eqref{ex:imp-fact-hyper}.  
+
+\begin{example}\label{ex:imp-fact-hyper}
+\begin{itemize}
+  \item[(a)] John refused to dance $\vDash$ John didn't tango
+  \item[(b)] John did not forget to tango $\vDash$ John danced
+\end{itemize}
+\end{example}
+
+Example \eqref{ex:ws-imp-2} demonstrates how our system combines
+categorial implicativity with a probabilistic approach to hypernymy.  
+The verb ``anticipate that'' is positively entailing in the negative
+environment.
+The verb ``moderate'' can mean ``chair'' as in ``chair a discussion'' or
+``curb'' as in ``curb spending''.  Since ``restrain'' is a hypernym of
+``curb'', it receives a weight based on the applicability of the word ``curb''
+in the context.  Similarly, ``talk'' receives a weight based on its
+hyponym ``chair''. Since our model predicts ``curb'' to be a more probable
+paraphrase of ``moderate'' in this context than ``chair'' (even though the
+priors according to WordNet are reversed), the system is able to infer
+$h_{good}$ while rejecting $h_{bad}$.
+
+\begin{example}\label{ex:ws-imp-2}
+\begin{itemize}
+  \item[$p$:] He did not anticipate that inflation would moderate this year
+  \item[$h_{good}$:] Inflation {\bf restrained} this year
+  \item[$h_{bad}$:] Inflation {\bf talked} this year
+\end{itemize} 
+\end{example}
+
+% According to \citet{nairn:icos2006}, the verb ``predict that'' is a positively
+% entailing factive, but if \eqref{ex:ws-imp-2} is modified so that ``anticipate''
+% is replaced by ``predict'', Boxer produces a DRS without a nested proposition
+% for ``moderate'', meaning that it is not possible to analyze ``predict that'' as
+% a factive and preventing our system from licensing the entailment. 
+
+
+\noindent\textbf{Word sense, coreference, and hypernymy.}
+Example \eqref{ex:ws-coref} demonstrates the interaction between paraphrase,
+hypernymy, and coreference incorporated into a single entailment.  The
+relevant coreference chains are marked explicitly in the example.  The correct
+inference relies on recognizing that ``he'' in the hypothesis refers to ``Joe
+Robbie'' and ``it'' to ``coliseum'', which is a hyponym of ``stadium''. 
+Further, our model recognizes that ``sizable'' is a better paraphrase for
+``healthy'' than ``intelligent'' even though WordNet has the reverse order.
+
+\begin{example}\label{ex:ws-coref}
+\begin{itemize}
+  \item[$p$:] [Joe Robbie]$_{53}$ couldn't persuade the mayor , so [he]$_{53}$ built [[his]$_{53}$ own coliseum]$_{54}$. 
+  \item[] [He]$_{53}$ has used [it]$_{54}$ to turn a healthy profit.\footnote{Only relevent coreferences have been marked}
+  \item[$h_{good}$:] {\it Joe Robbie} used {\it a stadium} to turn a {\bf sizable} profit
+  \item[$h_{bad-1}$:] {\it Joe Robbie} used {\it a stadium} to turn an {\bf intelligent} profit
+  \item[$h_{bad-2}$:] {\it The mayor} used {\it a stadium} to turn a healthy profit
+\end{itemize}
+\end{example}

@@ -1,0 +1,52 @@
+\section{Future work}
+
+The next step is to execute a full-scale evaluation of our approach using 
+more varied phenomena and naturally occurring sentences. 
+However, the memory requirements of Alchemy are a limitation that prevents us
+from currently executing larger and more complex examples.  The problem arises
+because Alchemy considers every possible grounding of every atom, even when a
+more focused subset of atoms and inference rules would suffice. There is on-going
+work to modify Alchemy so that only the required groundings are incorporated
+into the network, reducing the size of the model and thus making it possible to
+handle more complex inferences.  We will be able to begin using this new version
+of Alchemy very soon and our task will provide an excellent test case for the
+modification.
+
+Since Alchemy outputs a probability of entailment, it is necessary to fix a
+threshold that separates entailment from nonentailment.
+We plan to use machine learning techniques to compute an appropriate threshold
+automatically from a calibration dataset such as a corpus of valid and invalid
+paraphrases.
+
+
+\section{Conclusion}
+
+In this paper, we have introduced a system that implements a first step
+towards integrating logical semantic representations with
+probabilistic weights using methods from Statistical Relational AI,
+particularly Markov Logic. We have focused on three phenomena and their
+interaction: implicatives, coreference, and word meaning. Taking
+implicatives and coreference as categorial and word meaning as
+probabilistic, we have used a distributional model to generate
+paraphrase appropriateness ratings, which we then transformed into
+weights on first order formulas.
+The resulting MLN approach is able to correctly solve a number of difficult
+textual entailment problems that require handling complex combinations of these
+important semantic phenomena.
+
+% The framework we have developed takes a pair of natural
+% language sentences as input and parses them into DRS \citep{kamp:book93}
+% representations.  It then augments those representations by linking the
+% predicates back to the original words in the sentences and incorporating
+% coreference information from OntoNotes \citep{hovy:naacl2006}.
+% Since DRSs are hierarchical structures, our approach flattens them to a simple
+% list of atoms while keeping track of the original structure through DRS labels
+% as arguments, allowing inferences to be performed in 
+% an MLN. In order to maintain the DRS semantics in the flat logical form, we have 
+% hand-written a collection of inference rules that are used in the inference. 
+% We also generate a list of inference rules to address the particular
+% linguistic phenomena that we are handling.  Categorial rules based
+% on implication signatures \citep{nairn:icos2006} are used to handle
+% implicativity and factivity.  Weighted rules are used to address issues of
+% word meaning in context.
+

@@ -1,0 +1,53 @@
+\section{Introduction}
+
+Logic-based representations of natural language meaning have a long history.  
+Representing the meaning of language in a first-order
+logical form is appealing because it provides a powerful and flexible way to
+express even complex propositions. 
+However, systems built solely using first-order logical forms tend to be very
+brittle as they have no way of integrating uncertain knowledge. 
+They, therefore, tend to have high precision at the cost of low
+recall \citep{bos:emnlp2005}.
+
+Recent advances in computational linguistics have yielded robust methods that
+use weighted or probabilistic models.  For example, distributional models of
+word meaning have been used successfully to judge paraphrase appropriateness.
+This has been done by representing the word meaning in context as a point in a
+high-dimensional semantics space
+\citep{erk:emnlp08,ThaterFuerstenauPinkal:10,erk:acl2010}. However, these
+models typically handle only individual phenomena instead of providing a meaning
+representation for complete sentences. It is a long-standing open question how
+best to integrate the weighted or probabilistic information coming from such
+modules with logic-based representations in a way that allows for reasoning over
+both.  See, for example, \citet{hobbs:alj93}.
+
+The goal of this work is to combine logic-based meaning representations
+with probabilities in a single unified framework.  This will allow us to obtain
+the best of both situations: we will have the full expressivity of 
+first-order logic and be able to reason with probabilities.  We believe that
+this will allow for a more complete and robust approach to natural language
+understanding. In order to perform logical inference with probabilities, we draw 
+from the large and active body of work related to Statistical Relational AI
+\citep{getoor:book2007}.  Specifically, we make use of Markov Logic Networks
+(MLNs) \citep{richardson:mlj06} which employ weighted graphical models to
+represent first-order logical formulas. MLNs are appropriate for our approach
+because they provide an elegant method of assigning weights to first-order
+logical rules, combining a diverse set of inference rules, and performing
+inference in a probabilistic way. 
+
+While this is a large and complex task, this paper proposes a series
+of first steps toward our goal. 
+In this paper, we focus on three natural language phenomena and their
+interaction: implicativity and factivity, word meaning, and coreference.
+Our framework parses natural language
+into a logical form, adds rule weights computed by external NLP
+modules, and performs inferences using an MLN. Our end-to-end approach
+integrates multiple existing tools.
+%  within the context of the Natural
+% Language Toolkit (NLTK) \citep{bird:book2009}, a Python toolkit for
+% natural language processing.  
+We use Boxer
+\citep{bos:coling2004} to parse natural language into a logical form.
+We use Alchemy \citep{kok:tr05} for MLN inference. Finally, we use the
+exemplar-based distributional model of \citet{erk:acl2010} to produce
+rule weights.
