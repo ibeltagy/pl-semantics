@@ -5,20 +5,23 @@ import java.net.URL
 import edu.mit.jwi.Dictionary
 import edu.mit.jwi.item.POS
 import scala.collection.JavaConversions._
+import org.junit.Test
 
-object WordnetImplTests {
-    def main(args: Array[String]): Unit = {
+class WordnetImplTests {
 
-        val wn = new WordnetImpl()
+  @Test
+  def test() {
 
-        wn.synsets("big", POS.ADJECTIVE).map(println)
-        println
-        wn.synsets("sweep", POS.VERB).map(println)
-        println
-        wn.synsets("convertible", POS.NOUN).map(w => w.getWords.map(_.getLemma).mkString("/") + ": " +
-            (wn.hypernyms(w).map(_.getWords.map(_.getLemma).mkString("/")).mkString(", "))).map(println)
-        println
+    val wn = new WordnetImpl()
 
-    }
+    wn.synsets("big", POS.ADJECTIVE).map(println)
+    println
+    wn.synsets("sweep", POS.VERB).map(println)
+    println
+    wn.synsets("convertible", POS.NOUN).map(w => w.getWords.map(_.getLemma).mkString("/") + ": " +
+      (wn.hypernyms(w).map(_.getWords.map(_.getLemma).mkString("/")).mkString(", "))).map(println)
+    println
+
+  }
 
 }
