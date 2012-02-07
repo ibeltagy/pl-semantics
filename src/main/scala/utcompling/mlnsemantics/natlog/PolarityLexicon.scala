@@ -31,6 +31,7 @@ object PolarityLexicon {
                 signature match {
                     case factRe(pol) => (isPosEntail(pol), isPosEntail(pol))
                     case implRe(_, p, _, n) => (isPosEntail(p), isPosEntail(n))
+                    case "none" => (None, None)
                 }
 
             val subcat = SubCatFrame(lemma, pos, requiredRelationsString.split(",").map(_.trim).toSet, relation)
