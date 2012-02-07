@@ -59,10 +59,10 @@ object PolarityLexiconPreparer {
               case "V-SUBJ-XCOMPinf_prt(on_)" => ("VB", "xcomp+to", "theme")
               case "V-SUBJ-OBLto-COMPEXthat" => ("VB", "ccomp+that", "theme")
               case _ =>
+                println()
                 println(example)
                 println(parcSubcat)
                 pdi.interpret(Tokenize(example).mkString(" ")); ("???", "???", "???")
-                println()
             }
 
           f.write(List(lemma, parcSubcat, pos, requiredRelationsString, relation, signature, example, comment, "##automatically generated").mkString("\t").trim)
