@@ -82,9 +82,9 @@ object PolarityLexiconPreparer {
       CandcImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin"))),
       BoxerImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin")))),
     candcDiscourseParser: DiscourseParser[Discourse] = new CandcDiscourseParser(CandcImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin")))))
-    extends DiscourseInterpreter[DrtExpression] {
+    extends DiscourseInterpreter[Null] {
 
-    override def batchInterpretMultisentence(inputs: List[List[String]], discourseIds: Option[List[String]] = None, question: Boolean = false, verbose: Boolean = false): List[Option[DrtExpression]] = {
+    override def batchInterpretMultisentence(inputs: List[List[String]], discourseIds: Option[List[String]] = None, question: Boolean = false, verbose: Boolean = false): List[Option[Null]] = {
       val newDiscourseIds = discourseIds.getOrElse((0 until inputs.length).map(_.toString).toList)
       val boxerResults = this.boxerDiscourseInterpreter.batchInterpretMultisentence(inputs, Some(newDiscourseIds), question, verbose)
       val parseResults = this.candcDiscourseParser.batchParseMultisentence(inputs, Map(), Some(newDiscourseIds), if (question) Some("question") else Some("boxer"), verbose)
@@ -97,7 +97,7 @@ object PolarityLexiconPreparer {
         boxerResult.pprint
       }
 
-      return boxerResults
+      return List(Some(null))
     }
   }
 
