@@ -14,7 +14,7 @@ object DataGen {
     //    val signatures = List("pn", "np", "fact_n")
     //    val interestingVerbs =
     //      (for (
-    //        line <- Source.fromFile("resources/polarity-lexicon/polarity_lexicon.txt").getLines if line.trim.nonEmpty && !line.startsWith("#");
+    //        line <- Source.fromFile("resources/polarity-lexicon/polarity_lexicon_expanded.txt").getLines if line.trim.nonEmpty && !line.startsWith("#");
     //        Array(word, subcat, sig, example) = line.split('\t') if signatures.exists(x => sig.contains(x))
     //      ) yield word).toSet
 

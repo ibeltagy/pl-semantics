@@ -39,7 +39,7 @@ class FracasTestRunner {
     val bei = new MergingBoxerExpressionInterpreterDecorator()
     val bdi = new BoxerDiscourseInterpreter(bei, candc, boxer)
     val cdp = new CandcDiscourseParser(candc)
-    val pl = PolarityLexicon.fromFile("resources/polarity-lexicon/small_polarity_lexicon.txt")
+    val pl = PolarityLexicon.fromFile("resources/polarity-lexicon/polarity_lexicon_expanded.txt")
     val mdi = new ModalDiscourseInterpreter(bdi, cdp, pl)
     def tp = new Prover9TheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/LADR-2009-11A/bin/prover9"), 5, false)
     def mtp = new ModalTheoremProver(tp)

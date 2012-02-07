@@ -65,10 +65,10 @@ object PolarityLexiconPreparer {
                 pdi.interpret(Tokenize(example).mkString(" ")); ("???", "???", "???")
             }
 
-          f.write(List(lemma, parcSubcat, pos, requiredRelationsString, relation, signature, example, comment, "##automatically generated").mkString("\t").trim)
+          f.write(List(lemma, parcSubcat, pos, requiredRelationsString, relation, signature, example, comment, "##automatically generated").mkString("\t").trim + "\n")
 
         } else {
-          f.write(line)
+          f.write(line + "\n")
 
         }
       }

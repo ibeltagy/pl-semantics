@@ -22,7 +22,7 @@ class ModalDiscourseInterpreter(
     CandcImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin"))),
     BoxerImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin")))),
   candcDiscourseParser: DiscourseParser[Discourse] = new CandcDiscourseParser(CandcImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin")))),
-  polarityLexicon: PolarityLexicon = PolarityLexicon.fromFile("resources/polarity-lexicon/small_polarity_lexicon.txt"))
+  polarityLexicon: PolarityLexicon = PolarityLexicon.fromFile("resources/polarity-lexicon/polarity_lexicon_expanded.txt"))
   extends DiscourseInterpreter[BoxerExpression] {
 
   override def batchInterpretMultisentence(inputs: List[List[String]], discourseIds: Option[List[String]] = None, question: Boolean = false, verbose: Boolean = false): List[Option[BoxerExpression]] = {
