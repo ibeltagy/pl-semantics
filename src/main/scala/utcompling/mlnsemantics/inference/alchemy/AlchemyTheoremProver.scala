@@ -113,25 +113,11 @@ class AlchemyTheoremProver(
       case FolIfExpression(first, second) => "(" + convert(first, bound) + " => " + convert(second, bound) + ")"
       case FolIffExpression(first, second) => "(" + convert(first, bound) + " <=> " + convert(second, bound) + ")"
       case FolEqualityExpression(first, second) => "(" + convert(first, bound) + " = " + convert(second, bound) + ")"
-      //TODO: Quote constants (but not variables)
       case FolAtom(pred, args @ _*) => pred.name.replace("'", "") + "(" + args.map(v => if (bound(v)) v.name else quote(v.name)).mkString(",") + ")"
       case FolVariableExpression(v) => if (bound(v)) v.name else quote(v.name)
     }
 
   private def quote(s: String) = '"' + s + '"'
-
-  private def getProof(stdout: String): String = {
-    val proof = new ListBuffer[String]
-    val proofRe = """(?s)=+ PROOF =+\n(.*)\n=+ end of proof =+""".r
-    for (line <- proofRe.findFirstMatchIn(stdout).get.group(1).split("\n")) {
-      line.trim() match {
-        case "" => {}
-        case _ if (line.startsWith("%")) => {}
-        case _ => proof += line
-      }
-    }
-    return proof.mkString("\n")
-  }
 
 }
 
