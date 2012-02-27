@@ -1,18 +1,23 @@
-package utcompling.scalalogic.inference.alchemy
+package utcompling.mlnsemantics.inference
 
-import utcompling.mlnsemantics.inference.WeightedExpression
-import utcompling.scalalogic.fol.expression._
-import utcompling.scalalogic.top.expression.Variable
-import scala.collection.mutable.ListBuffer
-import utcompling.scalalogic.util.SubprocessCallable
-import utcompling.scalalogic.util.FileUtils
-import utcompling.scalalogic.util.FileUtils._
 import org.apache.commons.logging.LogFactory
-import utcompling.scalalogic.top.expression.parse.LogicParser
-import utcompling.scalalogic.fol.expression.parse.FolLogicParser
-import utcompling.mlnsemantics.inference.HardWeightedExpression
-import utcompling.mlnsemantics.inference.SoftWeightedExpression
 import scala.io.Source
+import utcompling.scalalogic.fol.expression.parse.FolLogicParser
+import utcompling.scalalogic.fol.expression.FolAllExpression
+import utcompling.scalalogic.fol.expression.FolAndExpression
+import utcompling.scalalogic.fol.expression.FolAtom
+import utcompling.scalalogic.fol.expression.FolEqualityExpression
+import utcompling.scalalogic.fol.expression.FolExistsExpression
+import utcompling.scalalogic.fol.expression.FolExpression
+import utcompling.scalalogic.fol.expression.FolIfExpression
+import utcompling.scalalogic.fol.expression.FolIffExpression
+import utcompling.scalalogic.fol.expression.FolNegatedExpression
+import utcompling.scalalogic.fol.expression.FolOrExpression
+import utcompling.scalalogic.fol.expression.FolVariableExpression
+import utcompling.scalalogic.top.expression.Variable
+import utcompling.scalalogic.util.FileUtils.pathjoin
+import utcompling.scalalogic.util.FileUtils
+import utcompling.scalalogic.util.SubprocessCallable
 
 class AlchemyTheoremProver(
   override val binary: String)
@@ -131,14 +136,12 @@ object AlchemyTheoremProver {
 
     val atp = new AlchemyTheoremProver(pathjoin(System.getenv("HOME"), "bin/alchemy/bin/infer"))
 
-    {
-      val constants = Map("ind" -> List("socrates"))
-      val declarations = List("man(ind)", "mortal(ind)").map(parse)
-      val evidence = List("man(socrates)").map(parse)
-      val assumptions = List(HardWeightedExpression(parse("all x.(man(x) -> mortal(x))")))
-      val goal = parse("mortal(socrates)")
-      println(atp.prove(constants, declarations, evidence, assumptions, goal))
-    }
-  }
+    val constants = Map("ind" -> List("socrates"))
+    val declarations = List("man(ind)", "mortal(ind)").map(parse)
+    val evidence = List("man(socrates)").map(parse)
+    val assumptions = List(HardWeightedExpression(parse("all x.(man(x) -> mortal(x))")))
+    val goal = parse("mortal(socrates)")
+    println(atp.prove(constants, declarations, evidence, assumptions, goal))
 
+  }
 }
