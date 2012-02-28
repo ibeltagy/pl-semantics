@@ -12,18 +12,18 @@ object CncLemmatizeCorpus {
   def main(args: Array[String]) {
     val candc = CandcImpl.findBinary(Some(pathjoin(System.getenv("HOME"), "bin/candc/bin")))
 
-    val N = 5 //0000
+    val N = 500
 
-    for ((sentences, g) <- io.Source.fromFile("data/nytgiga.spl").getLines.map(s => Tokenize(s).mkString(" ")).grouped(N).zipWithIndex.take(2)) {
+    for ((sentences, g) <- io.Source.fromFile("data/nytgiga.spl").getLines.map(s => Tokenize(s).mkString(" ")).grouped(N).zipWithIndex) {
       val lemmatized = parseToLemmas(candc, sentences)
 
-      for ((s, i) <- sentences.zipWithIndex) {
-        println(s)
-        println(lemmatized.get(i))
-        println()
-      }
+      //for ((s, i) <- sentences.zipWithIndex) {
+      //  println(s)
+      //  println(lemmatized.get(i))
+      //  println()
+      //}
 
-      writeUsing("data/nytgiga-cnc-lemma-%03d.spl".format(g)) { f =>
+      writeUsing("data/nytgiga-cnc-lemma-%06d.spl".format(g)) { f =>
         for (
           i <- 0 to N;
           s <- lemmatized.get(i)
