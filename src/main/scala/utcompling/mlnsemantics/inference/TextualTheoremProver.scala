@@ -9,11 +9,19 @@ import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.OccurrenceMarkingBoxerExpressionInterpreterDecorator
 import utcompling.scalalogic.util.FileUtils.pathjoin
 import utcompling.scalalogic.util.FileUtils
+import utcompling.scalalogic.util.CollectionUtils._
 import utcompling.scalalogic.inference.TheoremProver
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.MergingBoxerExpressionInterpreterDecorator
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.UnnecessarySubboxRemovingBoxerExpressionInterpreter
 import utcompling.scalalogic.drt.expression.parse.DrtLogicParser
 import utcompling.scalalogic.inference.impl.Prover9TheoremProver
+import utcompling.scalalogic.fol.expression.FolExpression
+import utcompling.scalalogic.top.expression.Variable
+import utcompling.scalalogic.fol.expression.FolApplicationExpression
+import utcompling.scalalogic.fol.expression.FolVariableExpression
+import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.SetBuilder
+import utcompling.scalalogic.fol.expression.FolAtom
 
 class TextualTheoremProver(
   ptp: AlchemyTheoremProver) {
@@ -64,12 +72,58 @@ object TextualTheoremProver {
 
     println(Prover9TheoremProver.findBinary(Some(pathjoin(System.getenv("HOME"), "bin/LADR-2009-11A/bin/")), timeout = 5).prove(List(a, b), c).isDefined)
 
-    //    val constants = Map("ind" -> List("socrates"))
+    //    val constants = Map("ind" -> Set("socrates"))
     //    val declarations = List("man(ind)", "mortal(ind)").map(parse)
     //    val evidence = List("man(socrates)").map(parse)
     //    val assumptions = List(HardWeightedExpression(parse("all x.(man(x) -> mortal(x))")))
     //    val goal = parse("mortal(socrates)")
     //    println(atp.prove(constants, declarations, evidence, assumptions, goal))
+
+    val IndvVar = """^(x\d*)$""".r
+    val EvntVar = """^(e\d*)$""".r
+    val PropVar = """^(p\d*)$""".r
+
+    def combinePredicatesAndArgTypes(list: List[(Map[FolExpression, Seq[String]], Map[String, Set[String]])]): (Map[FolExpression, Seq[String]], Map[String, Set[String]]) = {
+      val (predTypes, constTypes) = list.unzip
+      val combinedPredTypes =
+        predTypes.flatten.groupByKey.mapValuesStrict {
+          case head :: tail =>
+            tail.foreach(t => assert(head == t))
+            head
+        }
+      val combinedConstTypes = constTypes.flatten.groupByKey.mapValuesStrict(_.flatten.toSet)
+      (combinedPredTypes, combinedConstTypes)
+    }
+
+    def getPredicatesAndArgTypes(e: FolExpression): (Map[FolExpression, Seq[String]], Map[String, Set[String]]) =
+      e match {
+        case e @ FolAtom(_, args @ _*) =>
+          val constants = new ListBuffer[(String, String)]
+          val argTypes =
+            args.map(_.name).map {
+              case IndvVar(v) => "indv"
+              case EvntVar(v) => "evnt"
+              case PropVar(v) => "prop"
+              case c => constants += "indv" -> c; "indv"
+            }
+          val predTypes = Map(e.pred -> argTypes)
+          val constTypes = constants.toSet.groupByKey
+          (predTypes, constTypes)
+        case _ =>
+          e.visit(getPredicatesAndArgTypes, combinePredicatesAndArgTypes)
+      }
+
+    val (predTypes, constTypes) = combinePredicatesAndArgTypes(List(a, b, c).map(getPredicatesAndArgTypes))
+    val constants =
+      Map(
+        "indv" -> Set("default_indv_variable"),
+        "evnt" -> Set("default_evnt_variable"),
+        "prop" -> Set("default_prop_variable")) ++ constTypes
+    val declarations = predTypes.toList.map { case (pred, args) => pred(args.map(n => FolVariableExpression(Variable(n))): _*) } //List("man(ind)", "mortal(ind)")
+    val evidence = List() //"man(socrates)"
+    val assumptions = List(HardWeightedExpression(a), HardWeightedExpression(b))
+    val goal = c
+    println(atp.prove(constants, declarations, evidence, assumptions, goal))
 
   }
 

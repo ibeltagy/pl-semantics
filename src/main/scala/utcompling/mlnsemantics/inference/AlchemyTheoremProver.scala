@@ -29,7 +29,7 @@ class AlchemyTheoremProver(
   private val LOG = LogFactory.getLog(AlchemyTheoremProver.getClass)
 
   def prove(
-    constants: Map[String, Iterable[String]],
+    constants: Map[String, Set[String]],
     declarations: List[FolExpression],
     evidence: List[FolExpression],
     assumptions: List[WeightedFolEx],
@@ -38,11 +38,11 @@ class AlchemyTheoremProver(
     declarations.foreach {
       case FolAtom(Variable(pred), args @ _*) =>
         for (a <- args.map(_.name))
-          require(constants.contains(a), "No contants were found for argument '%s' of declared predicate '%s'.".format(a, pred))
+          require(constants.contains(a), "No contants were found for type '%s' of declared predicate '%s'.".format(a, pred))
       case d => throw new RuntimeException("Only atoms may be declared.  '%s' is not an atom.".format(d))
     }
 
-    val entailedConst = ("entail" -> List("entailed"))
+    val entailedConst = ("entail" -> Set("entailed"))
     val entailedDec = FolAtom(Variable("entailment"), Variable("entail"))
     val ResultsRE = """entailment\("entailed"\) (\d*\.\d*)""".r
 
@@ -63,7 +63,7 @@ class AlchemyTheoremProver(
   }
 
   private def makeMlnFile(
-    constants: Map[String, Iterable[String]],
+    constants: Map[String, Set[String]],
     declarations: List[FolExpression],
     assumptions: List[WeightedFolEx]) = {
 
@@ -136,7 +136,7 @@ object AlchemyTheoremProver {
 
     val atp = new AlchemyTheoremProver(pathjoin(System.getenv("HOME"), "bin/alchemy/bin/infer"))
 
-    val constants = Map("ind" -> List("socrates"))
+    val constants = Map("ind" -> Set("socrates"))
     val declarations = List("man(ind)", "mortal(ind)").map(parse)
     val evidence = List("man(socrates)").map(parse)
     val assumptions = List(HardWeightedExpression(parse("all x.(man(x) -> mortal(x))")))
