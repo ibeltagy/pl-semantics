@@ -12,16 +12,16 @@ object CncLemmatizeCorpus {
   def main(args: Array[String]) {
     val candc = CandcImpl.findBinary(Some(pathjoin(System.getenv("HOME"), "bin/candc/bin")))
 
-    val N = 50000
+    val N = 5 //0000
 
     for ((sentences, g) <- io.Source.fromFile("data/nytgiga.spl").getLines.map(s => Tokenize(s).mkString(" ")).grouped(N).zipWithIndex.take(2)) {
       val lemmatized = parseToLemmas(candc, sentences)
 
-      //      for ((s, i) <- sentences.zipWithIndex) {
-      //        println(s)
-      //        println(lemmatized.get(i))
-      //        println()
-      //      }
+      for ((s, i) <- sentences.zipWithIndex) {
+        println(s)
+        println(lemmatized.get(i))
+        println()
+      }
 
       writeUsing("data/nytgiga-cnc-lemma-%03d.spl".format(g)) { f =>
         for (
@@ -63,9 +63,24 @@ object CncLemmatizeCorpus {
 
   private def lemmatize(outputs: Map[Int, String]): scala.collection.immutable.Map[Int, List[(String, String)]] = {
     val TerminalRe = """.*t\(\S+, ?'(\S+)', ?'(\S+)', ?'\S+', ?'\S+', ?'\S+'\).*""".r
-    val lemmatized =
-      outputs.mapValuesStrict(output =>
-        output.split("\n").collect { case TerminalRe(word, lemma) => (word, lemma) }.toList)
-    lemmatized
+    outputs.mapValuesStrict(_.split("\n").collect { case TerminalRe(word, lemma) => (cleanEscaped(word), cleanEscaped(lemma)) }.toList)
+  }
+
+  private def cleanEscaped(s: String) = {
+    val len = s.length
+    val out = new ListBuffer[Char]
+    var inquote = false
+    for (i <- 0 until len) {
+      if (!inquote) {
+        if (s(i) == '\\')
+          inquote = true
+        else
+          out += s(i)
+      } else { //if(inquote)
+        out += s(i)
+        inquote = false
+      }
+    }
+    out.mkString("")
   }
 }
