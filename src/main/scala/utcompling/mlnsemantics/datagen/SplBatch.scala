@@ -1,19 +1,8 @@
 package utcompling.mlnsemantics.datagen
 
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.Path
-import org.apache.hadoop.io.{ IntWritable, Text }
-import org.apache.hadoop.mapreduce.{ Job, Mapper, Reducer }
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat
-import org.apache.hadoop.util.GenericOptionsParser
 import scala.collection.JavaConversions._
 import utcompling.scalalogic.util.FileUtils._
 import utcompling.scalalogic.util.CollectionUtils._
-import utcompling.scalalogic.discourse.candc.call.impl.CandcImpl
-import utcompling.scalalogic.discourse.DiscourseInterpreter
-import scala.collection.mutable.ListBuffer
-import scala.collection.mutable.{ Map => MMap }
 
 /**
  * Convert a sentence-per-line file into a file that has 'batchSize'
