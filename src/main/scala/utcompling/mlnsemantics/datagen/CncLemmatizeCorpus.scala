@@ -15,6 +15,20 @@ import utcompling.scalalogic.discourse.DiscourseInterpreter
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.{ Map => MMap }
 
+/**
+ * 
+ * 
+ * HOW TO RUN:
+ * 
+ * cd ~
+ * vi ~/.hadoop2/conf/hadoop-env.sh: export HADOOP_HEAPSIZE=2000
+ * ./fix_HDFS.sh
+ * cd mln-semantics
+ * sbt assembly
+ * hadoop fs -put /scratch/01899/dhg1/nytgiga.grouped nytgiga.grouped
+ * hadoop jar target/mln-semantics-assembly-0.0.1.jar utcompling.mlnsemantics.datagen.CncLemmatizeCorpus nytgiga.grouped nytgiga.lem
+ * hadoop fs -getmerge nytgiga.lem.out /scratch/01899/dhg1/nytgiga.lem
+ */
 object CncLemmatizeCorpus {
   def main(args: Array[String]) {
     val List(inputFile, outputFile) = args.toList
