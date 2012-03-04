@@ -1,5 +1,12 @@
 package utcompling.mlnsemantics.datagen
 
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.Path
+import org.apache.hadoop.io.{ IntWritable, Text }
+import org.apache.hadoop.mapreduce.{ Job, Mapper, Reducer }
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat
+import org.apache.hadoop.util.GenericOptionsParser
 import scala.collection.JavaConversions._
 import utcompling.scalalogic.util.FileUtils._
 import utcompling.scalalogic.util.CollectionUtils._
@@ -10,34 +17,49 @@ import scala.collection.mutable.{ Map => MMap }
 
 object CncLemmatizeCorpus {
   def main(args: Array[String]) {
-    val candc = CandcImpl.findBinary(Some(pathjoin(System.getenv("HOME"), "bin/candc/bin")))
+    val List(inputFile, outputFile) = args.toList
 
-    val N = 500
-
-    for ((sentences, g) <- io.Source.fromFile("data/nytgiga.spl").getLines.map(s => Tokenize(s).mkString(" ")).grouped(N).zipWithIndex) {
-      val lemmatized = parseToLemmas(candc, sentences)
-
-      //for ((s, i) <- sentences.zipWithIndex) {
-      //  println(s)
-      //  println(lemmatized.get(i))
-      //  println()
-      //}
-
-      writeUsing("data/nytgiga-cnc-lemma-%06d.spl".format(g)) { f =>
-        for (
-          i <- 0 to N;
-          s <- lemmatized.get(i)
-        ) f.write(s.map(_._2).mkString("", " ", "\n"))
-      }
-    }
+    val conf = new Configuration()
+    val job = new Job(conf, "CncLemmatizeCorpus")
+    job.setJarByClass(classOf[CncLemmatizeCorpusMapper])
+    job.setMapperClass(classOf[CncLemmatizeCorpusMapper])
+    job.setReducerClass(classOf[CncLemmatizeCorpusReducer])
+    job.setOutputKeyClass(classOf[IntWritable])
+    job.setOutputValueClass(classOf[Text])
+    job.setNumReduceTasks(1)
+    FileInputFormat.addInputPath(job, new Path(inputFile))
+    FileOutputFormat.setOutputPath(job, new Path(outputFile + ".out"))
+    if (!job.waitForCompletion(true))
+      throw new RuntimeException("Job Failed")
   }
 
-  private def parseToLemmas(candc: utcompling.scalalogic.discourse.candc.call.impl.CandcImpl, sentences: Seq[java.lang.String]): scala.collection.immutable.Map[Int, List[(String, String)]] = {
+}
+
+class CncLemmatizeCorpusMapper extends Mapper[Object, Text, IntWritable, Text] {
+  private[this] val candc = CandcImpl.findBinary(Some(pathjoin(System.getenv("HOME"), "bin/candc/bin")))
+
+  private[this] val returnKey = new IntWritable
+  private[this] var returnVal = new Text
+
+  override def map(key: Object, value: Text, context: Mapper[Object, Text, IntWritable, Text]#Context) {
+    val Array(batchNum, sentences @ _*) = value.toString.split("\t")
+
+    val tokenized = sentences.map(s => Tokenize(s).mkString(" "))
+    val lemmatized = parseToLemmas(tokenized)
+    val lemmasOnly = lemmatized.flatten.map(_.map(_._2).mkString(" "))
+
+    returnKey.set(batchNum.toInt)
+    returnVal.set(lemmasOnly.mkString("\t"))
+    context.write(returnKey, returnVal)
+  }
+
+  private def parseToLemmas(sentences: Seq[java.lang.String]): Seq[Option[List[(String, String)]]] = {
     val candcArgs = Map[String, String](
       "--candc-printer" -> "boxer")
     val candcOut = candc.batchParse(sentences, candcArgs, None, Some("boxer"))
     val outputs = splitOutput(candcOut)
-    lemmatize(outputs)
+    val lemmatized = lemmatize(outputs)
+    sentences.indices.map(lemmatized.get)
   }
 
   private def splitOutput(candcOut: String): Map[Int, String] = {
@@ -61,7 +83,7 @@ object CncLemmatizeCorpus {
     outputs.toMap
   }
 
-  private def lemmatize(outputs: Map[Int, String]): scala.collection.immutable.Map[Int, List[(String, String)]] = {
+  private def lemmatize(outputs: Map[Int, String]): Map[Int, List[(String, String)]] = {
     val TerminalRe = """.*t\(\S+, ?'(\S+)', ?'(\S+)', ?'\S+', ?'\S+', ?'\S+'\).*""".r
     outputs.mapValuesStrict(_.split("\n").collect { case TerminalRe(word, lemma) => (cleanEscaped(word), cleanEscaped(lemma)) }.toList)
   }
@@ -82,5 +104,17 @@ object CncLemmatizeCorpus {
       }
     }
     out.mkString("")
+  }
+}
+
+class CncLemmatizeCorpusReducer extends Reducer[IntWritable, Text, Text, Text] {
+  val empty = new Text("")
+  val result = new Text
+
+  override def reduce(key: IntWritable, values: java.lang.Iterable[Text], context: Reducer[IntWritable, Text, Text, Text]#Context) {
+    for (sentence <- values.flatMap(_.toString.split("\t"))) {
+      result.set(sentence)
+      context.write(result, empty)
+    }
   }
 }
