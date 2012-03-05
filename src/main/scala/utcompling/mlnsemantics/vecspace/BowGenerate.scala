@@ -19,6 +19,17 @@ import org.apache.log4j.Level
 
 /**
  *
+ *
+ * HOW TO RUN:
+ *
+ * cd ~
+ * vi ~/.hadoop2/conf/hadoop-env.sh: export HADOOP_HEAPSIZE=2000
+ * ./fix_HDFS.sh
+ * cd mln-semantics
+ * sbt package-hadoop
+ * hadoop fs -put /scratch/01899/dhg1/nytgiga.lem nytgiga.lem
+ * hadoop jar target/mln-semantics-hadoop-0.0.1.jar utcompling.mlnsemantics.vecspace.BowGenerate nytgiga.lem nytgiga.lem.vc.out
+ * hadoop fs -getmerge nytgiga.lem.vc.out /scratch/01899/dhg1/nytgiga.lem.vc
  */
 object BowGenerate {
 
@@ -48,8 +59,8 @@ object BowGenerate {
 
     // Get scalar number of sentences
     val numSentences =
-      fromTextFile(inputFile).map(_ => ("", 1)).groupByKey.combine((_: Int) + (_: Int)).toIterable.toList match {
-        case List(("", n)) => n
+      fromTextFile(inputFile).map(_ => 1).sum.toIterable.toList match {
+        case List(n) => n
         case l => throw new RuntimeException("numSentences = " + l)
       }
     println("numSentences = " + numSentences)
