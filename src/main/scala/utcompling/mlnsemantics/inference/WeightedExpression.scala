@@ -1,6 +1,6 @@
 package utcompling.mlnsemantics.inference
 
-case class WeightedExpression[T] {
+class WeightedExpression[T] {
 
 }
 
