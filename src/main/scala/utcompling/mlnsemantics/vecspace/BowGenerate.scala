@@ -14,18 +14,23 @@ import com.nicta.scoobi.DList._
 import com.nicta.scoobi.io.text.TextInput._
 import com.nicta.scoobi.io.text.TextOutput._
 import java.io.File
+import org.apache.log4j.Logger
+import org.apache.log4j.Level
 
 /**
  *
  */
 object BowGenerate {
 
-  val MIN_COUNT = 10 //50
-  val NUM_FEATURES = 20 //00
+  val MIN_COUNT = 50
+  val NUM_FEATURES = 2000
   val WINDOW_SIZE = scala.Int.MaxValue
   val punctuation = Set(".", ",", "``", "''", "'", "`", "--", ":", ";", "-RRB-", "-LRB-", "?", "!", "-RCB-", "-LCB-", "...")
 
   def main(allArgs: Array[String]) = withHadoopArgs(allArgs) { args =>
+    Logger.getRootLogger.setLevel(Level.ERROR)
+    Logger.getLogger("scoobi").setLevel(Level.INFO)
+
     val List(inputFile, outputFile) = args.toList
 
     val allWordsSorted = getSortedCounts(inputFile)
