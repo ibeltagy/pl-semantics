@@ -28,40 +28,44 @@ object BowGenerate {
   def main(allArgs: Array[String]) = withHadoopArgs(allArgs) { args =>
     val List(inputFile, outputFile) = args.toList
 
-    new File(outputFile).recursiveDelete() // TODO: REMOVE
+    val allWordsSorted = getSortedCounts(inputFile)
+    println("ALL WORDS:")
+    allWordsSorted.foreach(println)
+    val features = allWordsSorted.take(NUM_FEATURES).toSet
 
-    val sortedCounts = getSortedCounts(inputFile)
-    val allWords = sortedCounts.map(_._2).toSet
-    val features = sortedCounts.take(NUM_FEATURES).map(_._2).toSet
-    features.foreach(println)
-
-    val vectors = getSentenceContexts(inputFile, features, allWords)
+    val vectors = getSentenceContexts(inputFile, features, allWordsSorted.toSet)
     val vectorStrings = vectors.map { case (word, vector) => "%s\t%s".format(word, vector.map { case (feature, count) => "%s\t%d".format(feature, count) }.mkString("\t")) }
     persist(toTextFile(vectorStrings, outputFile))
-
-    //    vectorStrings.toIterable.foreach(println)
-
-    //val strings = counts.map { case (w, c) => "%s\t%d".format(w, c) }
-
   }
 
   def getSortedCounts(inputFile: String) = {
     // Get the count of each word in the corpus
-    val counts: DList[(String, Int)] =
+    val counts: DList[(String, (Int, Int))] =
       fromTextFile(inputFile)
-        .flatMap(_.trim.split(" "))
-        .map(word => (word, -1))
+        .flatMap(_ // for each sentence
+          .trim // remove trailing space
+          .split(" ").toList // split into individual tokens
+          .counts // map words to the number of times they appear in this sentence
+          .map {
+            // map word to its count in the sentence AND a count of 1 document 
+            // that they word has appeared in. 
+            case (word, count) => (word, (count, 1))
+          })
         .groupByKey
-        .combine(_ + _)
+        .combine { case ((tf1: Int, df1: Int), (tf2: Int, df2: Int)) => (tf1 + tf2, df1 + df2) }
 
     // Keep only the non-punctuation words occurring more than MIN_COUNT times
-    val filteredCounts = counts.filter { case (w, c) => -c >= MIN_COUNT && !punctuation(w) }
+    val filteredCounts = counts.filter { case (w, (tf, df)) => tf >= MIN_COUNT && !punctuation(w) }
+
+    // Compute TF-IDF value for each word (negated so that sorting works out)
+    // (Note: We use 1 instead of the actual number of documents b/c all we care about is the ordering.) 
+    val tfidfs = filteredCounts.map { case (word, (tf, df)) => (word, -tf * math.log(1.0 / df)) }
 
     // Sort by frequency
-    val sortedCounts: DList[(Int, String)] =
-      filteredCounts.map(_.swap)
+    val sortedCounts: DList[String] =
+      tfidfs.map(_.swap)
         .groupByKey
-        .flatMap { case (count, words) => words.map(word => (-count, word)) }
+        .flatMap(_._2)
 
     sortedCounts.toIterable
   }
