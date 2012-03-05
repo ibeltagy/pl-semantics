@@ -46,8 +46,16 @@ object BowGenerate {
   def getSortedCounts(inputFile: String) = {
     val DUMMY = ""
 
+    // Get scalar number of sentences
+    val numSentences =
+      fromTextFile(inputFile).map(_ => ("", 1)).groupByKey.combine((_: Int) + (_: Int)).toIterable.toList match {
+        case List(("", n)) => n
+        case l => throw new RuntimeException("numSentences = " + l)
+      }
+    println("numSentences = " + numSentences)
+
     // Get the count of each word in the corpus
-    val countsWithDummy: DList[(String, (Int, Int))] =
+    val counts: DList[(String, (Int, Int))] =
       fromTextFile(inputFile)
         .flatMap(_ // for each sentence
           .trim // remove trailing space
@@ -57,16 +65,9 @@ object BowGenerate {
             // map word to its count in the sentence AND a count of 1 document 
             // that they word has appeared in. 
             case (word, count) => (word, (count, 1))
-          } + (DUMMY -> (0, 1))) // add a dummy word to count the total number of sentences
+          }) // add a dummy word to count the total number of sentences
         .groupByKey
         .combine { case ((tf1: Int, df1: Int), (tf2: Int, df2: Int)) => (tf1 + tf2, df1 + df2) }
-
-    // Extract the sentence-counting dummy
-    val (dummyCount, counts) = countsWithDummy.partition { case (word, _) => word == DUMMY }
-
-    // Get scalar number of sentences
-    val List((_, (_, numSentences))) = dummyCount.toIterable.toList
-    println("numSentences = " + numSentences)
 
     // Keep only the non-punctuation words occurring more than MIN_COUNT times
     val filteredCounts = counts.filter { case (w, (tf, df)) => tf >= MIN_COUNT && !punctuation(w) }

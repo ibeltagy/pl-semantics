@@ -6,10 +6,15 @@ import scala.annotation.tailrec
 
 object BowVectorSpace {
   def apply(filename: String) = {
-    io.Source.fromFile(filename).getLines.map(_.split("\t")).map {
+    io.Source.fromFile(filename).getLines.map(_.split("\t")).flatMap {
       case Array(word, vector @ _*) =>
         val pairs = vector.grouped(2).map { case Seq(feature, count) => (feature, count.toDouble) }
-        word -> new BowVector(pairs.toMap)
+        if (pairs.nonEmpty)
+          Some(word -> new BowVector(pairs.toMap))
+        else {
+          println("Empty vector: " + word)
+          None
+        }
     }.toMap
   }
 }
@@ -39,7 +44,7 @@ class BowVector(val counts: Map[String, Double]) {
         case (Nil, (bS, bD) :: bTail) =>
           doZip(Nil, bTail, ((bS, 0.0), (bS, bD)) :: accum)
         case (Nil, Nil) =>
-          accum.reverse
+          accum
       }
     }
 
