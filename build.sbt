@@ -34,12 +34,13 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.cloudera.crunch" % "crunch" % "0.2.0" excludeAll(
-    ExclusionRule(organization = "com.sun.jdmk"),
-    ExclusionRule(organization = "com.sun.jmx"),
-    ExclusionRule(organization = "javax.jms")
-  ),
-  "org.apache.hbase" % "hbase" % "0.90.3-cdh3u1" % "provided" excludeAll(
+  "com.google.guava" % "guava" % "r09",
+  "org.apache.avro" % "avro-mapred" % "1.6.0",
+  "org.codehaus.jackson" % "jackson-core-asl" % "1.8.3",
+  "org.codehaus.jackson" % "jackson-mapper-asl" % "1.8.3",
+  "org.codehaus.jackson" % "jackson-smile" % "1.8.6",
+  "org.slf4j" % "slf4j-log4j12" % "1.6.1",
+  "org.apache.hbase" % "hbase" % "0.90.3-cdh3u1" excludeAll(
     ExclusionRule(organization = "org.apache.hadoop"),
     ExclusionRule(organization = "commons-logging"),
     ExclusionRule(organization = "com.google.guava"),
