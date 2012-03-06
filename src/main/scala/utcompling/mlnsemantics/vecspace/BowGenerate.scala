@@ -1,6 +1,5 @@
 package utcompling.mlnsemantics.vecspace
 
-import utcompling.mlnsemantics.util.ScoobiUtil._
 import scala.collection.JavaConversions._
 import utcompling.scalalogic.util.FileUtils._
 import utcompling.scalalogic.util.CollectionUtils._
@@ -8,14 +7,12 @@ import utcompling.scalalogic.discourse.candc.call.impl.CandcImpl
 import utcompling.scalalogic.discourse.DiscourseInterpreter
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.{ Map => MMap }
-import com.nicta.scoobi.Scoobi._
-import com.nicta.scoobi.DList
-import com.nicta.scoobi.DList._
-import com.nicta.scoobi.io.text.TextInput._
-import com.nicta.scoobi.io.text.TextOutput._
 import java.io.File
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
+import com.cloudera.crunch.io.{ From => from, To => to }
+import com.cloudera.scrunch._
+import com.cloudera.scrunch.Conversions._
 
 /**
  *
@@ -33,12 +30,12 @@ import org.apache.log4j.Level
  */
 object BowGenerate {
 
-  val MIN_COUNT = 50
-  val NUM_FEATURES = 2000
+  val MIN_COUNT = 10//50
+  val NUM_FEATURES = 20//00
   val WINDOW_SIZE = scala.Int.MaxValue
   val punctuation = Set(".", ",", "``", "''", "'", "`", "--", ":", ";", "-RRB-", "-LRB-", "?", "!", "-RCB-", "-LCB-", "...")
 
-  def main(allArgs: Array[String]) = withHadoopArgs(allArgs) { args =>
+  def main(args: Array[String]) {
     Logger.getRootLogger.setLevel(Level.ERROR)
     Logger.getLogger("scoobi").setLevel(Level.INFO)
 
@@ -50,20 +47,25 @@ object BowGenerate {
     val features = allWordsSorted.take(NUM_FEATURES).map(_._1).toSet
 
     val vectors = getBowVectors(inputFile, features, allWordsSorted.toMap)
-    val vectorStrings = vectors.map { case (word, vector) => "%s\t%s".format(word, vector.map { case (feature, count) => "%s\t%s".format(feature, count) }.mkString("\t")) }
-    persist(toTextFile(vectorStrings, outputFile))
+    val vectorStrings = vectors.map {
+      case (word, vector) => "%s\t%s".format(word, vector.map {
+        case (feature, count) => "%s\t%s".format(feature, count)
+      }.mkString("\t"))
+    }
+    vectorStrings.write(to.textFile(outputFile))
   }
 
-  def getSortedCounts(inputFile: String) = {
+  def getSortedCounts(inputFile: String): Iterable[(String, Double)] = {
     val DUMMY = ""
 
     // Get scalar number of sentences
-    val numSentences = fromTextFile(inputFile).map(_ => 1).sum.materializeGet(_.toInt)
+    val List((1, numSentences)) = new Pipeline[CountSentences].read(from.textFile(inputFile)).map(_ => 1).count.materialize.toList
     println("numSentences = " + numSentences)
 
     // Get the count of each word in the corpus
-    val counts: DList[(String, (Int, Int))] =
-      fromTextFile(inputFile)
+    val counts: PTable[String, (Int, Int)] =
+      new Pipeline[GetSortedCounts]
+        .read(from.textFile(inputFile))
         .flatMap(_ // for each sentence
           .trim // remove trailing space
           .split(" ").toList // split into individual tokens
@@ -74,7 +76,10 @@ object BowGenerate {
             case (word, count) => (word, (count, 1))
           }) // add a dummy word to count the total number of sentences
         .groupByKey
-        .combine { case ((tf1: Int, df1: Int), (tf2: Int, df2: Int)) => (tf1 + tf2, df1 + df2) }
+        .combine { tfdfCounts =>
+          val (tfCounts, dfCounts) = tfdfCounts.unzip
+          (tfCounts.sum, dfCounts.sum)
+        }
 
     // Keep only the non-punctuation words occurring more than MIN_COUNT times
     val filteredCounts = counts.filter { case (w, (tf, df)) => tf >= MIN_COUNT && !punctuation(w) }
@@ -83,13 +88,14 @@ object BowGenerate {
     val tfidfs = filteredCounts.map { case (word, (tf, df)) => (-tf * math.log(numSentences.toDouble / df), word) }
 
     // Sort by frequency
-    val sortedTfidfs: DList[(String, Double)] = tfidfs.groupByKey.flatMap { case (tfidf, words) => words.map(_ -> -tfidf) }
+    val sortedTfidfs: PTable[String, Double] = tfidfs.groupByKey.flatMap { case (tfidf, words) => words.map(_ -> -tfidf) }
 
-    sortedTfidfs.toIterable
+    sortedTfidfs.materialize
   }
 
   def getBowVectors(inputFile: String, features: Set[String], tfidfs: Map[String, Double]) = {
-    fromTextFile(inputFile)
+    new Pipeline[GetBowVectors]
+      .read(from.textFile(inputFile))
       .map(_ // for each sentence
         .trim // remove trailing space
         .split(" ").toList) // split into individual tokens
@@ -110,4 +116,8 @@ object BowGenerate {
           })
       }
   }
+
+  class CountSentences
+  class GetSortedCounts
+  class GetBowVectors
 }
