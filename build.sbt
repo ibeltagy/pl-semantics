@@ -1,7 +1,5 @@
 import AssemblyKeys._
 
-import com.typesafe.startscript.StartScriptPlugin
-
 name := "mln-semantics"
 
 version := "0.0.1"
@@ -22,8 +20,8 @@ libraryDependencies ++= Seq(
     ExclusionRule(organization = "com.sun.jdmk"),
     ExclusionRule(organization = "com.sun.jmx")
   ),
-  "junit" % "junit" % "4.10" % "test",
-  "com.novocode" % "junit-interface" % "0.6" % "test->default") //switch to ScalaTest at some point...
+  "junit" % "junit" % "4.10" % "test")
+  //"com.novocode" % "junit-interface" % "0.6" % "test->default") //switch to ScalaTest at some point...
 
 
 ////////////////////////////////////////////////////////
@@ -31,7 +29,8 @@ libraryDependencies ++= Seq(
 ////////////////////////////////////////////////////////
 
 resolvers ++= Seq(
-  "Cloudera Hadoop Releases" at "https://repository.cloudera.com/content/repositories/releases/"
+  "Cloudera Hadoop Releases" at "https://repository.cloudera.com/content/repositories/releases/",
+  "Thrift location" at "http://people.apache.org/~rawson/repo/"
 )
 
 libraryDependencies ++= Seq(
@@ -53,7 +52,7 @@ libraryDependencies ++= Seq(
 // END FOR SCRUNCH
 ////////////////////////////////////////////////////////
 
-
-seq(StartScriptPlugin.startScriptForClassesSettings: _*)
+test in assembly := {}
 
 seq(assemblySettings: _*)
+

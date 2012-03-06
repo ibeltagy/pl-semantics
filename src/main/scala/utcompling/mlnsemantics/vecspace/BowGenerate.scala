@@ -25,7 +25,7 @@ import com.cloudera.scrunch.Conversions._
  * cd mln-semantics
  * sbt package-hadoop
  * hadoop fs -put /scratch/01899/dhg1/nytgiga.lem nytgiga.lem
- * hadoop jar target/mln-semantics-hadoop-0.0.1.jar utcompling.mlnsemantics.vecspace.BowGenerate nytgiga.lem nytgiga.lem.vc.out
+ * hadoop jar target/mln-semantics-assembly-0.0.1.jar utcompling.mlnsemantics.vecspace.BowGenerate nytgiga.lem nytgiga.lem.vc.out
  * hadoop fs -getmerge nytgiga.lem.vc.out /scratch/01899/dhg1/nytgiga.lem.vc
  */
 object BowGenerate {
@@ -36,7 +36,7 @@ object BowGenerate {
   val punctuation = Set(".", ",", "``", "''", "'", "`", "--", ":", ";", "-RRB-", "-LRB-", "?", "!", "-RCB-", "-LCB-", "...")
 
   def main(args: Array[String]) {
-    Logger.getRootLogger.setLevel(Level.ERROR)
+    Logger.getRootLogger.setLevel(Level.INFO)
     Logger.getLogger("scoobi").setLevel(Level.INFO)
 
     val List(inputFile, outputFile) = args.toList
