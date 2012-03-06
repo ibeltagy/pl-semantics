@@ -58,11 +58,7 @@ object BowGenerate {
     val DUMMY = ""
 
     // Get scalar number of sentences
-    val numSentences =
-      fromTextFile(inputFile).map(_ => 1).sum.toIterable.toList match {
-        case List(n) => n
-        case l => throw new RuntimeException("numSentences = " + l)
-      }
+    val numSentences = fromTextFile(inputFile).map(_ => 1).sum.materializeGet(_.toInt)
     println("numSentences = " + numSentences)
 
     // Get the count of each word in the corpus
@@ -84,11 +80,10 @@ object BowGenerate {
     val filteredCounts = counts.filter { case (w, (tf, df)) => tf >= MIN_COUNT && !punctuation(w) }
 
     // Compute TF-IDF value for each word (negated so that sorting works out)
-    // (Note: We use 1 instead of the actual number of documents b/c all we care about is the ordering.) 
-    val tfidfs = filteredCounts.map { case (word, (tf, df)) => (word, -tf * math.log(numSentences.toDouble / df)) }
+    val tfidfs = filteredCounts.map { case (word, (tf, df)) => (-tf * math.log(numSentences.toDouble / df), word) }
 
     // Sort by frequency
-    val sortedTfidfs: DList[(String, Double)] = tfidfs.map(_.swap).groupByKey.flatMap { case (tfidf, words) => words.map(_ -> -tfidf) }
+    val sortedTfidfs: DList[(String, Double)] = tfidfs.groupByKey.flatMap { case (tfidf, words) => words.map(_ -> -tfidf) }
 
     sortedTfidfs.toIterable
   }
