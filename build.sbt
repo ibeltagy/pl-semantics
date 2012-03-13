@@ -8,11 +8,6 @@ scalaVersion := "2.9.1"
 
 libraryDependencies ++= Seq(
   "edu.stanford.nlp" % "stanford-corenlp" % "1.3.0",
-  "org.apache.hadoop" % "hadoop-core" % "0.20.2-cdh3u1" excludeAll(
-    ExclusionRule(organization = "com.sun.jdmk"),
-    ExclusionRule(organization = "com.sun.jmx"),
-    ExclusionRule(organization = "javax.jms")
-  ),
   "commons-logging" % "commons-logging" % "1.1.1",
   "log4j" % "log4j" % "1.2.16" excludeAll(
     ExclusionRule(organization = "javax.mail"),
@@ -34,6 +29,11 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
+  "org.apache.hadoop" % "hadoop-core" % "0.20.2-cdh3u1" excludeAll(
+    ExclusionRule(organization = "com.sun.jdmk"),
+    ExclusionRule(organization = "com.sun.jmx"),
+    ExclusionRule(organization = "javax.jms")
+  ),
   "com.google.guava" % "guava" % "r09",
   "org.apache.avro" % "avro-mapred" % "1.6.0",
   "org.codehaus.jackson" % "jackson-core-asl" % "1.8.3",

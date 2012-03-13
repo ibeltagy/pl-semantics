@@ -10,7 +10,7 @@ import scala.collection.mutable.{ Map => MMap }
 import java.io.File
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
-import com.cloudera.crunch.io.{ From => from, To => to }
+import com.cloudera.crunch.io.{ From => from }
 import com.cloudera.scrunch._
 import com.cloudera.scrunch.Conversions._
 
@@ -30,21 +30,20 @@ import com.cloudera.scrunch.Conversions._
  */
 object BowGenerate {
 
-  val MIN_COUNT = 10//50
-  val NUM_FEATURES = 20//00
+  val MIN_COUNT = 50
+  val NUM_FEATURES = 2000
   val WINDOW_SIZE = scala.Int.MaxValue
   val punctuation = Set(".", ",", "``", "''", "'", "`", "--", ":", ";", "-RRB-", "-LRB-", "?", "!", "-RCB-", "-LCB-", "...")
 
   def main(args: Array[String]) {
     Logger.getRootLogger.setLevel(Level.INFO)
-    Logger.getLogger("scoobi").setLevel(Level.INFO)
 
     val List(inputFile, outputFile) = args.toList
 
     val allWordsSorted = getSortedCounts(inputFile)
     println("ALL WORDS:")
-    allWordsSorted.foreach(println)
     val features = allWordsSorted.take(NUM_FEATURES).map(_._1).toSet
+    allWordsSorted.grouped((allWordsSorted.size / 50) + 1).take(20).map(_.head).foreach(println)
 
     val vectors = getBowVectors(inputFile, features, allWordsSorted.toMap)
     val vectorStrings = vectors.map {
@@ -52,7 +51,11 @@ object BowGenerate {
         case (feature, count) => "%s\t%s".format(feature, count)
       }.mkString("\t"))
     }
-    vectorStrings.write(to.textFile(outputFile))
+
+    writeUsing(outputFile) { f =>
+      for (line <- vectorStrings.materialize)
+        f.write(line + "\n")
+    }
   }
 
   def getSortedCounts(inputFile: String): Iterable[(String, Double)] = {
@@ -66,8 +69,10 @@ object BowGenerate {
     val counts: PTable[String, (Int, Int)] =
       new Pipeline[GetSortedCounts]
         .read(from.textFile(inputFile))
-        .flatMap(_ // for each sentence
-          .trim // remove trailing space
+        .map(_ // for each sentence
+          .trim) // remove trailing space
+        .filter(!badLine(_)) // remove weird lines
+        .flatMap(_
           .split(" ").toList // split into individual tokens
           .counts // map words to the number of times they appear in this sentence
           .map {
@@ -91,6 +96,12 @@ object BowGenerate {
     val sortedTfidfs: PTable[String, Double] = tfidfs.groupByKey.flatMap { case (tfidf, words) => words.map(_ -> -tfidf) }
 
     sortedTfidfs.materialize
+  }
+
+  def badLine(s: String) = {
+    Set(
+      "-LRB- STORY CAN END HERE .",
+      "OPTIONAL 2ND TAKE FOLLOWS . -RRB-")(s)
   }
 
   def getBowVectors(inputFile: String, features: Set[String], tfidfs: Map[String, Double]) = {
