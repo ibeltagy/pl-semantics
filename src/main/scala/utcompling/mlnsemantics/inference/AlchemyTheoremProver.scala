@@ -28,6 +28,12 @@ class AlchemyTheoremProver(
 
   private val LOG = LogFactory.getLog(AlchemyTheoremProver.getClass)
 
+  private val entailedConst = ("entail" -> Set("entailed"))
+  private val entailedDec = FolAtom(Variable("entailment"), Variable("entail"))
+  private val entailmentConsequent = FolAtom(Variable("entailment"), Variable("entailed"))
+  private val entailmentConsequentPrior = -1.
+  private val ResultsRE = """entailment\("entailed"\) (\d*\.\d*)""".r
+
   def prove(
     constants: Map[String, Set[String]],
     declarations: List[FolExpression],
@@ -42,16 +48,13 @@ class AlchemyTheoremProver(
       case d => throw new RuntimeException("Only atoms may be declared.  '%s' is not an atom.".format(d))
     }
 
-    val entailedConst = ("entail" -> Set("entailed"))
-    val entailedDec = FolAtom(Variable("entailment"), Variable("entail"))
-    val ResultsRE = """entailment\("entailed"\) (\d*\.\d*)""".r
-
-    val entailedGoal: FolExpression = goal -> FolAtom(Variable("entailment"), Variable("entailed"))
+    val entailedGoal: FolExpression = goal -> entailmentConsequent
 
     val mlnFile = makeMlnFile(
       constants + entailedConst,
       declarations :+ entailedDec,
-      assumptions :+ HardWeightedExpression(entailedGoal))
+      assumptions,
+      goal)
     val evidenceFile = makeEvidenceFile(evidence)
     val resultFile = FileUtils.mktemp(suffix = ".res")
 
@@ -65,7 +68,8 @@ class AlchemyTheoremProver(
   private def makeMlnFile(
     constants: Map[String, Set[String]],
     declarations: List[FolExpression],
-    assumptions: List[WeightedFolEx]) = {
+    assumptions: List[WeightedFolEx],
+    goal: FolExpression) = {
 
     FileUtils.writeUsing(FileUtils.mktemp(suffix = ".mln")) { f =>
       constants.foreach {
@@ -82,6 +86,10 @@ class AlchemyTheoremProver(
         case SoftWeightedExpression(folEx, weight) => f.write(weight + " " + convert(folEx) + "\n")
         case HardWeightedExpression(folEx) => f.write(convert(folEx) + ".\n")
       }
+
+      f.write("\n")
+      f.write(convert(goal -> entailmentConsequent) + ".\n")
+      f.write(entailmentConsequentPrior + " " + convert(entailmentConsequent) + "\n")
     }
   }
 
@@ -95,10 +103,17 @@ class AlchemyTheoremProver(
   }
 
   private def callAlchemy(mln: String, evidence: String, result: String, args: List[String] = List()): Option[String] = {
+    if (LOG.isDebugEnabled) {
+      LOG.debug("mln file:\n" + Source.fromFile(mln).getLines.mkString("\n").trim)
+      LOG.debug("evidence file:\n" + Source.fromFile(evidence).getLines.mkString("\n").trim)
+    }
+
     val allArgs = "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args
     val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, LOG.isDebugEnabled)
 
     val results = Source.fromFile(result).getLines.mkString("\n").trim
+
+    LOG.debug("results file:\n" + results)
 
     exitcode match {
       case 0 =>

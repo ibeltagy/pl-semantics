@@ -22,6 +22,8 @@ import utcompling.scalalogic.fol.expression.FolVariableExpression
 import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.SetBuilder
 import utcompling.scalalogic.fol.expression.FolAtom
+import org.apache.log4j.Logger
+import org.apache.log4j.Level
 
 class TextualTheoremProver(
   ptp: AlchemyTheoremProver) {
@@ -31,6 +33,8 @@ class TextualTheoremProver(
 object TextualTheoremProver {
 
   def main(args: Array[String]) {
+    Logger.getRootLogger.setLevel(Level.DEBUG)
+    
     val atp = new AlchemyTheoremProver(pathjoin(System.getenv("HOME"), "bin/alchemy/bin/infer"))
 
     val natlogInterpreter = new ModalDiscourseInterpreter()
