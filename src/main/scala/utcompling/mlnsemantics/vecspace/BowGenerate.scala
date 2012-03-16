@@ -42,13 +42,13 @@ object BowGenerate {
     var additionalArgs: List[String] = Nil
     if (args.size == 0)
       throw new RuntimeException("Expected arguments: inputFile, outputFile, numFeatures, minWordCount")
-    else if (args.size < 5)
+    if (args.size < 5)
       additionalArgs ::= "2000" // minWordCount
-    else if (args.size < 4)
+    if (args.size < 4)
       additionalArgs ::= "50" // numFeatures
-    else if (args.size < 3)
+    if (args.size < 3)
       additionalArgs ::= "1000000000" // windowSize
-    else if (args.size < 2)
+    if (args.size < 2)
       additionalArgs ::= args(0) + ".vc" // outputFile
 
     val List(inputFile, outputFile, windowSizeString, numFeaturesString, minWordCountString) = args.toList ++ additionalArgs
