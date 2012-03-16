@@ -15,6 +15,8 @@ import org.apache.log4j.Level
 import scala.io.Source
 import org.apache.commons.logging.LogFactory
 import scala.collection.GenMap
+import com.cloudera.scrunch.Conversions._
+import com.cloudera.scrunch._
 
 /**
  *
@@ -56,47 +58,49 @@ object BowGenerate {
     val numFeatures = numFeaturesString.toInt
     val minWordCount = minWordCountString.toInt
 
-    val tfidfs = getTfidfs(inputFile, minWordCount)
+    val pipeline = new Pipeline[BowGenerate]
+    val inputLines =
+      pipeline
+        .read(From.textFile(inputFile))
+        .map(_.trim) // remove trailing space
+        .filter(!badLine(_)) // remove weird lines
+
+    val tfidfs = getTfidfs(inputLines, minWordCount)
     LOG.info("computed all tf-idfs")
 
-    val allWordsSorted = tfidfs.toSeq.toList.sortBy(_._2)
-    val features = allWordsSorted.take(numFeatures).map(_._1).toSet
-    LOG.debug("identified features")
+    val topTfidfs = tfidfs.top(numFeatures, maximize = true).materialize.toList
 
     if (LOG.isDebugEnabled) {
-      LOG.debug("ALL WORDS:")
-      for (x <- allWordsSorted.grouped((allWordsSorted.size / 50) + 1).take(20).map(_.head))
-        LOG.debug("    " + x)
-
       LOG.debug("ALL FEATURES")
-      for (x <- allWordsSorted.take(numFeatures))
+      for (x <- topTfidfs.take(numFeatures))
         LOG.debug("    " + x)
     }
 
-    val vectors = getBowVectors(inputFile, features, tfidfs.seq, windowSize)
+    val features = topTfidfs.map(_._1).toSet
+    LOG.debug("identified features")
+
+    val vectors = getBowVectors(inputLines, features, topTfidfs.toMap, windowSize)
     LOG.debug("calculated all vectors")
 
-    writeUsing(outputFile) { f =>
-      for ((word, vector) <- vectors) {
-        val s =
+    val vectorStrings =
+      vectors.map {
+        case (word, vector) =>
           "%s\t%s".format(word, vector.map {
             case (feature, count) => "%s\t%s".format(feature, count)
           }.mkString("\t"))
-        f.write(s + "\n")
       }
-    }
+
+    pipeline.writeTextFile(vectorStrings, outputFile)
+
+    pipeline.done
   }
 
-  //def top(self: 
-
-  def getTfidfs(inputFile: String, minWordCount: Int) = {
+  def getTfidfs(inputLines: PCollection[String], minWordCount: Int) = {
     val DUMMY = ""
 
     // Get the count of each word in the corpus
     val countsWithDummy =
-      Source.fromFile(inputFile).getLines
-        .map(_.trim) // remove trailing space
-        .filter(!badLine(_)) // remove weird lines
+      inputLines
         .flatMap(_
           .split("\\s+").toList // split into individual tokens
           .counts // map words to the number of times they appear in this sentence
@@ -105,25 +109,25 @@ object BowGenerate {
             // that they word has appeared in. 
             case (word, count) => (word, (count, 1))
           } + (DUMMY -> (1, 1))) // add a dummy word to count the total number of sentences
-        .groupBy(_._1)
-        .par
-        .map {
-          case (w, wordAndTfdfCounts) =>
-            val tfdfCounts = wordAndTfdfCounts.map(_._2)
+        .groupByKey
+        .combine {
+          tfdfCounts =>
             val (tfCounts, dfCounts) = tfdfCounts.unzip
-            (w, (tfCounts.sum, dfCounts.sum))
+            (tfCounts.sum, dfCounts.sum)
         }
 
     // Get scalar number of sentences
-    val (dummies, counts) = countsWithDummy.partition(_._1 == DUMMY)
-    val Pattern.Map((DUMMY, (_, numSentences))) = dummies.seq
+    val List(DUMMY -> (_ -> numSentences)) = countsWithDummy.filter((w, c) => w == DUMMY).materialize.toList
     println("numSentences = " + numSentences)
+
+    // Get the real word counts (non-dummy)
+    val counts = countsWithDummy.filter((w, c) => w != DUMMY)
 
     // Keep only the non-punctuation words occurring more than MIN_COUNT times
     val filteredCounts = counts.filter { case (w, (tf, df)) => tf >= minWordCount && !punctuation(w) }
 
     // Compute TF-IDF value for each word
-    val tfidfs = filteredCounts.map { case (word, (tf, df)) => (word, tf * math.log(numSentences.toDouble / df)) }
+    val tfidfs = filteredCounts.mapValues { case (tf, df) => tf * math.log(numSentences.toDouble / df) }
 
     tfidfs
   }
@@ -134,10 +138,8 @@ object BowGenerate {
       "OPTIONAL 2ND TAKE FOLLOWS . -RRB-")(s)
   }
 
-  def getBowVectors(inputFile: String, features: Set[String], tfidfs: Map[String, Double], windowSize: Int) = {
-    Source.fromFile(inputFile).getLines
-      .map(_.trim) // remove trailing space
-      .filter(!badLine(_)) // remove weird lines
+  def getBowVectors(inputLines: PCollection[String], features: Set[String], tfidfs: Map[String, Double], windowSize: Int) = {
+    inputLines
       .flatMap { line => // take the line
         val tokens = line.split(" ").toList // split into individual tokens
         tokens.zipWithIndex.collect {
@@ -148,17 +150,16 @@ object BowGenerate {
             (token, featuresInWindow)
         }
       }
-      .groupBy(_._1)
-      .par
-      .map {
-        case (word, wordsAndContexts) => {
-          val contexts = wordsAndContexts.flatMap(_._2)
-          (word, contexts.counts.map { // convert contexts to feature counts
-            case (feature, count) =>
-              (feature, count * tfidfs(feature)) // scale feature counts by the TF-IDF of the feature
-          })
+      .groupByKey
+      .ungroup
+      .mapValues {
+        _.counts.map { // convert contexts to feature counts
+          case (feature, count) =>
+            (feature, count * tfidfs(feature)) // scale feature counts by the TF-IDF of the feature
         }
       }
   }
 
 }
+
+class BowGenerate
