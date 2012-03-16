@@ -39,7 +39,8 @@ object BowGenerate {
   val punctuation = Set(".", ",", "``", "''", "'", "`", "--", ":", ";", "-RRB-", "-LRB-", "?", "!", "-RCB-", "-LCB-", "...")
 
   def main(args: Array[String]) {
-    Logger.getRootLogger.setLevel(Level.DEBUG)
+    Logger.getRootLogger.setLevel(Level.INFO)
+    Logger.getLogger("utcompling").setLevel(Level.DEBUG)
 
     var additionalArgs: List[String] = Nil
     if (args.size == 0)
