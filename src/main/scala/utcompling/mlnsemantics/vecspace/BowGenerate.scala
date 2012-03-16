@@ -17,6 +17,7 @@ import org.apache.commons.logging.LogFactory
 import scala.collection.GenMap
 import com.cloudera.scrunch.Conversions._
 import com.cloudera.scrunch._
+import Avros._
 
 /**
  *
@@ -36,28 +37,33 @@ object BowGenerate {
   val LOG = LogFactory.getLog(BowGenerate.getClass)
 
   val WINDOW_SIZE = scala.Int.MaxValue
-  val punctuation = Set(".", ",", "``", "''", "'", "`", "--", ":", ";", "-RRB-", "-LRB-", "?", "!", "-RCB-", "-LCB-", "...")
+  val punctuation = Set(".", ",", "``", "''", "'", "`", "--", ":", ";", "-RRB-", "-LRB-", "?", "!", "-RCB-", "-LCB-", "...", "-", "_")
 
   def main(args: Array[String]) {
     Logger.getRootLogger.setLevel(Level.INFO)
     Logger.getLogger("utcompling").setLevel(Level.DEBUG)
 
-    var additionalArgs: List[String] = Nil
-    if (args.size == 0)
-      throw new RuntimeException("Expected arguments: inputFile, outputFile, numFeatures, minWordCount")
-    if (args.size < 5)
-      additionalArgs ::= "2000" // minWordCount
-    if (args.size < 4)
-      additionalArgs ::= "50" // numFeatures
-    if (args.size < 3)
-      additionalArgs ::= "1000000000" // windowSize
-    if (args.size < 2)
-      additionalArgs ::= args(0) + ".vc" // outputFile
+    val DEFAULT_NUM_FEATURES = "2000"
+    val DEFAULT_MIN_WORD_COUNT = "50"
+    val DEFAULT_WINDOW_SIZE = "Inf"
 
-    val List(inputFile, outputFile, windowSizeString, numFeaturesString, minWordCountString) = args.toList ++ additionalArgs
-    val windowSize = windowSizeString.toInt
+    var additionalArgs: List[String] = Nil
+    if (args.size + additionalArgs.size < 4)
+      additionalArgs ::= DEFAULT_WINDOW_SIZE
+    if (args.size + additionalArgs.size < 4)
+      additionalArgs ::= DEFAULT_MIN_WORD_COUNT
+    if (args.size + additionalArgs.size < 4)
+      additionalArgs ::= DEFAULT_NUM_FEATURES
+    if (args.size + additionalArgs.size < 4)
+      throw new RuntimeException("Expected arguments: inputFile, numFeatures, minWordCount, windowSize")
+
+    val List(inputFile, numFeaturesString, minWordCountString, windowSizeString) = args.toList ++ additionalArgs.reverse
+    val outputFile = "%s.vc.f%s.m%s.w%s".format(inputFile, numFeaturesString, minWordCountString, windowSizeString)
     val numFeatures = numFeaturesString.toInt
     val minWordCount = minWordCountString.toInt
+    val windowSize = windowSizeString.toLowerCase match { case "inf" => Int.MaxValue; case s => s.toInt }
+
+    LOG.info("outputFile = " + outputFile)
 
     val pipeline = new Pipeline[BowGenerate]
     val inputLines =
@@ -69,16 +75,18 @@ object BowGenerate {
     val tfidfs = getTfidfs(inputLines, minWordCount)
     LOG.info("computed all tf-idfs")
 
-    val topTfidfs = tfidfs.top(numFeatures, maximize = true).materialize.toMap
+    val topTfidfsP = tfidfs.top(numFeatures, maximize = true)
+    val topTfidfs = topTfidfsP.materialize.toMap
 
     if (LOG.isDebugEnabled) {
-      LOG.debug("ALL FEATURES")
-      for (x <- topTfidfs.toList.sorted.take(numFeatures))
-        LOG.debug("    " + x)
+      LOG.info("ALL FEATURES")
+      for ((word, (tfidf /*, (tf, df)*/)) <- topTfidfs.toList.sorted.take(numFeatures))
+        //LOG.info("    %s\t%f.3\t%d\t%d".format(word, tfidf, tf, df))
+        LOG.info("    %s\t%f.3".format(word, tfidf))
     }
 
-    val vectors = getBowVectors(inputLines, topTfidfs, windowSize)
-    LOG.debug("calculated all vectors")
+    val vectors = getBowVectors(inputLines, topTfidfs/*.mapValuesStrict(_._1)*/, windowSize)
+    LOG.info("calculated all vectors")
 
     val featureList = topTfidfs.keys.toList.sorted
     val vectorStrings =
@@ -87,7 +95,7 @@ object BowGenerate {
           val vecString =
             featureList.map { f =>
               vector.get(f) match {
-                case Some(v) => "%s\t%.3f".format(f, v)
+                case Some(v) => "%s\t%s".format(f, v)
                 case None => "\t"
               }
             }.mkString("\t")
@@ -128,10 +136,10 @@ object BowGenerate {
     val counts = countsWithDummy.filter((w, c) => w != DUMMY)
 
     // Keep only the non-punctuation words occurring more than MIN_COUNT times
-    val filteredCounts = counts.filter { case (w, (tf, df)) => tf >= minWordCount && !punctuation(w) } // TODO: CAUSES ERROR
+    val filteredCounts = counts.filter { case (w, (tf, df)) => tf >= minWordCount && !punctuation(w.toLowerCase) }
 
     // Compute TF-IDF value for each word
-    val tfidfs = filteredCounts.mapValues { case (tf, df) => tf * math.log(numSentences.toDouble / df) }
+    val tfidfs = filteredCounts.mapValues { case (tf, df) => (tf * math.log(numSentences.toDouble / df) /*, (tf, df)*/ ) }
 
     tfidfs
   }
@@ -164,6 +172,11 @@ object BowGenerate {
           })
       }
   }
+
+  //  case class TfidfTriple(var _1: Double, var _2: Int, var _3: Int) extends java.lang.Comparable[TfidfTriple] {
+  //    def this() = this(0., 0, 0)
+  //    def compareTo(that: TfidfTriple): Int = this._1.compareTo(that._1)
+  //  }
 
 }
 
