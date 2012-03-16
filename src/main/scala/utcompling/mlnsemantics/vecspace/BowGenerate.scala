@@ -69,26 +69,29 @@ object BowGenerate {
     val tfidfs = getTfidfs(inputLines, minWordCount)
     LOG.info("computed all tf-idfs")
 
-    val topTfidfs = tfidfs.top(numFeatures, maximize = true).materialize.toList
+    val topTfidfs = tfidfs.top(numFeatures, maximize = true).materialize.toMap
 
     if (LOG.isDebugEnabled) {
       LOG.debug("ALL FEATURES")
-      for (x <- topTfidfs.take(numFeatures))
+      for (x <- topTfidfs.toList.sorted.take(numFeatures))
         LOG.debug("    " + x)
     }
 
-    val features = topTfidfs.map(_._1).toSet
-    LOG.debug("identified features")
-
-    val vectors = getBowVectors(inputLines, features, topTfidfs.toMap, windowSize)
+    val vectors = getBowVectors(inputLines, topTfidfs, windowSize)
     LOG.debug("calculated all vectors")
 
+    val featureList = topTfidfs.keys.toList.sorted
     val vectorStrings =
       vectors.map {
         case (word, vector) =>
-          "%s\t%s".format(word, vector.map {
-            case (feature, count) => "%s\t%s".format(feature, count)
-          }.mkString("\t"))
+          val vecString =
+            featureList.map { f =>
+              vector.get(f) match {
+                case Some(v) => "%s\t%.3f".format(f, v)
+                case None => "\t"
+              }
+            }.mkString("\t")
+          "%s\t%s".format(word, vecString)
       }
 
     pipeline.writeTextFile(vectorStrings, outputFile)
@@ -125,7 +128,7 @@ object BowGenerate {
     val counts = countsWithDummy.filter((w, c) => w != DUMMY)
 
     // Keep only the non-punctuation words occurring more than MIN_COUNT times
-    val filteredCounts = counts.filter { case (w, (tf, df)) => tf >= minWordCount && !punctuation(w) }
+    val filteredCounts = counts.filter { case (w, (tf, df)) => tf >= minWordCount && !punctuation(w) } // TODO: CAUSES ERROR
 
     // Compute TF-IDF value for each word
     val tfidfs = filteredCounts.mapValues { case (tf, df) => tf * math.log(numSentences.toDouble / df) }
@@ -139,7 +142,8 @@ object BowGenerate {
       "OPTIONAL 2ND TAKE FOLLOWS . -RRB-")(s)
   }
 
-  def getBowVectors(inputLines: PCollection[String], features: Set[String], tfidfs: Map[String, Double], windowSize: Int) = {
+  def getBowVectors(inputLines: PCollection[String], tfidfs: Map[String, Double], windowSize: Int) = {
+    val features = Set() ++ tfidfs.keySet //make a serializable feature set
     inputLines
       .flatMap { line => // take the line
         val tokens = line.split(" ").toList // split into individual tokens
@@ -152,12 +156,12 @@ object BowGenerate {
         }
       }
       .groupByKey
-      .ungroup
-      .mapValues {
-        _.counts.map { // convert contexts to feature counts
-          case (feature, count) =>
-            (feature, count * tfidfs(feature)) // scale feature counts by the TF-IDF of the feature
-        }
+      .map {
+        case (word, contexts) =>
+          (word, contexts.flatten.counts.map { // convert contexts to feature counts
+            case (feature, count) =>
+              (feature, count * tfidfs(feature)) // scale feature counts by the TF-IDF of the feature
+          })
       }
   }
 
