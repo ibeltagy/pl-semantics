@@ -5,6 +5,7 @@ import utcompling.scalalogic.util.FileUtils._
 import utcompling.scalalogic.util.CollectionUtils._
 import utcompling.scalalogic.util.Pattern
 import utcompling.scalalogic.util.Pattern.{ -> }
+import utcompling.mlnsemantics.util.Scrunch._
 import utcompling.scalalogic.discourse.candc.call.impl.CandcImpl
 import utcompling.scalalogic.discourse.DiscourseInterpreter
 import scala.collection.mutable.ListBuffer
@@ -18,6 +19,9 @@ import scala.collection.GenMap
 import com.cloudera.scrunch.Conversions._
 import com.cloudera.scrunch._
 import Avros._
+import utcompling.mlnsemantics.data.Stopwords
+import math.log
+import com.cloudera.crunch.impl.mem.MemPipeline
 
 /**
  *
@@ -36,8 +40,10 @@ import Avros._
 object BowGenerate {
   val LOG = LogFactory.getLog(BowGenerate.getClass)
 
-  val WINDOW_SIZE = scala.Int.MaxValue
-  val punctuation = Set(".", ",", "``", "''", "'", "`", "--", ":", ";", "-RRB-", "-LRB-", "?", "!", "-RCB-", "-LCB-", "...", "-", "_")
+  val punctuation = (w: String) => Set(".", ",", "``", "''", "'", "`", "--", ":", ";", "-RRB-", "-LRB-", "?", "!", "-RCB-", "-LCB-", "...", "-", "_")(w.toUpperCase)
+  val stopwords = (w: String) => punctuation(w) // || Stopwords.get(w) TODO: remove stopwords?
+
+  val Log2 = log(2)
 
   def main(args: Array[String]) {
     Logger.getRootLogger.setLevel(Level.INFO)
@@ -65,7 +71,7 @@ object BowGenerate {
 
     LOG.info("outputFile = " + outputFile)
 
-    val pipeline = new Pipeline[BowGenerate]
+    val pipeline = Mem//new Pipeline[BowGenerate]
     val inputLines =
       pipeline
         .read(From.textFile(inputFile))
@@ -80,66 +86,53 @@ object BowGenerate {
 
     if (LOG.isDebugEnabled) {
       LOG.info("ALL FEATURES")
-      for ((word, (tfidf /*, (tf, df)*/)) <- topTfidfs.toList.sorted.take(numFeatures))
-        //LOG.info("    %s\t%f.3\t%d\t%d".format(word, tfidf, tf, df))
-        LOG.info("    %s\t%f.3".format(word, tfidf))
+      for ((word, (tfidf /*, (tf, df)*/ )) <- topTfidfs.toList.take(numFeatures))
+        //LOG.info("\t%s\t%f\t%d\t%d".format(word, tfidf, tf, df))
+        LOG.info("\t%s\t%f".format(word, tfidf))
     }
 
-    val vectors = getBowVectors(inputLines, topTfidfs/*.mapValuesStrict(_._1)*/, windowSize)
+    val validWords = tfidfs.map((word, _) => word).materialize.toSet //make a serializable set of words that exceed the minimum count
+    val features = Set() ++ topTfidfs.keySet //make a serializable feature set
+    val wordVectors = getBowVectors(inputLines, validWords, features, windowSize)
     LOG.info("calculated all vectors")
 
-    val featureList = topTfidfs.keys.toList.sorted
-    val vectorStrings =
-      vectors.map {
-        case (word, vector) =>
-          val vecString =
-            featureList.map { f =>
-              vector.get(f) match {
-                case Some(v) => "%s\t%s".format(f, v)
-                case None => "\t"
-              }
-            }.mkString("\t")
-          "%s\t%s".format(word, vecString)
-      }
+    pipeline.dump(stringify(wordVectors, topTfidfs.keys)) //.writeTextFile(stringify(wordVectors, topTfidfs.keys), outputFile)
 
-    pipeline.writeTextFile(vectorStrings, outputFile)
-
-    pipeline.done
+    //pipeline.done
   }
 
   def getTfidfs(inputLines: PCollection[String], minWordCount: Int) = {
-    val DUMMY = ""
+    val SentenceMarker = ""
 
     // Get the count of each word in the corpus
     val countsWithDummy =
       inputLines
         .flatMap(_
           .split("\\s+").toList // split into individual tokens
+          .filterNot(stopwords) // remove useless tokens 
           .counts // map words to the number of times they appear in this sentence
           .map {
             // map word to its count in the sentence AND a count of 1 document 
             // that they word has appeared in. 
             case (word, count) => (word, (count, 1))
-          } + (DUMMY -> (1, 1))) // add a dummy word to count the total number of sentences
+          } + (SentenceMarker -> (1, 1))) // add a dummy word to count the total number of sentences
         .groupByKey
         .combine {
           tfdfCounts =>
             val (tfCounts, dfCounts) = tfdfCounts.unzip
             (tfCounts.sum, dfCounts.sum)
         }
+        .filter { case (w, (tf, df)) => tf >= minWordCount } // Keep only the non-punctuation words occurring more than MIN_COUNT times
 
     // Get scalar number of sentences
-    val List(DUMMY -> (_ -> numSentences)) = countsWithDummy.filter((w, c) => w == DUMMY).materialize.toList
+    val List(SentenceMarker -> (_ -> numSentences)) = countsWithDummy.filter((w, c) => w == SentenceMarker).materialize.toList
     println("numSentences = " + numSentences)
 
     // Get the real word counts (non-dummy)
-    val counts = countsWithDummy.filter((w, c) => w != DUMMY)
-
-    // Keep only the non-punctuation words occurring more than MIN_COUNT times
-    val filteredCounts = counts.filter { case (w, (tf, df)) => tf >= minWordCount && !punctuation(w.toLowerCase) }
+    val counts = countsWithDummy.filter((w, c) => w != SentenceMarker)
 
     // Compute TF-IDF value for each word
-    val tfidfs = filteredCounts.mapValues { case (tf, df) => (tf * math.log(numSentences.toDouble / df) /*, (tf, df)*/ ) }
+    val tfidfs = counts.mapValues { case (tf, df) => (tf * log(numSentences.toDouble / df) /*, (tf, df)*/ ) } // TODO: log(tf)?
 
     tfidfs
   }
@@ -150,33 +143,123 @@ object BowGenerate {
       "OPTIONAL 2ND TAKE FOLLOWS . -RRB-")(s)
   }
 
-  def getBowVectors(inputLines: PCollection[String], tfidfs: Map[String, Double], windowSize: Int) = {
-    val features = Set() ++ tfidfs.keySet //make a serializable feature set
-    inputLines
-      .flatMap { line => // take the line
-        val tokens = line.split(" ").toList // split into individual tokens
-        tokens.zipWithIndex.collect {
-          case (token, i) if tfidfs.contains(token) => // for each token that meets the cutoff
-            val before = tokens.slice(i - windowSize, i) // get the tokens before it
-            val after = tokens.slice(i + 1, i + 1 + windowSize) // and the tokens after it
-            val featuresInWindow = (before ++ after).filter(features) // keep only the features in the window
-            (token, featuresInWindow)
+  def getBowVectors(inputLines: PCollection[String], validWords: Set[String], features: Set[String], windowSize: Int) = {
+    val WordCountFeature = ""
+
+    /*
+     * C(f,w) and, 
+     * C(w) = C(WordCountFeature, w)
+     */
+    val featureCountsByWordWithWordCountFeature =
+      inputLines
+        .flatMap { line => // take the line
+          val tokens = line.split(" ").toList // split into individual tokens
+          tokens.zipWithIndex.collect {
+            case (token, i) if validWords(token) => // for each token that meets the cutoff
+              val before = tokens.slice(i - windowSize, i) // get the tokens before it
+              val after = tokens.slice(i + 1, i + 1 + windowSize) // and the tokens after it
+              val featuresInWindow = ((before ++ after).filter(features)).toSet.toList // keep only the features in the window
+              (token, WordCountFeature :: featuresInWindow) // TODO: QUESTION: featuresInWindow.toSet?  C(f,w) + 1 iff sentence has f in the context of w (vs, C(f,w) + count of f in context of w)
+          }
         }
-      }
-      .groupByKey
-      .map {
-        case (word, contexts) =>
-          (word, contexts.flatten.counts.map { // convert contexts to feature counts
-            case (feature, count) =>
-              (feature, count * tfidfs(feature)) // scale feature counts by the TF-IDF of the feature
-          })
-      }
+        .groupByKey
+        .combine(_.flatten.toList)
+        .mapValues(_.counts)
+        .map((word, featureCounts) => (word, featureCounts))
+
+    if (LOG.isDebugEnabled) {
+      LOG.debug("featureCountsByWordWithWordCountFeature")
+      stringify(featureCountsByWordWithWordCountFeature, features).materialize.foreach(s => println("\t" + s))
+    }
+
+    /*
+     * P(f|w) = C(f,w) / C(w)
+     * represented as a log
+     */
+    val featureProbGivenWord =
+      featureCountsByWordWithWordCountFeature
+        .mapValues { featureCounts =>
+          val wordCount = log(featureCounts(WordCountFeature).toDouble)
+          featureCounts
+            .filterKeys(_ != WordCountFeature) // remove dummy feature
+            .mapValuesStrict(c => log(c) - wordCount)
+        }
+
+    if (LOG.isDebugEnabled) {
+      LOG.debug("featureProbGivenWord")
+      stringify(featureProbGivenWord, features).materialize.foreach(s => println("\t" + s))
+    }
+
+    /*
+     * C(f,w)
+     */
+    val featureCountsByWord =
+      featureCountsByWordWithWordCountFeature
+        .mapValues(_.filterKeys(_ != WordCountFeature)) //remove WordCountFeature
+
+    if (LOG.isDebugEnabled) {
+      LOG.debug("featureCountsByWord")
+      stringify(featureCountsByWord, features).materialize.foreach(s => println("\t" + s))
+    }
+
+    /*
+     * numWords = sum C(w') for all w'
+     */
+    val Pattern.Map(1 -> numWords) =
+      featureCountsByWordWithWordCountFeature
+        .map((word, featureCounts) => featureCounts(WordCountFeature)) //only WordCountFeature
+        .groupBy(_ => 1)
+        .combine(_.sum)
+        .materialize.toMap
+    LOG.info("numWords = " + numWords)
+
+    /*
+     * P(f) = sum P(f,w') for all w'
+     * represented as a log
+     */
+    val featureProb =
+      featureProbGivenWord
+        .flatMap((word, featureProbs) => featureProbs)
+        .groupByKey
+        .combine(_.sum)
+        .mapValues(log)
+        .materialize.toMap
+
+    if (LOG.isDebugEnabled) {
+      LOG.debug("featureProb")
+      featureProb.map { case (f, p) => "%s\t%s".format(f, p) }.foreach(s => println("\t" + s))
+    }
+
+    /*
+     * pmi(f,w) = log_2 (P(f|w) / P(f))
+     * represented as a log
+     */
+    val pmi =
+      featureProbGivenWord
+        .mapValues(_.map { case (feature, prob) => (feature, prob - featureProb(feature)) })
+
+    pmi
   }
 
   //  case class TfidfTriple(var _1: Double, var _2: Int, var _3: Int) extends java.lang.Comparable[TfidfTriple] {
   //    def this() = this(0., 0, 0)
   //    def compareTo(that: TfidfTriple): Int = this._1.compareTo(that._1)
   //  }
+
+  def stringify[N: Numeric](wordVectors: PTable[String, Map[String, N]], features: Iterable[String]) = {
+    wordVectors.map {
+      case (word, vector) =>
+        val vecString =
+          features.toList.sorted.map { f =>
+            vector.get(f) match {
+              case Some(v) => "%s\t%s".format(f, v)
+              case None => "\t"
+            }
+          }.mkString("\t")
+        "%s\t%s".format(word, vecString)
+    }
+    //.materialize.foreach(s => println("\t"+s))
+  }
 
 }
 
