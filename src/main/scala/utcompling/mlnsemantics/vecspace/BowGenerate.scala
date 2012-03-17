@@ -47,7 +47,7 @@ object BowGenerate {
 
   def main(args: Array[String]) {
     Logger.getRootLogger.setLevel(Level.INFO)
-    Logger.getLogger("utcompling").setLevel(Level.DEBUG)
+    //Logger.getLogger("utcompling").setLevel(Level.DEBUG)
 
     val DEFAULT_NUM_FEATURES = "2000"
     val DEFAULT_MIN_WORD_COUNT = "50"
@@ -71,7 +71,7 @@ object BowGenerate {
 
     LOG.info("outputFile = " + outputFile)
 
-    val pipeline = Mem //new Pipeline[BowGenerate]
+    val pipeline = new Pipeline[BowGenerate]
     val inputLines =
       pipeline
         .read(From.textFile(inputFile))
@@ -91,14 +91,14 @@ object BowGenerate {
         LOG.info("\t%s\t%f".format(word, tfidf))
     }
 
-    val validWords = tfidfs.map((word, _) => word).materialize.toSet //make a serializable set of words that exceed the minimum count
+    val validWords = tfidfs.map((word, _) => word).materialize.toSet //make a set of words that exceed the minimum count
     val features = Set() ++ topTfidfs.keySet //make a serializable feature set
     val wordVectors = getBowVectors(inputLines, validWords, features, windowSize)
     LOG.info("calculated all vectors")
 
-    pipeline.dump(stringify(wordVectors, topTfidfs.keys, (d: Double) => "%.2f".format(math.exp(d)))) //.writeTextFile(stringify(wordVectors, topTfidfs.keys), outputFile)
+    pipeline.writeTextFile(stringify(wordVectors, features, (d: Double) => "%.2f".format(math.exp(d))), outputFile)
 
-    //pipeline.done
+    pipeline.done
   }
 
   def getTfidfs(inputLines: PCollection[String], minWordCount: Int) = {
@@ -182,12 +182,12 @@ object BowGenerate {
           val wordCount = Probability(featureCounts(WordCountFeature))
           featureCounts
             .filterKeys(_ != WordCountFeature) // remove dummy feature
-            .mapValuesStrict(c => Probability(c) / wordCount)
+            .mapValuesStrict(c => (Probability(c) / wordCount).logProb)
         }
 
     if (LOG.isDebugEnabled) {
       LOG.debug("featureProbGivenWord")
-      stringify(featureProbGivenWord, features, (p: Probability) => "%.2f".format(p.toDouble)).materialize.foreach(s => println("\t" + s))
+      stringify(featureProbGivenWord, features, (p: Double) => "%.2f".format(math.exp(p))).materialize.foreach(s => println("\t" + s))
     }
 
     /*
@@ -215,16 +215,16 @@ object BowGenerate {
 
     /*
      * P(f,w) = C(f,w) / sum(C(w'))
+     * represented as a log
      */
-    val numWordsLog = Probability(numWords)
     val featureWordProbByWord =
       featureCountsByWord
         .mapValues(_
-          .mapValuesStrict(c => Probability(c) / numWordsLog))
+          .mapValuesStrict(c => (Probability(c) / Probability(numWords)).logProb))
 
     if (LOG.isDebugEnabled) {
       LOG.debug("featureWordProbByWord")
-      stringify(featureWordProbByWord, features, (p: Probability) => "%.2f".format(p.toDouble)).materialize.foreach(s => println("\t" + s))
+      stringify(featureWordProbByWord, features, (p: Double) => "%.2f".format(math.exp(p))).materialize.foreach(s => println("\t" + s))
     }
 
     /*
@@ -235,12 +235,12 @@ object BowGenerate {
       featureWordProbByWord
         .flatMap((word, featureProbs) => featureProbs)
         .groupByKey
-        .combine(_.sum)
+        .combine(_.map(new Probability(_)).sum.logProb)
         .materialize.toMap
 
     if (LOG.isDebugEnabled) {
       LOG.debug("featureProb")
-      featureProb.map { case (f, p) => "%s\t%.2f".format(f, p.toDouble) }.foreach(s => println("\t" + s))
+      featureProb.map { case (f, p) => "%s\t%.2f".format(f, math.exp(p)) }.foreach(s => println("\t" + s))
     }
 
     /*
@@ -249,7 +249,7 @@ object BowGenerate {
      */
     val pmi =
       featureProbGivenWord
-        .mapValues(_.map { case (feature, prob) => (feature, (prob / featureProb(feature)).logProb / Log2) })
+        .mapValues(_.map { case (feature, prob) => (feature, (new Probability(prob) / new Probability(featureProb(feature))).logProb / Log2) })
 
     pmi
   }
