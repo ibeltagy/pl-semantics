@@ -67,7 +67,7 @@ object BowGenerate {
     val outputFile = "%s.vc.f%s.m%s.w%s".format(inputFile, numFeaturesString, minWordCountString, windowSizeString)
     val numFeatures = numFeaturesString.toInt
     val minWordCount = minWordCountString.toInt
-    val windowSize = windowSizeString.toLowerCase match { case "inf" => Int.MaxValue; case s => s.toInt }
+    val windowSize = windowSizeString.toLowerCase match { case "inf" => 10000; case s => s.toInt }
 
     LOG.info("outputFile = " + outputFile)
 
@@ -86,7 +86,7 @@ object BowGenerate {
 
     if (LOG.isDebugEnabled) {
       LOG.info("ALL FEATURES")
-      for ((word, (tfidf /*, (tf, df)*/ )) <- topTfidfs.toList.take(numFeatures))
+      for ((word, (tfidf /*, (tf, df)*/ )) <- topTfidfs.toList.sorted.take(numFeatures))
         //LOG.info("\t%s\t%f\t%d\t%d".format(word, tfidf, tf, df))
         LOG.info("\t%s\t%f".format(word, tfidf))
     }
@@ -116,7 +116,7 @@ object BowGenerate {
             // that they word has appeared in. 
             case (word, count) => (word, (count, 1))
           } + (SentenceMarker -> (1, 1))) // add a dummy word to count the total number of sentences
-        .groupByKey
+          .groupByKey
         .combine {
           tfdfCounts =>
             val (tfCounts, dfCounts) = tfdfCounts.unzip
@@ -169,7 +169,7 @@ object BowGenerate {
 
     if (LOG.isDebugEnabled) {
       LOG.debug("featureCountsByWordWithWordCountFeature")
-      stringify(featureCountsByWordWithWordCountFeature, features).materialize.foreach(s => println("\t" + s))
+      stringifyCounts(featureCountsByWordWithWordCountFeature, features).materialize.foreach(s => println("\t" + s))
     }
 
     /*
@@ -179,7 +179,7 @@ object BowGenerate {
     val featureProbGivenWord =
       featureCountsByWordWithWordCountFeature
         .mapValues { featureCounts =>
-          val wordCount = log(featureCounts(WordCountFeature).toDouble)
+          val wordCount = log(featureCounts(WordCountFeature))
           featureCounts
             .filterKeys(_ != WordCountFeature) // remove dummy feature
             .mapValuesStrict(c => log(c) - wordCount)
@@ -199,7 +199,7 @@ object BowGenerate {
 
     if (LOG.isDebugEnabled) {
       LOG.debug("featureCountsByWord")
-      stringify(featureCountsByWord, features).materialize.foreach(s => println("\t" + s))
+      stringifyCounts(featureCountsByWord, features).materialize.foreach(s => println("\t" + s))
     }
 
     /*
@@ -236,7 +236,7 @@ object BowGenerate {
      */
     val pmi =
       featureProbGivenWord
-        .mapValues(_.map { case (feature, prob) => (feature, prob - featureProb(feature)) })
+        .mapValues(_.map { case (feature, prob) => (feature, prob - featureProb(feature) - Log2) })
 
     pmi
   }
@@ -252,7 +252,22 @@ object BowGenerate {
         val vecString =
           features.toList.sorted.map { f =>
             vector.get(f) match {
-              case Some(v) => "%s\t%s".format(f, v)
+              case Some(v) => "%s\t%.2f".format(f, math.exp(implicitly[Numeric[N]].toDouble(v))) //TODO: USE LOG
+              case None => "\t"
+            }
+          }.mkString("\t")
+        "%s\t%s".format(word, vecString)
+    }
+    //.materialize.foreach(s => println("\t"+s))
+  }
+
+  def stringifyCounts[N: Numeric](wordVectors: PTable[String, Map[String, N]], features: Iterable[String]) = {
+    wordVectors.map {
+      case (word, vector) =>
+        val vecString =
+          features.toList.sorted.map { f =>
+            vector.get(f) match {
+              case Some(v) => "%s\t%s".format(f, v) //TODO: USE LOG
               case None => "\t"
             }
           }.mkString("\t")
