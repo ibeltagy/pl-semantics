@@ -63,7 +63,7 @@ object BowGenerate {
     if (args.size + additionalArgs.size < 4)
       throw new RuntimeException("Expected arguments: inputFile, numFeatures, minWordCount, windowSize")
 
-    val List(inputFile, numFeaturesString, minWordCountString, windowSizeString) = args.toList ++ additionalArgs.reverse
+    val List(inputFile, numFeaturesString, minWordCountString, windowSizeString) = args.toList ++ additionalArgs
     val outputFile = "%s.vc.f%s.m%s.w%s".format(inputFile, numFeaturesString, minWordCountString, windowSizeString)
     val numFeatures = numFeaturesString.toInt
     val minWordCount = minWordCountString.toInt
