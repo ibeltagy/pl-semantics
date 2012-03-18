@@ -3,7 +3,6 @@ package utcompling.mlnsemantics.inference
 import utcompling.scalalogic.fol.expression.parse.FolLogicParser
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.Boxer2DrtExpressionInterpreter
 import utcompling.scalalogic.discourse.candc.boxer.expression.parse.BoxerExpressionParser
-import utcompling.mlnsemantics.modal.WordnetImpl
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
 import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.OccurrenceMarkingBoxerExpressionInterpreterDecorator
@@ -24,6 +23,7 @@ import scala.collection.mutable.SetBuilder
 import utcompling.scalalogic.fol.expression.FolAtom
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
+import utcompling.mlnsemantics.wordnet.WordnetImpl
 
 class TextualTheoremProver(
   ptp: AlchemyTheoremProver) {
@@ -34,7 +34,7 @@ object TextualTheoremProver {
 
   def main(args: Array[String]) {
     Logger.getRootLogger.setLevel(Level.DEBUG)
-    
+
     val atp = new AlchemyTheoremProver(pathjoin(System.getenv("HOME"), "bin/alchemy/bin/infer"))
 
     val natlogInterpreter = new ModalDiscourseInterpreter()

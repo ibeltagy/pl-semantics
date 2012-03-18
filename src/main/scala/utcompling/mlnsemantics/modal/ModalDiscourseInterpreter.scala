@@ -253,13 +253,15 @@ class ModalDiscourseInterpreter(
       case BoxerNamed(discId, List(BoxerIndex(sentIndex, wordIndex)), variable, name, typ, sense) =>
         if (wordIndex == word.index && name == word.lemma) {
           List(ex)
-        } else
+        }
+        else
           List()
 
       case BoxerPred(discId, List(BoxerIndex(sentIndex, wordIndex)), variable, name, pos, sense) =>
         if (wordIndex == word.index && name == word.lemma) {
           List(ex)
-        } else
+        }
+        else
           List()
 
       case e =>

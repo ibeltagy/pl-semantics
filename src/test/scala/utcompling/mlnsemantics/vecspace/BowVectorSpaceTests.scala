@@ -24,6 +24,66 @@ class BowVectorSpaceTests {
 
   }
 
+  @Test
+  def test_BowVector_zip = {
+    {
+      val a = new BowVector(Map("a" -> 1, "b" -> 2, "c" -> 3))
+      val b = new BowVector(Map("b" -> 1, "c" -> 2, "d" -> 3))
+      println(a zip b)
+      println(b zip a)
+    }
+    {
+      val a = new BowVector(Map("a" -> 1, "b" -> 2, "c" -> 3))
+      val b = new BowVector(Map("c" -> 2, "d" -> 3, "e" -> 4))
+      println(a zip b)
+      println(b zip a)
+    }
+    {
+      val a = new BowVector(Map("a" -> 1, "c" -> 3, "f" -> 4))
+      val b = new BowVector(Map("b" -> 1, "c" -> 2, "d" -> 3, "e" -> 4))
+      println(a zip b)
+      println(b zip a)
+    }
+    {
+      val a = new BowVector(Map())
+      val b = new BowVector(Map("b" -> 1, "c" -> 2, "d" -> 3))
+      println(a zip b)
+      println(b zip a)
+    }
+    {
+      val a = new BowVector(Map("a" -> 1))
+      val b = new BowVector(Map("b" -> 1, "c" -> 2, "d" -> 3))
+      println(a zip b)
+      println(b zip a)
+    }
+  }
+
+  @Test
+  def test_BowVector_cosine = {
+    {
+      val a = new BowVector(Map("a" -> 1))
+      val b = new BowVector(Map("b" -> 5))
+      println(a cosine b)
+      println(b cosine a)
+    }
+    {
+      val a = new BowVector(Map("a" -> 1))
+      val b = new BowVector(Map("a" -> 5))
+      println(a cosine b)
+      println(b cosine a)
+    }
+    {
+      val a = new BowVector(Map("a" -> 1))
+      val b = new BowVector(Map("a" -> 5, "b" -> 5))
+      println(a cosine b)
+      println(b cosine a)
+    }
+
+    val vs = BowVectorSpace("data/nytgiga.lem.vc.small")
+    vs.foreach(println)
+
+  }
+
   def assertOptionDoubleEquals(expected: Option[Double], found: Option[Double]) = {
     (expected, found) match {
       case (Some(e), Some(f)) => assertEquals(e, f, 0.0001)

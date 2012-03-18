@@ -67,7 +67,8 @@ object PolarityLexiconPreparer {
 
           f.write(List(lemma, parcSubcat, pos, requiredRelationsString, relation, signature, example, comment, "##automatically generated").mkString("\t").trim + "\n")
 
-        } else {
+        }
+        else {
           f.write(line + "\n")
 
         }

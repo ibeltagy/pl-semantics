@@ -13,26 +13,26 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.Boxer2DrtExpressionInterpreter
 
 class VisualizingModalTheoremProverDecorator[R](
-    theoremProver: TheoremProver[BoxerExpression, R])
-    extends TheoremProver[BoxerExpression, R] {
+  theoremProver: TheoremProver[BoxerExpression, R])
+  extends TheoremProver[BoxerExpression, R] {
 
-    private def d(drs: BoxerExpression) = new Boxer2DrtExpressionInterpreter().interpret(drs)
+  private def d(drs: BoxerExpression) = new Boxer2DrtExpressionInterpreter().interpret(drs)
 
-    override def prove(assumptions: List[BoxerExpression], goal: Option[BoxerExpression] = None, verbose: Boolean = false): Option[R] =
-        theoremProver.prove(assumptions, goal, verbose)
+  override def prove(assumptions: List[BoxerExpression], goal: Option[BoxerExpression] = None, verbose: Boolean = false): Option[R] =
+    theoremProver.prove(assumptions, goal, verbose)
 
-    def proveVisualize(assumptions: List[BoxerExpression], goal: BoxerExpression, verbose: Boolean = false): (Option[R], String) = {
-        val proof = this.prove(assumptions, goal, verbose)
-        val parts =
-            assumptions.map(d(_).pretty) :::
-                //"   " ::
-                //assumptions.map(a => box(f(a).pretty)) :::
-                " = " + proof.isDefined + " => " ::
-                //box(f(goal).pretty) ::
-                //"   " ::
-                d(goal).pretty ::
-                Nil
-        return (proof, sideBySideCentering(parts: _*))
-    }
+  def proveVisualize(assumptions: List[BoxerExpression], goal: BoxerExpression, verbose: Boolean = false): (Option[R], String) = {
+    val proof = this.prove(assumptions, goal, verbose)
+    val parts =
+      assumptions.map(d(_).pretty) :::
+        //"   " ::
+        //assumptions.map(a => box(f(a).pretty)) :::
+        " = " + proof.isDefined + " => " ::
+        //box(f(goal).pretty) ::
+        //"   " ::
+        d(goal).pretty ::
+        Nil
+    return (proof, sideBySideCentering(parts: _*))
+  }
 
 }

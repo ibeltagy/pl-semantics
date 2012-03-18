@@ -60,9 +60,9 @@ class AlchemyTheoremProver(
 
     val args = List("-q", "entailment")
 
-    callAlchemy(mlnFile, evidenceFile, resultFile, args) map {
-      case ResultsRE(score) => score.toDouble
-    }
+//    callAlchemy(mlnFile, evidenceFile, resultFile, args) map {
+//      case ResultsRE(score) => score.toDouble
+//    }
   }
 
   private def makeMlnFile(

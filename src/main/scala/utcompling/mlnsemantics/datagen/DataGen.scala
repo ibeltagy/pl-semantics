@@ -8,6 +8,7 @@ import utcompling.mlnsemantics.modal._
 import edu.mit.jwi.item.POS
 import scala.collection.JavaConversions._
 import edu.mit.jwi.item.ISynset
+import utcompling.mlnsemantics.wordnet.WordnetImpl
 
 object DataGen {
   def findFactives() = {
