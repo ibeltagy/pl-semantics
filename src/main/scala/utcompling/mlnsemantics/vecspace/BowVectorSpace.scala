@@ -5,16 +5,27 @@ import scala.collection.mutable.Buffer
 import scala.annotation.tailrec
 
 object BowVectorSpace {
-  def apply(filename: String) = {
+  def apply(filename: String): Map[String, BowVector] = {
+    apply(filename, _ => true)
+  }
+
+  def apply(filename: String, filter: String => Boolean): Map[String, BowVector] = {
     io.Source.fromFile(filename).getLines.map(_.split("\t")).flatMap {
       case Array(word, vector @ _*) =>
-        val pairs = vector.grouped(2).map { case Seq(feature, count) => (feature, count.toDouble) }
-        if (pairs.nonEmpty)
-          Some(word -> new BowVector(pairs.toMap))
-        else {
-          println("Empty vector: " + word)
-          None
+        if (filter(word)) {
+          val pairs =
+            vector.grouped(2)
+              .map(_.toTuple2)
+              .filter(_._2.nonEmpty)
+              //.map { x => println(x); x }
+              .mapValuesStrict(_.toDouble)
+          if (pairs.nonEmpty)
+            Some(word -> new BowVector(pairs.toMap))
+          else
+            None
         }
+        else
+          None
     }.toMap
   }
 }
