@@ -34,7 +34,7 @@ import com.cloudera.crunch.impl.mem.MemPipeline
  * cd mln-semantics
  * sbt assembly
  * hadoop fs -put /scratch/01899/dhg1/nytgiga.lem nytgiga.lem
- * hadoop jar target/mln-semantics-assembly-0.0.1.jar utcompling.mlnsemantics.vecspace.BowGenerate nytgiga.lem nytgiga.lem.vc.out
+ * hadoop jar target/mln-semantics-assembly-0.0.1.jar utcompling.mlnsemantics.vecspace.BowGenerate nytgiga.lem
  * hadoop fs -getmerge nytgiga.lem.vc.out /scratch/01899/dhg1/nytgiga.lem.vc
  */
 object BowGenerate {
