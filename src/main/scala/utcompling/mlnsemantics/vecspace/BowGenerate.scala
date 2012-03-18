@@ -41,7 +41,7 @@ object BowGenerate {
   val LOG = LogFactory.getLog(BowGenerate.getClass)
 
   val punctuation = (w: String) => Set(".", ",", "``", "''", "'", "`", "--", ":", ";", "-RRB-", "-LRB-", "?", "!", "-RCB-", "-LCB-", "...", "-", "_")(w.toUpperCase)
-  val stopwords = (w: String) => punctuation(w) // || Stopwords.get(w) TODO: remove stopwords?
+  val stopwords = (w: String) => punctuation(w) || Stopwords.get(w) //TODO: remove stopwords?
 
   val Log2 = math.log(2)
 
