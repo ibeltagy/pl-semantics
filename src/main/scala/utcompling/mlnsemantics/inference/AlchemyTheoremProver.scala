@@ -117,10 +117,8 @@ class AlchemyTheoremProver(
     LOG.debug("results file:\n" + results)
 
     exitcode match {
-      case 0 =>
-        Some(results)
-      case _ =>
-        throw new RuntimeException("Failed with exitcode=%s.\n%s\n%s".format(exitcode, stdout, stderr))
+      case 0 => Some(results)
+      case _ => throw new RuntimeException("Failed with exitcode=%s.\n%s\n%s".format(exitcode, stdout, stderr))
     }
   }
 

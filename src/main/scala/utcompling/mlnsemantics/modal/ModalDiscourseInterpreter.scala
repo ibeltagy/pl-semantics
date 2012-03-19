@@ -12,10 +12,23 @@ import utcompling.scalalogic.discourse.candc.call._
 import utcompling.scalalogic.discourse.candc.call.impl._
 import utcompling.scalalogic.discourse.candc.parse.output.impl._
 import scala.collection.mutable.ListBuffer
-import utcompling.mlnsemantics.natlog._
+import utcompling.mlnsemantics.polarity._
 import utcompling.scalalogic.util.SeqUtils
 import utcompling.scalalogic.util.FileUtils
+import org.apache.commons.logging.LogFactory
 
+/**
+ * Discourse Interpreter that decorates a logical form.
+ *
+ * Makes use of both Boxer and C&C outputs for logical form and dependency
+ * information, respectively.  Additionally, uses the polarity lexicon.
+ *
+ * This decorator works as follows:
+ *
+ *
+ *
+ *
+ */
 class ModalDiscourseInterpreter(
   boxerDiscourseInterpreter: DiscourseInterpreter[BoxerExpression] = new BoxerDiscourseInterpreter[BoxerExpression](
     new PassthroughBoxerExpressionInterpreter(),
@@ -25,77 +38,149 @@ class ModalDiscourseInterpreter(
   polarityLexicon: PolarityLexicon = PolarityLexicon.fromFile("resources/polarity-lexicon/polarity_lexicon_expanded.txt"))
   extends DiscourseInterpreter[BoxerExpression] {
 
-  override def batchInterpretMultisentence(inputs: List[List[String]], discourseIds: Option[List[String]] = None, question: Boolean = false, verbose: Boolean = false): List[Option[BoxerExpression]] = {
-    process(inputs, discourseIds, question, verbose).map(_.map(_._1))
+  protected val LOG = LogFactory.getLog(classOf[ModalDiscourseInterpreter])
+
+  private type BoxerRef = (List[BoxerIndex], BoxerVariable)
+
+  object NotPrefix {
+    val NotPrefixRe = """^not_(.+)$""".r
+    def unapply(pred: String) =
+      pred match {
+        case NotPrefixRe(unnegated) => Some(unnegated)
+        case _ => None
+      }
+    def apply(pred: String) = "not_" + pred
   }
 
+  val EventVar = """^e\d*$""".r
+  val PropVar = """^p\d*$""".r
+
+  /**
+   * Hook to which all interpret calls delegate.  Calls `process`.
+   */
+  override def batchInterpretMultisentence(inputs: List[List[String]], discourseIds: Option[List[String]] = None, question: Boolean = false, verbose: Boolean = false): List[Option[BoxerExpression]] = {
+    process(inputs, discourseIds, question).map(_.map(_._1))
+  }
+
+  /**
+   * @param inputs			natural language discourses
+   * @param discourseIds
+   * @param question
+   * @return 				list of (augmented) BoxerExpressons and list of new rules added to that expression
+   */
   def process(inputs: List[List[String]], discourseIds: Option[List[String]] = None, question: Boolean = false, verbose: Boolean = false): List[Option[(BoxerExpression, List[BoxerExpression])]] = {
+
     val newDiscourseIds = discourseIds.getOrElse((0 until inputs.length).map(_.toString).toList)
     val boxerResults = this.boxerDiscourseInterpreter.batchInterpretMultisentence(inputs, Some(newDiscourseIds), question, verbose)
     val parseResults = this.candcDiscourseParser.batchParseMultisentence(inputs, Map(), Some(newDiscourseIds), if (question) Some("question") else Some("boxer"), verbose)
     require(boxerResults.length == parseResults.length)
 
-    for ((boxerResult, parseResult) <- boxerResults zip parseResults) yield {
-      if (boxerResult.isEmpty || parseResult.isEmpty)
-        None
-      else {
-        val newRules = this.generateNatlogRules(boxerResult.get, parseResult.get)
-        val modalDrs = modalify(boxerResult.get)
-        Some((
-          if (newRules.nonEmpty)
-            BoxerMerge("merge", modalDrs, BoxerDrs(List(), newRules))
-          else
-            modalDrs,
-          newRules))
-      }
+    for (
+      (boxerResultOpt, parseResultOpt) <- (boxerResults zip parseResults);
+      boxerResult <- boxerResultOpt;
+      parseResult <- parseResultOpt
+    ) yield {
+      val modalDrs = modalify(boxerResult)
+      val newRules = this.generateNatlogRules(boxerResult, parseResult)
+      val resultDrs = if (newRules.nonEmpty) BoxerMerge("merge", modalDrs, BoxerDrs(List(), newRules)) else modalDrs
+      Some(resultDrs, newRules)
     }
+
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  private def fol(d: BoxerExpression) = new Boxer2DrtExpressionInterpreter().interpret(d).simplify.fol
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  private type BoxerRef = (List[BoxerIndex], BoxerVariable)
-
+  /**
+   * Take a logical form and its corresponding dependency parse; generate inference rules.
+   *
+   * For each word of each sentence in the parse, check for an entry in the
+   * polarity lexicon.  The lexicon is indexed by word and required
+   * dependencies. For any words found in the lexicon, locate the word in the
+   * logical form (it will be a BoxerPred).
+   *
+   * For each entry in the polarity lexicon, generate positive and/or negative
+   * environment modality rules.  For example, if a word has positive entailment
+   * in a negative environment, it will generate a BoxerExpression equivalent to:
+   *  ____________________
+   * | p                  |
+   * |--------------------|
+   * |      ____________  |
+   * | __  | e          | |
+   * |   | |------------| | => POS(X)
+   * |     | word(e)    | |
+   * |     | theme(e,p) | |
+   * |     |____________| |
+   * |____________________|
+   */
   private def generateNatlogRules(boxerResult: BoxerExpression, parse: Discourse): List[BoxerExpression] = {
-    //println(new Boxer2DrtExpressionInterpreter().interpret(boxerResult))
-
-    val newRules = new ListBuffer[BoxerExpression]
-    for (sentence <- parse.sentences; word <- sentence.words) {
-      val (posEnv, negEnv) = polarityLexicon.get(word)
-      for (BoxerPred(discId, List(BoxerIndex(sentIndex, wordIndex)), _, name, pos, sense) <- findWordInBoxerExpression(word, boxerResult)) {
-        if (posEnv.isDefined) {
-          val entailmentPred = if (posEnv.get) "POS" else "NEG"
-          //newRules += this.parse(discId, sentIndex, wordIndex, "imp(drs([e,p],[pred(%s,%s,e),rel(theme,e,p)]), pred(%s,%s,p))".format(name, pos, entailmentPred, "X"))
-          newRules += modalify(this.parse(discId, sentIndex, wordIndex, "imp(drs([e,p],[pred(%s,%s,e),rel(theme,e,p)]), pred(%s,%s,p))".format(name, pos, entailmentPred, "X")))
+    val allWords = parse.sentences.flatMap(_.words)
+    allWords.flatMap {
+      word =>
+        val (posEnv, negEnv) = polarityLexicon.get(word)
+        if (posEnv.isDefined || negEnv.isDefined) {
+          findWordInBoxerExpression(word, boxerResult).flatMap {
+            case BoxerPred(discId, List(BoxerIndex(sentIndex, wordIndex)), _, name, pos, sense) =>
+              List(
+                posEnv.map { env =>
+                  val entailmentPred = if (env) "POS" else "NEG"
+                  modalify(this.parse(discId, sentIndex, wordIndex, "imp(drs([e,p],[pred(%s,%s,e),rel(theme,e,p)]), pred(%s,%s,p))".format(name, pos, entailmentPred, "X")))
+                },
+                negEnv.map { env =>
+                  val entailmentPred = if (env) "POS" else "NEG"
+                  modalify(this.parse(discId, sentIndex, wordIndex, "imp(drs([p],[not(drs([e],[pred(%s,%s,e),rel(theme,e,p)]))]), pred(%s,%s,p))".format(name, pos, entailmentPred, "X")))
+                }).flatten
+          }
         }
-        if (negEnv.isDefined) {
-          val entailmentPred = if (negEnv.get) "POS" else "NEG"
-          //newRules += this.parse(discId, sentIndex, wordIndex, "imp(drs([e,p],[not(drs([],[pred(%s,%s,e),rel(theme,e,p)]))]), pred(%s,%s,p))".format(name, pos, entailmentPred, "X"))
-          newRules += modalify(this.parse(discId, sentIndex, wordIndex, "imp(drs([p],[not(drs([e],[pred(%s,%s,e),rel(theme,e,p)]))]), pred(%s,%s,p))".format(name, pos, entailmentPred, "X")))
-        }
-      }
+        else List()
     }
-
-    //        println(fol(modalDrs))
-    //        println(fol(modalDrs).pretty)
-    //        newRules.map(d => println(fol(d)))
-    newRules.result
   }
 
+  /**
+   * Transform the BoxerExpression to the "modal" style.
+   *
+   * This means to do the following things:
+   *
+   * 1) Eliminate double-negations
+   *
+   * 2) Identify negated DRSs that have an event.
+   *    Push the negation into the DRS by using the modal constructs to
+   *    describe the negation.
+   *    - Add the prefix "not_" the any relevant verbs (a verb of the event).
+   *    - Made a negated DRS containing all other conditions.
+   *
+   * 3) Identify DRSs that have an event and a theme proposition.
+   *    - For relevant propositions P, add implications of the form
+   *      POS(X) => P and NEG(X) => -P
+   *
+   * 4) Identify negated DRSs that have an event and a theme proposition.
+   *    Push the negation into the DRS by using the modal constructs to
+   *    describe the negation.
+   *    - Add the prefix "not_" the any relevant verbs (a verb of the event
+   *      and that has the proposition as its theme).
+   *    - For relevant propositions P, add implications of the form
+   *      POS(X) => P and NEG(X) => -P
+   *    - Made a negated DRS containing all other conditions.
+   */
   private def modalify(e: BoxerExpression): BoxerExpression = {
-    //        println(e)
-    //        println(new Boxer2DrtExpressionInterpreter().interpret(e).pretty)
-    //        println
     val d = e match {
       case BoxerNot(_, _, BoxerNot(_, _, drs)) =>
         modalify(drs)
+      case BoxerNot(discId, notIndices, BoxerVerbDrs(eventRefs, propRefs, eventPreds, eventConds, otherRefs, otherConds)) => {
+        val negatedEventPreds = eventPreds.map {
+          case BoxerPred(discId, verbIndices, variable, name, pos, sense) =>
+            BoxerPred(discId, notIndices, variable, notPred(name), pos, sense)
+        }
+        val conds = negatedEventPreds ++ eventConds ++
+          (if (otherConds.nonEmpty) List(BoxerNot(discId, notIndices, BoxerDrs(otherRefs, otherConds))) else List())
+        BoxerDrs(eventRefs ++ propRefs, conds)
+      }
+      case BoxerVerbThemePropDrs(eventRefs, propRefs, eventPreds, eventConds, props, otherRefs, otherConds) => {
+        val propConds = props.flatMap {
+          case BoxerProp(discId, propIdx, variable, drs) =>
+            List(
+              BoxerImp(discId, propIdx, BoxerPred(discId, propIdx, variable, "POS", "X", 0), modalify(drs)),
+              BoxerImp(discId, propIdx, BoxerPred(discId, propIdx, variable, "NEG", "X", 0), modalify(BoxerNot(discId, propIdx, drs))))
+        }
+        BoxerDrs(eventRefs ++ propRefs, eventPreds ++ eventConds ++ propConds ++ otherConds)
+      }
       case BoxerNot(discId, notIndices, BoxerVerbThemePropDrs(eventRefs, propRefs, eventPreds, eventConds, props, otherRefs, otherConds)) => {
         val negatedEventPreds = eventPreds.map {
           case BoxerPred(discId, verbIndices, variable, name, pos, sense) =>
@@ -103,47 +188,28 @@ class ModalDiscourseInterpreter(
         }
         val propConds = props.flatMap {
           case BoxerProp(discId, propIdx, variable, drs) =>
-            List(BoxerImp(discId, propIdx, BoxerPred(discId, propIdx, variable, "POS", "X", 0), modalify(drs)),
+            List(
+              BoxerImp(discId, propIdx, BoxerPred(discId, propIdx, variable, "POS", "X", 0), modalify(drs)),
               BoxerImp(discId, propIdx, BoxerPred(discId, propIdx, variable, "NEG", "X", 0), modalify(BoxerNot(discId, propIdx, drs))))
         }
         val conds = negatedEventPreds ++ eventConds ++ propConds ++
-          (if (otherConds.nonEmpty) List(BoxerNot(discId, notIndices, BoxerDrs(otherRefs, otherConds)))
-          else List())
-        BoxerDrs(eventRefs ++ propRefs, conds)
-      }
-      case BoxerVerbThemePropDrs(eventRefs, propRefs, eventPreds, eventConds, props, otherRefs, otherConds) => {
-        val propConds = props.flatMap {
-          case BoxerProp(discId, propIdx, variable, drs) =>
-            List(BoxerImp(discId, propIdx, BoxerPred(discId, propIdx, variable, "POS", "X", 0), modalify(drs)),
-              BoxerImp(discId, propIdx, BoxerPred(discId, propIdx, variable, "NEG", "X", 0), modalify(BoxerNot(discId, propIdx, drs))))
-        }
-        BoxerDrs(eventRefs ++ propRefs, eventPreds ++ eventConds ++ propConds ++ otherConds)
-      }
-      case BoxerNot(discId, notIndices, BoxerVerbDrs(eventRefs, propRefs, eventPreds, eventConds, otherRefs, otherConds)) => {
-        val negatedEventPreds = eventPreds.map {
-          case BoxerPred(discId, verbIndices, variable, name, pos, sense) =>
-            BoxerPred(discId, notIndices, variable, notPred(name), pos, sense)
-        }
-        val conds = negatedEventPreds ++ eventConds ++
-          (if (otherConds.nonEmpty) List(BoxerNot(discId, notIndices, BoxerDrs(otherRefs, otherConds)))
-          else List())
+          (if (otherConds.nonEmpty) List(BoxerNot(discId, notIndices, BoxerDrs(otherRefs, otherConds))) else List())
         BoxerDrs(eventRefs ++ propRefs, conds)
       }
       case _ => e.visitConstruct(modalify)
     }
 
     d match {
-      case BoxerDrs(refs1, List(BoxerDrs(refs2, conds))) =>
-        modalify(BoxerDrs(refs1 ++ refs2, conds))
+      case BoxerDrs(refs1, List(BoxerDrs(refs2, conds))) => modalify(BoxerDrs(refs1 ++ refs2, conds))
       case _ => d
     }
   }
 
   private def notPred(pred: String) =
-    if (pred.startsWith("not_"))
-      pred.drop(4)
-    else
-      "not_" + pred
+    pred match {
+      case NotPrefix(unNegated) => unNegated
+      case _ => NotPrefix(pred)
+    }
 
   /**
    * Matches DRS objects that have an event and a theme proposition
@@ -198,11 +264,13 @@ class ModalDiscourseInterpreter(
   }
 
   private def partitionRefs(refs: List[BoxerRef]) = {
-    val List(eventRefs, propRefs, otherRefs) = SeqUtils.partitionN(refs, (r: BoxerRef) => r match {
-      case (i, BoxerVariable(v)) if """^e\d*$""".r.findFirstIn(v).isDefined => 0
-      case (i, BoxerVariable(v)) if """^p\d*$""".r.findFirstIn(v).isDefined => 1
-      case _ => 2
-    }, Some(3))
+    val List(eventRefs, propRefs, otherRefs) =
+      SeqUtils.partitionN(refs, (r: BoxerRef) =>
+        r match {
+          case (i, BoxerVariable(EventVar())) => 0
+          case (i, BoxerVariable(PropVar())) => 1
+          case _ => 2
+        }, Some(3))
     (eventRefs, propRefs, otherRefs)
   }
 

@@ -1,4 +1,4 @@
-package utcompling.mlnsemantics.natlog
+package utcompling.mlnsemantics.polarity
 
 import utcompling.scalalogic.drt.expression.parse.DrtLogicParser
 import utcompling.scalalogic.drt.expression._

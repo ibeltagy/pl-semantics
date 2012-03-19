@@ -16,9 +16,9 @@ class ModalTheoremProver[R](
   theoremProver: TheoremProver[FolExpression, R])
   extends TheoremProver[BoxerExpression, R] {
 
-  private val p = new FolLogicParser().parse(_)
-  private def d(drs: BoxerExpression) = new Boxer2DrtExpressionInterpreter().interpret(drs)
-  private def f(drs: BoxerExpression) = d(drs).simplify.fol
+  private val fol = new FolLogicParser().parse(_)
+  private def drt(drs: BoxerExpression) = new Boxer2DrtExpressionInterpreter().interpret(drs)
+  private def f(drs: BoxerExpression) = drt(drs).simplify.fol
 
   def prove(assumptions: List[BoxerExpression], goal: Option[BoxerExpression], verbose: Boolean = false): Option[R] = {
     //        assumptions.map(x => println(d(x).pretty))
@@ -27,7 +27,7 @@ class ModalTheoremProver[R](
     val newAssumptions = assumptions.map(f)
     val newGoal = goal.map(f)
 
-    if (theoremProver.prove(newAssumptions, p("P&-P"), verbose).isDefined) {
+    if (theoremProver.prove(newAssumptions, fol("P&-P"), verbose).isDefined) {
       throw new RuntimeException("INCONSISTENT")
     }
 

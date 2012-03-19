@@ -27,12 +27,10 @@ class FlatPremiseBoxerExpressionInterpreter extends BoxerExpressionInterpreter[L
         val cLabel = labelCounter.get
         val tempPropVars = new ListBuffer[String]
         val firstClauses: List[FolExpression] = clausify(first, label, labelCounter).map {
-          _ match {
-            case PredAtom(_, label, name, variable) => PredExistAtom(label, name, variable)
-            case NamedAtom(_, label, name, variable) => NamedExistAtom(label, name, variable)
-            case RelAtom(_, label, name, event, variable) => RelExistAtom(label, name, event, variable)
-            case EqAtom(_, label, first, second) => EqExistAtom(label, first, second)
-          }
+          case PredAtom(_, label, name, variable) => PredExistAtom(label, name, variable)
+          case NamedAtom(_, label, name, variable) => NamedExistAtom(label, name, variable)
+          case RelAtom(_, label, name, event, variable) => RelExistAtom(label, name, event, variable)
+          case EqAtom(_, label, first, second) => EqExistAtom(label, first, second)
         }
         val clauses = new ListBuffer[FolExpression]
 

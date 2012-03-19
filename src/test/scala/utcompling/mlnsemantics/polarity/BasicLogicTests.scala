@@ -1,4 +1,4 @@
-package utcompling.mlnsemantics.natlog
+package utcompling.mlnsemantics.polarity
 
 import utcompling.scalalogic.inference.TheoremProver
 import utcompling.scalalogic.inference.impl.Prover9TheoremProver

@@ -6,7 +6,7 @@ import utcompling.scalalogic.discourse.candc.call.impl.CandcImpl
 import utcompling.scalalogic.discourse.impl.BoxerDiscourseInterpreter
 import utcompling.scalalogic.discourse.impl.CandcDiscourseParser
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.MergingBoxerExpressionInterpreterDecorator
-import utcompling.mlnsemantics.natlog.PolarityLexicon
+import utcompling.mlnsemantics.polarity.PolarityLexicon
 import utcompling.mlnsemantics.modal.ModalTheoremProver
 import utcompling.scalalogic.inference.impl.Prover9TheoremProver
 import utcompling.scalalogic.util.StringUtils._

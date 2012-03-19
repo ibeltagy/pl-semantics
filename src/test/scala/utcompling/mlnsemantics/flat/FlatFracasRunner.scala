@@ -8,7 +8,7 @@ import utcompling.scalalogic.discourse.candc.call.impl.BoxerImpl
 import utcompling.scalalogic.inference.impl.Prover9TheoremProver
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.MergingBoxerExpressionInterpreterDecorator
 import utcompling.mlnsemantics.modal.ModalTheoremProver
-import utcompling.mlnsemantics.natlog.PolarityLexicon
+import utcompling.mlnsemantics.polarity.PolarityLexicon
 import utcompling.mlnsemantics.data.FracasReader
 import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
 import utcompling.mlnsemantics.data.RtePair

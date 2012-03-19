@@ -112,11 +112,11 @@ class ModalTests {
     //        tp(johnDidNotBuyACar_drs, johnDidNotBuyACar_parse, johnBoughtAConvertible_drs, johnBoughtAConvertible_parse)
     //tp(johnDidNotBuyACar_drs, johnDidNotBuyACar_parse, johnDidNotBuyAConvertible_drs, johnDidNotBuyAConvertible_parse)
 
-    //d(i(johnDixdNotManageToLeave_drs, johnDidNotManageToLeave_parse)).pprint()
+    d(i(johnDidNotManageToLeave_drs, johnDidNotManageToLeave_parse)).pprint()
 
-    tp(edForgotToLockTheDoor_drs, edForgotToLockTheDoor_parse, edDidNotLockTheDoor_drs, edDidNotLockTheDoor_parse)
-    tp(edForgotThatHeLockedTheDoor_drs, edForgotThatHeLockedTheDoor_parse, edLockedTheDoor_drs, edLockedTheDoor_parse)
-    tp(edForgotHeLockedTheDoor_drs, edForgotHeLockedTheDoor_parse, edLockedTheDoor_drs, edLockedTheDoor_parse)
+//    tp(edForgotToLockTheDoor_drs, edForgotToLockTheDoor_parse, edDidNotLockTheDoor_drs, edDidNotLockTheDoor_parse)
+//    tp(edForgotThatHeLockedTheDoor_drs, edForgotThatHeLockedTheDoor_parse, edLockedTheDoor_drs, edLockedTheDoor_parse)
+//    tp(edForgotHeLockedTheDoor_drs, edForgotHeLockedTheDoor_parse, edLockedTheDoor_drs, edLockedTheDoor_parse)
 
     //        {
     //            val List(a, c) = List("convertible", "car").map(s => drtp("([x0],[john_per(x0), -([e2,x1],[%s(x1), buy(e2), agent(e2, x0), patient(e2, x1)])])".format(s)))

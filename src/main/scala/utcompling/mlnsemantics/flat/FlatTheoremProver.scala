@@ -115,15 +115,15 @@ class FlatTheoremProver[R](
     folExpressionInterpreters.map(_.interpret _).reduceLeft(_ andThen _)(e)
 
   def proveVisualize(assumptions: List[FolExpression], goal: FolExpression, verbose: Boolean = false): (Option[R], String) = {
-    var msg = ""
-    var proof: Option[R] = None
-    try {
-      proof = this.prove(assumptions, goal, verbose)
-      msg = proof.isDefined.toString
-    }
-    catch {
-      case e => msg = e.getMessage
-    }
+    val (proof, msg) =
+      try {
+        val proof = this.prove(assumptions, goal, verbose)
+        val msg = proof.isDefined.toString
+        (proof, msg)
+      }
+      catch {
+        case e => (None, e.getMessage)
+      }
     val visual = StringUtils.sideBySideCentering(StringUtils.box(assumptions.map(_.pretty).mkString("\n")), " + ",
       StringUtils.box(getRules(assumptions, List(goal)).mkString("\n")), " = " + msg + " => ",
       StringUtils.box(goal.pretty))

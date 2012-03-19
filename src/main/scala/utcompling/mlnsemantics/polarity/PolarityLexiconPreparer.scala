@@ -1,4 +1,4 @@
-package utcompling.mlnsemantics.natlog
+package utcompling.mlnsemantics.polarity
 
 import scala.io.Source
 
@@ -22,7 +22,6 @@ import utcompling.scalalogic.discourse.candc.call._
 import utcompling.scalalogic.discourse.candc.call.impl._
 import utcompling.scalalogic.discourse.candc.parse.output.impl._
 import scala.collection.mutable.ListBuffer
-import utcompling.mlnsemantics.natlog._
 import utcompling.mlnsemantics.datagen._
 import utcompling.scalalogic.util.SeqUtils
 import utcompling.scalalogic.util.FileUtils

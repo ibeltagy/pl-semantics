@@ -1,4 +1,4 @@
-package utcompling.mlnsemantics.natlog
+package utcompling.mlnsemantics.polarity
 
 import utcompling.scalalogic.util.FileUtils
 import scala.collection.mutable.HashMap
