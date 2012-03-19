@@ -7,18 +7,18 @@ import utcompling.scalalogic.top.expression.Variable
 
 class LabelCounter {
 
-    private val counter = new Counter
-    private val propositions = new HashMap[BoxerVariable, String]
+  private val counter = new Counter
+  private val propositions = new HashMap[BoxerVariable, String]
 
-    private val PROP_RE = """p\d+""".r
+  private val PROP_RE = """p\d+""".r
 
-    def get(): String =
-        "p" + counter.get
+  def get(): String =
+    "p" + counter.get
 
-    def get(v: BoxerVariable): String =
-        v.name match {
-            case PROP_RE() => propositions.getOrElseUpdate(v, this.get)
-            case s => s
-        }
+  def get(v: BoxerVariable): String =
+    v.name match {
+      case PROP_RE() => propositions.getOrElseUpdate(v, this.get)
+      case s => s
+    }
 
 }

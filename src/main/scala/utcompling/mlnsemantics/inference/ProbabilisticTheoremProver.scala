@@ -1,6 +1,6 @@
 package utcompling.scalalogic.inference
 
-import utcompling.mlnsemantics.inference.WeightedExpression
+import utcompling.mlnsemantics.inference.support.WeightedExpression
 
 trait ProbabilisticTheoremProver[T, R] {
 

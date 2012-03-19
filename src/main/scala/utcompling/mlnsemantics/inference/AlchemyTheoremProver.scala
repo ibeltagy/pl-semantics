@@ -18,6 +18,7 @@ import utcompling.scalalogic.top.expression.Variable
 import utcompling.scalalogic.util.FileUtils.pathjoin
 import utcompling.scalalogic.util.FileUtils
 import utcompling.scalalogic.util.SubprocessCallable
+import utcompling.mlnsemantics.inference.support._
 
 class AlchemyTheoremProver(
   override val binary: String)
@@ -60,9 +61,9 @@ class AlchemyTheoremProver(
 
     val args = List("-q", "entailment")
 
-//    callAlchemy(mlnFile, evidenceFile, resultFile, args) map {
-//      case ResultsRE(score) => score.toDouble
-//    }
+    //    callAlchemy(mlnFile, evidenceFile, resultFile, args) map {
+    //      case ResultsRE(score) => score.toDouble
+    //    }
   }
 
   private def makeMlnFile(

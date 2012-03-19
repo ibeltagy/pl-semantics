@@ -24,6 +24,7 @@ import utcompling.scalalogic.fol.expression.FolAtom
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
 import utcompling.mlnsemantics.wordnet.WordnetImpl
+import utcompling.mlnsemantics.inference.support._
 
 class TextualTheoremProver(
   ptp: AlchemyTheoremProver) {

@@ -1,4 +1,4 @@
-package utcompling.mlnsemantics.inference
+package utcompling.mlnsemantics.inference.support
 
 class WeightedExpression[T] {
 
