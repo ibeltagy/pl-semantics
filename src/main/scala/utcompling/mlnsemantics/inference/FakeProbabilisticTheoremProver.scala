@@ -29,7 +29,7 @@ class FakeProbabilisticTheoremProver[T, R](
 
   override def prove(
     constants: Map[String, Set[String]],
-    declarations: List[T],
+    declarations: Map[String, Seq[String]],
     evidence: List[T],
     assumptions: List[WeightedExpression[T]],
     goal: T): Option[Double] = {

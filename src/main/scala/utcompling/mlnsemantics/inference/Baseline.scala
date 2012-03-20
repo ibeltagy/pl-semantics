@@ -38,7 +38,7 @@ object Baseline {
     //    def ds(drs: String) = d(p(drs))
     //    def d(drs: BoxerExpression) = new Boxer2DrtExpressionInterpreter().interpret(drs).simplify
 
-    val ptp =
+    val ttp =
       new TextualTheoremProver(
         new ModalDiscourseInterpreter(),
         new InferenceRuleInjectingProbabilisticTheoremProver(
@@ -55,7 +55,7 @@ object Baseline {
             new FakeProbabilisticTheoremProver(
               new Prover9TheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/LADR-2009-11A/bin/prover9"), 5, false)))))
 
-    println(ptp.prove(txt, hyp))
+    println(ttp.prove(txt, hyp))
     
     //    def mtpo = new ModalTheoremProver(tpo)
     //    def vtpo = new VisualizingModalTheoremProverDecorator(mtpo)

@@ -30,7 +30,7 @@ class AlchemyTheoremProver(
   private val LOG = LogFactory.getLog(AlchemyTheoremProver.getClass)
 
   private val entailedConst = ("entail" -> Set("entailed"))
-  private val entailedDec = FolAtom(Variable("entailment"), Variable("entail"))
+  private val entailedDec = "entailment" -> Seq("entail")
   private val entailmentConsequent = FolAtom(Variable("entailment"), Variable("entailed"))
   private val entailmentConsequentPrior = -1.
   private val ResultsRE = """entailment\("entailed"\) (\d*\.\d*)""".r
@@ -53,7 +53,7 @@ class AlchemyTheoremProver(
 
     val mlnFile = makeMlnFile(
       constants + entailedConst,
-      declarations :+ entailedDec,
+      declarations + entailedDec,
       assumptions,
       goal)
     val evidenceFile = makeEvidenceFile(evidence)
@@ -68,7 +68,7 @@ class AlchemyTheoremProver(
 
   private def makeMlnFile(
     constants: Map[String, Set[String]],
-    declarations: List[FolExpression],
+    declarations: Map[String, Seq[String]],
     assumptions: List[WeightedFolEx],
     goal: FolExpression) = {
 
@@ -79,7 +79,7 @@ class AlchemyTheoremProver(
       f.write("\n")
 
       declarations.foreach {
-        case FolAtom(pred, args @ _*) => f.write("%s(%s)\n".format(pred.name, args.map(_.name).mkString(",")))
+        case (pred, varTypes) => f.write("%s(%s)\n".format(pred, varTypes.mkString(",")))
       }
       f.write("\n")
 
@@ -151,7 +151,7 @@ object AlchemyTheoremProver {
     val atp = new AlchemyTheoremProver(pathjoin(System.getenv("HOME"), "bin/alchemy/bin/infer"))
 
     val constants = Map("ind" -> Set("socrates"))
-    val declarations = List("man(ind)", "mortal(ind)").map(parse)
+    val declarations = Map("man" -> Seq("ind"), "mortal" -> Seq("ind"))
     val evidence = List("man(socrates)").map(parse)
     val assumptions = List(HardWeightedExpression(parse("all x.(man(x) -> mortal(x))")))
     val goal = parse("mortal(socrates)")

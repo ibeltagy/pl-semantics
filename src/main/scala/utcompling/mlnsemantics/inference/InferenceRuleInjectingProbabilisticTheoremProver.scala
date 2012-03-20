@@ -45,7 +45,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
   def getAllPreds(e: BoxerExpression): Set[BoxerPred] =
     e match {
       case p: BoxerPred => Set(p)
-      case _ => e.visit(getAllPreds, (parts: List[Set[BoxerPred]]) => parts.flatten.toSet, Set())
+      case _ => e.visit(getAllPreds, (parts: List[Set[BoxerPred]]) => parts.flatten.toSet, Set.empty[BoxerPred])
     }
 
   private def makeRules(allPreds: Set[BoxerPred]): Set[BoxerExpression] = {

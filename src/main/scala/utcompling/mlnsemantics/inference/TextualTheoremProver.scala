@@ -38,31 +38,32 @@ class TextualTheoremProver(
     val EvntVar = """^(e\d*)$""".r
     val PropVar = """^(p\d*)$""".r
 
-    def combinePredicatesAndArgTypes(list: List[(Map[BoxerExpression, Seq[String]], Map[String, Set[String]])]): (Map[BoxerExpression, Seq[String]], Map[String, Set[String]]) = {
+    def combinePredicatesAndArgTypes(list: List[(Map[String, List[String]], Map[String, Set[String]])]): (Map[String, List[String]], Map[String, Set[String]]) = {
       val (predTypes, constTypes) = list.unzip
       val combinedPredTypes =
         predTypes.flatten.groupByKey.mapValuesStrict {
           case head :: tail =>
-            tail.foreach(t => assert(head == t))
+            tail.foreach(t => (head zipEqual t).foreach { case (a, b) => assert(a == b) })
             head
         }
       val combinedConstTypes = constTypes.flatten.groupByKey.mapValuesStrict(_.flatten.toSet)
       (combinedPredTypes, combinedConstTypes)
     }
 
-    def getPredicatesAndArgTypes(e: BoxerExpression): (Map[BoxerExpression, Seq[String]], Map[String, Set[String]]) =
+    def getPredicatesAndArgTypes(e: BoxerExpression): (Map[String, List[String]], Map[String, Set[String]]) =
       e match {
-        case BoxerPred(discId, indices, variable, name, pos) =>
+        case BoxerPred(discId, indices, variable, name, pos, sense) =>
           _getPredAndArgTypesTypes(name, List(variable))
         case BoxerNamed(discId, indices, variable, name, typ, sense) =>
           _getPredAndArgTypesTypes(name, List(variable))
         case BoxerRel(discId, indices, event, variable, name, sense) =>
           _getPredAndArgTypesTypes(name, List(event, variable))
-        case _ =>
-          e.visit(getPredicatesAndArgTypes, combinePredicatesAndArgTypes)
+        case _ => {
+          e.visit(getPredicatesAndArgTypes, combinePredicatesAndArgTypes, (Map[String, List[String]](), Map[String, Set[String]]()))
+        }
       }
 
-    def _getPredAndArgTypesTypes(name: String, args: List[BoxerVariable]) = {
+    def _getPredAndArgTypesTypes(name: String, args: List[BoxerVariable]): (Map[String, List[String]], Map[String, Set[String]]) = {
       val (argTypes, constants) =
         args.map(_.name).foldLeft(List[String](), List[(String, String)]()) {
           case ((argTypes, constants), varName) =>
@@ -84,7 +85,7 @@ class TextualTheoremProver(
         "indv" -> Set("default_indv_variable"),
         "evnt" -> Set("default_evnt_variable"),
         "prop" -> Set("default_prop_variable")) ++ constTypes
-    val declarations = predTypes.toList.map { case (pred, args) => pred(args.map(n => FolVariableExpression(Variable(n))): _*) } //List("man(ind)", "mortal(ind)")
+    val declarations = predTypes //List("man(ind)", "mortal(ind)")
     val evidence = List() //"man(socrates)"
     val assumptions = List(HardWeightedExpression(txtEx))
     val goal = hypEx
