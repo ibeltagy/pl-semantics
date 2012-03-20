@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory
  *
  */
 class ModalDiscourseInterpreter(
-  boxerDiscourseInterpreter: DiscourseInterpreter[BoxerExpression] = new BoxerDiscourseInterpreter[BoxerExpression](
+  delegate: DiscourseInterpreter[BoxerExpression] = new BoxerDiscourseInterpreter[BoxerExpression](
     new PassthroughBoxerExpressionInterpreter(),
     CandcImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin"))),
     BoxerImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin")))),
@@ -71,8 +71,8 @@ class ModalDiscourseInterpreter(
   def process(inputs: List[List[String]], discourseIds: Option[List[String]] = None, question: Boolean = false, verbose: Boolean = false): List[Option[(BoxerExpression, List[BoxerExpression])]] = {
 
     val newDiscourseIds = discourseIds.getOrElse((0 until inputs.length).map(_.toString).toList)
-    val boxerResults = this.boxerDiscourseInterpreter.batchInterpretMultisentence(inputs, Some(newDiscourseIds), question, verbose)
-    val parseResults = this.candcDiscourseParser.batchParseMultisentence(inputs, Map(), Some(newDiscourseIds), if (question) Some("question") else Some("boxer"), verbose)
+    val boxerResults = delegate.batchInterpretMultisentence(inputs, Some(newDiscourseIds), question, verbose)
+    val parseResults = candcDiscourseParser.batchParseMultisentence(inputs, Map(), Some(newDiscourseIds), if (question) Some("question") else Some("boxer"), verbose)
     require(boxerResults.length == parseResults.length)
 
     for (
@@ -127,6 +127,7 @@ class ModalDiscourseInterpreter(
                   val entailmentPred = if (env) "POS" else "NEG"
                   modalify(this.parse(discId, sentIndex, wordIndex, "imp(drs([p],[not(drs([e],[pred(%s,%s,e),rel(theme,e,p)]))]), pred(%s,%s,p))".format(name, pos, entailmentPred, "X")))
                 }).flatten
+            //case BoxerPred(discId, List(BoxerIndex(sentIndex, wordIndex)), _, name, pos, sense) => // TODO: ...
           }
         }
         else List()
@@ -205,6 +206,10 @@ class ModalDiscourseInterpreter(
     }
   }
 
+  /**
+   * For an input predicate string, if it begins with the prefix "not_",
+   * remove the prefix; if it doesn't have the prefix, add it.
+   */
   private def notPred(pred: String) =
     pred match {
       case NotPrefix(unNegated) => unNegated
@@ -263,6 +268,10 @@ class ModalDiscourseInterpreter(
     }
   }
 
+  /**
+   * Split a list of refs into separate lists for events, propositions, and
+   * everything else.
+   */
   private def partitionRefs(refs: List[BoxerRef]) = {
     val List(eventRefs, propRefs, otherRefs) =
       SeqUtils.partitionN(refs, (r: BoxerRef) =>
@@ -273,6 +282,20 @@ class ModalDiscourseInterpreter(
         }, Some(3))
     (eventRefs, propRefs, otherRefs)
   }
+
+  /**
+   * Given a word from a parse, find the corresponding BoxerPred in the
+   * BoxerExpression.
+   */
+  private def findWordInBoxerExpression(word: Word, ex: BoxerExpression): List[BoxerExpression] =
+    return ex match {
+      case BoxerNamed(discId, List(BoxerIndex(sentIndex, wordIndex)), variable, name, typ, sense) =>
+        if (wordIndex == word.index && name == word.lemma) List(ex) else List()
+      case BoxerPred(discId, List(BoxerIndex(sentIndex, wordIndex)), variable, name, pos, sense) =>
+        if (wordIndex == word.index && name == word.lemma) List(ex) else List()
+      case e =>
+        e.visit(findWordInBoxerExpression(word, _), (x: List[List[BoxerExpression]]) => x.flatten, List())
+    }
 
   private def parse(discId: String, sentIndex: Int, wordIndex: Int, expression: String): BoxerExpression = {
     def doRefs(e: List[String]): (List[BoxerVariable], List[String]) =
@@ -315,25 +338,5 @@ class ModalDiscourseInterpreter(
     val (be, Nil) = doParse("""\s+""".r.split("()[],".map(_.toString).foldLeft(expression)((a, b) => a.replace(b, " " + b + " "))).toList)
     return be
   }
-
-  private def findWordInBoxerExpression(word: Word, ex: BoxerExpression): List[BoxerExpression] =
-    return ex match {
-      case BoxerNamed(discId, List(BoxerIndex(sentIndex, wordIndex)), variable, name, typ, sense) =>
-        if (wordIndex == word.index && name == word.lemma) {
-          List(ex)
-        }
-        else
-          List()
-
-      case BoxerPred(discId, List(BoxerIndex(sentIndex, wordIndex)), variable, name, pos, sense) =>
-        if (wordIndex == word.index && name == word.lemma) {
-          List(ex)
-        }
-        else
-          List()
-
-      case e =>
-        e.visit(findWordInBoxerExpression(word, _), (x: List[List[BoxerExpression]]) => x.flatten, List())
-    }
 
 }

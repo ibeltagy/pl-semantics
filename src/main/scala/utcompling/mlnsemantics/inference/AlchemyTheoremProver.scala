@@ -22,8 +22,8 @@ import utcompling.mlnsemantics.inference.support._
 
 class AlchemyTheoremProver(
   override val binary: String)
-  extends SubprocessCallable(binary) //with ProbabilisticTheoremProver[FolExpression, Double] 
-  {
+  extends SubprocessCallable(binary)
+  with ProbabilisticTheoremProver[FolExpression] {
 
   type WeightedFolEx = WeightedExpression[FolExpression]
 
@@ -35,12 +35,12 @@ class AlchemyTheoremProver(
   private val entailmentConsequentPrior = -1.
   private val ResultsRE = """entailment\("entailed"\) (\d*\.\d*)""".r
 
-  def prove(
+  override def prove(
     constants: Map[String, Set[String]],
-    declarations: List[FolExpression],
+    declarations: Map[String, Seq[String]],
     evidence: List[FolExpression],
     assumptions: List[WeightedFolEx],
-    goal: FolExpression) = {
+    goal: FolExpression): Option[Double] = {
 
     declarations.foreach {
       case FolAtom(Variable(pred), args @ _*) =>
@@ -61,9 +61,9 @@ class AlchemyTheoremProver(
 
     val args = List("-q", "entailment")
 
-    //    callAlchemy(mlnFile, evidenceFile, resultFile, args) map {
-    //      case ResultsRE(score) => score.toDouble
-    //    }
+    callAlchemy(mlnFile, evidenceFile, resultFile, args) map {
+      case ResultsRE(score) => score.toDouble
+    }
   }
 
   private def makeMlnFile(

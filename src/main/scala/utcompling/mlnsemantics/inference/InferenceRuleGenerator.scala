@@ -6,8 +6,11 @@ import utcompling.scalalogic.drt.expression.DrtExpression
 import edu.mit.jwi.item.POS
 import utcompling.mlnsemantics.wordnet.Wordnet
 import utcompling.mlnsemantics.wordnet.WordnetImpl
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
 
-class InferenceRuleGenerator(vecspace: Map[String, BowVector], wordnet: Wordnet) {
+class InferenceRuleGenerator(
+  vecspace: Map[String, BowVector],
+  wordnet: Wordnet) {
 
   def generate(from: Set[(String, String)], to: Set[(String, String)]): Iterable[DrtExpression] = {
 

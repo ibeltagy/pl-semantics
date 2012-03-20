@@ -39,7 +39,7 @@ class ModalTests {
     def tpo = new Prover9TheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/LADR-2009-11A/bin/prover9"), 5, false)
     def mtpo = new ModalTheoremProver(tpo)
     def vtpo = new VisualizingModalTheoremProverDecorator(mtpo)
-    def vwtpo = new VisualizingModalTheoremProverDecorator(new WordnetModalTheoremProverDecorator(mtpo))
+    def vwtpo = new VisualizingModalTheoremProverDecorator(mtpo)
     def tp(aDrs: String, aParse: Discourse, gDrs: String, gParse: Discourse, v: Boolean = false) =
       println(vtpo.proveVisualize(List(i(aDrs, aParse)), i(gDrs, gParse), v)._2)
     def tpg(aDrs: String, aParse: Discourse, g: String, v: Boolean = false) =

@@ -3,7 +3,7 @@ package utcompling.mlnsemantics.inference
 import utcompling.scalalogic.fol.expression.parse.FolLogicParser
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.Boxer2DrtExpressionInterpreter
 import utcompling.scalalogic.discourse.candc.boxer.expression.parse.BoxerExpressionParser
-import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
+import utcompling.scalalogic.discourse.candc.boxer.expression._
 import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.OccurrenceMarkingBoxerExpressionInterpreterDecorator
 import utcompling.scalalogic.util.FileUtils.pathjoin
@@ -25,70 +25,20 @@ import org.apache.log4j.Logger
 import org.apache.log4j.Level
 import utcompling.mlnsemantics.wordnet.WordnetImpl
 import utcompling.mlnsemantics.inference.support._
+import utcompling.scalalogic.discourse.DiscourseInterpreter
 
 class TextualTheoremProver(
-  ptp: AlchemyTheoremProver) {
+  discourseIterpreter: DiscourseInterpreter[BoxerExpression],
+  probabilisticTheoremProver: ProbabilisticTheoremProver[BoxerExpression]) {
 
-}
-
-object TextualTheoremProver {
-
-  def main(args: Array[String]) {
-    Logger.getRootLogger.setLevel(Level.DEBUG)
-
-    val atp = new AlchemyTheoremProver(pathjoin(System.getenv("HOME"), "bin/alchemy/bin/infer"))
-
-    val natlogInterpreter = new ModalDiscourseInterpreter()
-    def boxerInterpreter(x: BoxerExpression) = {
-      new Boxer2DrtExpressionInterpreter().interpret(
-        //new OccurrenceMarkingBoxerExpressionInterpreterDecorator().interpret(
-        new MergingBoxerExpressionInterpreterDecorator().interpret(
-          new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(x))) //)
-    }
-    val wordnet = new WordnetImpl()
-
-    def fullParse(sentence: String) =
-      natlogInterpreter.process(List(List(sentence))) match {
-        case List(Some((boxerEx, natlogRules))) =>
-          val drs = boxerInterpreter(boxerEx)
-          drs.pprint()
-          drs.fol
-      }
-
-    //    val List(Some((a, natlogRules))) = natlogInterpreter.process(List(List("Socrates is a man .")))
-    //    println(a)
-    //    val b = new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(a)
-    //    println(b)
-    //    val c = new MergingBoxerExpressionInterpreterDecorator().interpret(b)
-    //    println(c)
-    //    val d = new Boxer2DrtExpressionInterpreter().interpret(c)
-    //    println(d)
-
-    //    val assumptions = List("Every man bought a car .", "Socrates is a man .").map(fullParse)
-    //    val goal = fullParse("A man bought a car .")
-    //
-    //    assumptions.foreach(println)
-    //    println(goal)
-
-    val parse = new FolLogicParser().parse(_)
-    val a = parse("all x0.(man(x0) -> exists e2 x1.(car(x1) & buy(e2) & agent(e2, x0) & patient(e2, x1)))")
-    val b = parse("exists x0.(socrates_org(x0) & man(x0))")
-    val c = parse("exists e2 x0 x1.(man(x0) & car(x1) & buy(e2) & agent(e2, x0) & patient(e2, x1))")
-
-    println(Prover9TheoremProver.findBinary(Some(pathjoin(System.getenv("HOME"), "bin/LADR-2009-11A/bin/")), timeout = 5).prove(List(a, b), c).isDefined)
-
-    //    val constants = Map("ind" -> Set("socrates"))
-    //    val declarations = List("man(ind)", "mortal(ind)").map(parse)
-    //    val evidence = List("man(socrates)").map(parse)
-    //    val assumptions = List(HardWeightedExpression(parse("all x.(man(x) -> mortal(x))")))
-    //    val goal = parse("mortal(socrates)")
-    //    println(atp.prove(constants, declarations, evidence, assumptions, goal))
+  def prove(text: String, hyp: String) = {
+    val List(Some(txtEx), Some(hypEx)) = discourseIterpreter.batchInterpret(List(text, hyp), Some(List("t", "h")), false, false)
 
     val IndvVar = """^(x\d*)$""".r
     val EvntVar = """^(e\d*)$""".r
     val PropVar = """^(p\d*)$""".r
 
-    def combinePredicatesAndArgTypes(list: List[(Map[FolExpression, Seq[String]], Map[String, Set[String]])]): (Map[FolExpression, Seq[String]], Map[String, Set[String]]) = {
+    def combinePredicatesAndArgTypes(list: List[(Map[BoxerExpression, Seq[String]], Map[String, Set[String]])]): (Map[BoxerExpression, Seq[String]], Map[String, Set[String]]) = {
       val (predTypes, constTypes) = list.unzip
       val combinedPredTypes =
         predTypes.flatten.groupByKey.mapValuesStrict {
@@ -100,25 +50,35 @@ object TextualTheoremProver {
       (combinedPredTypes, combinedConstTypes)
     }
 
-    def getPredicatesAndArgTypes(e: FolExpression): (Map[FolExpression, Seq[String]], Map[String, Set[String]]) =
+    def getPredicatesAndArgTypes(e: BoxerExpression): (Map[BoxerExpression, Seq[String]], Map[String, Set[String]]) =
       e match {
-        case e @ FolAtom(_, args @ _*) =>
-          val constants = new ListBuffer[(String, String)]
-          val argTypes =
-            args.map(_.name).map {
-              case IndvVar(v) => "indv"
-              case EvntVar(v) => "evnt"
-              case PropVar(v) => "prop"
-              case c => constants += "indv" -> c; "indv"
-            }
-          val predTypes = Map(e.pred -> argTypes)
-          val constTypes = constants.toSet.groupByKey
-          (predTypes, constTypes)
+        case BoxerPred(discId, indices, variable, name, pos) =>
+          _getPredAndArgTypesTypes(name, List(variable))
+        case BoxerNamed(discId, indices, variable, name, typ, sense) =>
+          _getPredAndArgTypesTypes(name, List(variable))
+        case BoxerRel(discId, indices, event, variable, name, sense) =>
+          _getPredAndArgTypesTypes(name, List(event, variable))
         case _ =>
           e.visit(getPredicatesAndArgTypes, combinePredicatesAndArgTypes)
       }
 
-    val (predTypes, constTypes) = combinePredicatesAndArgTypes(List(a, b, c).map(getPredicatesAndArgTypes))
+    def _getPredAndArgTypesTypes(name: String, args: List[BoxerVariable]) = {
+      val (argTypes, constants) =
+        args.map(_.name).foldLeft(List[String](), List[(String, String)]()) {
+          case ((argTypes, constants), varName) =>
+            varName match {
+              case IndvVar(v) => ("indv" :: argTypes, constants)
+              case EvntVar(v) => ("evnt" :: argTypes, constants)
+              case PropVar(v) => ("prop" :: argTypes, constants)
+              case c => ("indv" :: argTypes, "indv" -> c :: constants)
+            }
+        }
+      val predTypes = Map(name -> argTypes.reverse)
+      val constTypes = constants.toSet.groupByKey
+      (predTypes, constTypes)
+    }
+
+    val (predTypes, constTypes) = combinePredicatesAndArgTypes(List(txtEx, hypEx).map(getPredicatesAndArgTypes))
     val constants =
       Map(
         "indv" -> Set("default_indv_variable"),
@@ -126,9 +86,9 @@ object TextualTheoremProver {
         "prop" -> Set("default_prop_variable")) ++ constTypes
     val declarations = predTypes.toList.map { case (pred, args) => pred(args.map(n => FolVariableExpression(Variable(n))): _*) } //List("man(ind)", "mortal(ind)")
     val evidence = List() //"man(socrates)"
-    val assumptions = List(HardWeightedExpression(a), HardWeightedExpression(b))
-    val goal = c
-    println(atp.prove(constants, declarations, evidence, assumptions, goal))
+    val assumptions = List(HardWeightedExpression(txtEx))
+    val goal = hypEx
+    println(probabilisticTheoremProver.prove(constants, declarations, evidence, assumptions, goal))
 
   }
 

@@ -1,37 +1,44 @@
-package utcompling.mlnsemantics.modal
+package utcompling.mlnsemantics.inference
 
-import scala.collection.mutable.SetBuilder
-import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.Boxer2DrtExpressionInterpreter
-import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
-import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerPred
-import utcompling.scalalogic.fol.expression.parse.FolLogicParser
-import utcompling.scalalogic.inference.TheoremProver
-import utcompling.scalalogic.util.StringUtils._
 import edu.mit.jwi.item.POS
-import scala.collection.JavaConversions._
-import utcompling.scalalogic.top.expression.Variable
-import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerImp
-import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerDrs
-import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerVariable
+import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.mutable.SetBuilder
+import utcompling.mlnsemantics.inference.support.HardWeightedExpression
+import utcompling.mlnsemantics.inference.support.WeightedExpression
+import utcompling.mlnsemantics.vecspace.BowVector
 import utcompling.mlnsemantics.wordnet.Wordnet
-import utcompling.mlnsemantics.wordnet.WordnetImpl
+import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.Boxer2DrtExpressionInterpreter
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerDrs
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerImp
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerPred
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerVariable
 
-class WordnetModalTheoremProverDecorator[R](
-  theoremProver: TheoremProver[BoxerExpression, R],
-  wn: Wordnet = new WordnetImpl())
-  extends TheoremProver[BoxerExpression, R] {
+class InferenceRuleInjectingProbabilisticTheoremProver(
+  //inferenceRuleGenerator: InferenceRuleGenerator,
+  vecspaceFactory: (String => Boolean) => Map[String, BowVector],
+  wordnet: Wordnet,
+  delegate: ProbabilisticTheoremProver[BoxerExpression])
+  extends ProbabilisticTheoremProver[BoxerExpression] {
 
   private def d(drs: BoxerExpression) = new Boxer2DrtExpressionInterpreter().interpret(drs)
 
-  def prove(assumptions: List[BoxerExpression], goal: Option[BoxerExpression], verbose: Boolean = false): Option[R] = {
-    val newRules = makeNewRules(assumptions, goal)
-    return theoremProver.prove(assumptions ++ newRules, goal, verbose)
+  override def prove(
+    constants: Map[String, Set[String]],
+    declarations: Map[String, Seq[String]],
+    evidence: List[BoxerExpression],
+    assumptions: List[WeightedExpression[BoxerExpression]],
+    goal: BoxerExpression): Option[Double] = {
+
+    val rules = makeNewRules(assumptions.map(_.expression), goal).map(HardWeightedExpression(_))
+    delegate.prove(constants, declarations, evidence, assumptions ++ rules, goal)
+
   }
 
-  def makeNewRules(assumptions: List[BoxerExpression], goal: Option[BoxerExpression], verbose: Boolean = false): Set[BoxerExpression] = {
-    val allPreds = (assumptions ++ (goal.map(List(_)).getOrElse(List()))).flatMap(getAllPreds).toSet
+  def makeNewRules(assumptions: List[BoxerExpression], goal: BoxerExpression): Set[BoxerExpression] = {
+    val allPreds = (assumptions :+ goal).flatMap(getAllPreds).toSet
     val rules = makeRules(allPreds)
-    rules.map(x => println(d(x).pretty))
+    rules.foreach(x => println(d(x).pretty))
     return rules
   }
 
@@ -67,21 +74,23 @@ class WordnetModalTheoremProverDecorator[R](
       BoxerDrs(List(), List(BoxerPred(cDiscId, cIndices, v, cName, cPos, cSense))))
   }
 
+  val VariableRe = """^([a-z])\d*$""".r
+
   private def variableType(pred: BoxerPred): String =
-    """^([a-z])\d*$""".r.findFirstMatchIn(pred.variable.name).get.group(1) match {
-      case "p" => "p"
-      case "e" => "e"
+    pred.variable.name match {
+      case VariableRe("p") => "p"
+      case VariableRe("e") => "e"
       case _ => "x"
     }
 
   private def getSynonyms(name: String, pos: String): Set[String] =
-    (for (p <- getPos(pos); s <- wn.synsets(name, p); w <- s.getWords) yield w.getLemma).toSet
+    (for (p <- getPos(pos); s <- wordnet.synsets(name, p); w <- s.getWords) yield w.getLemma).toSet
 
   private def getHypernyms(name: String, pos: String): Set[String] =
     (for (
       p <- getPos(pos);
-      s <- wn.synsets(name, p);
-      h <- wn.hypernyms(s);
+      s <- wordnet.synsets(name, p);
+      h <- wordnet.hypernyms(s);
       w <- h.getWords
     ) yield w.getLemma).toSet
 
