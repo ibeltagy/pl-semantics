@@ -1,7 +1,7 @@
 package utcompling.mlnsemantics.inference
 
 import edu.mit.jwi.item.POS
-import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions._
 import scala.collection.mutable.SetBuilder
 import utcompling.mlnsemantics.inference.support.HardWeightedExpression
 import utcompling.mlnsemantics.inference.support.WeightedExpression
@@ -30,15 +30,17 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     assumptions: List[WeightedExpression[BoxerExpression]],
     goal: BoxerExpression): Option[Double] = {
 
-    val rules = makeNewRules(assumptions.map(_.expression), goal).map(HardWeightedExpression(_))
+    assumptions.foreach(x => println(d(x.expression).pretty))
+    val rules = makeNewRules(assumptions.map(_.expression), goal)
+    println(d(goal).pretty)
     delegate.prove(constants, declarations, evidence, assumptions ++ rules, goal)
 
   }
 
-  def makeNewRules(assumptions: List[BoxerExpression], goal: BoxerExpression): Set[BoxerExpression] = {
+  def makeNewRules(assumptions: List[BoxerExpression], goal: BoxerExpression): Set[WeightedExpression[BoxerExpression]] = {
     val allPreds = (assumptions :+ goal).flatMap(getAllPreds).toSet
     val rules = makeRules(allPreds)
-    rules.foreach(x => println(d(x).pretty))
+    rules.foreach(x => println(d(x.expression).pretty))
     return rules
   }
 
@@ -48,8 +50,8 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
       case _ => e.visit(getAllPreds, (parts: List[Set[BoxerPred]]) => parts.flatten.toSet, Set.empty[BoxerPred])
     }
 
-  private def makeRules(allPreds: Set[BoxerPred]): Set[BoxerExpression] = {
-    val rules = new SetBuilder[BoxerExpression, Set[BoxerExpression]](Set[BoxerExpression]())
+  private def makeRules(allPreds: Set[BoxerPred]): Set[WeightedExpression[BoxerExpression]] = {
+    val rules = new SetBuilder[WeightedExpression[BoxerExpression], Set[WeightedExpression[BoxerExpression]]](Set[WeightedExpression[BoxerExpression]]())
     for ((pos, preds) <- allPreds.groupBy(_.pos)) {
       val predsByNameVar = preds.groupBy(_.name).mapValues(_.groupBy(variableType))
       for (pred <- preds) {
@@ -65,13 +67,15 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     return rules.result
   }
 
-  private def makeRule(antecedent: BoxerPred, consequent: BoxerPred): BoxerExpression = {
+  private def makeRule(antecedent: BoxerPred, consequent: BoxerPred): WeightedExpression[BoxerExpression] = {
     val BoxerPred(aDiscId, aIndices, aVariable, aName, aPos, aSense) = antecedent
     val BoxerPred(cDiscId, cIndices, cVariable, cName, cPos, cSense) = consequent
     val v = BoxerVariable(variableType(antecedent))
-    return BoxerImp(aDiscId, aIndices,
-      BoxerDrs(List(List() -> v), List(BoxerPred(aDiscId, aIndices, v, aName, aPos, aSense))),
-      BoxerDrs(List(), List(BoxerPred(cDiscId, cIndices, v, cName, cPos, cSense))))
+    val unweightedRule =
+      BoxerImp(aDiscId, aIndices,
+        BoxerDrs(List(List() -> v), List(BoxerPred(aDiscId, aIndices, v, aName, aPos, aSense))),
+        BoxerDrs(List(), List(BoxerPred(cDiscId, cIndices, v, cName, cPos, cSense))))
+    HardWeightedExpression(unweightedRule) //TODO: Apply weight here
   }
 
   val VariableRe = """^([a-z])\d*$""".r
@@ -90,7 +94,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     (for (
       p <- getPos(pos);
       s <- wordnet.synsets(name, p);
-      h <- wordnet.hypernyms(s);
+      h <- wordnet.allHypernyms(s);
       w <- h.getWords
     ) yield w.getLemma).toSet
 

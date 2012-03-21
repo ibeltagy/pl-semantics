@@ -36,10 +36,10 @@ class FakeProbabilisticTheoremProver[T, R](
 
     // TODO: Add closed-word assumption using constants and declarations 
 
-    discreteTheoremProver.prove(evidence ++ assumptions.map(_.expression), goal, LOG.isDebugEnabled).map {
-      case true => 1.
-      case false => 0.
-    }
+    discreteTheoremProver.prove(evidence ++ assumptions.map(_.expression), goal, LOG.isDebugEnabled)
+      .map {
+        case _ => 1. // if Some is returned 
+      }
 
   }
 

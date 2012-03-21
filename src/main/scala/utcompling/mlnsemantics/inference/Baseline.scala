@@ -20,13 +20,15 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.U
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.OccurrenceMarkingBoxerExpressionInterpreterDecorator
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.BoxerExpressionInterpreter
 import utcompling.scalalogic.drt.expression.DrtExpression
+import edu.mit.jwi.item.POS
+import scala.collection.JavaConversions.asScalaBuffer
 
 object Baseline {
 
   def main(args: Array[String]) {
 
-    val txt = "an architect bought a red car"
-    val hyp = "a person purchased a vehicle"
+    val txt = "an architect bought a new red car"
+    val hyp = "a person purchased a new vehicle"
 
     //    def i(drs: String, parse: Discourse): BoxerExpression =
     //      new ModalDiscourseInterpreter().interpret("")
@@ -56,7 +58,7 @@ object Baseline {
               new Prover9TheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/LADR-2009-11A/bin/prover9"), 5, false)))))
 
     println(ttp.prove(txt, hyp))
-    
+
     //    def mtpo = new ModalTheoremProver(tpo)
     //    def vtpo = new VisualizingModalTheoremProverDecorator(mtpo)
     //    def vwtpo = new VisualizingModalTheoremProverDecorator(new InferenceRuleInjectingProbabilisticTheoremProver(mtpo))
