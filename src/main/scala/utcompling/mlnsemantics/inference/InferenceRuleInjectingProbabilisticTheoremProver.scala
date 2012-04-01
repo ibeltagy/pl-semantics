@@ -34,7 +34,6 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     val rules = makeNewRules(assumptions.map(_.expression), goal)
     println(d(goal).pretty)
     delegate.prove(constants, declarations, evidence, assumptions ++ rules, goal)
-
   }
 
   def makeNewRules(assumptions: List[BoxerExpression], goal: BoxerExpression): Set[WeightedExpression[BoxerExpression]] = {
@@ -51,20 +50,26 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     }
 
   private def makeRules(allPreds: Set[BoxerPred]): Set[WeightedExpression[BoxerExpression]] = {
-    val rules = new SetBuilder[WeightedExpression[BoxerExpression], Set[WeightedExpression[BoxerExpression]]](Set[WeightedExpression[BoxerExpression]]())
-    for ((pos, preds) <- allPreds.groupBy(_.pos)) {
-      val predsByNameVar = preds.groupBy(_.name).mapValues(_.groupBy(variableType))
-      for (pred <- preds) {
-        val varType = variableType(pred)
-        for (nym <- (getSynonyms(pred.name, pred.pos) ++ getHypernyms(pred.name, pred.pos))) {
-          for (consequent <- predsByNameVar.getOrElse(nym, Map()).getOrElse(varType, Set())) {
-            if (pred != consequent)
-              rules += makeRule(pred, consequent)
-          }
-        }
-      }
-    }
-    return rules.result
+    (for (
+      (pos, preds) <- allPreds.groupBy(_.pos);
+      predsByNameVar = preds.groupBy(_.name).mapValues(_.groupBy(variableType));
+      pred <- preds;
+      rule <- makeRulesForPred(pred, predsByNameVar)
+    ) yield rule).toSet
+  }
+
+  private def makeRulesForPred(pred: BoxerPred, predsByNameVar: Map[String, Map[String, Set[BoxerPred]]]) = {
+    val varType = variableType(pred)
+    val synonymsAndHypernyms = getSynonyms(pred.name, pred.pos) ++ getHypernyms(pred.name, pred.pos)
+    val consequents =
+      synonymsAndHypernyms
+        .flatMap(nym => predsByNameVar.getOrElse(nym, Map()).getOrElse(varType, Set()))
+        .filter(_ != pred)
+    makeRulesForPredConsequents(pred, consequents)
+  }
+
+  protected def makeRulesForPredConsequents(pred: BoxerPred, consequents: Set[BoxerPred]) = {
+    consequents.map(consequent => makeRule(pred, consequent))
   }
 
   private def makeRule(antecedent: BoxerPred, consequent: BoxerPred): WeightedExpression[BoxerExpression] = {
