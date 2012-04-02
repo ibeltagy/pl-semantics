@@ -61,10 +61,12 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
   private def makeRulesForPred(pred: BoxerPred, predsByNameVar: Map[String, Map[String, Set[BoxerPred]]]) = {
     val varType = variableType(pred)
     val synonymsAndHypernyms = getSynonyms(pred.name, pred.pos) ++ getHypernyms(pred.name, pred.pos)
-    val consequents =
-      synonymsAndHypernyms
-        .flatMap(nym => predsByNameVar.getOrElse(nym, Map()).getOrElse(varType, Set()))
-        .filter(_ != pred)
+
+    val consequents: Set[BoxerPred] =
+      synonymsAndHypernyms.flatMap(nym =>
+        predsByNameVar.get(nym).flatMap(constituentMap =>
+          constituentMap.get(varType))).flatten.filter(_ != pred)
+
     makeRulesForPredConsequents(pred, consequents)
   }
 
