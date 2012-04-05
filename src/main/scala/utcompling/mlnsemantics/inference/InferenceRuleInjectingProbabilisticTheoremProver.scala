@@ -13,6 +13,7 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerImp
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerPred
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerVariable
+import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 
 class InferenceRuleInjectingProbabilisticTheoremProver(
   //inferenceRuleGenerator: InferenceRuleGenerator,
@@ -61,28 +62,29 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
   private def makeRulesForPred(pred: BoxerPred, predsByNameVar: Map[String, Map[String, Set[BoxerPred]]]) = {
     val varType = variableType(pred)
     val synonymsAndHypernyms = getSynonyms(pred.name, pred.pos) ++ getHypernyms(pred.name, pred.pos)
-
-    val consequents: Set[BoxerPred] =
+    val consequents =
       synonymsAndHypernyms.flatMap(nym =>
         predsByNameVar.get(nym).flatMap(constituentMap =>
           constituentMap.get(varType))).flatten.filter(_ != pred)
-
     makeRulesForPredConsequents(pred, consequents)
   }
 
   protected def makeRulesForPredConsequents(pred: BoxerPred, consequents: Set[BoxerPred]) = {
-    consequents.map(consequent => makeRule(pred, consequent))
+    consequents.map(consequent => makeRule(pred, consequent, None))
   }
 
-  private def makeRule(antecedent: BoxerPred, consequent: BoxerPred): WeightedExpression[BoxerExpression] = {
+  private def makeRule(antecedent: BoxerPred, consequent: BoxerPred, weight: Option[Double]): WeightedExpression[BoxerExpression] = {
     val BoxerPred(aDiscId, aIndices, aVariable, aName, aPos, aSense) = antecedent
     val BoxerPred(cDiscId, cIndices, cVariable, cName, cPos, cSense) = consequent
     val v = BoxerVariable(variableType(antecedent))
     val unweightedRule =
       BoxerImp(aDiscId, aIndices,
-        BoxerDrs(List(List() -> v), List(BoxerPred(aDiscId, aIndices, v, aName, aPos, aSense))),
-        BoxerDrs(List(), List(BoxerPred(cDiscId, cIndices, v, cName, cPos, cSense))))
-    HardWeightedExpression(unweightedRule) //TODO: Apply weight here
+        BoxerDrs(List(Nil -> v), List(BoxerPred(aDiscId, aIndices, v, aName, aPos, aSense))),
+        BoxerDrs(Nil, List(BoxerPred(cDiscId, cIndices, v, cName, cPos, cSense))))
+    weight match {
+      case Some(w) => SoftWeightedExpression(unweightedRule, w)
+      case None => HardWeightedExpression(unweightedRule)
+    }
   }
 
   val VariableRe = """^([a-z])\d*$""".r
@@ -95,7 +97,11 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     }
 
   private def getSynonyms(name: String, pos: String): Set[String] =
-    (for (p <- getPos(pos); s <- wordnet.synsets(name, p); w <- s.getWords) yield w.getLemma).toSet
+    (for (
+      p <- getPos(pos);
+      s <- wordnet.synsets(name, p);
+      w <- s.getWords
+    ) yield w.getLemma).toSet
 
   private def getHypernyms(name: String, pos: String): Set[String] =
     (for (
@@ -110,7 +116,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
       case "n" => List(POS.NOUN)
       case "v" => List(POS.VERB)
       case "a" => List(POS.ADJECTIVE)
-      case _ => List()
+      case _ => Nil
     }
 
 }

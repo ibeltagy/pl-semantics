@@ -1,6 +1,6 @@
 package utcompling.mlnsemantics.inference.support
 
-trait WeightedExpression[T] {
+sealed trait WeightedExpression[T] {
   val expression: T
 }
 

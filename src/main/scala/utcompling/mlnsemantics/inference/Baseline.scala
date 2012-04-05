@@ -30,16 +30,6 @@ object Baseline {
     val txt = "an architect bought a new red car"
     val hyp = "a person purchased a new vehicle"
 
-    //    def i(drs: String, parse: Discourse): BoxerExpression =
-    //      new ModalDiscourseInterpreter().interpret("")
-
-    //    def p(s: String) = new BoxerExpressionParser().parse(s)
-    //    def f(s: String) = new FolLogicParser().parse(s)
-    //    def drtp(s: String) = new DrtLogicParser().parse(s)
-    //    def l(st: String*) = st.map(f).toList
-    //    def ds(drs: String) = d(p(drs))
-    //    def d(drs: BoxerExpression) = new Boxer2DrtExpressionInterpreter().interpret(drs).simplify
-
     val ttp =
       new TextualTheoremProver(
         new ModalDiscourseInterpreter(),

@@ -33,9 +33,9 @@ object BowVectorSpace {
 class BowVector(val counts: Map[String, Double]) {
 
   def cosine(other: BowVector) = {
-    val numer = (this zip other).sumMap { case ((_, t), (_, o)) => t * o }
-    val denom1 = math.sqrt(this.counts.sumMap { case (_, c) => c * c })
-    val denom2 = math.sqrt(other.counts.sumMap { case (_, c) => c * c })
+    val numer = (this zip other).sumBy { case ((_, t), (_, o)) => t * o }
+    val denom1 = math.sqrt(this.counts.sumBy { case (_, c) => c * c })
+    val denom2 = math.sqrt(other.counts.sumBy { case (_, c) => c * c })
     numer / (denom1 * denom2)
   }
 
