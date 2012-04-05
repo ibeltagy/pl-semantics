@@ -16,9 +16,8 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerVariable
 import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 
 class InferenceRuleInjectingProbabilisticTheoremProver(
-  //inferenceRuleGenerator: InferenceRuleGenerator,
-  vecspaceFactory: (String => Boolean) => Map[String, BowVector],
   wordnet: Wordnet,
+  ruleWeighter: RuleWeighter,
   delegate: ProbabilisticTheoremProver[BoxerExpression])
   extends ProbabilisticTheoremProver[BoxerExpression] {
 
@@ -70,7 +69,8 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
   }
 
   protected def makeRulesForPredConsequents(pred: BoxerPred, consequents: Set[BoxerPred]) = {
-    consequents.map(consequent => makeRule(pred, consequent, None))
+    for ((consequent, weight) <- ruleWeighter.weightForRules(pred, consequents))
+      yield makeRule(pred, consequent, weight)
   }
 
   private def makeRule(antecedent: BoxerPred, consequent: BoxerPred, weight: Option[Double]): WeightedExpression[BoxerExpression] = {
