@@ -32,6 +32,10 @@ object BowVectorSpace {
 
 class BowVector(val counts: Map[String, Double]) {
 
+  def +(other: BowVector) = {
+    new BowVector((this zip2 other).map { case (k, (t, o)) => (k, t + o) })
+  }
+
   def cosine(other: BowVector) = {
     val numer = (this zip other).sumBy { case ((_, t), (_, o)) => t * o }
     val denom1 = math.sqrt(this.counts.sumBy { case (_, c) => c * c })
@@ -63,8 +67,8 @@ class BowVector(val counts: Map[String, Double]) {
     doZip(t, o, List())
   }
 
-  def zip2(other: BowVector): Iterable[(String, (Double, Double))] = {
-    (this.counts.keySet ++ other.counts.keySet).mapTo(k => (this.counts.getOrElse(k, 0.), other.counts.getOrElse(k, 0.)))
+  def zip2(other: BowVector): Map[String, (Double, Double)] = {
+    (this.counts.keySet ++ other.counts.keySet).mapTo(k => (this.counts.getOrElse(k, 0.), other.counts.getOrElse(k, 0.))).toMap
   }
 
   override def toString = "BowVector(%s)".format(counts.map { case (k, v) => "%s -> %s".format(k, v) }.mkString(", "))

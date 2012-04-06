@@ -5,42 +5,43 @@ import utcompling.mlnsemantics.vecspace.BowVector
 import utcompling.scalalogic.util.CollectionUtils._
 
 trait RuleWeighter {
-  def weightForRules(pred: BoxerPred, consequents: Iterable[BoxerPred]): Iterable[(BoxerPred, Option[Double])]
+  def weightForRules(antecedentPreds: Iterable[BoxerPred], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]): Iterable[(BoxerPred, Option[Double])]
 }
 
 case class UniformHardRuleWeighter() extends RuleWeighter {
-  override def weightForRules(pred: BoxerPred, consequents: Iterable[BoxerPred]) = {
+  override def weightForRules(antecedentPreds: Iterable[BoxerPred], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]) = {
     consequents.mapTo(_ => None)
   }
 }
 
 case class VecspaceRuleWeighter(
-  vecspaceFactory: (String => Boolean) => Map[String, BowVector])
+  compositeVectorMaker: CompositeVectorMaker)
   extends RuleWeighter {
 
-  override def weightForRules(pred: BoxerPred, consequents: Iterable[BoxerPred]) = {
+  override def weightForRules(antecedentPreds: Iterable[BoxerPred], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]) = {
+    // TODO: Remove this match stuff?
     consequents.toSeq match {
-      case Seq() =>
+      case Seq() => 
         Iterable.empty
       case Seq(consequent) =>
         Iterable(consequent -> Some(1.))
       case Seq(consequents @ _*) =>
-        val p = pred.name
-        val vs = vecspaceFactory(consequents.map(_.name).toSet + p)
-        vs.get(p) match {
-          case Some(pv) =>
-            val similarities =
-              consequents.mapTo { consequent =>
-                vs.get(consequent.name) match {
-                  case Some(cv) => pv cosine cv
-                  case None => Double.NegativeInfinity
-                }
-              }
-            val ranks = similarities.sortBy(_._2).zipWithIndex.map { case ((c, _), rank) => (c, rank) }
-            ranks.normalizeValues.mapValuesStrict(Option(_))
-          case None =>
-            Iterable.empty
-        }
+        val pv = compositeVectorMaker.make(antecedentPreds, vectorspace)
+        val similarities =
+          consequents.map { consequent =>
+            (vectorspace.get(consequent.name) match {
+              case Some(cv) => pv cosine cv
+              case None => Double.NegativeInfinity
+            }, consequent)
+          }
+        val sortedGroupedSimilarities = similarities.groupByKey.toSeq.sortBy(-_._1).map(_._2)
+        val ranks =
+          sortedGroupedSimilarities
+            .foldLeft((Map[BoxerPred, Int](), 1)) {
+              case ((accum, rank), cs) =>
+                (accum ++ cs.mapTo(_ => rank), rank + cs.size)
+            }._1
+        ranks.normalizeValues.mapValuesStrict(Option(_))
     }
   }
 }
@@ -49,8 +50,8 @@ case class TopRuleWeighter(
   delegate: RuleWeighter)
   extends RuleWeighter {
 
-  override def weightForRules(pred: BoxerPred, consequents: Iterable[BoxerPred]) = {
-    val weighted = delegate.weightForRules(pred, consequents)
+  override def weightForRules(antecedentPreds: Iterable[BoxerPred], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]) = {
+    val weighted = delegate.weightForRules(antecedentPreds, consequents, vectorspace)
     if (weighted.nonEmpty) {
       val topConsequent = weighted.maxBy(_._2.getOrElse(Double.PositiveInfinity))._1
       Iterable(topConsequent -> None)

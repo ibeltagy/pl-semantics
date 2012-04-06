@@ -17,6 +17,7 @@ import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 
 class InferenceRuleInjectingProbabilisticTheoremProver(
   wordnet: Wordnet,
+  vecspaceFactory: ((String => Boolean) => Map[String, BowVector]),
   ruleWeighter: RuleWeighter,
   delegate: ProbabilisticTheoremProver[BoxerExpression])
   extends ProbabilisticTheoremProver[BoxerExpression] {
@@ -37,39 +38,42 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
   }
 
   def makeNewRules(assumptions: List[BoxerExpression], goal: BoxerExpression): Set[WeightedExpression[BoxerExpression]] = {
-    val allPreds = (assumptions :+ goal).flatMap(getAllPreds).toSet
-    val rules = makeRules(allPreds)
+    val allAssumptionPreds = assumptions.flatMap(getAllPreds)
+    val allGoalPreds = getAllPreds(goal)
+    val allPreds = allAssumptionPreds.toSet ++ allGoalPreds
+    val vectorspace = vecspaceFactory(allPreds.map(_.name))
+    val rules = makeRules(allPreds, allAssumptionPreds, vectorspace)
     rules.foreach(x => println(d(x.expression).pretty))
     return rules
   }
 
-  def getAllPreds(e: BoxerExpression): Set[BoxerPred] =
+  def getAllPreds(e: BoxerExpression): Iterable[BoxerPred] =
     e match {
       case p: BoxerPred => Set(p)
-      case _ => e.visit(getAllPreds, (parts: List[Set[BoxerPred]]) => parts.flatten.toSet, Set.empty[BoxerPred])
+      case _ => e.visit(getAllPreds, (parts: List[Iterable[BoxerPred]]) => parts.flatten, Iterable.empty[BoxerPred])
     }
 
-  private def makeRules(allPreds: Set[BoxerPred]): Set[WeightedExpression[BoxerExpression]] = {
+  private def makeRules(allPreds: Set[BoxerPred], antecedentPreds: Iterable[BoxerPred], vectorspace: Map[String, BowVector]): Set[WeightedExpression[BoxerExpression]] = {
     (for (
       (pos, preds) <- allPreds.groupBy(_.pos);
       predsByNameVar = preds.groupBy(_.name).mapValues(_.groupBy(variableType));
       pred <- preds;
-      rule <- makeRulesForPred(pred, predsByNameVar)
+      rule <- makeRulesForPred(pred, predsByNameVar, antecedentPreds, vectorspace)
     ) yield rule).toSet
   }
 
-  private def makeRulesForPred(pred: BoxerPred, predsByNameVar: Map[String, Map[String, Set[BoxerPred]]]) = {
+  private def makeRulesForPred(pred: BoxerPred, predsByNameVar: Map[String, Map[String, Set[BoxerPred]]], antecedentPreds: Iterable[BoxerPred], vectorspace: Map[String, BowVector]) = {
     val varType = variableType(pred)
     val synonymsAndHypernyms = getSynonyms(pred.name, pred.pos) ++ getHypernyms(pred.name, pred.pos)
     val consequents =
       synonymsAndHypernyms.flatMap(nym =>
         predsByNameVar.get(nym).flatMap(constituentMap =>
           constituentMap.get(varType))).flatten.filter(_ != pred)
-    makeRulesForPredConsequents(pred, consequents)
+    makeRulesForPredConsequents(pred, antecedentPreds, consequents, vectorspace)
   }
 
-  protected def makeRulesForPredConsequents(pred: BoxerPred, consequents: Set[BoxerPred]) = {
-    for ((consequent, weight) <- ruleWeighter.weightForRules(pred, consequents))
+  protected def makeRulesForPredConsequents(pred: BoxerPred, antecedentPreds: Iterable[BoxerPred], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]) = {
+    for ((consequent, weight) <- ruleWeighter.weightForRules(antecedentPreds, consequents, vectorspace))
       yield makeRule(pred, consequent, weight)
   }
 
