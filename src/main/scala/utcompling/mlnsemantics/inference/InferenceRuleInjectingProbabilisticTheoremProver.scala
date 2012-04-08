@@ -14,6 +14,7 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerImp
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerPred
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerVariable
 import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
+import utcompling.scalalogic.util.CollectionUtils._
 
 class InferenceRuleInjectingProbabilisticTheoremProver(
   wordnet: Wordnet,
@@ -38,42 +39,38 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
   }
 
   def makeNewRules(assumptions: List[BoxerExpression], goal: BoxerExpression): Set[WeightedExpression[BoxerExpression]] = {
-    val allAssumptionPreds = assumptions.flatMap(getAllPreds)
-    val allGoalPreds = getAllPreds(goal)
-    val allPreds = allAssumptionPreds.toSet ++ allGoalPreds
-    val vectorspace = vecspaceFactory(allPreds.map(_.name))
-    val rules = makeRules(allPreds, allAssumptionPreds, vectorspace)
+    val allPredsAndContexts = (assumptions :+ goal).flatMap(getAllPredsAndContexts)
+    val vectorspace = vecspaceFactory(allPredsAndContexts.flatMap { case (pred, context) => (pred +: context).map(_.name) }.toSet)
+    val rules = makeRules(allPredsAndContexts, vectorspace)
     rules.foreach(x => println(d(x.expression).pretty))
     return rules
   }
 
-  def getAllPreds(e: BoxerExpression): Iterable[BoxerPred] =
+  def getAllPredsAndContexts(e: BoxerExpression) = {
+    val preds = getAllPreds(e)
+    preds.zipWithIndex.map { case (p, i) => p -> (preds.take(i) ++ preds.drop(i + 1)) }
+  }
+
+  private def getAllPreds(e: BoxerExpression): Seq[BoxerPred] =
     e match {
-      case p: BoxerPred => Set(p)
-      case _ => e.visit(getAllPreds, (parts: List[Iterable[BoxerPred]]) => parts.flatten, Iterable.empty[BoxerPred])
+      case p: BoxerPred => Seq(p)
+      case _ => e.visit(getAllPreds, (parts: List[Seq[BoxerPred]]) => parts.flatten, Seq.empty[BoxerPred])
     }
 
-  private def makeRules(allPreds: Set[BoxerPred], antecedentPreds: Iterable[BoxerPred], vectorspace: Map[String, BowVector]): Set[WeightedExpression[BoxerExpression]] = {
+  private def makeRules(allPredsAndContexts: Iterable[(BoxerPred, Iterable[BoxerPred])], vectorspace: Map[String, BowVector]): Set[WeightedExpression[BoxerExpression]] = {
     (for (
-      (pos, preds) <- allPreds.groupBy(_.pos);
-      predsByNameVar = preds.groupBy(_.name).mapValues(_.groupBy(variableType));
-      pred <- preds;
-      rule <- makeRulesForPred(pred, predsByNameVar, antecedentPreds, vectorspace)
+      (pos, preds1) <- allPredsAndContexts.groupBy(_._1.pos);
+      (vartype, preds2) <- preds1.groupBy(p => variableType(p._1));
+      predsByName = preds2.map(p => (p._1.name, p._1)).groupByKey;
+      (pred, antecedentContext) <- preds2;
+      rule <- makeRulesForPred(pred, antecedentContext, predsByName, vectorspace)
     ) yield rule).toSet
   }
 
-  private def makeRulesForPred(pred: BoxerPred, predsByNameVar: Map[String, Map[String, Set[BoxerPred]]], antecedentPreds: Iterable[BoxerPred], vectorspace: Map[String, BowVector]) = {
-    val varType = variableType(pred)
+  private def makeRulesForPred(pred: BoxerPred, antecedentContext: Iterable[BoxerPred], predsByName: Map[String, Iterable[BoxerPred]], vectorspace: Map[String, BowVector]) = {
     val synonymsAndHypernyms = getSynonyms(pred.name, pred.pos) ++ getHypernyms(pred.name, pred.pos)
-    val consequents =
-      synonymsAndHypernyms.flatMap(nym =>
-        predsByNameVar.get(nym).flatMap(constituentMap =>
-          constituentMap.get(varType))).flatten.filter(_ != pred)
-    makeRulesForPredConsequents(pred, antecedentPreds, consequents, vectorspace)
-  }
-
-  protected def makeRulesForPredConsequents(pred: BoxerPred, antecedentPreds: Iterable[BoxerPred], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]) = {
-    for ((consequent, weight) <- ruleWeighter.weightForRules(antecedentPreds, consequents, vectorspace))
+    val consequents = synonymsAndHypernyms.flatMap(nym => predsByName.get(nym)).flatten.filter(_ != pred)
+    for ((consequent, weight) <- ruleWeighter.weightForRules(antecedentContext, consequents, vectorspace))
       yield makeRule(pred, consequent, weight)
   }
 
