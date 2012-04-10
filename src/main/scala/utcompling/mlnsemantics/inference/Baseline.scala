@@ -37,8 +37,9 @@ object Baseline {
           new WordnetImpl(),
           (words: (String => Boolean)) => BowVectorSpace("resources/nytgiga.lem.1m.vc.f2000.m50.wInf", words),
           new TopRuleWeighter(
-            new VecspaceRuleWeighter(
-              new SimpleCompositeVectorMaker())),
+            new RankingRuleWeighter(
+              new VecspaceRuleWeighter(
+                new SimpleCompositeVectorMaker()))),
           new TypeConvertingPTP(
             new BoxerExpressionInterpreter[FolExpression] {
               def interpret(x: BoxerExpression): FolExpression =
