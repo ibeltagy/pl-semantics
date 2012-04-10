@@ -1,5 +1,3 @@
-import AssemblyKeys._
-
 name := "mln-semantics"
 
 version := "0.0.1"
@@ -52,8 +50,4 @@ libraryDependencies ++= Seq(
 ////////////////////////////////////////////////////////
 // END FOR SCRUNCH
 ////////////////////////////////////////////////////////
-
-test in assembly := {}
-
-seq(assemblySettings: _*)
 
