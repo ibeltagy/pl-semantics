@@ -28,83 +28,47 @@ to the format given in Figure \ref{fig:canonical-drs}.
 \begin{figure}
   \centering
   \subfloat[Output from Boxer]{\label{fig:boxer-drs}
-		\dhgdrs{}{{\footnotesize x0~ x1}}{
-			{\footnotesize named(x0,ed,per)} \\
-			\vspace{-.7ex}
-			{\footnotesize named(x1,dave,per)} \\
-			\vspace{-.7ex}
-			\dhgnegdrs{{\footnotesize x2~ x3}}{
-				\vspace{-.7ex}
-				{\footnotesize forget(x2)} \\
-				\vspace{-.7ex}
-				{\footnotesize event(x2)} \\
-				\vspace{-.7ex}
-				{\footnotesize agent(x2,x0)} \\ 
-				\vspace{-.7ex}
-				{\footnotesize theme(x2,x3)} \\ 
-				\vspace{-.7ex}
-				\dhgdrs{{\footnotesize x3:}}{{\footnotesize x4~ x5}}{
-					\vspace{-.7ex}
-					{\footnotesize arrange(x4)} \\ 
-					\vspace{-.7ex}
-					{\footnotesize event(x4)} \\ 
-					\vspace{-.7ex}
-					{\footnotesize agent(x4,x0)} \\
-					\vspace{-.7ex}
-					{\footnotesize theme(x4,x5)} \\ 
-					\vspace{-.7ex}
-					\dhgdrs{{\footnotesize x5:}}{{\footnotesize x6}}{ 
-						\vspace{-.7ex}
-						{\footnotesize fail(x6)} \\ 
-						\vspace{-.7ex}
-						{\footnotesize event(x6)} \\ 
-						\vspace{-.7ex}
-						{\footnotesize agent(x6,x1)}
-						\vspace{-2ex}
-					} 
-					\vspace{-1.5ex}
-				} 
-				\vspace{-1.5ex}
+		\drs{x0 x1}{
+			named(x0,ed,per) \\
+			named(x1,dave,per) \\
+			\negdrs{e2 p3}{
+				forget(e2) \\
+				event(e2) \\
+				agent(e2,x0) \\ 
+				theme(e2,p3) \\ 
+				~x3:\drs{e4 p5}{
+					arrange(e4) \\ 
+					event(e4) \\ 
+					agent(e4,x0) \\
+					theme(e4,p5) \\ 
+					~x5:\drs{e6}{ 
+						fail(e6) \\ 
+						event(e6) \\ 
+						agent(e6,x1)
+					}
+				}
 			}
-			\vspace{-1.5ex}
 		}
-	}                
+	}
   ~~$\xrightarrow{\text{ transforms to }}$
   \subfloat[Canonical form]{\label{fig:canonical-drs}
   	\dhgboxed{
-		\vspace{-.7ex}
-		{\footnotesize named(l0, ne\_per\_ed\_d\_s0\_w0, z0)} \\
-		\vspace{-.7ex}
-		{\footnotesize named(l0, ne\_per\_dave\_d\_s0\_w7, z1)} \\
-		\vspace{-.7ex}
-		{\footnotesize not(l0, l1)} \\
-		\vspace{-.7ex}
-		{\footnotesize pred(l1, v\_forget\_d\_s0\_w3, e2)} \\
-		\vspace{-.7ex}
-		{\footnotesize event(l1, e2)} \\
-		\vspace{-.7ex}
-		{\footnotesize rel(l1, agent, e2, z0)} \\
-		\vspace{-.7ex}
-		{\footnotesize rel(l1, theme, e2, l2)} \\
-		\vspace{-.7ex}
-		{\footnotesize prop(l1, l2)} \\
-		\vspace{-.7ex}
-		{\footnotesize pred(l2, v\_arrange\_d\_s0\_w5, e4)} \\
-		\vspace{-.7ex}
-		{\footnotesize event(l2, e4)} \\
-		\vspace{-.7ex}
-		{\footnotesize rel(l2, agent, e4, z0)} \\
-		\vspace{-.7ex}
-		{\footnotesize rel(l2, theme, e4, l3)} \\
-		\vspace{-.7ex}
-		{\footnotesize prop(l2, l3)} \\
-		\vspace{-.7ex}
-		{\footnotesize pred(l3, v\_fail\_d\_s0\_w8, e6)} \\
-		\vspace{-.7ex}
-		{\footnotesize event(l3, e6)} \\
-		\vspace{-.7ex}
-		{\footnotesize rel(l3, agent, e6, z1)}
-		\vspace{-2ex}
+		named(l0, ne\_per\_ed\_d\_s0\_w0, z0) \\
+		named(l0, ne\_per\_dave\_d\_s0\_w7, z1) \\
+		not(l0, l1) \\
+		pred(l1, v\_forget\_d\_s0\_w3, e2) \\
+		event(l1, e2) \\
+		rel(l1, agent, e2, z0) \\
+		rel(l1, theme, e2, l2) \\
+		prop(l1, l2) \\
+		pred(l2, v\_arrange\_d\_s0\_w5, e4) \\
+		event(l2, e4) \\
+		rel(l2, agent, e4, z0) \\
+		rel(l2, theme, e4, l3) \\
+		prop(l2, l3) \\
+		pred(l3, v\_fail\_d\_s0\_w8, e6) \\
+		event(l3, e6) \\
+		rel(l3, agent, e6, z1)
 	}
   }
   \caption{Converting the premise of \eqref{ex:imp-fact-nested} from
