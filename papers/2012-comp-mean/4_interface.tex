@@ -1,0 +1,152 @@
+% logical language
+\newcommand{\loglang}{\ensuremath{{\cal{L}}}\xspace}
+% predicate symbols
+\newcommand{\predsym}[1]{\ensuremath{{\cal{P}}_{#1}}\xspace}
+
+
+\section{A Logical-Distributional Interface}
+\label{sec:interface}
+
+\subsection*{Representing words in vector space} 
+
+[TODO: \\vec is making vectors bold instead of using an overarrow]
+
+Let $V$ be a vector space whose dimensions stand for elements of  textual
+context. We represent each word as a point in vector space. (Each point in
+vector space thus stands for a potential word, defined through the contexts in
+which it has been observed.) The central relation in vector spaces is semantic
+similarity. We represent this through a \textit{similarity function} \[S: V
+\times V \to [0,1] \] that maps each pair of points in vector space to their
+degree of similarity, a number between 0 and 1. Most similarity functions in the
+literature are symmetric, such that  $S(\vec v, \vec w) = S(\vec w, \vec v)$,
+but there are exceptions \citep{kotlerman:nlej2010}. In our setting, the
+important thing about the similarity function is that it can be understood as a
+\emph{substitutability function}: If words $v$ and $w$ are represented by $\vec
+v$ and $\vec w \in V$ and $S(\vec v, \vec w) = \eta$, then $w$ can be
+substituted for $v$ to the degree $\eta$.
+
+%[TODO: This seems problematic
+%to me since, in our formulation, $\vec v$ will be the {\em context} of the
+%substituted word (and $\vec w$ will be the replacement word).  In other words,
+%we're subsituting ]
+
+We want to represent word meaning in a given sentence context.
+In previous work, \citet{MitchellLapata:08} define the meaning $\vec p$ of a
+two-word phrase $vw$ as a function of the vectors for $v$, $w$, and their
+syntactic relation:
+\[\vec p = f(\vec v, \vec w, r, K) \] where $f$ is some function, $r$ is the
+relation between $v$ and $w$ in the text, and $K$ is background knowledge. This
+same schema has also applied to representing the meaning of $v$ in the presence
+of $w$ \citep{erk:emnlp08}. We extend this schema canonically to the case of a
+word $v$ in the presence of multiple context words, also dropping the background
+knowledge $K$, since it is not clear what that would be and how it would be
+formalized.
+
+We describe the context of a word $v$ as a set $c = \{(r_1, \vec w_1), \ldots,
+(r_n, \vec w_n)\}$, where $\vec w_1, \ldots, \vec w_n$ are vectors in $V$ that
+represent the words $w_1, \ldots, w_n$ that occur around $v$, and
+$r_i \in R$ is the semantic relation between $v$ and $w_i$.
+Given a vector space $V$ and a set $R$ of semantic relations, the set
+\textit{$C(V, R)$ of contexts over $V$ and $R$} contains all finite sets of
+pairs from $R \times V$.  Thus, $c \in C(V,R)$ for some $V$ and some $R$.
+
+We now define a function that maps the context-independent representation of a
+word $v$ to its representation in a context $c$.
+A \textit{contextualization function} on vector space $V$ with relation set $R$
+has the form \[ \alpha: V \times C(V, R) \to V \] For a word $v$ in a context $c
+\in C(V, R)$, the meaning of $v$ in the context $c$ is $\alpha(\vec v, c)$.
+% \[\vec v_c = \alpha(\vec v, c) \]
+
+We are particularly interested in substitutability for words in context: Given a
+word $v$ in a context $c$, and a potential paraphrase $w$ of $v$, the degree of
+context-specific substitutability of $w$ for $v$, given their vector
+representations in $V$ $\vec w$ and $\vec v$, is \[ S(\alpha(\vec v, c), \vec
+w)\] This formulation adapts $v$ to the context $c$, but leaves the vector $w$ 
+unchanged, as most approaches in the literature do 
+\citep{erk:emnlp08,MitchellLapata:08,ThaterFuerstenauPinkal:10,vandecruys:emnlp2011}.
+But we can just as well contextualize the paraphrase candidate
+too \citep{erk:acl2010}. We compute the degree of context-specific
+substitutability of $w$ for $v$ as \[ S(\alpha(\vec v, c), \alpha(\vec w, c)) \]
+This formulation contextualizes $w$ in the same sentential context in which $v$
+is situated.
+
+
+\subsection*{Linking logical form and vector space.} 
+
+Let \loglang be a logical language, a set of logical formulas. For each $n \ge
+0$, let the set of $n$-ary predicate symbols of \loglang be
+$\predsym{\loglang}^n$, and let $\predsym{\loglang} = \cup_{n \ge 0}
+\predsym{\loglang}^n$. Let $V$ be a vector space. Then a \emph{lexical mapping}
+from \loglang to $V$ is a function $\ell:
+\predsym{\loglang} \to V$ that maps each predicate symbol to a point in the
+vector space.
+
+The aim of the lexical mapping is to be able to project inferences from vector
+space to logical form: If a lexical mapping function maps predicate $P$ to $\vec
+v$ and $Q$ to $ \vec w$, and $S(\vec v, \vec w) = \eta$, then we can substitute
+$Q$ for $P$ with certainty $\eta$. If $P$ and $Q$ are n-ary predicates, we can
+express this {\it weighted substitution rule} as the formula $\forall x_1,
+\ldots, x_n.[P(x_1, \ldots, x_n) \to Q(x_1, \ldots x_n)]$ with weight $\eta$.
+
+Let \loglang be a logical language with lexical mapping $\ell$ to a vector space
+$V$ with similarity function $S$. Then the \textit{substitution projection} 
+for a predicate $P \in \predsym{\loglang}^n$ is the set of weighted substitution
+rules (the set of pairs of formulas $F \in \loglang$ and weights $\eta \in
+[0,1]$) given by
+\begin{align*}
+\Pi_{S, \ell}(P) = \{ (F, \eta) \mid \exists Q \in \predsym{\loglang}^n~[ 
+&~F = \forall x_1, \ldots, x_n.[P(x_1, \ldots, x_n) \to Q(x_1, \ldots, x_n)], \\
+&~\eta = S\big(\ell(P), \ell(Q)\big) ~] \}
+\end{align*}
+
+However, since we are interested in the substitutability of words {\it in
+context}, we compute context-specific lexical mappings by first computing a
+context from a logical form. Given a logical language \loglang, a vector space
+$V$, and set $R$ of semantic relations, a \textit{context mapping} is a function
+\[ \kappa: \predsym{\loglang} \times \loglang \to C(V, R) \] Given a predicate
+$P \in \predsym{\loglang}$ and a formula $G \in \loglang$, it computes a context
+$c = \kappa(P, G)$.
+
+By combining context mappings with contextualization functions, we can now
+describe how we extend a logical form by context-specific inferences: Let
+\loglang be a logical language with lexical mapping $\ell$ to vector space $V$.
+Let $S$ be a similarity function on $V$, $\alpha$ a contextualization function
+on $V$ and $R$, and $\kappa$ a context mapping from \loglang to $C(V, R)$.
+Then the \textit{contextualized substitution projection} for predicate $P \in
+\predsym{\loglang}^n$ found in formula $G \in \loglang$ is
+\begin{align*}
+\Pi^G_{S, \ell}(P) = \{ (F, \eta) \mid \exists Q \in \predsym{\loglang}^n~[ 
+&~F = \forall x_1, \ldots, x_n.[P(x_1, \ldots, x_n) \to Q(x_1, \ldots, x_n)], \\
+&~\eta = S\big(\alpha(\ell(P), \kappa(P, G)), \ell(Q)\big) ~] \}
+\end{align*}
+This ensures that similarity is measured between the replacement $Q$ the {\em contextualized}
+vector representing $P$.
+
+Thus, the aggregate contextualized substitution projection for an entire formula
+$G$ is the union of the contextualized substitution projections for all
+predicates in $G$
+
+\[\Phi_{S, \ell}(G) = \bigcup_{~P \in \predsym{\loglang} \text{ occurs in }
+G} \Pi^G_{S, \ell}(P) \] 
+
+% [TODO: Might be clearer to explicitly say:] Thus, the contextualized
+% substitution projection is given by
+% \begin{align*}
+% \Pi'_{S, \ell}(P) =  \{ (F, \eta) \mid \exists Q \in \predsym{\loglang}^n~[ 
+% &~F = \forall x_1, \ldots, x_n.P(x_1, \ldots, x_n) \to Q(x_1, \ldots, x_n), \\
+% &~\eta = S\big(\alpha(\ell(P), \kappa(P, G)), \ell(Q)\big), \text{ and } \\
+% &~ \eta > 0 ~] \}
+% \end{align*}
+
+This formalization only contextualizes $P$ and estimates the substitutability of
+$Q$ based on a context-independent vector. If we like,we can substitute a
+different lexical mapping that maps both $P$ and $Q$ to context-specific
+vectors: Given a context-independent lexical mapping $\ell$, contextualization
+function $\alpha$ and context mapping $\kappa$, a predicate $P \in
+\predsym{\loglang}$ and formula $G \in \loglang$, let $\gamma^{P, G, \alpha,
+\kappa}$ be the lexical mapping defined as \[\gamma^{P, G, \ell, \alpha,
+\kappa}(Q) = \alpha\big(\ell(Q), \kappa(P, G)\big) \] Then we can compute the
+aggregate contextualized substitution projection for $G$ as \[\Phi'_{S, \ell}(G)
+= \bigcup_{P \in \predsym{\loglang} \text{ occurs in } G} \Pi_{S, \gamma^{P, G, \ell, \alpha,
+\kappa}}(P) \]
+
