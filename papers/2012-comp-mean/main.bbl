@@ -1,0 +1,121 @@
+\begin{thebibliography}{23}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{{#1}}
+\providecommand{\urlprefix}{URL }
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{DOI~\discretionary{}{}{}#1}\else
+  \providecommand{\doi}{DOI~\discretionary{}{}{}\begingroup
+  \urlstyle{rm}\Url}\fi
+\providecommand{\eprint}[2][]{\url{#2}}
+
+\bibitem[{Bos and Markert(2005)}]{bos:emnlp2005}
+Bos J, Markert K (2005) Recognising textual entailment with logical inference.
+  In: Proceedings of EMNLP 2005, pp 628--635
+
+\bibitem[{Bos et~al(2004)Bos, Clark, Steedman, Curran, and
+  Hockenmaier}]{bos:coling2004}
+Bos J, Clark S, Steedman M, Curran JR, Hockenmaier J (2004) Wide-coverage
+  semantic representations from a {CCG} parser. In: Proceedings of COLING 2004,
+  Geneva, Switzerland, pp 1240--1246
+
+\bibitem[{Clark and Curran(2004)}]{clark:acl04}
+Clark S, Curran JR (2004) Parsing the {WSJ} using {CCG} and log-linear models.
+  In: Proceedings of ACL 2004, Barcelona, Spain, pp 104--111
+
+\bibitem[{Dagan et~al(2005)Dagan, Glickman, and Magnini}]{dagan:rte2005}
+Dagan I, Glickman O, Magnini B (2005) The pascal recognising textual entailment
+  challenge. In: In Proceedings of the PASCAL Challenges Workshop on
+  Recognising Textual Entailment
+
+\bibitem[{Dinu and Lapata(2010)}]{dinu-lapata:2010:EMNLP}
+Dinu G, Lapata M (2010) Measuring distributional similarity in context. In:
+  Proceedings of the 2010 Conference on Empirical Methods in Natural Language
+  Processing, Association for Computational Linguistics, Cambridge, MA, pp
+  1162--1172, \urlprefix\url{http://www.aclweb.org/anthology/D10-1113}
+
+\bibitem[{Erk and Pad\'o(2008)}]{erk:emnlp08}
+Erk K, Pad\'o S (2008) A structured vector space model for word meaning in
+  context. In: Proceedings of EMNLP 2008, Honolulu, HI, pp 897--906
+
+\bibitem[{Erk and Pad\'o(2010)}]{erk:acl2010}
+Erk K, Pad\'o S (2010) Exemplar-based models for word meaning in context. In:
+  Proceedings of ACL 2010, Uppsala, Sweden, pp 92--97
+
+\bibitem[{G\"ardenfors(2004)}]{Gardenfors:04}
+G\"ardenfors P (2004) Conceptual spaces. MIT press, Cambridge, MA
+
+\bibitem[{Getoor and Taskar(2007)}]{getoor:book2007}
+Getoor L, Taskar B (eds)  (2007) Introduction to Statistical Relational
+  Learning. MIT Press, Cambridge, MA
+
+\bibitem[{Hobbs et~al(1993)Hobbs, Stickel, Appelt, and Martin}]{hobbs:alj93}
+Hobbs JR, Stickel M, Appelt D, Martin P (1993) Interpretation as abduction.
+  Artificial Intelligence 63(1--2):69--142
+
+\bibitem[{Kamp and Reyle(1993)}]{kamp:book93}
+Kamp H, Reyle U (1993) From Discourse to Logic; An Introduction to
+  Modeltheoretic Semantics of Natural Language, Formal Logic and {DRT}. Kluwer,
+  Dordrecht
+
+\bibitem[{Kok et~al(2005)Kok, Singla, Richardson, and Domingos}]{kok:tr05}
+Kok S, Singla P, Richardson M, Domingos P (2005) The {A}lchemy system for
+  statistical relational {AI}. Tech. rep., Department of Computer Science and
+  Engineering, University of Washington,
+  \url{http://www.cs.washington.edu/ai/alchemy}
+
+\bibitem[{Kotlerman et~al(2010)Kotlerman, Dagan, Szpektor, and
+  Zhitomirsky-Geffet}]{kotlerman:nlej2010}
+Kotlerman L, Dagan I, Szpektor I, Zhitomirsky-Geffet M (2010) Directional
+  distributional similarity for lexical inference. Natural Language Engineering
+  16(04):359--389
+
+\bibitem[{Landauer and Dumais(1997)}]{landauer97:solution}
+Landauer T, Dumais S (1997) A solution to {P}latos problem: the latent semantic
+  analysis theory of acquisition, induction, and representation of knowledge.
+  Psychological Review 104(2):211--240
+
+\bibitem[{Lund and Burgess(1996)}]{lund96:producing}
+Lund K, Burgess C (1996) Producing high-dimensional semantic spaces from
+  lexical co-occurrence. Behavior Research Methods, Instruments, and Computers
+  28:203---208
+
+\bibitem[{MacCartney and Manning(2009)}]{maccartney:iwcs2009}
+MacCartney B, Manning CD (2009) An extended model of natural logic. In:
+  Proceedings of the Eighth International Conference on Computational Semantics
+  (IWCS-8), pp 140--156
+
+\bibitem[{Mitchell and Lapata(2008)}]{MitchellLapata:08}
+Mitchell J, Lapata M (2008) Vector-based models of semantic composition. In:
+  Proceedings of ACL, pp 236--244
+
+\bibitem[{Nairn et~al(2006)Nairn, Condoravdi, and Karttunen}]{nairn:icos2006}
+Nairn R, Condoravdi C, Karttunen L (2006) Computing relative polarity for
+  textual inference. In: Proceedings of Inference in Computational Semantics
+  (ICoS-5), Buxton, UK
+
+\bibitem[{Poon and Domingos(2009)}]{poon:emnlp2009}
+Poon H, Domingos P (2009) Unsupervised semantic parsing. In: Proceedings of
+  EMNLP 2009, pp 1--10
+
+\bibitem[{Reisinger and Mooney(2010)}]{ReisingerMooney:10}
+Reisinger J, Mooney RJ (2010) Multi-prototype vector-space models of word
+  meaning. In: Proceeding of NAACL
+
+\bibitem[{Richardson and Domingos(2006)}]{richardson:mlj06}
+Richardson M, Domingos P (2006) Markov logic networks. Machine Learning
+  62:107--136
+
+\bibitem[{Thater et~al(2010)Thater, F\"urstenau, and
+  Pinkal}]{ThaterFuerstenauPinkal:10}
+Thater S, F\"urstenau H, Pinkal M (2010) Contextualizing semantic
+  representations using syntactically enriched vector models. In: Proceedings
+  of ACL 2010, Uppsala, Sweden, pp 948--957
+
+\bibitem[{{Van de Cruys} et~al(2011){Van de Cruys}, Poibeau, and
+  Korhonen}]{vandecruys:emnlp2011}
+{Van de Cruys} T, Poibeau T, Korhonen A (2011) Latent vector weighting for word
+  meaning in context. In: Proceedings of the 2011 Conference on Empirical
+  Methods in Natural Language Processing, Edinburgh, Scotland, UK., pp
+  1012--1022
+
+\end{thebibliography}
