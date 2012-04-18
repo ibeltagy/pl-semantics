@@ -65,23 +65,24 @@ and $\simfunc(\vec v, \vec w) = \eta$, then we obtain the weighted inference
 rule $\forall x_1, \ldots, x_n[ P(x_1, \ldots, x_n) \to Q(x_1, \ldots x_n) ]$
 with weight $\eta$. More generally, let \loglang be a logical language with
 lexical mapping $\ell$ to a vector space $V$. Let \simfunc{} be the similarity
-function on $V$. For all $Q \in \predsym\loglang$ and ${\cal Q} \subseteq
-\predsym\loglang$, let $\zeta(Q, {\cal Q}) \subseteq {\cal Q}$. Then the
+function on $V$. For all $P \in \predsym\loglang$ and ${\cal Q} \subseteq
+\predsym\loglang$, let $\zeta$ be a function that restricts the elements in 
+${\cal Q}$ such that $\zeta(P, {\cal Q}) \subseteq {\cal Q}$. Then the
 \emph{inference projection} for the predicate $P \in \predsym{\loglang}^n$ is
 \begin{align*}
 &\Pi_{\simfunc, \zeta, \ell}(P) = \{ (F, \eta) \mid \exists Q \in \zeta(P, \predsym{\loglang}^n)\:[ \\ 
 & \hspace{125px} F = \forall x_1, \ldots, x_n[P(x_1, \ldots, x_n) \to Q(x_1, \ldots, x_n)], \\
 & \hspace{125px} \eta = \simfunc\big(\ell(P), \ell(Q)\big) ~] \}
 \end{align*}
-
-The inference projection for $P$ contains all weighted inference rules
-$(F, \eta)$ with $P$ on the left-hand side that the vector space
-predicts. However, sometimes we have additional information not
-encoded in the vector space on the inferences that we are
-willing to project. For example we may only want to consider
+Thus, the inference projection for $P$ is the set of all weighted inference
+rules $(F, \eta)$ predicted by the vector space that map $P$ to a another
+predicate $Q$. Additionally, we may have additional information on the 
+inferences that we are willing to project that is not encoded in the vector 
+space. For example we may only want to consider
 predicates $Q$ that stand for paraphrases of $P$. For this reason, the
-function $\zeta$ can limit the predicates $Q$ considered for the right-hand
-sides of rules to a subset of $\predsym{\loglang}^n$. 
+function $\zeta$ can be used to limit the predicates $Q$ considered for the right-hand
+sides of rules.  If no restriction is applied through $\zeta$, then a rule will
+be generated for every predicate in $\predsym{\loglang}^n$. 
 
 
 \subsection*{Addressing polysemy}
@@ -161,9 +162,9 @@ relations, a \textit{context mapping} is a function that computes the context $c
 signature of a context mapping function is $\kappa:
 \predsym{\loglang} \times \loglang \to C(V, R)$.
 
-We can now compute a context-specific vector space representation $\vec{v}_{P,
+We can now compute a context-specific vector space representation $\vec{w}_{P,
 G}$ for a predicate $P$ in a formula $G$ from the context-independent vector
-$\ell(P)$ and the context $\kappa(P, G)$. It is \[\vec{v}_{P, G} =
+$\ell(P)$ and the context $\kappa(P, G)$. It is \[\vec{w}_{P, G} =
 \alpha\big(\ell(P), \kappa(P, G)\big)\]
 
 To obtain an inference projection for $P$ that takes into account its context in
@@ -176,8 +177,8 @@ mapping from \loglang to $C(V, R)$. Then the \textit{contextualized inference
 projection} for predicate $P \in \predsym{\loglang}^n$ in formula $G \in
 \loglang$ is \[ \Pi^G_{\simfunc, \zeta, \ell}(P) = \Pi_{\simfunc, \zeta,
   \ell_{[P/\alpha(\ell(P), \kappa(P, G))}}(P)
-\] In this contextualized inference projection, any rule $\forall \vec x [P(\vec
-x) \to Q(\vec x)]$ is weighted by similarity $\simfunc(\alpha(\ell(P), \kappa(P,
+\] In this contextualized inference projection, any rule $\forall x_1,\ldots,x_n [P(
+x_1,\ldots,x_n) \to Q(x_1,\ldots,x_n)]$ is weighted by similarity $\simfunc(\alpha(\ell(P), \kappa(P,
 G)), \ell(Q))$ between the context-specific vector for $P$ and the vector for
 $Q$. This follows common practice in vector space models of word meaning in
 context of computing a context-specific representation of the target, but not
