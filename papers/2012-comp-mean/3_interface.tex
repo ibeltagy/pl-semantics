@@ -91,12 +91,17 @@ function $\zeta$ can limit the predicates $Q$ considered for the right-hand
 sides of rules to a subset of $\predsym{\loglang}^n$. 
 
 
-
 \subsection*{Addressing polysemy}
 
-We follow the literature on vector space approaches to modeling word
-meaning in
-context~\citep{erk:emnlp08,ThaterFuerstenauPinkal:10,ReisingerMooney:10,dinu-lapata:2010:EMNLP,vandecruys:emnlp2011}
+When a word is polysemous, this affects the applicability of vector
+space-based inference rules. Consider the rule $\forall e[fix(e) \to
+correct(e)]$ (any fixing event is a correcting event): This rule
+applies in contexts like ``fix a problem'', but not in contexts like
+``fix the date''. We therefore need to take context into account when
+considering inference rule applicability. We do this by computing
+vector representations for word meaning in context, and predicting
+rule applicability based on these context-specific vectors. We follow
+the literature on vector space representations for word meaning in context~\citep{erk:emnlp08,ThaterFuerstenauPinkal:10,ReisingerMooney:10,dinu-lapata:2010:EMNLP,vandecruys:emnlp2011}
 in assuming that a word's context-specific meaning is a function of its
 out-of-context representation and the context. The context may consist
 of a single item or multiple items, and (syntactic or semantic) relations to the
@@ -107,11 +112,11 @@ We
 first define what we mean by a context. Given a vector space $V$ and a
 finite set $R$ of semantic relations, the set
 \textit{$C(V, R)$ of contexts over $V$ and $R$} consists of all finite sets of
-pairs from $R \times V$.  That is, we describe the context in which a
+pairs from $V \times R$.  That is, we describe the context in which a
 target word occurs as a finite set of pairs $(\vec v, r)$ of a context
 item $\vec v$ represented as a point in vector space, and the relation $r$
 between the context item and the target. 
-For a word $v$ in a context $c
+For a word $w$ in a context $c
 \in C(V, R)$, the context-specific meaning $\vec w_c$ of $w$ is a
 function of the out-of-context vector $\vec w$ for $w$ and the context
 $c$:
@@ -120,14 +125,12 @@ The function $\alpha$ is a \emph{contextualization function} with
 signature $\alpha: V \times C(V, R) \to V$. 
 
 This definition of contextualization functions is similar to the
-framework of \citet{MitchellLapata:08}, wh define the meaning $\vec p$
-of a two-word phrase $vw$ as a function of the vectors for $v$, $w$, and their
-syntactic relation: $\vec p = f(\vec v, \vec w, r, K)$,  where $f$ is some function, $r$ is the
-relation between $v$ and $w$ in the text, and $K$ is background
+framework of \citet{MitchellLapata:08}, who define the meaning $\vec p$
+of a two-word phrase $p = vw$ as a function of the vectors for $v$ and $w$, and their
+syntactic relation $r$ in the text: $\vec p = f(\vec v, \vec w, r, K)$,  where $f$ is some function, and $K$ is background
 knowledge. However, we use contextualization functions to compute the meaning of a word in
-context, rather than the meaning of a phrase: Our aim is to define a
-mapping from the predicate symbols of a logical language to a vector
-space, and predicate symbols need to map to word meanings, not phrase
+context, rather than the meaning of a phrase. We map predicate
+symbols to points in space, and predicate symbols need to map to word meanings, not phrase
 meanings. Also, Mitchell and Lapata only consider the case of two-word
 phrases, while we allow for arbitrary-size contexts. 
 
@@ -139,74 +142,85 @@ phrases, while we allow for arbitrary-size contexts.
 % v$ and $\vec w \in V$ and $\simfunc(\vec v, \vec w) = \eta$, then $w$ can be
 % substituted for $v$ to the degree $\eta$.
 
-Vector space approaches to representing word meaning in context in the
-literature are typically evaluated on a paraphrasing task: Given a
-word $v$ in a sentence context $c$, how appropriate is a paraphrase
-candidate 
-$w$ for $v$ in this context? The appropriateness of $w$ is typically
-predicted as 
-\[ \mathrm{appl}(w) = \simfunc(\alpha(\vec v, c), \vec w)\] 
-That is, the appropriateness of $w$ is predicted as the similarity of
-the vector for $w$ to the context-specific vector for $v$. This
-formulation adapts $v$ to the context $c$, but leaves the vector $w$  
-unchanged~\citep{erk:emnlp08,MitchellLapata:08,ThaterFuerstenauPinkal:10,vandecruys:emnlp2011}.
-If the paraphrase candidate $w$ is itself ambiguous, it can be useful
-to adapt its vector to the context $c$ as
-well~\citep{erk:acl2010}. In that case, the appropriateness of $w$ is
-predicted as 
-\[ \mathrm{appl}(w) = \simfunc(\alpha(\vec v, c), \alpha(\vec w, c)) \]
+% Vector space approaches to representing word meaning in context in the
+% literature are typically evaluated on a paraphrasing task: Given a
+% word $v$ in a sentence context $c$, how appropriate is a paraphrase
+% candidate 
+% $w$ for $v$ in this context? The appropriateness of $w$ is typically
+% predicted as 
+% \[ \mathrm{appl}(w) = \simfunc(\alpha(\vec v, c), \vec w)\] 
+% That is, the appropriateness of $w$ is predicted as the similarity of
+% the vector for $w$ to the context-specific vector for $v$. This
+% formulation adapts $v$ to the context $c$, but leaves the vector $w$  
+% unchanged~\citep{erk:emnlp08,MitchellLapata:08,ThaterFuerstenauPinkal:10,vandecruys:emnlp2011}.
+% If the paraphrase candidate $w$ is itself ambiguous, it can be useful
+% to adapt its vector to the context $c$ as
+% well~\citep{erk:acl2010}. In that case, the appropriateness of $w$ is
+% predicted as 
+% \[ \mathrm{appl}(w) = \simfunc(\alpha(\vec v, c), \alpha(\vec w, c)) \]
 
+In existing approaches to computing word meaning in context,
+bag-of-words representations or syntactic parses of the sentence
+context are used to compute the contextualization. In contrast, we
+use the logical form representation, through a function that maps a
+logic formula to a context in $C(V, R)$.  Given a logical language \loglang, a vector space
+$V$, and set $R$ of semantic relations, a \textit{context mapping} is
+a function that computes the context $c \in C(V, R)$ of a predicate $P$ in a formula
+$G$ as 
+\[c = \kappa(P, G)\]
+The signature of a context mapping function is $\kappa:
+\predsym{\loglang} \times \loglang \to C(V, R)$. 
 
+We can now compute a context-specific vector space representation
+$\vec{v}_{P, G}$ for
+a predicate $P$ in a formula $G$ from the context-independent vector
+$\ell(P)$ and the context $\kappa(P, G)$. It is 
+\[\vec{v}_{P, G} = \alpha\big(\ell(P), \kappa(P, G)\big)\]
 
-
-However, since we are interested in the substitutability of words {\it in
-context}, we compute context-specific lexical mappings by first computing a
-context from a logical form. Given a logical language \loglang, a vector space
-$V$, and set $R$ of semantic relations, a \textit{context mapping} is a function
-\[ \kappa: \predsym{\loglang} \times \loglang \to C(V, R) \] Given a predicate
-$P \in \predsym{\loglang}$ and a formula $G \in \loglang$, it computes a context
-$c = \kappa(P, G)$.
-
-By combining context mappings with contextualization functions, we can now
-describe how we extend a logical form by context-specific inferences: Let
-\loglang be a logical language with lexical mapping $\ell$ to vector space $V$.
-Let \simfunc{} be a similarity function on $V$, $\alpha$ a contextualization function
+To obtain an inference projection for $P$ that takes into account its
+context in the formula $G$, we adapt the lexical mapping
+function. Given a lexical mapping $\ell$, let $\ell_{[Q/\vec{v}]}$ be the
+function that is exactly like $\ell$ except that it maps $Q$ to $\vec
+v$. Let $\Pi_{\simfunc, \zeta, \ell}$ be an inference projection for
+  vector space $V$ and logical language $\loglang$, let $\alpha$ be a contextualization function
 on $V$ and $R$, and $\kappa$ a context mapping from \loglang to $C(V, R)$.
-Then the \textit{contextualized substitution projection} for predicate $P \in
-\predsym{\loglang}^n$ found in formula $G \in \loglang$ is
-\begin{align*}
-\Pi^G_{\simfunc, \ell}(P) = \{ (F, \eta) \mid \exists Q \in \predsym{\loglang}^n~[ 
-&~F = \forall x_1, \ldots, x_n.[P(x_1, \ldots, x_n) \to Q(x_1, \ldots, x_n)], \\
-&~\eta = \simfunc\big(\alpha(\ell(P), \kappa(P, G)), \ell(Q)\big) ~] \}
-\end{align*}
-This ensures that similarity is measured between the replacement $Q$ the {\em contextualized}
-vector representing $P$.
+Then the \textit{contextualized inference projection} for predicate $P \in
+\predsym{\loglang}^n$ in formula $G \in \loglang$ is
+\[
+\Pi^G_{\simfunc, \zeta, \ell}(P) = \Pi_{\simfunc, \zeta,
+  \ell_{[P/\alpha(\ell(P), \kappa(P, G))}}(P)
+\]
+In this contextualized inference projection, any rule $\forall \vec x
+[P(\vec x) \to Q(\vec x)]$ is weighted by similarity
+$\simfunc(\alpha(\ell(P), \kappa(P, G)), \ell(Q))$ between the
+context-specific vector for $P$ and the vector for $Q$. This follows
+common practice in vector space models of word meaning in context of
+computing a context-specific representation of the target, but not the
+paraphrase candidate. But if the paraphrase candidate is polysemous,
+it may be useful to compute a representation for it that is also
+specific to the sentence context at hand~\citep{erk:acl2010}.  We can
+do this by defining a lexical mapping $\gamma^{P, G}$ specific to predicate $P$ and formula $G$ by $\gamma^{P, G}(Q) = \alpha\big(\ell(Q), \kappa(P, G)\big)$. Then we can
+compute the contextualized inference projection of $P$ as
+$\Pi^G_{\simfunc, \zeta, \ell}(P) = \Pi_{\simfunc, \zeta, \gamma^{P, G}}(P)$.
 
-Thus, the aggregate contextualized substitution projection for an entire formula
-$G$ is the union of the contextualized substitution projections for all
-predicates in $G$
-
-\[\Pi^*_{\simfunc, \ell}(G) = \bigcup_{~P \in \predsym{\loglang} \text{ occurs in }
-G} \Pi^G_{\simfunc, \ell}(P) \] 
-
-% [TODO: Might be clearer to explicitly say:] Thus, the contextualized
-% substitution projection is given by
-% \begin{align*}
-% \Pi'_{\simfunc, \ell}(P) =  \{ (F, \eta) \mid \exists Q \in \predsym{\loglang}^n~[ 
-% &~F = \forall x_1, \ldots, x_n.P(x_1, \ldots, x_n) \to Q(x_1, \ldots, x_n), \\
-% &~\eta = \simfunc\big(\alpha(\ell(P), \kappa(P, G)), \ell(Q)\big), \text{ and } \\
-% &~ \eta > 0 ~] \}
-% \end{align*}
-
-This formalization only contextualizes $P$ and estimates the substitutability of
-$Q$ based on a context-independent vector. If we like,we can substitute a
-different lexical mapping that maps both $P$ and $Q$ to context-specific
-vectors: Given a context-independent lexical mapping $\ell$, contextualization
-function $\alpha$ and context mapping $\kappa$, a predicate $P \in
-\predsym{\loglang}$ and formula $G \in \loglang$, let $\gamma^{P, G, \alpha,
-\kappa}$ be the lexical mapping defined as \[\gamma^{P, G, \ell, \alpha,
-\kappa}(Q) = \alpha\big(\ell(Q), \kappa(P, G)\big) \] Then we can compute the
-aggregate contextualized substitution projection for $G$ as \[\Pi^*_{\simfunc, \ell}(G)
-= \bigcup_{P \in \predsym{\loglang} \text{ occurs in } G} \Pi_{\simfunc, \gamma^{P, G, \ell, \alpha,
-\kappa}}(P) \]
-
+In computational semantics, polysemy is mostly addressed by using multiple
+predicates. For example, for the noun ``bank'' there would be 
+predicates
+bank$_1$, bank$_2$ to cover the financial and riverside senses of the
+word. In contrast, we are using only a single predicate for polysemous
+words, but vary its lexical mapping based on the formula that it
+appears in: A predicate $P$ in a formula $G$ is mapped to the vector
+$\alpha\big(\ell(P), \kappa(P, G)\big)$, which depends on $G$. We make this change for two
+reasons. First, a system that uses distinct predicates bank$_1$,
+bank$_2$ has to rely on an external word sense
+disambiguation system that decides, during semantics construction,
+which of the senses to use. In contrast, we determine lexical meaning
+based on the overall semantic representation of a sentence, directly
+linking sentence semantics and lexical semantics. Second, in the case of polysemy, the senses to distinguish are
+not always that clear. For example, for a noun like ``onion'', should
+the vegetable sense and the plant/bulb sense be separate~\citep{KrishnamurthyNicholls:00}?
+Through the vector space model, we can model
+word meaning in context without ever referring to distinct dictionary
+senses~\citep{Erk:2010}. But if we do not distinguish a fixed list of
+senses for a word $w$, we cannot represent them through a fixed list of distinct
+predicates $w_1, w_2, \ldots, w_n$.  
