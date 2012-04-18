@@ -7,13 +7,20 @@ discourse of one or more sentences into a semantic representation.  Boxer
 outputs the meaning of each discourse as a Discourse Representation Structure
 (DRS) that closely resembles the structures described by \citet{kamp:book93}.
 
-We chose to use Boxer for two main reasons.  First, Boxer is a
-wide-coverage system that can deal with arbitrary text. 
-%  that is able to return a reasonable logical representation
-% of most English sentences.  Since our goal is to work with actual texts,
-% it is critical that we have a wide-coverage semantic parser.  If
-% we did not, then we would be unable to deal with any but the simplest texts. 
+We chose to use Boxer for two main reasons.  First, Boxer is a wide-coverage
+system that can deal with arbitrary text.
+% that is able to return a reasonable logical representation of most English
+% sentences.  Since our goal is to work with actual texts, it is critical that
+% we have a wide-coverage semantic parser.  If we did not, then we would be
+% unable to deal with any but the simplest texts.
 Second, the DRSs that Boxer produces are close to the standard first-order
-logical forms that are required for use by the MLN software package 
-Alchemy.  Our system transforms Boxer output into a format that Alchemy can read and 
+logical forms that are required for use by the MLN software package Alchemy. 
+Our system transforms Boxer output into a format that Alchemy can read and
 augments it with additional information.
+
+[TODO: Another example: in section 4, 1st paragraph, where you say "Our system
+transforms Boxer output into a format that Alchemy can read and augments it with
+additional information", it would be better to say/add "Our system transforms
+DRSs into first order logic formulas. A number of problems arise for these
+transformations, namely X, Y, and Z. We address them in ways A and B. While A is
+an ad hoc solution, B is a contribution ... " Something of the sort.]

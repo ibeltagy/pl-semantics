@@ -1,55 +1,67 @@
 \section{Introduction}
 
-[TODO: Example numbering should be (1) instead of ``Example 1.'']
-
-Logic-based representations of natural language meaning have a long history.  
-Representing the meaning of language in a first-order
-logical form is appealing because it provides a powerful and flexible way to
-express even complex propositions. 
-However, systems built solely using first-order logical forms tend to be very
-brittle as they have no way of integrating uncertain knowledge. 
-They, therefore, tend to have high precision at the cost of low
-recall \citep{bos:emnlp2005}.
+Logic-based representations of natural language meaning have a long history.
+Representing the meaning of language in a first-order logical form is appealing
+because it provides a powerful and flexible way to express even complex
+propositions. However, systems built solely using first-order logical forms tend
+to be very brittle as they have no way of integrating uncertain knowledge.
+They, therefore, tend to have high precision at the cost of low recall
+\citep{bos:emnlp2005}.
 
 Recent advances in computational linguistics have yielded robust methods that
-use weighted or probabilistic models.  For example, distributional models of
-word meaning have been used successfully to judge paraphrase appropriateness.
-This has been done by representing the word meaning in context as a point in a
-high-dimensional semantics space
-\citep{erk:emnlp08,ThaterFuerstenauPinkal:10,erk:acl2010}. However, these
-models typically handle only individual phenomena instead of providing a meaning
-representation for complete sentences. It is a long-standing open question how
-best to integrate the weighted or probabilistic information coming from such
-modules with logic-based representations in a way that allows for reasoning over
-both.  See, for example, \citet{hobbs:alj93}.
+use statistically-driven probabilistic models.  For example, distributional
+models of word meaning have been used successfully to judge paraphrase
+appropriateness by representing the meaning of a word in context as a point in a
+high-dimensional semantics space \citep{erk:emnlp08,thater:acl2010,erk:acl2010}.
+However, these models typically provide only shallow representations of meaning,
+handling only individual phenomena instead of providing meaning representations
+for complete sentences. It is a long-standing open question how best to
+integrate the weighted or probabilistic information coming from such modules
+with logic-based representations in a way that allows for reasoning over both. 
+See, for example, \citet{hobbs:alj93}.
 
-The goal of this work is to combine logic-based meaning representations
-with probabilities in a single unified framework.  This will allow us to obtain
-the best of both situations: we will have the full expressivity of 
-first-order logic and be able to reason with probabilities.  We believe that
-this will allow for a more complete and robust approach to natural language
-understanding. In order to perform logical inference with probabilities, we draw 
-from the large and active body of work related to Statistical Relational AI
-\citep{getoor:book2007}.  Specifically, we make use of Markov Logic Networks
-(MLNs) \citep{richardson:mlj06} which employ weighted graphical models to
-represent first-order logical formulas. MLNs are appropriate for our approach
-because they provide an elegant method of assigning weights to first-order
-logical rules, combining a diverse set of inference rules, and performing
-inference in a probabilistic way. 
+The goal of this work is to establish a formal system for combining
+logic-based meaning representations with probabilistic information into a single
+unified framework.  This will allow us to obtain the best of both situations: we
+will have the full expressivity of first-order logic and be able to reason with
+probabilities.  We believe that this will allow for a more complete and robust
+approach to natural language understanding.
 
-While this is a large and complex task, this paper proposes a series
-of first steps toward our goal. 
-In this paper, we focus on three natural language phenomena and their
-interaction: implicativity and factivity, word meaning, and coreference.
-Our framework parses natural language
-into a logical form, adds rule weights computed by external NLP
-modules, and performs inferences using an MLN. Our end-to-end approach
-integrates multiple existing tools.
-%  within the context of the Natural
-% Language Toolkit (NLTK) \citep{bird:book2009}, a Python toolkit for
-% natural language processing.  
-We use Boxer
-\citep{bos:coling2004} to parse natural language into a logical form.
-We use Alchemy \citep{kok:tr05} for MLN inference. Finally, we use the
-exemplar-based distributional model of \citet{erk:acl2010} to produce
-rule weights.
+While this is a large and complex task, this paper proposes first steps toward
+our goal by presenting a mechanism for injecting distributional word-similarity
+information from a vector space into a first-order logical form.  
+\citet{gardenfors:book2004} uses the interpretation function for this purpose,
+such that logical formulas are interpreted over vector space representations.
+However, he uses spaces whose dimensions are qualities, like the hue and
+saturation of a color or the taste of a fruit. Points in his conceptual spaces
+are, therefore, potential entities.  In contrast, the vector spaces that we use
+are distributional in nature, and, therefore, cannot be interpreted as potential
+entities. A point in such a space is a potential word, defined through
+its observed contexts, where the coordinates on each dimension constitute the
+co-occurrence count with that respective context item.  For this reason, we
+define the link between logical form and vector space through a second mapping
+function independent of the interpretation function, which we call the
+\emph{lexical mapping} function.
+
+A central property of distributional vector space models is that they
+can predict semantic similarity based on proximity in space.  This comes from
+the hypothesis that a word's meaning is its use, and similarity in
+meaning is reflected in similarity in use (CITE Wittgenstein, Harris,
+Firth). When syntax is suitably restrained, vector space models can
+also be used to predict substitutability in context
+\citep{lin:kdd2001,mitchell:acl2008,erk:emnlp08,thater:acl2010,reisinger:naacl2010,dinu:emnlp2010,vandecruys:emnlp2011}.
+So if $A$ and $B$ are words or
+expressions that are distributionally similar and that can occur in
+the same syntactic contexts, we can substitute $B$ for $A$ in all
+contexts that are suitable to both words. This can be described
+through the inference rule $A \to B$, with a weight computed from the
+vector space. Thus, our main aim in linking logical form to a vector
+space in this paper is to project inferences from the vector space to
+logical form.
+
+In this paper, we first present our formal framework for projecting inferences
+from vector space to logical form.  We then show how that framework can be
+applied to a real logical language and vector space to address issues of
+ambiguity in word meaning.  Finally, we show how the weighted inference rules
+produced by our approach interact appropriately with the first-order logical
+form to produce correct inferences.

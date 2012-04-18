@@ -1,5 +1,5 @@
 % RECOMMENDED %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\documentclass[graybox]{styles/svmult}
+\documentclass[graybox,vecarrow]{styles/svmult}
 
 % choose options for [] as required from the list
 % in the Reference Guide
@@ -7,9 +7,9 @@
 \usepackage{mathptmx}       % selects Times Roman as basic font
 \usepackage{helvet}         % selects Helvetica as sans-serif font
 \usepackage{courier}        % selects Courier as typewriter font
-\usepackage{type1cm}        % activate if the above 3 fonts are
+%\usepackage{type1cm}        % activate if the above 3 fonts are
                             % not available on your system
-%
+
 \usepackage{makeidx}         % allows index generation
 \usepackage{graphicx}        % standard LaTeX graphics tool
                              % when including figure files
@@ -34,7 +34,7 @@
 
 \usepackage{amsmath,amssymb,amsfonts}
 %\renewcommand{\vec}[1]{\overrightarrow{#1}}
-\DeclareMathAlphabet{\mathcal}{OMS}{cmsy}{m}{n} % use 'b' instead of 'm' to make bold
+\DeclareMathAlphabet{\mathcal}{OMS}{cmsy}{m}{n} % use '{b}' instead of '{m}' to make bold
 \usepackage{wrapfig}
 \usepackage{subfig}
 \usepackage{drs}
@@ -44,20 +44,20 @@
 \usepackage{xspace}
 \usepackage{tikz}
 \usepackage{tikz-qtree}
+\usepackage{styles/modcov}
+\usepackage{esvect}
 
+\newcommand\pred[2]{#1\ensuremath{_{#2}}}
+\newcommand\POS[1]{\ensuremath{P\hspace{-0.5px}O\hspace{-0.5px}S(#1)}}
+\newcommand\NEG[1]{\ensuremath{N\hspace{-0.5px}E\hspace{-0.5px}G(#1)}}
 
-\newcommand{\dhgboxed}[1]
-{
-    {
-    \begin{tabular}{|l|}
-    \hline
-    ~ \vspace{-2ex} \\
-    #1
-    \\
-    ~ \\    % can't vspace here or the line will come out wrong
-    \hline
-    \end{tabular}
-    }
+\newcommand{\entpairex}[3]{
+  \begin{covex}\label{#1}
+    \begin{itemize} \itemsep -4pt
+      \item[$p:$] #2
+      \item[$h:$] #3
+    \end{itemize}
+  \end{covex}
 }
 
 \newcommand\unboxedifdrs[2]
@@ -67,8 +67,7 @@
 
 \begin{document}
 
-\title*{A Formal Approach to Integrating Logical Representations with\\
-Probabilistic Information using Markov Logic [TODO: ?]}
+\title*{A formal approach to linking logical form and vector spaces}
 % Use \titlerunning{Short Title} for an abbreviated version of
 % your contribution title if the original one is too long
 \author{Dan Garrette, Katrin Erk, and Raymond Mooney}
@@ -77,11 +76,7 @@ Probabilistic Information using Markov Logic [TODO: ?]}
 \institute{Dan Garrette \at University of Texas at Austin, \email{dhg@cs.utexas.edu}
 \and Katrin Erk \at University of Texas at Austin \email{katrin.erk@mail.utexas.edu} 
 \and Raymond Mooney \at University of Texas at Austin \email{mooney@cs.utexas.edu}}
-%
-% Use the package "url.sty" to avoid
-% problems with special characters
-% used in your e-mail or web address
-%
+
 \maketitle
 
 
@@ -96,8 +91,8 @@ Probabilistic Information using Markov Logic [TODO: ?]}
   Structures can be combined with distributional models for word
   meaning inside a Markov Logic Network and used to successfully
   perform inferences that take advantage of logical concepts such as
-  factivity as well as probabilistic information on word meaning in
-  context.}
+  negation and factivity as well as probabilistic information on word 
+  meaning in context.}
 
 
 
@@ -105,8 +100,8 @@ Probabilistic Information using Markov Logic [TODO: ?]}
 \input{2_related}
 \input{3_interface}
 \input{4_logical_form}
-%\input{5_synonymy}
-%\input{6_implicativity}
+\input{5_synonymy}
+\input{6_implicativity}
 \input{7_data_eval}
 \input{8_evaluation}
 \input{9_conclusion}

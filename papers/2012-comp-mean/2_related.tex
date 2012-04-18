@@ -1,5 +1,25 @@
 \section{Background}
 
+\textbf{Recognizing textual entailment.}
+Textual entailment is the task of determining whether one natural language text
+implies another.  We have chosen textual entailment as the mode of evaluation
+for our approach because it offers a good framework for testing whether a system
+performs correct analyses and thus draws the right inferences from a given text.
+% For example, to test whether a system correctly handles implicative verbs, one
+% can use the \emph{premise} $p$ along with the \emph{hypothesis} $h$ in
+% \eqref{ex:imp-fact-nested} below. If the system analyses the two sentences
+% correctly, it should infer that $h$ holds.
+While the most prominent forum using textual entailment is the Recognizing
+Textual Entailment (RTE) challenge \citep{dagan:rte2005}, the RTE datasets do
+not test the phenomena in which we are interested. For example, in order to
+evaluate our system's ability to determine word meaning in context, the RTE pair
+would have to specifically test word sense confusion by having a word's context
+in the hypothesis be different from the context of the premise.  However, this
+simply does not occur in the RTE corpora.  In order to properly test our
+phenomena, we construct hand-tailored premises and hypotheses based on
+real-world texts.
+
+
 \textbf{Logic-based semantics.}
 Boxer \citep{bos:coling2004} is a software package for wide-coverage semantic
 analysis that provides semantic representations in the form of Discourse
@@ -15,43 +35,49 @@ to check for logical entailment.
 % two to find an answer to the question.
 
 
-\noindent\textbf{Distributional models for lexical meaning.}
-Distributional models describe the meaning of a word through the context in
-which it appears~\citep{landauer97:solution,lund96:producing}, where contexts 
-can be documents, other words, or snippets
-of syntactic structure. Distributional models are able to predict semantic
-similarity between words based on distributional similarity and they can be
-learned in an unsupervised fashion. Recently distributional models have been
-used to predict the applicability of paraphrases in context
-\citep{MitchellLapata:08,erk:emnlp08,ThaterFuerstenauPinkal:10,erk:acl2010}. 
-For example,
-in ``The wine left a stain'', ``result in'' is a better paraphrase for
-``leave'' than is ``entrust'', while the opposite is true in
+\noindent\textbf{Distributional models for lexical meaning.} Distributional
+models describe the meaning of a word through the context in which it
+appears~\citep{landauer97:solution,lund96:producing}, where contexts can be
+documents, other words, or snippets of syntactic structure. Distributional
+models are able to predict semantic similarity between words based on
+distributional similarity and they can be learned in an unsupervised fashion.
+Recently distributional models have been used to predict the applicability of
+paraphrases in context
+\citep{mitchell:acl2008,erk:emnlp08,thater:acl2010,erk:acl2010}.
+For example, in ``The wine left a stain'', {\it result in} is a better
+paraphrase for {\it leave} than is {\it entrust}, while the opposite is true in
 ``He left the children with the nurse''. Usually, the distributional
 representation for a word mixes all its usages (senses). For the paraphrase
 appropriateness task, these representations are then reweighted, extended, or
 filtered to focus on contextually appropriate usages.
 
-\noindent\textbf{Markov Logic.}
-An MLN consists of a set of weighted first-order clauses.  It provides a way
-of softening first-order logic by making situations in which not all clauses
-are satisfied less likely but not impossible \citep{richardson:mlj06}. More
-formally, let $X$ be the set of all propositions describing a world (i.e. the
-set of all ground atoms), $\mathcal{F}$ be the set of all clauses in the MLN,
-$w_i$ be the weight associated with clause $f_i \in \mathcal{F}$,
-$\mathcal{G}_{f_i}$ be the set of all possible groundings of clause $f_i$, and
-$\mathcal{Z}$ be the normalization constant. Then the probability of a
+\noindent\textbf{Markov Logic.} 
+In order to perform logical inference with probabilities, we draw
+from the large and active body of work related to Statistical Relational AI
+\citep{getoor:book2007}.  Specifically, we make use of Markov Logic Networks
+(MLNs) \citep{richardson:mlj06} which employ weighted graphical models to
+represent first-order logical formulas. MLNs are appropriate for our approach
+because they provide an elegant method of assigning weights to first-order
+logical rules, combining a diverse set of inference rules, and performing
+probabilistic inference.
+
+An MLN consists of a set of weighted first-order clauses.  It provides a way of
+softening first-order logic by making situations in which not all clauses are
+satisfied less likely, but not impossible \citep{richardson:mlj06}. More
+formally, if $X$ is the set of all propositions describing a world (i.e. the
+set of all ground atoms), $\mathcal{F}$ is the set of all clauses in the MLN,
+$w_i$ is the weight associated with clause $f_i \in \mathcal{F}$,
+$\mathcal{G}_{f_i}$ is the set of all possible groundings of clause $f_i$, and
+$\mathcal{Z}$ is the normalization constant, then the probability of a
 particular truth assignment $\mathbf{x}$ to the variables in $X$ is defined as:
-\begin{equation}
-P(X = \mathbf{x}) = \frac{1}{\mathcal{Z}} \exp\left(\sum_{f_i \in \mathcal{F}} w_i \sum_{g \in \mathcal{G}_{f_i}}g(\mathbf{x})
-\right) 
- = \frac{1}{\mathcal{Z}} \exp\left(\sum_{f_i \in \mathcal{F}} w_i n_i(\mathbf{x}) \right) \tag{1}\label{e1}
-\end{equation}
-where $g(\mathbf{x})$ is 1 if $g$ is satisfied and 0 otherwise, and 
-$n_i(\mathbf{x})= \sum_{g\in \mathcal{G}_{f_i}}g(\mathbf{x})$ is the number of
-groundings of $f_i$ that are satisfied given the current truth assignment to the
-variables in $X$. This means that the probability of a truth assignment rises
-exponentially with the number of groundings that are satisfied.
+\[ P(X = \mathbf{x}) = \frac{1}{\mathcal{Z}} \exp\left(\sum_{f_i \in
+\mathcal{F}} w_i \sum_{g \in \mathcal{G}_{f_i}}g(\mathbf{x}) \right) =
+\frac{1}{\mathcal{Z}} \exp\left(\sum_{f_i \in \mathcal{F}} w_i n_i(\mathbf{x})
+\right) \tag{1}\label{e1} \] where $g(\mathbf{x})$ is 1 if $g$ is satisfied and
+0 otherwise, and $n_i(\mathbf{x})= \sum_{g\in \mathcal{G}_{f_i}}g(\mathbf{x})$
+is the number of groundings of $f_i$ that are satisfied given the current truth
+assignment to the variables in $X$. This means that the probability of a truth
+assignment rises exponentially with the number of groundings that are satisfied.
 
 Markov Logic has been used previously in other NLP application
 (e.g. \citet{poon:emnlp2009}).  However, this paper marks the first attempt at
@@ -64,14 +90,5 @@ the distributional model of lexical meaning and then injected into the MLN.
 Rules governing implicativity and coreference are given infinite weight
 (hard constraints).
 
-% Alchemy \citep{kok:tr05} is an open source software package for MLNs. It
-% includes implementations for all of the major existing algorithms for learning and inference with MLNs.
-
-% A Markov Logic Network (MLN) is a probabilistic graphical model used to
-% represent weighted formulas of first-order logic.  An MLN represents a set of formulas through a Markov
-% network where each vertex stands for a ground atom and each edge
-% corresponds to a logical connective.  Each formula results in a
-% clique in the network.  Since MLNs only operate on ground atoms, the inference procedure always
-% starts by ``grounding out'' all of the formulas to create a complete network. 
-% \textbf{KE: The following sentence is not good yet, but I think we should say
-% something like this.} In an MLN, a model's goodness grows exponentially worse with the number of formulas that it violates, where the weight on a formula represents the penalty for violating it.
+We use the open source software package Alchemy \citep{kok:tr05} to perform MLN
+inference.

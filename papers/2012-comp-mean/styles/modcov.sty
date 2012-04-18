@@ -85,7 +85,7 @@
 %              \end{itemize}
 %             \end{example}
 
-\newenvironment{example}{\begin{examples}\item}{\end{examples}}
+\newenvironment{covex}{\begin{covexs}\item}{\end{covexs}}
 
 %%%
 %%% The 'examples' environment
@@ -104,7 +104,7 @@
 
 \newcounter{equationsave}          % used in trick with equation number
 
-\newenvironment{examples}%         % define "example" environment
+\newenvironment{covexs}%         % define "example" environment
 {%
 \begin{list}{(\theequation)}%
 {%
@@ -363,121 +363,6 @@
            $}
    }
 
-
-%%%
-%%% Discourse representation structures
-%%%
-
-% \drs        typesets a DRS in box notation a la Kamp.
-%             Arguments:
-%             1. List of discourse variables joined by ~
-%             2. List of conditions joined by \\
-%
-%             Example:   \drs{X}{donkey(X)\\green(X)}
-%
-%             Example:   \drs{~}{purple(X,Y)}
-%
-%             Example:   \drs{X}
-%                            {named(X,`Pedro') \\
-%                             \drs{Y}{donkey(Y)\\owns(X,Y)}~~
-%                             {\large $\Rightarrow$}~
-%                             \drs{~}{feeds(X,Y)}
-%                            }
-
-% \sdrs       like \drs but first argument is a sentence
-%             to be displayed above the drs.
-%
-%             Example:   \sdrs{A donkey is green.}{X}{donkey(X)\\green(X)}
-
-% \ifdrs      forms 2 DRSes joined with a big arrow.
-%             Usually used for DRSes nested within another.
-%
-%             Example:   \ifdrs{X}{donkey(X)\\hungry(X)}
-%                              {~}{feeds(Pedro,X)}
-
-% \alifdrs    is like \ifdrs but shifted to the left so that an
-%             embedded `if' structure will line up with ordinary
-%             DRS conditions.
-
-% \negdrs     forms a DRS preceded by the negation symbol.
-%
-%             Example:   \negdrs{X}{donkey(X)\\green(X)}
-
-
-\newcommand{\drs}[2]
-{
-    {
-    \it
-    \begin{tabular}{|l|}
-    \hline
-    ~ \vspace{-2ex} \\
-    #1
-    \\
-    ~ \vspace{-2ex} \\
-    \hline
-    ~ \vspace{-2ex} \\
-    #2
-    \\
-    ~ \\    % can't vspace here or the line will come out wrong
-    \hline
-    \end{tabular}
-    }
-}
-
-\newcommand{\sdrs}[3]
-{\begin{tabular}{l}
-\mbox{\it #1} \\
-~ \\
-\drs{#2}{#3}
-\end{tabular}}
-
-\newcommand{\ifdrs}[4]
-{
-  \mbox{\drs{#1}{#2}~~{\large $\Rightarrow$}~\drs{#3}{#4}}
-}
-
-\newcommand{\alifdrs}[4]
-{
-  \mbox{$\!\!\!$\drs{#1}{#2}~~{\large $\Rightarrow$}~\drs{#3}{#4}}
-}
-
-\newcommand{\negdrs}[2]
-{
-  \mbox{{\large $\neg$}\drs{#1}{#2}}
-}
-
-
-%
-% Exercises, reference lists, and miscellany
-%
-
-% exercise    Environment for exercises, numbered by subsection.
-%             Optional argument for describing the exercise
-%             ("Project" or the like).
-
-% \bx         Abbreviation for \begin{exercise}
-% \ex         Abbreviation for \end{exercise}
-
-% reflist     Environment for hanging-indented list
-%             (suitable for LSA-style reference list).
-%             Does NOT require \item before entries.
-
-% \sentence   Displays its argument, flushleft, italicized.
-
-% \either     Displays its arguments as alternatives between
-%             large curly brackets.  Good for alternatives
-%             within sentences or PS-rules.
-
-\newtheorem{exercise}{Exercise}[subsection]
-
-% Exercise numbering resets to 0 not only at the start of
-% a subsection, but also at the start of a section or chapter
-% even if it is not divided into subsections.
-\@addtoreset{exercise}{section}
-\@addtoreset{exercise}{chapter}
-
-\newcommand{\bx}{\begin{exercise}}
-\newcommand{\ex}{\end{exercise}}
 
 \@ifundefined{reflist}{
 \newenvironment{reflist}{\begin{list}{}%
