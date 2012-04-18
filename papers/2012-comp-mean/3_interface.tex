@@ -44,8 +44,7 @@ literature are symmetric, such that  $\simfunc(\vec v, \vec w) = \simfunc(\vec w
 \vec v)$, our definition also accommodates asymmmetric similarity
 measures like \citet{kotlerman:nlej2010}. 
 
-We link logical form and a vector space through a \emph{lexical
-  mapping function}, which maps every predicate symbol to a point in
+We link logical form and a vector space through a function that maps every predicate symbol to a point in
 space. Let \loglang be a logical language. For each $n \ge
 0$, let the set of $n$-ary predicate symbols of \loglang be
 $\predsym{\loglang}^n$, and let $\predsym{\loglang} = \cup_{n \ge 0}
@@ -54,59 +53,42 @@ $\predsym{\loglang}^n$, and let $\predsym{\loglang} = \cup_{n \ge 0}
 from \loglang to $V$ is a function $\ell:
 \predsym{\loglang} \to V$.
 
-We use the link between logical form and vector space to project
-inference rules from vector space to logical form. A central property
+A central property
 of distributional vector spaces is that they can predict similarity in
 meaning based on similarity in observed
 contexts~\citep{Harris}. \citet{LinPantel:01} point out that
-vector space similarity can also be used to formulate
+vector space similarity can be expressed in the form of 
 inference rules: If two words $v$
 and $w$ are similar in their observed contexts, we can write this as
 the inference rule $v \to w$, which states that $w$ can be substituted
 for $v$ in texts. The inference rule is weighted by $\simfunc(\vec v, \vec w)$. 
-We now apply this idea to a setting where points in vector space
-stand for predicate symbols rather than words. If a lexical mapping
+
+We use this same idea to project inference rules from vector space to
+logical form through the lexical mapping function. If the lexical mapping
 function maps the n-ary predicate $P$ to $\vec
 v$ and the n-ary predicate $Q$ to $ \vec w$, and $\simfunc(\vec v, \vec w) = \eta$, then
 we obtain the weighted inference rule $\forall x_1,
-\ldots, x_n[ P(x_1, \ldots, x_n) \to Q(x_1, \ldots x_n) ]$ with weight $\eta$.
-
-Below we define the \emph{inference projection} for a predicate $P$ as the set of all
-weighted inference rules about $P$ that the vector space affords. This
-is the
-set of all pairs $(F, \eta)$ where $F$ is an inference rule of th form $\forall x_1,
-\ldots, x_n[ P(x_1, \ldots, x_n) \to Q(x_1, \ldots x_n) ]$, and $\eta$
-is the nonzero weight predicted by the vector space. However, sometimes we have additional information on the inferences that we are
-willing to project, for example we may only want to consider
-predicates $Q$ that stand for paraphrases of $P$. So instead of
-considering all predicates $Q \in \predsym{\loglang}^n$, we introduce
-a selection function $\zeta$ that restricts the predicates $Q$
-considered in projected inference rules, with $\zeta(P, \predsym{\loglang}^n)
-\subseteq \predsym{\loglang}^n$.~\footnote{Instead of introducing a
-  selection function $\zeta$, we could also modify the vector space
-  $V$. Suppose $\predsym{\loglang}^n$ is partitioned into sets $\predsym_1,
-  \ldots, \predsym_n$ such that for $P \in \predsym_i$, all and only
-  $Q \in \predsym_i$ are candidates for projected rules. Then we can
-  use, instead of $V$, the tensor BM  $V \times \{\predsym_1,
-  \ldots, \predsym_n\}$}
-
-
-
-: Let \loglang
+\ldots, x_n[ P(x_1, \ldots, x_n) \to Q(x_1, \ldots x_n) ]$ with weight
+$\eta$. More generally, let \loglang
 be a logical language with lexical mapping $\ell$ to a vector space 
-$V$ with similarity function \simfunc. Then the inference projection
-for the predicate $P \in \predsym{\loglang}^n$ is 
+$V$. Let \simfunc{} be the similarity function on $V$. For all $Q \in
+\predsym\loglang$ and ${\cal Q} \subseteq \predsym\loglang$, let
+$\zeta(Q, {\cal Q}) \subseteq {\cal Q}$. Then the \emph{inference
+  projection} for the predicate $P \in \predsym{\loglang}^n$ is 
 \begin{align*}
-\Pi_{\simfunc, \ell}(P) = \{ (F, \eta) \mid \exists Q \in \predsym{\loglang}^n~[ 
-&~F = \forall x_1, \ldots, x_n.[P(x_1, \ldots, x_n) \to Q(x_1, \ldots, x_n)], \\
+\Pi_{\simfunc, \zeta, \ell}(P) = \{ (F, \eta) \mid \exists Q \in \zeta(P, \predsym{\loglang}^n)\:[ 
+&~F = \forall x_1, \ldots, x_n[P(x_1, \ldots, x_n) \to Q(x_1, \ldots, x_n)], \\
 &~\eta = \simfunc\big(\ell(P), \ell(Q)\big) ~] \}
 \end{align*}
 
-
-
-considering inference rules $\forall \vec{x}.P(\vec{x} \to Q(\vec x)$
-for all $Q \in \predsym{\loglang}^n$, we allow for 
-
+The inference projection for $P$ contains all weighted inference rules
+$(F, \eta)$ with $P$ on the left-hand side that the vector space
+predicts. However, sometimes we have additional information not
+encoded in the vector space on the inferences that we are
+willing to project. For example we may only want to consider
+predicates $Q$ that stand for paraphrases of $P$. For this reason, the
+function $\zeta$ can limit the predicates $Q$ considered for the right-hand
+sides of rules to a subset of $\predsym{\loglang}^n$. 
 
 
 
