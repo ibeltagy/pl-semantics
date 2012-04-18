@@ -23,7 +23,7 @@ and vector space through a second mapping function independent of the
 interpretation function, which we call the \emph{lexical mapping}
 function. 
 
-\subsection*{Vector space representations} 
+\subsection*{Lexical mapping and inference projection} 
 
 % [TODO: \\vec is making vectors bold instead of using an overarrow]
 % KE: leave them bold. this is due to mathptmx.
@@ -43,6 +43,74 @@ degree of similarity. While most similarity functions in the
 literature are symmetric, such that  $\simfunc(\vec v, \vec w) = \simfunc(\vec w,
 \vec v)$, our definition also accommodates asymmmetric similarity
 measures like \citet{kotlerman:nlej2010}. 
+
+We link logical form and a vector space through a \emph{lexical
+  mapping function}, which maps every predicate symbol to a point in
+space. Let \loglang be a logical language. For each $n \ge
+0$, let the set of $n$-ary predicate symbols of \loglang be
+$\predsym{\loglang}^n$, and let $\predsym{\loglang} = \cup_{n \ge 0}
+\predsym{\loglang}^n$. Let $V$ be a vector space. Then a \emph{lexical
+  mapping function}
+from \loglang to $V$ is a function $\ell:
+\predsym{\loglang} \to V$.
+
+We use the link between logical form and vector space to project
+inference rules from vector space to logical form. A central property
+of distributional vector spaces is that they can predict similarity in
+meaning based on similarity in observed
+contexts~\citep{Harris}. \citet{LinPantel:01} point out that
+vector space similarity can also be used to formulate
+inference rules: If two words $v$
+and $w$ are similar in their observed contexts, we can write this as
+the inference rule $v \to w$, which states that $w$ can be substituted
+for $v$ in texts. The inference rule is weighted by $\simfunc(\vec v, \vec w)$. 
+We now apply this idea to a setting where points in vector space
+stand for predicate symbols rather than words. If a lexical mapping
+function maps the n-ary predicate $P$ to $\vec
+v$ and the n-ary predicate $Q$ to $ \vec w$, and $\simfunc(\vec v, \vec w) = \eta$, then
+we obtain the weighted inference rule $\forall x_1,
+\ldots, x_n[ P(x_1, \ldots, x_n) \to Q(x_1, \ldots x_n) ]$ with weight $\eta$.
+
+Below we define the \emph{inference projection} for a predicate $P$ as the set of all
+weighted inference rules about $P$ that the vector space affords. This
+is the
+set of all pairs $(F, \eta)$ where $F$ is an inference rule of th form $\forall x_1,
+\ldots, x_n[ P(x_1, \ldots, x_n) \to Q(x_1, \ldots x_n) ]$, and $\eta$
+is the nonzero weight predicted by the vector space. However, sometimes we have additional information on the inferences that we are
+willing to project, for example we may only want to consider
+predicates $Q$ that stand for paraphrases of $P$. So instead of
+considering all predicates $Q \in \predsym{\loglang}^n$, we introduce
+a selection function $\zeta$ that restricts the predicates $Q$
+considered in projected inference rules, with $\zeta(P, \predsym{\loglang}^n)
+\subseteq \predsym{\loglang}^n$.~\footnote{Instead of introducing a
+  selection function $\zeta$, we could also modify the vector space
+  $V$. Suppose $\predsym{\loglang}^n$ is partitioned into sets $\predsym_1,
+  \ldots, \predsym_n$ such that for $P \in \predsym_i$, all and only
+  $Q \in \predsym_i$ are candidates for projected rules. Then we can
+  use, instead of $V$, the tensor BM  $V \times \{\predsym_1,
+  \ldots, \predsym_n\}$}
+
+
+
+: Let \loglang
+be a logical language with lexical mapping $\ell$ to a vector space 
+$V$ with similarity function \simfunc. Then the inference projection
+for the predicate $P \in \predsym{\loglang}^n$ is 
+\begin{align*}
+\Pi_{\simfunc, \ell}(P) = \{ (F, \eta) \mid \exists Q \in \predsym{\loglang}^n~[ 
+&~F = \forall x_1, \ldots, x_n.[P(x_1, \ldots, x_n) \to Q(x_1, \ldots, x_n)], \\
+&~\eta = \simfunc\big(\ell(P), \ell(Q)\big) ~] \}
+\end{align*}
+
+
+
+considering inference rules $\forall \vec{x}.P(\vec{x} \to Q(\vec x)$
+for all $Q \in \predsym{\loglang}^n$, we allow for 
+
+
+
+
+\subsection*{Addressing polysemy}
 
 We follow the literature on vector space approaches to modeling word
 meaning in
@@ -81,56 +149,33 @@ space, and predicate symbols need to map to word meanings, not phrase
 meanings. Also, Mitchell and Lapata only consider the case of two-word
 phrases, while we allow for arbitrary-size contexts. 
 
-BM
 
-Proximity in a
-vector space that is distributional in nature represents
-substitutability in context. For that reason, the similarity function can be understood as a
-substitutability function.  If words $v$ and $w$ are represented by $\vec
-v$ and $\vec w \in V$ and $\simfunc(\vec v, \vec w) = \eta$, then $w$ can be
-substituted for $v$ to the degree $\eta$.
+% Proximity in a
+% vector space that is distributional in nature represents
+% substitutability in context. For that reason, the similarity function can be understood as a
+% substitutability function.  If words $v$ and $w$ are represented by $\vec
+% v$ and $\vec w \in V$ and $\simfunc(\vec v, \vec w) = \eta$, then $w$ can be
+% substituted for $v$ to the degree $\eta$.
 
-We are particularly interested in substitutability for words in context: Given a
-word $v$ in a context $c$, and a potential paraphrase $w$ of $v$, the degree of
-context-specific substitutability of $w$ for $v$, given their vector
-representations in $V$ $\vec w$ and $\vec v$, is \[ \simfunc(\alpha(\vec v, c), \vec
-w)\] This formulation adapts $v$ to the context $c$, but leaves the vector $w$ 
-unchanged, as most approaches in the literature do 
-\citep{erk:emnlp08,MitchellLapata:08,ThaterFuerstenauPinkal:10,vandecruys:emnlp2011}.
-But we can just as well contextualize the paraphrase candidate
-too \citep{erk:acl2010}. We compute the degree of context-specific
-substitutability of $w$ for $v$ as \[ \simfunc(\alpha(\vec v, c), \alpha(\vec w, c)) \]
-This formulation contextualizes $w$ in the same sentential context in which $v$
-is situated.
+Vector space approaches to representing word meaning in context in the
+literature are typically evaluated on a paraphrasing task: Given a
+word $v$ in a sentence context $c$, how appropriate is a paraphrase
+candidate 
+$w$ for $v$ in this context? The appropriateness of $w$ is typically
+predicted as 
+\[ \mathrm{appl}(w) = \simfunc(\alpha(\vec v, c), \vec w)\] 
+That is, the appropriateness of $w$ is predicted as the similarity of
+the vector for $w$ to the context-specific vector for $v$. This
+formulation adapts $v$ to the context $c$, but leaves the vector $w$  
+unchanged~\citep{erk:emnlp08,MitchellLapata:08,ThaterFuerstenauPinkal:10,vandecruys:emnlp2011}.
+If the paraphrase candidate $w$ is itself ambiguous, it can be useful
+to adapt its vector to the context $c$ as
+well~\citep{erk:acl2010}. In that case, the appropriateness of $w$ is
+predicted as 
+\[ \mathrm{appl}(w) = \simfunc(\alpha(\vec v, c), \alpha(\vec w, c)) \]
 
 
-\subsection*{Lexical mapping and inference projection} 
 
-Let \loglang be a logical language, a set of logical formulas. For each $n \ge
-0$, let the set of $n$-ary predicate symbols of \loglang be
-$\predsym{\loglang}^n$, and let $\predsym{\loglang} = \cup_{n \ge 0}
-\predsym{\loglang}^n$. Let $V$ be a vector space. Then a \emph{lexical mapping}
-from \loglang to $V$ is a function $\ell:
-\predsym{\loglang} \to V$ that maps each predicate symbol to a point in the
-vector space.
-
-The aim of the lexical mapping is to be able to project inferences from vector
-space to logical form: If a lexical mapping function maps predicate $P$ to $\vec
-v$ and $Q$ to $ \vec w$, and $\simfunc(\vec v, \vec w) = \eta$, then we can substitute
-$Q$ for $P$ with certainty $\eta$. If $P$ and $Q$ are n-ary predicates, we can
-express this {\it weighted substitution rule} as the formula $\forall x_1,
-\ldots, x_n.[P(x_1, \ldots, x_n) \to Q(x_1, \ldots x_n)]$ with weight $\eta$.
-
-Let \loglang be a logical language with lexical mapping $\ell$ to a vector space
-$V$ with similarity function \simfunc. Then the \textit{substitution projection} 
-for a predicate $P \in \predsym{\loglang}^n$ is the set of weighted substitution
-rules (the set of pairs of formulas $F \in \loglang$ and weights $\eta \in
-[0,1]$) given by
-\begin{align*}
-\Pi_{\simfunc, \ell}(P) = \{ (F, \eta) \mid \exists Q \in \predsym{\loglang}^n~[ 
-&~F = \forall x_1, \ldots, x_n.[P(x_1, \ldots, x_n) \to Q(x_1, \ldots, x_n)], \\
-&~\eta = \simfunc\big(\ell(P), \ell(Q)\big) ~] \}
-\end{align*}
 
 However, since we are interested in the substitutability of words {\it in
 context}, we compute context-specific lexical mappings by first computing a
