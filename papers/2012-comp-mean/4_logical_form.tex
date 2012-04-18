@@ -14,13 +14,7 @@ system that can deal with arbitrary text.
 % we have a wide-coverage semantic parser.  If we did not, then we would be
 % unable to deal with any but the simplest texts.
 Second, the DRSs that Boxer produces are close to the standard first-order
-logical forms that are required for use by the MLN software package Alchemy. 
-Our system transforms Boxer output into a format that Alchemy can read and
-augments it with additional information.
-
-[TODO: Another example: in section 4, 1st paragraph, where you say "Our system
-transforms Boxer output into a format that Alchemy can read and augments it with
-additional information", it would be better to say/add "Our system transforms
-DRSs into first order logic formulas. A number of problems arise for these
-transformations, namely X, Y, and Z. We address them in ways A and B. While A is
-an ad hoc solution, B is a contribution ... " Something of the sort.]
+logical forms that are required for use by the MLN software package Alchemy.
+Our system interprets discourses with Boxer, augments the resulting logical
+forms by adding inference rules, and outputs a format that the MLN
+software Alchemy can read.
