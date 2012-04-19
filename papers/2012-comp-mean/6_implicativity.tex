@@ -334,8 +334,8 @@ implications.  If a verb predicate $P$ in formula $G$ occurs in a positive
 context, and our distributional information tells us that that verb, according
 to its context $\kappa(P,G)$, is negatively entailing in positive contexts with
 confidence $\eta$, the we can generate the weighted rule:
-\[ (\forall~ p.[~ \exists~ e.[~ \langle P(e) \land theme(e,p)) ~] \to \NEG{p}
-~]),~~\eta \]
+\[ (\forall~ p.[~ \exists~ e.[~ (P(e) \land theme(e,p)) ~] \to \NEG{p}
+~],~~\eta) \]
 Under the view, perfect confidence that  $P$ was negatively entailing would
 correspond to a weight $\eta=1$ and perfect confidence that $P$ was {\it not}
 negatively entailing would correspond to a weight $\eta=0$.  Thus, our previous
