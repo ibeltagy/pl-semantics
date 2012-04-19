@@ -65,9 +65,12 @@ and $\simfunc(\vec v, \vec w) = \eta$, then we obtain the weighted inference
 rule $\forall x_1, \ldots, x_n[ P(x_1, \ldots, x_n) \to Q(x_1, \ldots x_n) ]$
 with weight $\eta$. More generally, let \loglang be a logical language with
 lexical mapping $\ell$ to a vector space $V$. Let \simfunc{} be the similarity
-function on $V$. For all $P \in \predsym\loglang$ and ${\cal Q} \subseteq
+function on $V$. 
+% KE: I need this to be Q in order to avoid confusion with the P that
+% is used directly below. 
+For all $Q \in \predsym\loglang$ and ${\cal Q} \subseteq
 \predsym\loglang$, let $\zeta$ be a function that restricts the elements in 
-${\cal Q}$ such that $\zeta(P, {\cal Q}) \subseteq {\cal Q}$. Then the
+${\cal Q}$ such that $\zeta(Q, {\cal Q}) \subseteq {\cal Q}$. Then the
 \emph{inference projection} for the predicate $P \in \predsym{\loglang}^n$ is
 \begin{align*}
 &\Pi_{\simfunc, \zeta, \ell}(P) = \{ (F, \eta) \mid \exists Q \in \zeta(P, \predsym{\loglang}^n)\:[ \\ 
@@ -75,14 +78,15 @@ ${\cal Q}$ such that $\zeta(P, {\cal Q}) \subseteq {\cal Q}$. Then the
 & \hspace{125px} \eta = \simfunc\big(\ell(P), \ell(Q)\big) ~] \}
 \end{align*}
 Thus, the inference projection for $P$ is the set of all weighted inference
-rules $(F, \eta)$ predicted by the vector space that map $P$ to a another
-predicate $Q$. Additionally, we may have additional information on the 
+rules $(F, \eta)$ predicted by the vector space that let us infer some
+other predicate $Q$ from $P$. Additionally, we may have information on the 
 inferences that we are willing to project that is not encoded in the vector 
 space. For example we may only want to consider
 predicates $Q$ that stand for paraphrases of $P$. For this reason, the
 function $\zeta$ can be used to limit the predicates $Q$ considered for the right-hand
-sides of rules.  If no restriction is applied through $\zeta$, then a rule will
-be generated for every predicate in $\predsym{\loglang}^n$. 
+sides of rules. If $\zeta(P, \predsym\loglang^n) =
+\predsym\loglang^n$, then a rule will
+be generated for every $Q \in \predsym{\loglang}^n$. 
 
 
 \subsection*{Addressing polysemy}
