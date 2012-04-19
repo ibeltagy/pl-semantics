@@ -65,12 +65,8 @@ and $\simfunc(\vec v, \vec w) = \eta$, then we obtain the weighted inference
 rule $\forall x_1, \ldots, x_n[ P(x_1, \ldots, x_n) \to Q(x_1, \ldots x_n) ]$
 with weight $\eta$. More generally, let \loglang be a logical language with
 lexical mapping $\ell$ to a vector space $V$. Let \simfunc{} be the similarity
-function on $V$. 
-% KE: I need this to be Q in order to avoid confusion with the P that
-% is used directly below. 
-For all $Q \in \predsym\loglang$ and ${\cal Q} \subseteq
-\predsym\loglang$, let $\zeta$ be a function that restricts the elements in 
-${\cal Q}$ such that $\zeta(Q, {\cal Q}) \subseteq {\cal Q}$. Then the
+function on $V$. For all $Q \in \predsym\loglang$ and ${\cal Q} \subseteq
+\predsym\loglang$, let $\zeta(Q, {\cal Q}) \subseteq {\cal Q}$. Then the
 \emph{inference projection} for the predicate $P \in \predsym{\loglang}^n$ is
 \begin{align*}
 &\Pi_{\simfunc, \zeta, \ell}(P) = \{ (F, \eta) \mid \exists Q \in \zeta(P, \predsym{\loglang}^n)\:[ \\ 
@@ -131,30 +127,6 @@ need to map to word meanings, not phrase meanings. Also, Mitchell and Lapata
 only consider the case of two-word phrases, while we allow for arbitrary-size
 contexts.
 
-
-% Proximity in a
-% vector space that is distributional in nature represents
-% substitutability in context. For that reason, the similarity function can be understood as a
-% substitutability function.  If words $v$ and $w$ are represented by $\vec
-% v$ and $\vec w \in V$ and $\simfunc(\vec v, \vec w) = \eta$, then $w$ can be
-% substituted for $v$ to the degree $\eta$.
-
-% Vector space approaches to representing word meaning in context in the
-% literature are typically evaluated on a paraphrasing task: Given a
-% word $v$ in a sentence context $c$, how appropriate is a paraphrase
-% candidate 
-% $w$ for $v$ in this context? The appropriateness of $w$ is typically
-% predicted as 
-% \[ \mathrm{appl}(w) = \simfunc(\alpha(\vec v, c), \vec w)\] 
-% That is, the appropriateness of $w$ is predicted as the similarity of
-% the vector for $w$ to the context-specific vector for $v$. This
-% formulation adapts $v$ to the context $c$, but leaves the vector $w$  
-% unchanged~\citep{erk:emnlp08,MitchellLapata:08,ThaterFuerstenauPinkal:10,vandecruys:emnlp2011}.
-% If the paraphrase candidate $w$ is itself ambiguous, it can be useful
-% to adapt its vector to the context $c$ as
-% well~\citep{erk:acl2010}. In that case, the appropriateness of $w$ is
-% predicted as 
-% \[ \mathrm{appl}(w) = \simfunc(\alpha(\vec v, c), \alpha(\vec w, c)) \]
 
 In existing approaches to computing word meaning in context, bag-of-words
 representations or syntactic parses of the sentence context are used to compute
