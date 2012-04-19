@@ -97,8 +97,8 @@ $\predsym{\loglang}^n$ may serve as replacements.  Our system uses WordNet
 representing synonyms or hypernyms of the lemma underlying $P$.  So, for a
 predicate $P \in \predsym{\loglang}^n$ and a set of predicates ${\cal Q}
 \subseteq \predsym{\loglang}^n$, we define $\zeta$ as \[ \zeta(P,{\cal Q}) = \{
-Q \in {\cal Q} ~|~ Q\text{'s lemma is a synonym or hypernym of }P\text{'s lemma}
-\} \]
+Q \in {\cal Q} ~|~ Q\text{'s lemma is a synonym of, a hypernym of, or equal to
+}P\text{'s lemma} \} \]
 
 
 \subsection*{A lexical ambiguity example}
@@ -235,101 +235,101 @@ country''.  Thus, the rule $\forall x.[sweep_{1005}(x) \to cover_{2007}(x)]$
 will be given more consideration during inference.
 
 
-\subsection*{Hypernymy}
-
-\entpairex{ex:hyp-0}{Ed owns a car.}{Ed has a automobile.}
-	
-Even restricting rules to wordnet relationships, \eqref{ex:hyp-0} works in
-because car and automobile are synonyms (in the same synset).
-We construct rule 
-
-$(w,~ car \to automobile)$ where w = $sim(ctx(car),~ automobile)$
-
-\entpairex{ex:hyp-1}{Ed owns a car.}{Ed has a vehicle.}
-
-Even restricting rules to wordnet relationships, this works because vehicle
-is a hypernym of (a sense of) car.
-We can construct a rule 
-
-$(w,~ car \to vehicle)$ where w = $sim(ctx(car),~ vehicle)$
-
-\entpairex{ex:hyp-2}{Ed owns a vehicle.}{Ed has a car.}
-
-This is a less likely, but not altogether terrible entailment.
-However, using wordnet strictly would fail since vehicle is a hypernym of (a
-sense of) car.
-So, instead of strictly limiting our rules to wordnet relationships, we could
-have separate rules with separate weights:
-
-$(w_1,~ vehicle \to car)$ where $w_1 = sim(ctx(vehicle), car)$ 
-
-$(w_2,~ vehicle \to \lnot car)$ where $w_2$ = a measure of how far {\it car} and
-{\it vehicle} are in the hierarchy.
-
-So, we can say that, with certainty w1, that 'car' fits into 'vehicle''s context
-based on distributional data.
-Further, we can say with certainly w2 that 'vehicle' can be replaced with 'car'
-based on ontology data.
-
-
-
-\subsection*{Integration between logical and distributional phenomena}
-
-
-
-Some natural language phenomena are most naturally treated as categorial, while
-others are more naturally treated using weights or probabilities. In this paper,
-we treat implicativity, while using a probabilistic approach to word meaning.
-
-
-
-For example \eqref{ex:ws-imp-1}, ``fail to'' is a negatively entailing
-implicative in a positive environment.
-So, $p$ correctly entails $h_{good}$ in both the theorem prover and Alchemy. 
-However, the theorem prover incorrectly licenses the entailment of $h_{bad}$
-while Alchemy does not.  
-The probabilistic approach performs better in this situation because the
-categorial approach does not distinguish between a good paraphrase and a
-bad one.  This example also demonstrates the advantage of using a
-context-sensitive distributional model to calculate the probabilities of
-paraphrases because ``reward'' is an {\it a priori} better paraphrase than
-``observe'' according to WordNet since it appears in a higher ranked synset. 
-
-\begin{covex}\label{ex:ws-imp-1}
-\begin{itemize}
-  \item[$p$:] The U.S. is watching closely as South Korea fails to honor
-  U.S. patents\footnote{Example \eqref{ex:ws-imp-1} is adapted from Penn
-  Treebank document wsj\_0020 while \eqref{ex:ws-imp-2} is adapted from document
-  wsj\_2358}
-  \item[$h_{good}$:] South Korea does not {\bf observe} U.S. patents
-  \item[$h_{bad}$:] South Korea does not {\bf reward} U.S. patents
-\end{itemize}
-\end{covex}
-
-
-
-
-Above, we stated that the entailment in \eqref{ex:hyp-1} was licensed because a
-{\it car} is a type of {\it vehicle} and we can entail from a subset to a
-superset.  In fact, the situation is complicated a bit because the direction of
-entailment is actually dictated by the polarity of the context in which the
-words appear.
-
-Consider example \eqref{ex:hyp-3} below
-\entpairex{ex:hyp-3}{Ed does not own a vehicle.}{Ed does not have a car.}
-This entailment is valid despite the fact that we are entailing from {\it
-vehicle} to {\it car}, the opposite direction as in example \eqref{ex:hyp-1}. 
-The difference is that in \eqref{ex:hyp-1}, the words appeared in a {\it
-positive context} while in \eqref{ex:hyp-3} they appear in a {\it
-negative context} since they are embedded under a single negation.
-
-However, the approach that we have chosen to take handles this interaction
-naturally.  The softened inference rules we generate for hypernym relationships
-may lower the probability of entailment versus a similar hard rule (when the
-weight is less than 1), but if an entailment rule does not fit the polarity of
-the context, then it will not raise the probability of entailment.
-
-In addition to negation, other linguistic constructs such as quantifiers and
-implicative verbs may affect the polarity of a context
-\citep{maccartney:iwcs2009}.  Our system handles all equally well.
-
+% \subsection*{Hypernymy}
+% 
+% \entpairex{ex:hyp-0}{Ed owns a car.}{Ed has a automobile.}
+% 	
+% Even restricting rules to wordnet relationships, \eqref{ex:hyp-0} works in
+% because car and automobile are synonyms (in the same synset).
+% We construct rule 
+% 
+% $(w,~ car \to automobile)$ where w = $sim(ctx(car),~ automobile)$
+% 
+% \entpairex{ex:hyp-1}{Ed owns a car.}{Ed has a vehicle.}
+% 
+% Even restricting rules to wordnet relationships, this works because vehicle
+% is a hypernym of (a sense of) car.
+% We can construct a rule 
+% 
+% $(w,~ car \to vehicle)$ where w = $sim(ctx(car),~ vehicle)$
+% 
+% \entpairex{ex:hyp-2}{Ed owns a vehicle.}{Ed has a car.}
+% 
+% This is a less likely, but not altogether terrible entailment.
+% However, using wordnet strictly would fail since vehicle is a hypernym of (a
+% sense of) car.
+% So, instead of strictly limiting our rules to wordnet relationships, we could
+% have separate rules with separate weights:
+% 
+% $(w_1,~ vehicle \to car)$ where $w_1 = sim(ctx(vehicle), car)$ 
+% 
+% $(w_2,~ vehicle \to \lnot car)$ where $w_2$ = a measure of how far {\it car} and
+% {\it vehicle} are in the hierarchy.
+% 
+% So, we can say that, with certainty w1, that 'car' fits into 'vehicle''s context
+% based on distributional data.
+% Further, we can say with certainly w2 that 'vehicle' can be replaced with 'car'
+% based on ontology data.
+% 
+% 
+% 
+% \subsection*{Integration between logical and distributional phenomena}
+% 
+% 
+% 
+% Some natural language phenomena are most naturally treated as categorial, while
+% others are more naturally treated using weights or probabilities. In this paper,
+% we treat implicativity, while using a probabilistic approach to word meaning.
+% 
+% 
+% 
+% For example \eqref{ex:ws-imp-1}, ``fail to'' is a negatively entailing
+% implicative in a positive environment.
+% So, $p$ correctly entails $h_{good}$ in both the theorem prover and Alchemy. 
+% However, the theorem prover incorrectly licenses the entailment of $h_{bad}$
+% while Alchemy does not.  
+% The probabilistic approach performs better in this situation because the
+% categorial approach does not distinguish between a good paraphrase and a
+% bad one.  This example also demonstrates the advantage of using a
+% context-sensitive distributional model to calculate the probabilities of
+% paraphrases because ``reward'' is an {\it a priori} better paraphrase than
+% ``observe'' according to WordNet since it appears in a higher ranked synset. 
+% 
+% \begin{covex}\label{ex:ws-imp-1}
+% \begin{itemize}
+%   \item[$p$:] The U.S. is watching closely as South Korea fails to honor
+%   U.S. patents\footnote{Example \eqref{ex:ws-imp-1} is adapted from Penn
+%   Treebank document wsj\_0020 while \eqref{ex:ws-imp-2} is adapted from document
+%   wsj\_2358}
+%   \item[$h_{good}$:] South Korea does not {\bf observe} U.S. patents
+%   \item[$h_{bad}$:] South Korea does not {\bf reward} U.S. patents
+% \end{itemize}
+% \end{covex}
+% 
+% 
+% 
+% 
+% Above, we stated that the entailment in \eqref{ex:hyp-1} was licensed because a
+% {\it car} is a type of {\it vehicle} and we can entail from a subset to a
+% superset.  In fact, the situation is complicated a bit because the direction of
+% entailment is actually dictated by the polarity of the context in which the
+% words appear.
+% 
+% Consider example \eqref{ex:hyp-3} below
+% \entpairex{ex:hyp-3}{Ed does not own a vehicle.}{Ed does not have a car.}
+% This entailment is valid despite the fact that we are entailing from {\it
+% vehicle} to {\it car}, the opposite direction as in example \eqref{ex:hyp-1}. 
+% The difference is that in \eqref{ex:hyp-1}, the words appeared in a {\it
+% positive context} while in \eqref{ex:hyp-3} they appear in a {\it
+% negative context} since they are embedded under a single negation.
+% 
+% However, the approach that we have chosen to take handles this interaction
+% naturally.  The softened inference rules we generate for hypernym relationships
+% may lower the probability of entailment versus a similar hard rule (when the
+% weight is less than 1), but if an entailment rule does not fit the polarity of
+% the context, then it will not raise the probability of entailment.
+% 
+% In addition to negation, other linguistic constructs such as quantifiers and
+% implicative verbs may affect the polarity of a context
+% \citep{maccartney:iwcs2009}.  Our system handles all equally well.
+% 

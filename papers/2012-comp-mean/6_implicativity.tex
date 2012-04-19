@@ -1,19 +1,18 @@
 \section{Implicativity}
 
-[TODO: It would be nice if this also fit into the interface framework\ldots]
+Implicativity and factivity are concerned with analyzing the truth conditions of
+nested propositions.  For example, in the premise of the entailment pair shown
+in example \eqref{ex:imp-fact-nested}, {\it lock} falls under the scope of
+{\it forgot to}, meaning that it did not happen.  Similarly, in example
+\eqref{ex:hope-build}, {\it build} is within the scope of {\it hope}, so we
+cannot infer whether the building occurred. Correctly recognizing nested
+propositions and analyzing their contexts is necessary for preventing
+the licensing of entailments like \eqref{ex:imp-fact-nested} and rejecting those
+like \eqref{ex:hope-build}.
 
-Implicativity and factivity are concerned with analyzing
-the truth conditions of nested propositions.  For example, in the premise of
-the entailment pair shown in example 
-\eqref{ex:imp-fact-nested}, ``arrange that'' falls under the scope of 
-``forget to'', and ``fail'' is under the scope of ``arrange that''.
-Correctly recognizing nested propositions is necessary for preventing
-false inferences such as the one
-in example \eqref{ex:hope-build}.
-
-\entpairex{ex:imp-fact-nested}{Ed did not forget to arrange that Dave 
-fail. [TODO: THis is a dumb sentence]\footnote{Example
-\eqref{ex:imp-fact-nested} is derived from examples by \citet{maccartney:iwcs2009}}}{Dave failed.}
+\entpairex{ex:imp-fact-nested}{Ed forgot to lock the door.\footnote{Example
+\eqref{ex:imp-fact-nested} is derived from examples by \citet{maccartney:iwcs2009}}}
+{Ed did not lock the door.}
 
 \entpairex{ex:hope-build}{The mayor hoped to build a new
 stadium.\footnote{Example \eqref{ex:hope-build} is adapted from document
@@ -22,15 +21,15 @@ wsj\_0126 from the Penn Treebank}}{*The mayor built a new stadium.}
 
 \citet{nairn:icos2006} presented an approach to the treatment of inferences
 involving implicatives and factives.  Their approach identifies an ``implication
-signature'' for every implicative or factive verb that determines the truth
-conditions for the verb's nested proposition, whether in a positive or negative
-environment.  Implication signatures take the form ``$x/y$'' where $x$
+signature'' for every implicative or factive verb.  This signature specifies the
+truth conditions for the verb's nested proposition, whether in a positive or
+negative environment.  Implication signatures take the form ``$x/y$'' where $x$
 represents the implicativity in the the positive environment and $y$ represents
 the implicativity in the negative environment.  Both $x$ and $y$ have three
 possible values: ``+'' for positive entailment, meaning the nested proposition
-is entailed, ``-'' for negative entailment, meaning the negation of the proposition
-is entailed, and ``o'' for ``null'' entailment, meaning that neither the
-proposition nor its negation is entailed. Figure \ref{fig:imp-sig} gives
+is entailed, ``-'' for negative entailment, meaning the negation of the
+proposition is entailed, and ``o'' for ``null'' entailment, meaning that neither
+the proposition nor its negation is entailed. Figure \ref{fig:imp-sig} gives
 concrete examples.
 
 % For example, the verb ``managed to'' has positive entailment in the {\it true}
@@ -191,8 +190,8 @@ Now that our labeled subexpression has triggers, we can introduce inference
 rules to activate those triggers.  The purpose of these inference rules is to
 capture the behavior dictated by the implication signature of the implicative
 verb for which the relevant subexpression is the theme.  For example, according
-to the implication signature, the implicative {\it manage to} is positively
-entailing in positive contexts and negatively entailing in negative contexts.
+to the implication signature in Figure \ref{fig:imp-sig}, the implicative {\it
+manage to} is positively entailing in positive contexts and negatively entailing in negative contexts.
 This means that if John {\it managed to} do what is described by $p$, then the
 event described by $p$ occurred, or in other words, the subexpression of $p$ is
 {\it true}. Likewise, if John {\it did not manage to} do what is described by
@@ -317,49 +316,109 @@ in ``He forgot to lock the door'', {\it forgot} has a ``xcomp+to'' relationship
 to {\it lock}.
 
 
-\subsection*{Interaction of various phenomena}
+\subsection*{Weighting implicative inference rules}
 
-[Examples with implicatives and negations and ambiguous words]
+One important result arising from our approach to implicativity is that
+either the positive or negative entailment of a nested proposition is determined
+by the externalized rules, such as those in Figure \ref{drs:impl-3-rules}, that
+are used to activate the presupposition triggers of that proposition. 
+Previously, we discussed how the appropriate rules may be either added or not
+added depending on the implication signature for the verb.  However, it is
+possible for some verbs that the implication signature may, in fact, be somewhat
+fuzzy.  For example, the implicativity of a verb may be related to the
+distributional context in which it appears.  
+
+Because our system has externalized implicativity rules, we can assign
+independent weights according to what the verb's context says about its
+implications.  If a verb predicate $P$ in formula $G$ occurs in a positive
+context, and our distributional information tells us that that verb, according
+to its context $\kappa(P,G)$, is negatively entailing in positive contexts with
+confidence $\eta$, the we can generate the weighted rule:
+\[ (\forall~ p.[~ \exists~ e.[~ \langle P(e) \land theme(e,p)) ~] \to \NEG{p}
+~]),~~\eta \]
+Under the view, perfect confidence that  $P$ was negatively entailing would
+correspond to a weight $\eta=1$ and perfect confidence that $P$ was {\it not}
+negatively entailing would correspond to a weight $\eta=0$.  Thus, our previous
+description of a rule either being added or not added according to the
+implication signature can be seen as a subset of this technique where the only
+choices for $\eta$ are 0 and 1.
+
+[TODO: Tying this back to section 3 would be ideal].
+
+While we do not have a scheme for generate such weights at this time, our
+framework supports this addition.
+
+
+\subsection*{Interaction with other phenomena}
 
 % Some natural language phenomena are most naturally treated as categorial, while
 % others are more naturally treated using weights or probabilities. In this paper,
 % we treat implicativity, while using a probabilistic approach to word meaning.
 
-\noindent\textbf{Implicativity and hypernymy.}
-\citet{maccartney:iwcs2009} extended the work by \citet{nairn:icos2006} in order to
-correctly treat inference involving monotonicity and exclusion.  
-Our approaches to implicatives and factivity and hyper/hyponymy combine naturally
-to address these issues because of the structure of our logical representations
-and rules.  For example, no additional work is required to license the
-entailments in \eqref{ex:imp-fact-hyper}.  
-
+\citet{maccartney:iwcs2009} extended the work by \citet{nairn:icos2006} in order
+to correctly treat inference involving monotonicity and exclusion.
+Our approach to implicativity combines naturally with hypernymy to ensure
+correct entailment judgements. For example, no additional work is required to
+license the entailments in \eqref{ex:imp-fact-hyper}.
 \begin{covex}\label{ex:imp-fact-hyper}
 \begin{itemize}
-  \item[(a)] John refused to dance $\vDash$ John didn't tango
-  \item[(b)] John did not forget to tango $\vDash$ John danced
+  \item[(a)]~John refused to dance $\vDash$ John didn't tango
+  \item[(b)]~John did not forget to tango $\vDash$ John danced
 \end{itemize}
 \end{covex}
 
-Example \eqref{ex:ws-imp-2} demonstrates how our system combines
-categorial implicativity with a probabilistic approach to hypernymy.  
-The verb ``anticipate that'' is positively entailing in the negative
-environment.
-The verb ``moderate'' can mean ``chair'' as in ``chair a discussion'' or
-``curb'' as in ``curb spending''.  Since ``restrain'' is a hypernym of
-``curb'', it receives a weight based on the applicability of the word ``curb''
-in the context.  Similarly, ``talk'' receives a weight based on its
-hyponym ``chair''. Since our model predicts ``curb'' to be a more probable
-paraphrase of ``moderate'' in this context than ``chair'' (even though the
-priors according to WordNet are reversed), the system is able to infer
-$h_{good}$ while rejecting $h_{bad}$.
+Likewise, no further word is needed for our implicativity approach to interact
+correctly with our approach to ambiguity in word meaning.  For example, consider
+example \ref{ex:imp-fact-syn}.  Here the premise contains the verb {\it prevent}
+in a positive context, which is negatively entailing.  It also contains the word
+{\it leave} which is synonymous with both {\it result in} and {\it flee} through
+different senses.  As the example shows, our approach is able to correctly
+handle the interaction between the lexical ambiguity and the implicative verb.
 
-\begin{covex}\label{ex:ws-imp-2}
-\begin{itemize}
-  \item[$p$:] He did not anticipate that inflation would moderate this year
-  \item[$h_{good}$:] Inflation {\bf restrained} this year
-  \item[$h_{bad}$:] Inflation {\bf talked} this year
-\end{itemize} 
+\begin{covex}\label{ex:imp-fact-syn}
+\begin{itemize} \itemsep -3pt
+  \item[p:]~     He prevented the wine from leaving a stain.
+  \item[h1:]~~~ The wine did not result in a stain.
+  \item[h2*:]~~~The wine resulted in a stain.
+  \item[h3*:]~~~The wine did not flee a stain.
+\end{itemize}
 \end{covex}
+
+In example \ref{ex:imp-fact-syn-null}, the {\it prevent} event is nested under
+the null-entailing verb {\it try}.  As such, neither alternate sense of {\it
+leave} is entailed since {\it try} says nothing about the truth or falsity of
+its nested proposition.
+
+\begin{covex}\label{ex:imp-fact-syn-null}
+\begin{itemize} \itemsep -3pt
+  \item[p:]~     He tried to prevent the wine from leaving a stain.
+  \item[h1*:]~~~The wine did not result in a stain.
+  \item[h2*:]~~~The wine resulted in a stain.
+  \item[h3*:]~~~The wine did not flee a stain.
+\end{itemize}
+\end{covex}
+  
+
+% Example \eqref{ex:ws-imp-2} demonstrates how our system combines
+% categorial implicativity with a probabilistic approach to hypernymy.  
+% The verb ``anticipate that'' is positively entailing in the negative
+% environment.
+% The verb ``moderate'' can mean ``chair'' as in ``chair a discussion'' or
+% ``curb'' as in ``curb spending''.  Since ``restrain'' is a hypernym of
+% ``curb'', it receives a weight based on the applicability of the word ``curb''
+% in the context.  Similarly, ``talk'' receives a weight based on its
+% hyponym ``chair''. Since our model predicts ``curb'' to be a more probable
+% paraphrase of ``moderate'' in this context than ``chair'' (even though the
+% priors according to WordNet are reversed), the system is able to infer
+% $h_{good}$ while rejecting $h_{bad}$.
+% 
+% \begin{covex}\label{ex:ws-imp-2}
+% \begin{itemize}
+%   \item[$p$:] He did not anticipate that inflation would moderate this year
+%   \item[$h_{good}$:] Inflation {\bf restrained} this year
+%   \item[$h_{bad}$:] Inflation {\bf talked} this year
+% \end{itemize} 
+% \end{covex}
 
 % According to \citet{nairn:icos2006}, the verb ``predict that'' is a positively
 % entailing factive, but if \eqref{ex:ws-imp-2} is modified so that ``anticipate''
@@ -367,11 +426,5 @@ $h_{good}$ while rejecting $h_{bad}$.
 % for ``moderate'', meaning that it is not possible to analyze ``predict that'' as
 % a factive and preventing our system from licensing the entailment. 
 
-
-\subsection*{Weighting implicative inference rules}
-
-While we do not have a scheme for generate such weights at this time, one of the
-advantages of our approach is that it allows for the independent weighting of
-each implicative inference rule in isolation.  
 
 

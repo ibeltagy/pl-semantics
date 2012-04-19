@@ -1,48 +1,51 @@
 \section{Future work}
 
-[pull out realations from the logical form to have more interesting $\alpha$]
+Or plans for continued word can be divided into two categories: word on the
+theoretical side and work on implementation.
 
-[think about vector spaces that take logical form into account similar to how
-pado and lapata took dependencies into account.]
+From a theoretical perspective, we would like to extend our formalism to address
+a wider range of linguistic phenomena.  A huge amount of natural language is
+probabilistic in nature, and first-order representations do not correctly
+address these problems.  By extending our framework, we hope to be able to
+apply weights derived from distributional information to a wide variety of
+modeled concepts.
 
-[mention vibhav's work]
+We would also like to enhance the approaches that we have presented here.  For
+example, our procedure for handling word meaning ambiguity generates a weight
+based only on the words that appear in the same sentence as the target.  It
+would be more interesting to extract relations from the logical form to create a
+more interesting $\alpha$ function.
 
-[mention vectors built form entire sentences.  can measure similarity between
-phrases.]
+% [think about vector spaces that take logical form into account similar to how
+% pado and lapata took dependencies into account.]
 
+From an implementation perspective, we would like to produce a dataset that
+tests all of the issues outlined in this paper, and to run a large-scale
+evaluation of our techniques.  
+However, the major barrier here is that the Alchemy software has severe
+inefficiencies in terms of memory requirements and speed, preventing us
+from executing larger and more complex examples.  There is on-going
+work to improve Alchemy [TODO: CITE Vibhav's PTP paper].
 
-
-The next step is to execute a full-scale evaluation of our approach using 
-more varied phenomena and naturally occurring sentences. 
-However, the memory requirements of Alchemy are a limitation that prevents us
-from currently executing larger and more complex examples.  The problem arises
-because Alchemy considers every possible grounding of every atom, even when a
-more focused subset of atoms and inference rules would suffice. There is on-going
-work to modify Alchemy so that only the required groundings are incorporated
-into the network, reducing the size of the model and thus making it possible to
-handle more complex inferences.  We will be able to begin using this new version
-of Alchemy very soon and our task will provide an excellent test case for the
-modification.
-
-Since Alchemy outputs a probability of entailment, it is necessary to fix a
-threshold that separates entailment from nonentailment.
-We plan to use machine learning techniques to compute an appropriate threshold
-automatically from a calibration dataset such as a corpus of valid and invalid
-paraphrases.
+We are also interested in comparing our approaches to recent work on building
+vectors from entire sentences [TODO: CITATIONS].  We would like to example
+how our approach compares in the task of measuring similarity between
+phrases.
 
 
 \section{Conclusion}
 
-In this paper, we have introduced a system that implements a first step
-towards integrating logical semantic representations with
-probabilistic weights using methods from Statistical Relational AI,
-particularly Markov Logic. We have focused on three phenomena and their
-interaction: implicatives, coreference, and word meaning. Taking
-implicatives and coreference as categorial and word meaning as
-probabilistic, we have used a distributional model to generate
-paraphrase appropriateness ratings, which we then transformed into
-weights on first order formulas.
-The resulting MLN approach is able to correctly solve a number of difficult
+In this paper, we have introduced a formalism that allows us to integrating
+logical semantic representations with probabilistic weights acquired from
+distributional vector spaces.  We showed how these weighted first-order
+representations can be used to perform probabilistic first-order inferences
+using Markov Logic.  We have shown how our approach handles three distinct
+phenomena, word meaning ambiguity, hypernymy, and implicativity, as well as
+allowing them to interact appropriately.  Most importantly our approach allows 
+us to model discrete logical phenomena with hard first-order techniques and
+probabilistic phenomena with soft weights, and to do all of them within a
+single, unified framework.
+The resulting approach is able to correctly solve a number of difficult
 textual entailment problems that require handling complex combinations of these
 important semantic phenomena.
 
