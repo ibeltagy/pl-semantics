@@ -8,17 +8,30 @@ entailment pair in (\ref{ex:syn-hyp-pos}), the system must recognize that
 
 \entpairex{ex:syn-hyp-pos}{Ed owns a car.}{Ed has a vehicle.}
 
-Perhaps the most natural fit for our system of projecting distributional
-information into logical forms is trying to generate inference rules to address
-lexical ambiguity.  For any natural language sentence $A$, a word $v$ in $A$ may
-be replaced by a synonym of $v$, $w$, resulting in a new sentence $A'$.  The
-degree to which $A'$ means the same thing as $A$ is determined by how well $w$
-fits the context of $v$ in $A$.  Thus, in order to capture the probability that
-$A$ entails $A'$, we want to generate an inference rule stating that $v$ implies
-$w$ to the degree that that $w$ fits the context of $v$.
+We address this problem as described in Section~\ref{sec:interface}: 
+We use distributional information to
+generate inferences stating, for example,  that ``has'' can be substituted for
+``owns''. This inference is weighted by the degree to which 
+``owns'', in the context in which it is used in
+(\ref{ex:syn-hyp-pos}), is similar to ``has''. To integrate these
+inference rules with the logical form representations of sentences
+like (\ref{ex:syn-hyp-pos}), we use the formalism introduced in
+Section \ref{sec:interface}. We now describe how we instantiate it in
+the current paper.
 
-We can address this problem using the formalism introduced in
-Section \ref{sec:interface}.
+% KE: weird paragraph, sounds like we had not introduced the notion
+% of inference rules based on distributional information
+% before. Instead, point to section 3. 
+% Perhaps the most natural fit for our system of projecting distributional
+% information into logical forms is trying to generate inference rules to address
+% lexical ambiguity.  For any natural language sentence $A$, a word $v$ in $A$ may
+% be replaced by a synonym of $v$, $w$, resulting in a new sentence $A'$.  The
+% degree to which $A'$ means the same thing as $A$ is determined by how well $w$
+% fits the context of $v$ in $A$.  Thus, in order to capture the
+% strength of our conviction that
+% $A$ entails $A'$, we want to generate an inference rule stating that $v$ implies
+% $w$ to the degree that that $w$ fits the context of $v$.
+
 
 First, we generate a vector space $V$.  We have chosen to implement a very
 simple bag-of-words vector space.  To ensure that the entries in the vector
@@ -31,9 +44,8 @@ as each feature, and then calculate the point-wise mutual information (PMI)
 between the lemma and each feature.  The resulting PMI values for each feature
 are used as the vector for the lemma.
 
-Since we are concerned with measuring the similarity between points in our
-vector space $V$, we require a {\it similarity function} \simfunc.  We define
-\simfunc over vectors $\vec v$ and $\vec w$ to be to be simple cosine similarity
+As the \emph{similarity function} \simfunc on our vector space, we use cosine
+similarity. For two vectors $\vec v$ and $\vec w$, their similarity is 
 \[ \simfunc(\vec v, \vec w) = cosine(\vec v, \vec w) = \frac{\vec v \cdot \vec
 w}{\|\vec v\|~\|\vec w\|}\]
 
@@ -44,31 +56,35 @@ Boxer. Boxer's predicates, as represented by the {\tt pred} relation in Boxer's
 Prolog output\footnote{See
 \url{http://svn.ask.it.usyd.edu.au/trac/candc/wiki/DRSs} for the detailed
 grammar of Boxer DRS output.}, consist of a word lemma and a token index
-indicating the original token that generated that predicate.  As such, our 
-\emph{lexical mapping} $\ell$ simply returns the lemma portion of the predicate.
+indicating the original token that generated that predicate.  
+% lexical mapping maps to vectors, not words!
+Our \emph{lexical mapping} function maps each predicate symbol to the
+vector that represents the lemma portion of the predicate.
 
 In order to assess the similarity between a word's context and a possible
 replacement word, we must define a \textit{context mapping} that generates a
 context from a predicate $P \in \predsym{\loglang}$ and a formula $G \in
-\loglang$.  
-We can define our context mapping as a function that maps $P$ to the set of
-vectors representing the other predicates in $G$ along with the relations that
-connect them.
-\begin{align*}
-\kappa(P,G) = \{ (r_i, \ell(Q)) ~| 
-&~Q \text{ is a predicate found in } G, \\
-&~r_i = \text{the relation connecting } P \text{ and } Q, \text{ and } \\
-&~Q \neq P \}
-\end{align*}
-However, in our current scenario, the only ``relation'' we use is the relation
-of being in the same sentence.  So, we are defining the context of $P$ as the
+\loglang$.  For the current paper we use the simplest possible
+definition for $\kappa$, which ignores semantic relations. We define 
+% We can define our context mapping as a function that maps $P$ to the set of
+% vectors representing the other predicates in $G$ along with the relations that
+% connect them.
+% \begin{align*}
+% \kappa(P,G) = \{ (r_i, \ell(Q)) ~| 
+% &~Q \text{ is a predicate found in } G, \\
+% &~r_i = \text{the relation connecting } P \text{ and } Q, \text{ and } \\
+% &~Q \neq P \}
+% \end{align*}
+% However, in our current scenario, the only ``relation'' we use is the relation
+% of being in the same sentence.  So, we are defining 
+the context of $P$ as the
 vectors of all predicates $Q$ that occur in the same sentence as $P$.
 Since every predicate in a logical form returned by Boxer is indexed
 with the sentence from which it was generated, we can define a simple context
 mapping that defines a predicate's context solely in terms of the other
 predicates generated by boxer for that sentence.
 \begin{align*}
-\kappa'(P,G) = \{ (same\text{-}sentence, \ell(Q)) ~|
+\kappa(P,G) = \{ (same\text{-}sentence, \ell(Q)) ~|
 &~Q \text{ is a predicate found in } G, \\
 &~Q\text{'s sentence index} = P\text{'s sentence index}, \text{ and } \\
 &~Q \neq P \}
@@ -77,17 +93,20 @@ Note that the only predicates $Q$ that are used are those derived from the
 lemmas of words found in the text.  Meta-predicates representing relations such
 as $agent$, $patient$, and $theme$ are not included.
 
-Since the context mapping $\kappa$ returns a set as context, we require a
-\textit{contextualization function} that converts this set into a vector in $V$.
-Because our vector space is defined simply over lemmas, our contextualization
-function just adds the vectors for each lemma in the context \[ \alpha(\vec v,
-c) = \sum_{(r_i, \vec w_i) \in c} \vec w_i \]  Thus, the vector $\alpha(\vec v,
-c)$ representing the context of word $v$ is simply the sum of the vectors for
-the words in that context.
+The context mapping $\kappa$ computes a context for a predicate $P$
+occurring in a formula $G$. Next we require a 
+\textit{contextualization function} that uses the context returned by
+$\kappa$ to compute a context-specific vector for $P$. Again we use
+the simplest instantiation possible. Our contextualization
+function just computes the sum of the vectors for each lemma in the context \[ \alpha(\vec v,
+c) = \sum_{(r_i, \vec w_i) \in c} \vec w_i \]  Other, more complex
+instantiations of $\kappa$ and $\alpha$ are possible. We comment on
+thus further in Section~\ref{sec:future}. 
 
-Based on these definitions, we can compute the \textit{contextualized
+Based on these definitions, we compute the \textit{contextualized
 inference projection} $\Pi^G_{\simfunc,\zeta,\ell}(P)$, the set of weighted
-inference rules mapping predicate $P$ to its potential replacements.
+inference rules mapping predicate $P$ to its potential replacements,
+as described in Section~\ref{sec:interface}.
 
 Finally, in order to limit the number of inference rules generated in the
 inference projection, we define a restriction function $\zeta$ that specifies,
