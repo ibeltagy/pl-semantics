@@ -13,10 +13,10 @@ use statistically-driven weighted models.  For example, distributional
 models of word meaning have been used successfully to judge paraphrase
 appropriateness by representing the meaning of a word in context as a point in a
 high-dimensional semantics space
-\citep{erk:emnlp2008,thater:acl2010,erk:acl2010}.
-However, these models typically provide only shallow representations of meaning,
-handling only individual phenomena instead of providing meaning representations
-for complete sentences. It is a long-standing open question how best to
+\citep{erk:emnlp2008,thater:acl2010,reisinger:naacl2010,dinu:emnlp2010,vandecruys:emnlp2011}.
+However, these models only address word meaning, and do not
+addres the question of providing meaning representations for complete
+sentences. It is a long-standing open question how best to
 integrate the weighted or probabilistic information coming from such modules
 with logic-based representations in a way that allows for reasoning over both. 
 See, for example, \citet{hobbs:alj93}.
@@ -30,25 +30,26 @@ approach to natural language understanding.
 
 While this is a large and complex task, this paper proposes first steps toward
 our goal by presenting a mechanism for injecting distributional word-similarity
-information from a vector space into a first-order logical form.  
-\citet{gardenfors:book2004} uses the interpretation function for this purpose,
-such that logical formulas are interpreted over vector space representations.
-However, he uses spaces whose dimensions are qualities, like the hue and
-saturation of a color or the taste of a fruit. Points in his conceptual spaces
-are, therefore, potential entities.  In contrast, the vector spaces that we use
-are distributional in nature, and, therefore, cannot be interpreted as potential
-entities. A point in such a space is a potential word, defined through
-its observed contexts, where the coordinates on each dimension constitute the
-co-occurrence count with that respective context item.  For this reason, we
-define the link between logical form and vector space through a second mapping
-function independent of the interpretation function, which we call the
-\emph{lexical mapping} function.
-
+information from a vector space into a first-order logical form.  We
+define a mapping from predicate symbols of logical form to points in
+vector space, and use it for projecting inference rules from vector
+space to logical form. % \citet{gardenfors:book2004} also links logical
+% form and a vector space, using the interpretation function, 
+% such that logical formulas are interpreted over vector space
+% representations. However, the conceptual spaces that he uses are not
+% distributional, and points in conceptual space are potential entities.  In contrast, the vector spaces that we use
+% are distributional in nature, and, therefore, cannot be interpreted as potential
+% entities. % A point in such a space is a potential word, defined through
+% % its observed contexts, where the coordinates on each dimension constitute the
+% % co-occurrence count with that respective context item.  
+% For this reason, we
+% define the link between logical form and vector space through a second mapping
+% function independent of the interpretation function, which we call the
+% \emph{lexical mapping} function.
 A central property of distributional vector space models is that they
 can predict semantic similarity based on proximity in space.  This comes from
 the hypothesis that a word's meaning is its use, and similarity in
-meaning is reflected in similarity in use (CITE Wittgenstein, Harris,
-Firth). When syntax is suitably restrained, vector space models can
+meaning is reflected in similarity in use~\citep{Wittgenstein,firth:slaj1957,harris:wj1954}. When syntax is suitably restrained, vector space models can
 also be used to predict substitutability in context
 \citep{lin:nlej2001,mitchell:acl2008,erk:emnlp2008,thater:acl2010,reisinger:naacl2010,dinu:emnlp2010,vandecruys:emnlp2011}.
 So if $A$ and $B$ are words or
