@@ -1,10 +1,29 @@
 \section{Background}
 
-\textbf{Recognizing textual entailment.}
-Textual entailment is the task of determining whether one natural language text
-implies another.  We have chosen textual entailment as the mode of evaluation
+\textbf{Textual entailment.}
+Recognizing Textual Entailment (RTE) is the task of determining whether one
+natural language text, the {\it premise}, implies another, the {\it hypothesis}.
+For evaluation of our system, we have chosen to use a variation on RTE in which
+we assess the relative probability of entailment for a of set of hypotheses.
+
+We have chosen textual entailment as the mode of evaluation
 for our approach because it offers a good framework for testing whether a system
 performs correct analyses and thus draws the right inferences from a given text.
+As an example, consider \eqref{ex:backgound-rte} below.    
+\begin{covex}\label{ex:backgound-rte}
+\begin{itemize} \itemsep -3pt
+  \item[p:]~~    The wine left a stain.
+  \item[h1:]~~~The wine resulted in a stain.
+  \item[h2*:]~~~The wine fled a stain.
+  \item[h3*:]~~~The wine did not resulted in a stain.
+\end{itemize}
+\end{covex}
+Here, hypothesis {\it h1} is a valid entailment, and should be judged to have
+high probability by the system.  Hypothesis {\it h2} should have lower probability since
+it uses the wrong sense of {\it leave} and {\it h3} should be low probability
+because the logical operator $not$ has reversed the meaning of the premise
+statement.
+
 % For example, to test whether a system correctly handles implicative verbs, one
 % can use the \emph{premise} $p$ along with the \emph{hypothesis} $h$ in
 % \eqref{ex:imp-fact-nested} below. If the system analyses the two sentences
@@ -25,6 +44,7 @@ Boxer \citep{bos:coling2004} is a software package for wide-coverage semantic
 analysis that provides semantic representations in the form of Discourse
 Representation Structures \citep{kamp:book93}. It builds on the C\&C CCG parser
 \citep{clark:acl04}.
+
 \citet{bos:emnlp2005} describe a system for Recognizing Textual Entailment
 (RTE) that uses Boxer to convert both the premise and hypothesis of an RTE pair
 into first-order logical semantic representations and then uses a theorem prover
@@ -44,8 +64,9 @@ distributional similarity and they can be learned in an unsupervised fashion.
 Recently distributional models have been used to predict the applicability of
 paraphrases in context \citep{erk:emnlp2008,thater:acl2010,reisinger:naacl2010,dinu:emnlp2010,vandecruys:emnlp2011}.
 For example, in ``The wine left a stain'', {\it result in} is a better
-paraphrase for {\it leave} than is {\it entrust}, while the opposite is true in
-``He left the children with the nurse''. Usually, the distributional
+paraphrase for {\it leave} than {\it flee}, because of the context of {\it wine}
+and {\it stains}.  In the sentence ``The suspect left the country'', the
+opposite is true: {\it flee} is a better paraphrase. Usually, the distributional
 representation for a word mixes all its usages (senses). For the paraphrase
 appropriateness task, these representations are then reweighted, extended, or
 filtered to focus on contextually appropriate usages.
@@ -79,8 +100,8 @@ assignment to the variables in $X$. This means that the probability of a truth
 assignment rises exponentially with the number of groundings that are satisfied.
 
 Markov Logic has been used previously in other NLP application
-(e.g. \citet{poon:emnlp2009}).  However, this paper marks the first attempt at
-representing deep logical semantics in an MLN.
+(e.g. \citet{poon:emnlp2009}).  However, this paper differs in that it is an
+attempt to represent deep logical semantics in an MLN.
 
 While it is possible learn rule weights in an MLN directly from training data,
 our approach at this time focuses on incorporating weights computed

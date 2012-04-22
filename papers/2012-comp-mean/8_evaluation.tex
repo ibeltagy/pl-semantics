@@ -1,10 +1,34 @@
-% \section{Evaluation}
-% 
-% As a preliminary evaluation of our system, we constructed a set of demonstrative
-% examples to test our ability to handle the previously discussed phenomena and
-% their interactions and ran each example with both a theorem prover and Alchemy. 
-% Note that when running an example in the theorem prover, weights are not
-% possible, so any rule that would be weighted in an MLN is simply treated as a
-% ``hard clause'' following \citet{bos:emnlp2005}.
-% % We executed every example discussed in this paper and more.  
-% 
+\section{Evaluation}
+
+As a preliminary evaluation of our system, we constructed a set of demonstrative
+examples, including those discussed in this paper, to test our system's ability
+to handle the previously discussed phenomena and their interactions.  We ran
+each example with both a standard first-order theorem prover and Alchemy to
+ensure that the examples work as expected. Note that since weights are not
+possible when running an example in the theorem prover, any rule that would be
+weighted in an MLN is simply treated as a ``hard clause'' following
+\citet{bos:emnlp2005}.  For the experiments, we generated a vector space from
+the entire New York Times portion of the English Gigaword corpus
+\citep{graff:gigaword2003}.
+
+The examples entailments evaluated were designed to test the interaction between
+the logical and weighted phenomena.  For example, in \eqref{ex:ws-imp-1}, ``fail
+to'' is a negatively entailing implicative in a positive environment, so $p$
+correctly entails {\it h1} in both the theorem prover and Alchemy.
+However, the theorem prover incorrectly licenses the entailment of {\it h2}
+while Alchemy does not.
+\begin{covex}\label{ex:ws-imp-1}
+\begin{itemize}
+  \item[p:]~    The U.S. is watching closely as South Korea fails to honor
+  U.S. patents\footnote{Sentence adapted from Penn Treebank document wsj\_0020.}
+  \item[h1:]~~~South Korea does not {\bf observe} U.S. patents
+  \item[h2*:]~~~South Korea does not {\bf reward} U.S. patents
+\end{itemize}
+\end{covex}
+The probabilistic approach performs better in this situation because the
+first-order approach does not distinguish between a good paraphrase and a
+bad one.  This example also demonstrates the advantage of using a
+context-sensitive distributional model to calculate the probabilities of
+paraphrases because ``reward'' is an {\it a priori} better paraphrase than
+``observe'' according to WordNet since it appears in a higher ranked synset.
+

@@ -1,6 +1,7 @@
 \section{Introduction}
 
-Logic-based representations of natural language meaning have a long history.
+Logic-based representations of natural language meaning have a long history
+\citep{montague:tj1970,kamp:book93}\nocite{thomason:book1974}.
 Representing the meaning of language in a first-order logical form is appealing
 because it provides a powerful and flexible way to express even complex
 propositions. However, systems built solely using first-order logical forms tend
@@ -15,7 +16,7 @@ appropriateness by representing the meaning of a word in context as a point in a
 high-dimensional semantics space
 \citep{erk:emnlp2008,thater:acl2010,reisinger:naacl2010,dinu:emnlp2010,vandecruys:emnlp2011}.
 However, these models only address word meaning, and do not
-addres the question of providing meaning representations for complete
+address the question of providing meaning representations for complete
 sentences. It is a long-standing open question how best to
 integrate the weighted or probabilistic information coming from such modules
 with logic-based representations in a way that allows for reasoning over both. 
@@ -49,8 +50,10 @@ space to logical form. % \citet{gardenfors:book2004} also links logical
 A central property of distributional vector space models is that they
 can predict semantic similarity based on proximity in space.  This comes from
 the hypothesis that a word's meaning is its use, and similarity in
-meaning is reflected in similarity in use~\citep{Wittgenstein,firth:slaj1957,harris:wj1954}. When syntax is suitably restrained, vector space models can
-also be used to predict substitutability in context
+meaning is reflected in similarity in
+use~\citep{wittgenstein:pij1953,firth:slaj1957,harris:wj1954}. 
+When syntax is suitably restrained, vector space models can also be used to 
+predict substitutability in context
 \citep{lin:nlej2001,mitchell:acl2008,erk:emnlp2008,thater:acl2010,reisinger:naacl2010,dinu:emnlp2010,vandecruys:emnlp2011}.
 So if $A$ and $B$ are words or
 expressions that are distributionally similar and that can occur in
@@ -67,3 +70,11 @@ applied to a real logical language and vector space to address issues of
 ambiguity in word meaning.  Finally, we show how the weighted inference rules
 produced by our approach interact appropriately with the first-order logical
 form to produce correct inferences.
+
+Our implementation uses Markov Logic Networks (MLN)\citep{richardson:mlj06} as
+the underlying engine for probabilistic inference.  We are able to demonstrate
+that an MLN is able to properly integrate the first-order logical representation
+and weighted inference rules so that inferences involving correct word sense are
+assessed as being highly probable, inferences involving incorrect word sense are
+determined to be low probability, and inferences that violate hard logical rules
+are determined to have the lowest probability.

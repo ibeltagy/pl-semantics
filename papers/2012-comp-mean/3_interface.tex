@@ -3,7 +3,7 @@
 % predicate symbols
 \newcommand{\predsym}[1]{\ensuremath{{\cal{P}}_{#1}}\xspace}
 % similarity function
-\newcommand{\simfunc}{\ensuremath{\mathrm{sim}}}
+\newcommand{\simfunc}{\ensuremath{\mathrm{sim}}\xspace}
 
 \section{Linking logical form and vector spaces}
 \label{sec:interface}
@@ -32,11 +32,11 @@ call the \emph{lexical mapping} function.
 
 Let $V$ be a vector space whose dimensions stand for elements of  textual
 context. We also write $V$ for the set of points in the space. We assume that
-each word is represented as a point in vector space\footnote{The assumption of a
-single vector per word is made for the sake of simplicity. If we want to cover
+each word is represented as a point in vector space.\footnote{The assumption of
+a single vector per word is made for the sake of simplicity. If we want to cover
 models in which each word is represented through multiple
 vectors~\citep{reisinger:naacl2010,dinu:emnlp2010}, this can be done through
-straightforward extensions of the definitions given here.}.
+straightforward extensions of the definitions given here.}
 The central relation in vector spaces is semantic similarity. We represent this
 through a \textit{similarity function} \[\simfunc: V \times V \to [0,1] \] that
 maps each pair of points in vector space to their degree of similarity. While
@@ -184,6 +184,6 @@ distinguish are not always that clear. For example, for a noun like ``onion'',
 should the vegetable sense and the plant/bulb sense be
 separate~\citep{krishnamurthy:chj2000}? Through the vector space model, we
 can model word meaning in context without ever referring to distinct dictionary
-senses~\citep{erk:gems2010}. But if we do not distinguish a fixed list of senses
-for a word $w$, we cannot represent them through a fixed list of distinct predicates
-$w_1, w_2, \ldots, w_n$.
+senses~\citep{erk:gems2010}. 
+Thus, if we do not distinguish a fixed list of senses for a word $w$, we cannot
+represent them through a fixed list of distinct predicates $w_1, w_2, \ldots, w_n$.
