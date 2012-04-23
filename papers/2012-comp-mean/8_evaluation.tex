@@ -25,10 +25,10 @@ while Alchemy does not.
   \item[h2*:]~~~South Korea does not {\bf reward} U.S. patents
 \end{itemize}
 \end{covex}
-The probabilistic approach performs better in this situation because the
-first-order approach does not distinguish between a good paraphrase and a
-bad one.  This example also demonstrates the advantage of using a
-context-sensitive distributional model to calculate the probabilities of
-paraphrases because ``reward'' is an {\it a priori} better paraphrase than
-``observe'' according to WordNet since it appears in a higher ranked synset.
+The first-order approach that we used cannot distinguish between
+good and bad paraphrases, and considers both of them equally valid. In
+contrast, the weighted approach can judge the degree of fit of the two potential
+paraphrases. Also, it can do so in a context-specific manner, choosing
+the paraphrase ``observe'' over ``reward'' in the context of
+``patents''. 
 
