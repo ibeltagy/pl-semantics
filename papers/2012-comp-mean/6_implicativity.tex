@@ -1,4 +1,5 @@
 \section{Implicativity}
+\label{sec:implicativity}
 
 Implicativity and factivity are concerned with analyzing the truth conditions of
 nested propositions \citep{nairn:icos2006}.  
@@ -6,7 +7,7 @@ For example, in the premise of the entailment pair shown
 in example \eqref{ex:imp-fact-nested} below, {\it lock} falls under the scope of
 {\it forgot to}, meaning that it did not happen.  Similarly, in example
 \eqref{ex:hope-build}, {\it build} is within the scope of {\it hope}, so we
-cannot infer whether the building occurred. Correctly recognizing nested
+cannot infer that the building occurred. Correctly recognizing nested
 propositions and analyzing their contexts is necessary for preventing
 the licensing of entailments like \eqref{ex:imp-fact-nested} and rejecting those
 like \eqref{ex:hope-build}.
@@ -25,7 +26,7 @@ involving implicatives and factives.  Their approach identifies an ``implication
 signature'' for every implicative or factive verb.  This signature specifies the
 truth conditions for the verb's nested proposition, whether in a positive or
 negative environment.  Implication signatures take the form ``$x/y$'' where $x$
-represents the implicativity in the the positive environment and $y$ represents
+represents the implicativity in the positive environment and $y$ represents
 the implicativity in the negative environment.  Both $x$ and $y$ have three
 possible values: ``+'' for positive entailment, meaning the nested proposition
 is entailed, ``-'' for negative entailment, meaning the negation of the
@@ -279,7 +280,8 @@ the inference works as expected.
 Thus, we transform the output of Boxer in two ways.  First, we identify any
 labeled propositions and replace them with pairs of proposition triggers.  Then,
 we modify any negated DRSs by extracting the verb and theme atoms, changing the
-verb predicate to a ``not\_'' predicate, and finally ensuring that all other
+verb predicate to a ``not\_'' predicate\footnote{The lexical mapping for these new
+  predicates ignores the negation, i.e.\ $\ell(\mathrm{not\_manage}) = \ell(\mathrm{manage})$.}, and finally ensuring that all other
 expressions under the negated DRS (aside from the labeled proposition itself),
 remain under a negated DRS.
 
@@ -338,7 +340,7 @@ license the entailments in \eqref{ex:imp-fact-hyper}.
 \end{itemize}
 \end{covex}
 
-Likewise, no further word is needed for our implicativity approach to interact
+Likewise, no further work is needed for our implicativity approach to interact
 correctly with our approach to ambiguity in word meaning.  For example, consider
 example \ref{ex:imp-fact-syn}.  Here the premise contains the verb {\it prevent}
 in a positive context, which is negatively entailing.  It also contains the word

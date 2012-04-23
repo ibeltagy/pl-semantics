@@ -7,7 +7,7 @@ theoretical side and work on implementation and evaluation.
 From a theoretical perspective, we have used a simplistic bag-of-words
 approach for
 computing a context-specific vector for a predicate based on its
-formula context. We plan to move to a more informative construction
+formula context (functions $\alpha$ and $\kappa$). We plan to move to a more informative construction
 that takes semantic relations into account. This will be interesting in particular because the relations that can be read off a logical
 form differ from those available in a dependency parse. For example,
 we can check whether two predicates occur within the same DRS, or
@@ -24,9 +24,14 @@ candidates for this extension.  Because the inference rules that are used to
 activate the presupposition triggers are externalized, they can be weighted
 independently of the rest of the semantic analysis.  Right now the rules are
 either generated or not, which is equivalent to assigning a weight of either 1
-or 0, respectively, but if the degree to which an implicative is
-presuppositional depends on context, then perhaps these weights could be
-generated from a distributional vector space as well.
+or 0, but a weighted approach could be taken instead.
+% KE I find even this speculation too much, since I am not sure I
+% believe that we can find a distributional approach to this problem. 
+% I would need to see data first.
+%
+% if the degree to which an implicative is
+% presuppositional depends on context, then perhaps these weights could be
+% generated from a distributional vector space as well.
 
 % [START Weighting implicative inference rules]
 % 
@@ -96,7 +101,7 @@ using Markov Logic.  We have shown how our approach handles three distinct
 phenomena, word meaning ambiguity, hypernymy, and implicativity, as well as
 allowing them to interact appropriately.  Most importantly our approach allows 
 us to model some phenomena with hard first-order techniques and
-others phenomena with soft weights, and to do all of them within a
+others phenomena with soft weights, and to do all of this within a
 single, unified framework.
 The resulting approach is able to correctly solve a number of difficult
 textual entailment problems that require handling complex combinations of these
