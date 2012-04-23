@@ -12,13 +12,14 @@ In this section we define a link between logical form and vector space
 representations through a mapping function that connects predicates in logical
 form to points in vector space. \citet{gardenfors:book2004} uses the
 interpretation function for this purpose, such that logical formulas are
-interpreted over vector space representations. However, he uses spaces
-that are not distributional. Their dimensions are qualities, like the hue and saturation of a color or the taste of
-a fruit. Points in these conceptual spaces are, therefore, potential entities. In
+interpreted over vector space representations. However, the 
+\emph{conceptual spaces} that he uses are not distributional. Their
+dimensions are qualities, like the hue and saturation of a color or
+the taste of 
+a fruit. Points in a conceptual space are, therefore, potential entities. In
 contrast, the vector spaces that we use are distributional in nature, and, therefore, cannot be interpreted as potential
 entities. A point in such a space is a potential word, defined through
-its observed contexts, where the coordinates on each dimension constitute the
-co-occurrence count with that respective context item. For
+its observed contexts. For
 this reason, we define the link between logical form and vector space through a
 second mapping function independent of the interpretation function, which we
 call the \emph{lexical mapping} function.
@@ -52,13 +53,16 @@ $\predsym{\loglang}^n$, and let $\predsym{\loglang} = \cup_{n \ge 0}
 function} from \loglang to $V$ is a function $\ell:
 \predsym{\loglang} \to V$.
 
+
+
 A central property of distributional vector spaces is that they can predict
 similarity in meaning based on similarity in observed
-contexts~\citep{harris:wj1954}. \citet{lin:nlej2001} point out that vector space
-similarity can be expressed in the form of inference rules: If two words $v$ and
-$w$ are similar in their observed contexts, we can write this as the inference
-rule $v \to w$, which states that $w$ can be substituted for $v$ in texts. The
-inference rule is weighted by $\simfunc(\vec v, \vec w)$.
+contexts~\citep{harris:wj1954}. \citet{lin:nlej2001} point out that in
+suitably constrained distributional representations, distributional
+similarity indicates substitutability in text. If two words $v$ and
+$w$ are similar in their observed contexts, then $w$ can be
+substituted for $v$ in texts. This can be written as an
+inference rule $v \to w$, weighted by $\simfunc(\vec v, \vec w)$.
 
 We use this same idea to project inference rules from vector space to logical
 form through the lexical mapping function. If the lexical mapping function maps
@@ -75,7 +79,7 @@ function on $V$. For all $Q \in \predsym\loglang$ and ${\cal Q} \subseteq
 & \hspace{125px} F = \forall x_1, \ldots, x_n[P(x_1, \ldots, x_n) \to Q(x_1, \ldots, x_n)], \\
 & \hspace{125px} \eta = \simfunc\big(\ell(P), \ell(Q)\big) ~] \}
 \end{align*}
-Thus, the inference projection for $P$ is the set of all weighted inference
+That is, the inference projection for $P$ is the set of all weighted inference
 rules $(F, \eta)$ predicted by the vector space that let us infer some
 other predicate $Q$ from $P$. Additionally, we may have information on the 
 inferences that we are willing to project that is not encoded in the vector 
@@ -185,5 +189,5 @@ should the vegetable sense and the plant/bulb sense be
 separate~\citep{krishnamurthy:chj2000}? Through the vector space model, we
 can model word meaning in context without ever referring to distinct dictionary
 senses~\citep{erk:gems2010}. 
-Thus, if we do not distinguish a fixed list of senses for a word $w$, we cannot
-represent them through a fixed list of distinct predicates $w_1, w_2, \ldots, w_n$.
+But if we do not want to consider a fixed list of senses for a word
+$w$, then we also cannot represent its meanings through a fixed list of predicates.

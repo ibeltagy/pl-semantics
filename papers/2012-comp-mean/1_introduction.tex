@@ -33,36 +33,17 @@ While this is a large and complex task, this paper proposes first steps toward
 our goal by presenting a mechanism for injecting distributional word-similarity
 information from a vector space into a first-order logical form.  We
 define a mapping from predicate symbols of logical form to points in
-vector space, and use it for projecting inference rules from vector
-space to logical form. % \citet{gardenfors:book2004} also links logical
-% form and a vector space, using the interpretation function, 
-% such that logical formulas are interpreted over vector space
-% representations. However, the conceptual spaces that he uses are not
-% distributional, and points in conceptual space are potential entities.  In contrast, the vector spaces that we use
-% are distributional in nature, and, therefore, cannot be interpreted as potential
-% entities. % A point in such a space is a potential word, defined through
-% % its observed contexts, where the coordinates on each dimension constitute the
-% % co-occurrence count with that respective context item.  
-% For this reason, we
-% define the link between logical form and vector space through a second mapping
-% function independent of the interpretation function, which we call the
-% \emph{lexical mapping} function.
-A central property of distributional vector space models is that they
-can predict semantic similarity based on proximity in space.  This comes from
-the hypothesis that a word's meaning is its use, and similarity in
-meaning is reflected in similarity in
-use~\citep{wittgenstein:pij1953,firth:slaj1957,harris:wj1954}. 
-When syntax is suitably restrained, vector space models can also be used to 
-predict substitutability in context
-\citep{lin:nlej2001,mitchell:acl2008,erk:emnlp2008,thater:acl2010,reisinger:naacl2010,dinu:emnlp2010,vandecruys:emnlp2011}.
-So if $A$ and $B$ are words or
-expressions that are distributionally similar and that can occur in
-the same syntactic contexts, we can substitute $B$ for $A$ in all
-contexts that are suitable to both words. This can be described
-through the inference rule $A \to B$, with a weight computed from the
-vector space. Thus, our main aim in linking logical form to a vector
-space in this paper is to project inferences from the vector space to
-logical form.
+vector space. Our main aim in linking logical form to a vector
+ space in this paper is to project inferences from the vector space to
+logical form. The inference rules that we use are based on
+substitutability. In a suitably constructed distributional
+representation, distributional similarity between two words or
+expressions $A$ and $B$ indicates
+that $B$ can be substituted for $A$ in text~\citep{lin:nlej2001}. This can be described through an inference rule $A \to B$. Distributional
+information can also be used to determine the degree $\eta$ to which the rule applies in a
+given sentence context
+\citep{SzpektorEtAl:08,mitchell:acl2008,erk:emnlp2008,thater:acl2010,reisinger:naacl2010,dinu:emnlp2010,vandecruys:emnlp2011}. This
+degree $\eta$ can be used as a weight on the inference rule $A\to B$. 
 
 In this paper, we first present our formal framework for projecting inferences
 from vector space to logical form.  We then show how that framework can be
