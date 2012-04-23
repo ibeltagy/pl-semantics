@@ -167,7 +167,7 @@ class ModalDiscourseInterpreter(
       case BoxerNot(discId, notIndices, BoxerVerbDrs(eventRefs, propRefs, eventPreds, eventConds, otherRefs, otherConds)) => {
         val negatedEventPreds = eventPreds.map {
           case BoxerPred(discId, verbIndices, variable, name, pos, sense) =>
-            BoxerPred(discId, notIndices, variable, notPred(name), pos, sense)
+            BoxerPred(discId, verbIndices, variable, notPred(name), pos, sense)
         }
         val conds = negatedEventPreds ++ eventConds ++
           (if (otherConds.nonEmpty) List(BoxerNot(discId, notIndices, BoxerDrs(otherRefs, otherConds))) else List())
@@ -185,7 +185,7 @@ class ModalDiscourseInterpreter(
       case BoxerNot(discId, notIndices, BoxerVerbThemePropDrs(eventRefs, propRefs, eventPreds, eventConds, props, otherRefs, otherConds)) => {
         val negatedEventPreds = eventPreds.map {
           case BoxerPred(discId, verbIndices, variable, name, pos, sense) =>
-            BoxerPred(discId, notIndices, variable, notPred(name), pos, sense)
+            BoxerPred(discId, verbIndices, variable, notPred(name), pos, sense)
         }
         val propConds = props.flatMap {
           case BoxerProp(discId, propIdx, variable, drs) =>

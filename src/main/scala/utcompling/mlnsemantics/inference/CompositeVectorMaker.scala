@@ -11,6 +11,6 @@ trait CompositeVectorMaker {
 
 case class SimpleCompositeVectorMaker() extends CompositeVectorMaker {
   override def make(preds: Iterable[BoxerPred], vectorspace: Map[String, BowVector]): BowVector = {
-    preds.flatMap(p => vectorspace.get(p.name)).reduce(_ + _)
+    preds.flatMap(p => vectorspace.get(p.name)).fold(new BowVector(Map()))(_ + _)
   }
 }

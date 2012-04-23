@@ -15,6 +15,7 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerPred
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerVariable
 import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 import utcompling.scalalogic.util.CollectionUtils._
+import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.OccurrenceMarkingBoxerExpressionInterpreterDecorator
 
 class InferenceRuleInjectingProbabilisticTheoremProver(
   wordnet: Wordnet,
@@ -23,7 +24,11 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
   delegate: ProbabilisticTheoremProver[BoxerExpression])
   extends ProbabilisticTheoremProver[BoxerExpression] {
 
-  private def d(drs: BoxerExpression) = new Boxer2DrtExpressionInterpreter().interpret(drs)
+  private val NotPred = """^not_(.+)$""".r
+
+  private def d(drs: BoxerExpression) =
+    new Boxer2DrtExpressionInterpreter().interpret(
+      new OccurrenceMarkingBoxerExpressionInterpreterDecorator().interpret(drs))
 
   override def prove(
     constants: Map[String, Set[String]],
@@ -40,7 +45,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 
   def makeNewRules(assumptions: List[BoxerExpression], goal: BoxerExpression): Set[WeightedExpression[BoxerExpression]] = {
     val allPredsAndContexts = (assumptions :+ goal).flatMap(getAllPredsAndContexts)
-    val vectorspace = vecspaceFactory(allPredsAndContexts.flatMap { case (pred, context) => (pred +: context).map(_.name) }.toSet)
+    val vectorspace = vecspaceFactory(allPredsAndContexts.flatMap { case (pred, context) => (pred +: context).map(_.name).map { case NotPred(p) => p; case p => p } }.toSet)
     val rules = makeRules(allPredsAndContexts, vectorspace)
     rules.foreach(x => println(d(x.expression).pretty))
     return rules
@@ -69,7 +74,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 
   private def makeRulesForPred(pred: BoxerPred, antecedentContext: Iterable[BoxerPred], predsByName: Map[String, Iterable[BoxerPred]], vectorspace: Map[String, BowVector]) = {
     val synonymsAndHypernyms = getSynonyms(pred.name, pred.pos) ++ getHypernyms(pred.name, pred.pos)
-    val consequents = synonymsAndHypernyms.flatMap(nym => predsByName.get(nym)).flatten.filter(_ != pred)
+    val consequents = synonymsAndHypernyms.flatMap(predsByName.get).flatten.filter(_ != pred)
     for ((consequent, weight) <- ruleWeighter.weightForRules(antecedentContext, consequents, vectorspace))
       yield makeRule(pred, consequent, weight)
   }
@@ -102,7 +107,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
       p <- getPos(pos);
       s <- wordnet.synsets(name, p);
       w <- s.getWords
-    ) yield w.getLemma).toSet
+    ) yield w.getLemma).toSet -- Set("POS", "NEG") + name //TODO: REMOVE THE "+ name".  WE ONLY WANT NEED THIS FOR WHEN THE WORD ISN'T IN WORDNET.
 
   private def getHypernyms(name: String, pos: String): Set[String] =
     (for (

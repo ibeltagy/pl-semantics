@@ -41,10 +41,10 @@ class TextualTheoremProver(
     def combinePredicatesAndArgTypes(list: List[(Map[String, List[String]], Map[String, Set[String]])]): (Map[String, List[String]], Map[String, Set[String]]) = {
       val (predTypes, constTypes) = list.unzip
       val combinedPredTypes =
-        predTypes.flatten.groupByKey.mapValuesStrict {
-          case head :: tail =>
-            tail.foreach(t => (head zipEqual t).foreach { case (a, b) => assert(a == b) })
-            head
+        predTypes.flatten.groupByKey.map {
+          case (k, head :: tail) =>
+            tail.foreach(t => (head zipEqual t).foreach { case (a, b) => assert(a == b, k + ": " + (head :: tail)) })
+            (k, head)
         }
       val combinedConstTypes = constTypes.flatten.groupByKey.mapValuesStrict(_.flatten.toSet)
       (combinedPredTypes, combinedConstTypes)
@@ -56,8 +56,10 @@ class TextualTheoremProver(
           _getPredAndArgTypesTypes(name, List(variable))
         case BoxerNamed(discId, indices, variable, name, typ, sense) =>
           _getPredAndArgTypesTypes(name, List(variable))
-        case BoxerRel(discId, indices, event, variable, name, sense) =>
+        case BoxerRel(discId, indices, event, variable, name, sense) =>{
+          if(name == "theme") println(e)
           _getPredAndArgTypesTypes(name, List(event, variable))
+        }
         case _ => {
           e.visit(getPredicatesAndArgTypes, combinePredicatesAndArgTypes, (Map[String, List[String]](), Map[String, Set[String]]()))
         }
@@ -89,7 +91,7 @@ class TextualTheoremProver(
     val evidence = List() //"man(socrates)"
     val assumptions = List(HardWeightedExpression(txtEx))
     val goal = hypEx
-    println(probabilisticTheoremProver.prove(constants, declarations, evidence, assumptions, goal))
+    probabilisticTheoremProver.prove(constants, declarations, evidence, assumptions, goal)
 
   }
 
