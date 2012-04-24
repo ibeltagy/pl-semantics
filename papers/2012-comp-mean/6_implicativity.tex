@@ -154,7 +154,7 @@ but has no way of stating what $p2$ refers to.
 In order to capture the information that the DRT labels provide, we modify the
 DRT expression to contain explicit {\it subexpression triggers}.  That is, for a
 sub-DRS $A$ labeled by $p$, we replace $A$ with two new expressions in the same
-scope: $\POS{p} \to A$ and $\NEG{p} \to \lnot A$.  The result of such a
+scope: $\POSPRED{p} \to A$ and $\NEGPRED{p} \to \lnot A$.  The result of such a
 replacement on the DRS in Figure \ref{drs:impl-1-drt} can be see in Figure
 \ref{drs:impl-2-drt}.   
 
@@ -170,8 +170,8 @@ replacement on the DRS in Figure \ref{drs:impl-1-drt} can be see in Figure
 		      ~\pred{manage}{1004}(e1)~ \\
 		      ~theme(e1, p2)~ \\
 		      ~agent(e1, x0)~} \\
-		    \unboxedifdrs{\POS{p2}}{   \drs{~e3~}{~\pred{leave}{1006}(e3)~ \\ ~agent(e3, x0)~}} \\
-		    \unboxedifdrs{\NEG{p2}}{\negdrs{~e3~}{~\pred{leave}{1006}(e3)~ \\ ~agent(e3, x0)~}}
+		    \unboxedifdrs{\POSPRED{p2}}{   \drs{~e3~}{~\pred{leave}{1006}(e3)~ \\ ~agent(e3, x0)~}} \\
+		    \unboxedifdrs{\NEGPRED{p2}}{\negdrs{~e3~}{~\pred{leave}{1006}(e3)~ \\ ~agent(e3, x0)~}}
 		  }
 		}
     \end{minipage}
@@ -182,9 +182,9 @@ replacement on the DRS in Figure \ref{drs:impl-1-drt} can be see in Figure
     \begin{minipage}[c][1.6\width]{0.4\textwidth}
 	  \centering
 	    \shortstack{
-	      \unboxedifdrs{\drs{~p~}{~   \drs{~e~}{~\pred{manage}{1004}(e)~ \\ ~theme(e, p)~}~}}{\POS{p}} \\
+	      \unboxedifdrs{\drs{~p~}{~   \drs{~e~}{~\pred{manage}{1004}(e)~ \\ ~theme(e, p)~}~}}{\POSPRED{p}} \\
 	      \\\\\\\\\\\\
-	      \unboxedifdrs{\drs{~p~}{~\negdrs{~e~}{~\pred{manage}{1004}(e)~ \\ ~theme(e, p)~}~}}{\NEG{p}}
+	      \unboxedifdrs{\drs{~p~}{~\negdrs{~e~}{~\pred{manage}{1004}(e)~ \\ ~theme(e, p)~}~}}{\NEGPRED{p}}
 	    }
     \end{minipage}
   }
@@ -218,7 +218,7 @@ negative contexts, says that for all propositions $p$, if there is {\it no}
 While this approach works for positive contexts, there is a subtle problem for
 negative contexts.  The negative context rule in Figure \ref{drs:impl-2-rules}
 can be translated to FOL as \[ \forall~ p.[~ \lnot \exists~ e.[~ \pred{manage}{1004}(e) 
-\land theme(e,p)) ~] \to \NEG{p} ~] \] This expression is stating that for all
+\land theme(e,p)) ~] \to \NEGPRED{p} ~] \] This expression is stating that for all
 propositions $p$, $p$ is {\it false} if there is no ``managing'' of $p$.  Now,
 we want this inference rule to be used in cases where it is stated that
 ``managing'' did not occur, such as in the expression of Figure
@@ -253,8 +253,8 @@ rules in Figure \ref{drs:impl-2}, we arrive at our final form in Figure
 		    ~\pred{\textbf{not\_}manage}{1004}(e1)~ \\
 		    ~theme(e1, p2)~ \\
 		    \negdrs{ }{~agent(e1, x0)~} \\
-		    \unboxedifdrs{\POS{p2}}{\drs{~e3~}{~\pred{              leave}{1006}(e3)~ \\ ~agent(e3, x0)~}} \\
-		    \unboxedifdrs{\NEG{p2}}{\drs{~e3~}{~\pred{\textbf{not\_}leave}{1006}(e3)~ \\ \negdrs{ }{~agent(e3, x0)~}}} }
+		    \unboxedifdrs{\POSPRED{p2}}{\drs{~e3~}{~\pred{              leave}{1006}(e3)~ \\ ~agent(e3, x0)~}} \\
+		    \unboxedifdrs{\NEGPRED{p2}}{\drs{~e3~}{~\pred{\textbf{not\_}leave}{1006}(e3)~ \\ \negdrs{ }{~agent(e3, x0)~}}} }
 		}
     \end{minipage}
   }
@@ -264,9 +264,9 @@ rules in Figure \ref{drs:impl-2}, we arrive at our final form in Figure
     \begin{minipage}[c][1.8\width]{0.4\textwidth}
 	  \centering
 	    \shortstack{
-	      \unboxedifdrs{\drs{~p~}{~\drs{~e~}{~              \pred{manage}{1004}(e)~ \\ ~theme(e, p)~}~}}{\POS{p}} \\
+	      \unboxedifdrs{\drs{~p~}{~\drs{~e~}{~              \pred{manage}{1004}(e)~ \\ ~theme(e, p)~}~}}{\POSPRED{p}} \\
 	      \\\\\\\\\\\\
-	      \unboxedifdrs{\drs{~p~}{~\drs{~e~}{~\textbf{not\_}\pred{manage}{1004}(e)~ \\ ~theme(e, p)~}~}}{\NEG{p}}
+	      \unboxedifdrs{\drs{~p~}{~\drs{~e~}{~\textbf{not\_}\pred{manage}{1004}(e)~ \\ ~theme(e, p)~}~}}{\NEGPRED{p}}
 	    }
     \end{minipage}
   }
@@ -291,28 +291,64 @@ remain under a negated DRS.
 Once the sentence representations have been modified, we generate inference
 rules for each implicative verb.  If the verb is positively entailing in
 positive contexts, we generate a rule of the form 
-\[ \forall~ p.[~ \exists~ e.[~ \langle verb \rangle(e) \land theme(e,p)) ~] \to \POS{p} ~] \]
+\[ \forall~ p.[~ \exists~ e.[~ \langle verb \rangle(e) \land theme(e,p)) ~] \to \POSPRED{p} ~] \]
 but if it is negatively entailing in positive contexts, we instead generate a rule of the form
-\[ \forall~ p.[~ \exists~ e.[~ \langle verb \rangle(e) \land theme(e,p)) ~] \to \NEG{p} ~] \]
+\[ \forall~ p.[~ \exists~ e.[~ \langle verb \rangle(e) \land theme(e,p)) ~] \to \NEGPRED{p} ~] \]
 If the verb is positively entailing in {\it negative} contexts, we generate a rule of the form
-\[ \forall~ p.[~ \exists~ e.[~ \textbf{not\_}\langle verb \rangle(e) \land theme(e,p)) ~] \to \POS{p} ~] \]
+\[ \forall~ p.[~ \exists~ e.[~ \textbf{not\_}\langle verb \rangle(e) \land theme(e,p)) ~] \to \POSPRED{p} ~] \]
 but if it is negatively entailing in negative contexts, we instead generate a rule of the form
-\[ \forall~ p.[~ \exists~ e.[~ \textbf{not\_}\langle verb \rangle(e) \land theme(e,p)) ~] \to \NEG{p} ~] \]
+\[ \forall~ p.[~ \exists~ e.[~ \textbf{not\_}\langle verb \rangle(e) \land theme(e,p)) ~] \to \NEGPRED{p} ~] \]
 If the verb is non-entailing in either positive or negative contexts, then we do
 not generate a rule for that context polarity. 
 
-This approach works for arbitrarily long chains of nested implicatives and factives.  
-For example, consider the entailment in \eqref{ex:imp-fact-nested}. 
+This approach works for arbitrarily long chains of nested implicatives and
+factives.
+For example, consider the entailment in \eqref{ex:imp-fact-nested}.
 \begin{covex}\label{ex:imp-fact-nested}
-  Ed managed to not forget to prevent Dave from leaving $\vDash$ Dave did not leave
+  Dave managed to fail to not forget to leave $\vDash$ Dave did not leave
 \end{covex}
-Our approach is able to predict this entailment by correctly handling the three 
-layers of nested implicatives.  The top-level verb {\it manage} predicts a negative 
-environment for the {\it not forget} state.  Since the negation of {\it forget} is 
-in a negative environment, the negations reverse each other putting {\it forget} in
-a positive environment, thus predicting a negative environment for {\it prevent}.  
-Finally, {\it prevent} in a negative environment predicts that the {\it leaving}
-event did occur.  
+Our approach is able to predict this entailment by correctly handling the three
+nested implicatives along with the negation. Figure \ref{fig:imp-fact-nested} 
+shows the nested polarity environments and how the implicative verbs and negations 
+modify the polarity.  The top-level verb {\it managed to} maintains its same 
+polarity and predicts a positive environment for the {\it fail to} event.  The 
+{\it fail to} reverses the polarity for the {\it not forget to} state.  Since
+the negation of {\it forget} is in a negative environment, the negations reverse
+each other putting {\it forget} in a positive environment, thus predicting a
+negative environment for the {\it leaving} event.  Since the {\it leaving} event
+is in a negative environment, we can say that the sentence entail that the 
+leaving did not occur.
+\begin{figure}
+\centering{
+~
+\xymatrix@C=-1px@R=-3px{
++& & & & & & & & & & & & & & & & & & \\
+ & & & & & &+& & & & & & & & & & & & \\
+ & & & & & & & & &-& & & & & & & & & \\
+ & & & & & & & & & & & &+& & & & & & \\
+ & & & & & & & & & & & & & & &-& & & \\
+&*++[o][F-]{\text{Dave}}       \ar[rrr] &&&
+ *++[o][F-]{\text{managed to}} \ar[rrr] &&&
+ *++[o][F-]{\text{fail to}}    \ar[rrr] &&&
+ *++[o][F-]{\text{not}}        \ar[rrr] &&&
+ *++[o][F-]{\text{forget to}}  \ar[rrr] &&&
+ *++[o][F-]{\text{leave}} \\
+ & & & & & & & & & & & & & & & & & & & & & \\
+ & & & & & & & & & & & & & & & & & & & & & \\
+ & & & & & & & & & & & & & & & & & & & & & \\
+ & & & & & & & & & & & & & & & & & & & & & \\
+ & & & & & & & & & & & & & & & & & & & & & \\
+\save "1,1"."11,22"*[F-]\frm{}\restore
+\save "2,7"."10,21"*[F-]\frm{}\restore
+\save "3,10"."9,20"*[F-]\frm{}\restore
+\save "4,13"."8,19"*[F-]\frm{}\restore
+\save "5,16"."7,18"*[F-]\frm{}\restore
+}
+}
+\caption{Nested polarity environments showing how implicative verbs and
+negation modify polarity.}
+\label{fig:imp-fact-nested}
+\end{figure}
 
 
 
@@ -341,20 +377,20 @@ event did occur.
 % we treat implicativity, while using a probabilistic approach to word meaning.
 
 \citet{maccartney:iwcs2009} extended the work by \citet{nairn:icos2006} in order
-to correctly treat inference involving monotonicity and exclusion.
-Our approach to implicativity combines naturally with hypernymy to ensure
+to correctly treat inference involving monotonicity and exclusion. Our approach 
+to implicativity and factivity combines naturally with hypernymy to ensure
 correct entailment judgements. For example, no additional work is required to
 license the entailments in \eqref{ex:imp-fact-hyper}.
 \begin{covex}\label{ex:imp-fact-hyper}
-\begin{itemize}
+\begin{itemize} \itemsep -3pt
   \item[(a)]~John refused to dance $\vDash$ John didn't tango
   \item[(b)]~John did not forget to tango $\vDash$ John danced
 \end{itemize}
 \end{covex}
 
-Likewise, no further work is needed for our implicativity approach to interact
+Likewise, no further work is needed for our implicativity and factivity approach to interact
 correctly with our approach to ambiguity in word meaning.  For example, consider
-example \ref{ex:imp-fact-syn}.  Here the premise contains the verb {\it prevent}
+example \eqref{ex:imp-fact-syn}.  Here the premise contains the verb {\it prevent}
 in a positive context, which is negatively entailing.  It also contains the word
 {\it leave} which is synonymous with both {\it result in} and {\it flee} through
 different senses.  As the example shows, our approach is able to correctly
@@ -369,7 +405,7 @@ handle the interaction between the lexical ambiguity and the implicative verb.
 \end{itemize}
 \end{covex}
 
-In example \ref{ex:imp-fact-syn-null}, the {\it prevent} event is nested under
+In example \eqref{ex:imp-fact-syn-null}, the {\it prevent} event is nested under
 the null-entailing verb {\it try}.  As such, neither alternate sense of {\it
 leave} is entailed since {\it try} says nothing about the truth or falsity of
 its nested proposition.
