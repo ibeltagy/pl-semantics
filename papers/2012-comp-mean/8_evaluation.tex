@@ -1,28 +1,27 @@
-\section{Evaluation}
+\section{Preliminary Evaluation}
 
-As a preliminary evaluation of our system, we constructed a set of demonstrative
-examples, including those discussed in this paper, to test our system's ability
+As a preliminary evaluation of our system, we constructed the set of 
+demonstrative examples included in this paper to test our system's ability
 to handle the previously discussed phenomena and their interactions.  We ran
 each example with both a standard first-order theorem prover and Alchemy to
 ensure that the examples work as expected. Note that since weights are not
-possible when running an example in the theorem prover, any rule that would be
-weighted in an MLN is simply treated as a ``hard clause'' following
+possible when running an example in the theorem prover, any rule that would 
+receive a non-zero weight in an MLN is simply treated as a ``hard clause'' following
 \citet{bos:emnlp2005}.  For the experiments, we generated a vector space from
 the entire New York Times portion of the English Gigaword corpus
 \citep{graff:gigaword2003}.
 
-The examples entailments evaluated were designed to test the interaction between
+The example entailments evaluated were designed to test the interaction between
 the logical and weighted phenomena.  For example, in \eqref{ex:ws-imp-1}, ``fail
-to'' is a negatively entailing implicative in a positive environment, so $p$
-correctly entails {\it h1} in both the theorem prover and Alchemy.
-However, the theorem prover incorrectly licenses the entailment of {\it h2}
-while Alchemy does not.
+to'' is a negatively entailing implicative in a positive environment, so according 
+to the theorem prover, $p$ entails both {\it h1} and {\it h2}.  However, using our
+weighted approach, Alchemy outputs that {\it h1} is more probable than {\it h2}. 
 \begin{covex}\label{ex:ws-imp-1}
 \begin{itemize}
-  \item[p:]~    The U.S. is watching closely as South Korea fails to honor
+  \item[{\it p:}]~~    The U.S. is watching closely as South Korea fails to honor
   U.S. patents\footnote{Sentence adapted from Penn Treebank document wsj\_0020.}
-  \item[h1:]~~~South Korea does not {\bf observe} U.S. patents
-  \item[h2*:]~~~South Korea does not {\bf reward} U.S. patents
+  \item[{\it h1:}]~~~~South Korea does not {\bf observe} U.S. patents
+  \item[{\it h2*:}]~~~~South Korea does not {\bf reward} U.S. patents
 \end{itemize}
 \end{covex}
 The first-order approach, which contains inference rules for both
@@ -30,6 +29,6 @@ paraphrases as hard clauses, cannot distinguish between
 good and bad paraphrases, and considers both of them equally valid. In
 contrast, the weighted approach can judge the degree of fit of the two potential
 paraphrases. Also, it does so in a context-specific manner, choosing
-the paraphrase ``observe'' over ``reward'' in the context of
-``patents''. 
+the paraphrase {\it observe} over {\it reward} in the context of
+{\it patents}. 
 

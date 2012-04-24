@@ -12,10 +12,10 @@ performs correct analyses and thus draws the right inferences from a given text.
 As an example, consider \eqref{ex:backgound-rte} below.    
 \begin{covex}\label{ex:backgound-rte}
 \begin{itemize} \itemsep -3pt
-  \item[p:]~~    The wine left a stain.
-  \item[h1:]~~~The wine resulted in a stain.
-  \item[h2*:]~~~The wine fled a stain.
-  \item[h3*:]~~~The wine did not resulted in a stain.
+  \item[{\it p:}]~~~    The wine left a stain.
+  \item[{\it h1:}]~~~~The wine resulted in a stain.
+  \item[{\it h2*:}]~~~~The wine fled a stain.
+  \item[{\it h3*:}]~~~~The wine did not result in a stain.
 \end{itemize}
 \end{covex}
 Here, hypothesis {\it h1} is a valid entailment, and should be judged to have
@@ -95,22 +95,21 @@ particular truth assignment $\mathbf{x}$ to the variables in $X$ is defined as:
 \[ P(X = \mathbf{x}) = \frac{1}{\mathcal{Z}} \exp\left(\sum_{f_i \in
 \mathcal{F}} w_i \sum_{g \in \mathcal{G}_{f_i}}g(\mathbf{x}) \right) =
 \frac{1}{\mathcal{Z}} \exp\left(\sum_{f_i \in \mathcal{F}} w_i n_i(\mathbf{x})
-\right) \tag{1}\label{e1} \] where $g(\mathbf{x})$ is 1 if $g$ is satisfied and
+\right) \] where $g(\mathbf{x})$ is 1 if $g$ is satisfied and
 0 otherwise, and $n_i(\mathbf{x})= \sum_{g\in \mathcal{G}_{f_i}}g(\mathbf{x})$
 is the number of groundings of $f_i$ that are satisfied given the current truth
 assignment to the variables in $X$. This means that the probability of a truth
 assignment rises exponentially with the number of groundings that are satisfied.
 
-Markov Logic has been used previously in other NLP application
+Markov Logic has been used previously in other NLP applications
 (e.g. \citet{poon:emnlp2009}).  However, this paper differs in that it is an
 attempt to represent deep logical semantics in an MLN.
 
-While it is possible learn rule weights in an MLN directly from training data,
+While it is possible to learn rule weights in an MLN directly from training data,
 our approach at this time focuses on incorporating weights computed
 by external knowledge sources.  Weights for word meaning rules are computed from
 the distributional model of lexical meaning and then injected into the MLN. 
-Rules governing implicativity and coreference are given infinite weight
-(hard constraints).
+Rules governing implicativity are given infinite weight (hard constraints).
 
 We use the open source software package Alchemy \citep{kok:tr05} to perform MLN
 inference.

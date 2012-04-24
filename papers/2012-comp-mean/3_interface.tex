@@ -66,7 +66,7 @@ inference rule $v \to w$, weighted by $\simfunc(\vec v, \vec w)$.
 
 We use this same idea to project inference rules from vector space to logical
 form through the lexical mapping function. If the lexical mapping function maps
-the n-ary predicate $P$ to $\vec v$ and the n-ary predicate $Q$ to $ \vec w$,
+the $n$-ary predicate $P$ to $\vec v$ and the $n$-ary predicate $Q$ to $ \vec w$,
 and $\simfunc(\vec v, \vec w) = \eta$, then we obtain the weighted inference
 rule $\forall x_1, \ldots, x_n[ P(x_1, \ldots, x_n) \to Q(x_1, \ldots x_n) ]$
 with weight $\eta$. More generally, let \loglang be a logical language with
@@ -175,8 +175,10 @@ the contextualized inference projection of $P$ as $\Pi^G_{\simfunc, \zeta,
 In computational semantics, polysemy is mostly addressed by using multiple
 predicates. For example, for the noun ``bank'' there would be predicates
 bank$_1$, bank$_2$ to cover the financial and riverside senses of the word. In
-contrast, we are using only a single predicate for polysemous words, but vary
-its lexical mapping based on the formula that it appears in: A predicate $P$ in
+contrast, we use a separate predicate for each word token, but these 
+predicates are not associated with any particular fixed senses. Instead, we vary
+the lexical mapping of a predicate based on the formula that it appears in: 
+A predicate $P$ in
 a formula $G$ is mapped to the vector $\alpha\big(\ell(P), \kappa(P, G)\big)$,
 which depends on $G$. We make this change for two reasons. First, a system that
 uses distinct predicates bank$_1$, bank$_2$ has to rely on an external word
