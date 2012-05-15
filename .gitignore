@@ -2,4 +2,7 @@ scala-logic
 target/
 project/project/
 /data/
+.project
+.classpath
+.cache
 
