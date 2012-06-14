@@ -10,7 +10,7 @@ trait RuleWeighter {
 
 case class UniformHardRuleWeighter() extends RuleWeighter {
   override def weightForRules(antecedentContext: Iterable[BoxerPred], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]) = {
-    consequents.mapTo(_ => None)
+    consequents.map(_ -> None)
   }
 }
 

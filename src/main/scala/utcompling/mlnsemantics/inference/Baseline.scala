@@ -22,36 +22,52 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.BoxerE
 import utcompling.scalalogic.drt.expression.DrtExpression
 import edu.mit.jwi.item.POS
 import scala.collection.JavaConversions.asScalaBuffer
+import org.apache.log4j.Logger
+import org.apache.log4j.Level
+import utcompling.scalalogic.discourse.impl.BoxerDiscourseInterpreter
+import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.PassthroughBoxerExpressionInterpreter
 
 object Baseline {
 
   def main(args: Array[String]) {
+    Logger.getRootLogger.setLevel(Level.INFO)
 
-    val txt = "an architect bought a new red car"
-    val hyp = "a person purchased a new vehicle"
+    //    val txt = "an architect bought a new red car"
+    //    val hyp = "a person purchased a new vehicle"
 
-    val ttp =
-      new TextualTheoremProver(
-        new ModalDiscourseInterpreter(),
-        new InferenceRuleInjectingProbabilisticTheoremProver(
-          new WordnetImpl(),
-          (words: (String => Boolean)) => BowVectorSpace("resources/nytgiga.lem.1m.vc.f2000.m50.wInf", words),
-          new TopRuleWeighter(
-            new RankingRuleWeighter(
-              new VecspaceRuleWeighter(
-                new SimpleCompositeVectorMaker()))),
-          new TypeConvertingPTP(
-            new BoxerExpressionInterpreter[FolExpression] {
-              def interpret(x: BoxerExpression): FolExpression =
-                new Boxer2DrtExpressionInterpreter().interpret(
-                  new OccurrenceMarkingBoxerExpressionInterpreterDecorator().interpret(
-                    new MergingBoxerExpressionInterpreterDecorator().interpret(
-                      new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(x)))).fol
-            },
-            new FakeProbabilisticTheoremProver(
-              new Prover9TheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/LADR-2009-11A/bin/prover9"), 5, false)))))
+    val a = List(
+      "Dave failed to not forget to neglect to leave .",
+      "Dave left .",
+      "Dave did not forget to neglect to leave .",
+      "Dave did not leave .",
+      "Dave forgot to neglect to leave .",
+      "Dave left .",
+      "Dave neglected to leave .",
+      "Dave did not leave .")
+    val b = new BoxerDiscourseInterpreter(new PassthroughBoxerExpressionInterpreter).batchInterpret(a).flatten
+//    val b = new ModalDiscourseInterpreter().batchInterpret(a).flatten
+    val f =
+      new BoxerExpressionInterpreter[FolExpression] {
+        def interpret(x: BoxerExpression): FolExpression =
+          new Boxer2DrtExpressionInterpreter().interpret(
+            new MergingBoxerExpressionInterpreterDecorator().interpret(
+              new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(x))).fol
+      }
+    val d =
+      new BoxerExpressionInterpreter[DrtExpression] {
+        def interpret(x: BoxerExpression): DrtExpression =
+          new Boxer2DrtExpressionInterpreter().interpret(
+            new MergingBoxerExpressionInterpreterDecorator().interpret(
+              new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(x)))
+      }
 
-    println(ttp.prove(txt, hyp))
+    val tp = new Prover9TheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/LADR-2009-11A/bin/prover9"), 5, true)
+
+    for (List(txt, hyp) <- b.grouped(2)) {
+      d.interpret(txt).pprint
+      d.interpret(hyp).pprint
+      println(tp.prove(List(f.interpret(txt)), f.interpret(hyp)))
+    }
 
     //    def mtpo = new ModalTheoremProver(tpo)
     //    def vtpo = new VisualizingModalTheoremProverDecorator(mtpo)
