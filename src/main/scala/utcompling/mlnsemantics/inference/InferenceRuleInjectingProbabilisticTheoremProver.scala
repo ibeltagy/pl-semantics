@@ -45,15 +45,16 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 
   def makeNewRules(assumptions: List[BoxerExpression], goal: BoxerExpression): Set[WeightedExpression[BoxerExpression]] = {
     val allPredsAndContexts = (assumptions :+ goal).flatMap(getAllPredsAndContexts)
-    val vectorspace = vecspaceFactory(allPredsAndContexts.flatMap { case (pred, context) => (pred +: context).map(_.name).map { case NotPred(p) => p; case p => p } }.toSet)
+    val vectorspace = vecspaceFactory(allPredsAndContexts.flatMap { case (pred, context) => (pred.name +: context).map(stripNot) }.toSet)
     val rules = makeRules(allPredsAndContexts, vectorspace)
     rules.foreach(x => println(d(x.expression).pretty))
     return rules
   }
 
-  def getAllPredsAndContexts(e: BoxerExpression) = {
+  def getAllPredsAndContexts(e: BoxerExpression): Seq[(BoxerPred, Seq[String])] = {
     val preds = getAllPreds(e)
-    preds.zipWithIndex.map { case (p, i) => p -> (preds.take(i) ++ preds.drop(i + 1)) }
+    val predsAndContexts = preds.zipWithIndex.map { case (p, i) => p -> (preds.take(i) ++ preds.drop(i + 1)) }
+    predsAndContexts.mapValuesStrict(_.map(p => stripNot(p.name)))
   }
 
   private def getAllPreds(e: BoxerExpression): Seq[BoxerPred] =
@@ -62,19 +63,40 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
       case _ => e.visit(getAllPreds, (parts: List[Seq[BoxerPred]]) => parts.flatten, Seq.empty[BoxerPred])
     }
 
-  private def makeRules(allPredsAndContexts: Iterable[(BoxerPred, Iterable[BoxerPred])], vectorspace: Map[String, BowVector]): Set[WeightedExpression[BoxerExpression]] = {
+  private def makeRules(allPredsAndContexts: Iterable[(BoxerPred, Iterable[String])], vectorspace: Map[String, BowVector]): Set[WeightedExpression[BoxerExpression]] = {
     (for (
       (pos, preds1) <- allPredsAndContexts.groupBy(_._1.pos);
       (vartype, preds2) <- preds1.groupBy(p => variableType(p._1));
-      predsByName = preds2.map(p => (p._1.name, p._1)).groupByKey;
+      predsByName = preds2.map { case (p, _) => (stripNot(p.name), p) }.groupByKey;
       (pred, antecedentContext) <- preds2;
       rule <- makeRulesForPred(pred, antecedentContext, predsByName, vectorspace)
     ) yield rule).toSet
   }
 
-  private def makeRulesForPred(pred: BoxerPred, antecedentContext: Iterable[BoxerPred], predsByName: Map[String, Iterable[BoxerPred]], vectorspace: Map[String, BowVector]) = {
+  private def stripNot(p: String) = p match { case NotPred(x) => x; case x => x }
+
+  private def makeRulesForPred(pred: BoxerPred, antecedentContext: Iterable[String], predsByName: Map[String, Iterable[BoxerPred]], vectorspace: Map[String, BowVector]) = {
+    pred.name match {
+      case NotPred(_) =>
+        makeRulesForNegPred(pred, antecedentContext, predsByName, vectorspace)
+      case _ =>
+        makeRulesForPosPred(pred, antecedentContext, predsByName, vectorspace)
+    }
+  }
+
+  private def makeRulesForPosPred(pred: BoxerPred, antecedentContext: Iterable[String], predsByName: Map[String, Iterable[BoxerPred]], vectorspace: Map[String, BowVector]) = {
     val synonymsAndHypernyms = getSynonyms(pred.name, pred.pos) ++ getHypernyms(pred.name, pred.pos)
     val consequents = synonymsAndHypernyms.flatMap(predsByName.get).flatten.filter(_ != pred)
+      .filter(_.name match { case NotPred(_) => false; case _ => true })
+    for ((consequent, weight) <- ruleWeighter.weightForRules(antecedentContext, consequents, vectorspace))
+      yield makeRule(pred, consequent, weight)
+  }
+
+  private def makeRulesForNegPred(pred: BoxerPred, antecedentContext: Iterable[String], predsByName: Map[String, Iterable[BoxerPred]], vectorspace: Map[String, BowVector]) = {
+    val NotPred(simplePredName) = pred.name
+    val synonymsAndHypernyms = getSynonyms(simplePredName, pred.pos) ++ getHyponyms(simplePredName, pred.pos)
+    val consequents = synonymsAndHypernyms.flatMap(predsByName.get).flatten.filter(_ != pred)
+      .filter(_.name match { case NotPred(_) => true; case _ => false })
     for ((consequent, weight) <- ruleWeighter.weightForRules(antecedentContext, consequents, vectorspace))
       yield makeRule(pred, consequent, weight)
   }
@@ -107,13 +129,21 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
       p <- getPos(pos);
       s <- wordnet.synsets(name, p);
       w <- s.getWords
-    ) yield w.getLemma).toSet -- Set("POS", "NEG") + name //TODO: REMOVE THE "+ name".  WE ONLY WANT NEED THIS FOR WHEN THE WORD ISN'T IN WORDNET.
+    ) yield w.getLemma).toSet + name -- Set("POS", "NEG") //TODO: REMOVE THE "+ name".  WE ONLY WANT NEED THIS FOR WHEN THE WORD ISN'T IN WORDNET.
 
   private def getHypernyms(name: String, pos: String): Set[String] =
     (for (
       p <- getPos(pos);
       s <- wordnet.synsets(name, p);
       h <- wordnet.allHypernyms(s);
+      w <- h.getWords
+    ) yield w.getLemma).toSet
+
+  private def getHyponyms(name: String, pos: String): Set[String] =
+    (for (
+      p <- getPos(pos);
+      s <- wordnet.synsets(name, p);
+      h <- wordnet.allHyponyms(s);
       w <- h.getWords
     ) yield w.getLemma).toSet
 

@@ -121,11 +121,11 @@ class ModalDiscourseInterpreter(
               List(
                 posEnv.map { env =>
                   val entailmentPred = if (env) "POS" else "NEG"
-                  modalify(this.parse(discId, sentIndex, wordIndex, "imp(drs([e,p],[pred(%s,%s,e),rel(theme,e,p)]), pred(%s,%s,p))".format(name, pos, entailmentPred, "X")))
+                  modalify(this.parse(discId, sentIndex, wordIndex, "imp(drs([e,p],[pred(%s,%s,e),rel(theme,e,p)]), <POS/NEG>(%s,%s,p))".format(name, pos, entailmentPred, "X")))
                 },
                 negEnv.map { env =>
                   val entailmentPred = if (env) "POS" else "NEG"
-                  modalify(this.parse(discId, sentIndex, wordIndex, "imp(drs([p],[not(drs([e],[pred(%s,%s,e),rel(theme,e,p)]))]), pred(%s,%s,p))".format(name, pos, entailmentPred, "X")))
+                  modalify(this.parse(discId, sentIndex, wordIndex, "imp(drs([p],[not(drs([e],[pred(%s,%s,e),rel(theme,e,p)]))]), <POS/NEG>(%s,%s,p))".format(name, pos, entailmentPred, "X")))
                 }).flatten
             //case BoxerPred(discId, List(BoxerIndex(sentIndex, wordIndex)), _, name, pos, sense) => // TODO: ...
           }
@@ -329,6 +329,8 @@ class ModalDiscourseInterpreter(
         }
         case "pred" :: "(" :: name :: "," :: pos :: "," :: v :: ")" :: tail =>
           (BoxerPred(discId, List(BoxerIndex(sentIndex, wordIndex)), BoxerVariable(v), name, pos, 0), tail)
+        case "<POS/NEG>" :: "(" :: name :: "," :: pos :: "," :: v :: ")" :: tail =>
+          (BoxerPred(discId, List(), BoxerVariable(v), name, pos, 0), tail)
         case "rel" :: "(" :: name :: "," :: v1 :: "," :: v2 :: ")" :: tail =>
           (BoxerRel(discId, List(BoxerIndex(sentIndex, wordIndex)), BoxerVariable(v1), BoxerVariable(v2), name, 0), tail)
         case _ =>

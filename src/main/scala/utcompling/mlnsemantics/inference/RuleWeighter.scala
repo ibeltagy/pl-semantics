@@ -5,11 +5,11 @@ import utcompling.mlnsemantics.vecspace.BowVector
 import utcompling.scalalogic.util.CollectionUtils._
 
 trait RuleWeighter {
-  def weightForRules(antecedentContext: Iterable[BoxerPred], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]): Iterable[(BoxerPred, Option[Double])]
+  def weightForRules(antecedentContext: Iterable[String], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]): Iterable[(BoxerPred, Option[Double])]
 }
 
 case class UniformHardRuleWeighter() extends RuleWeighter {
-  override def weightForRules(antecedentContext: Iterable[BoxerPred], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]) = {
+  override def weightForRules(antecedentContext: Iterable[String], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]) = {
     consequents.map(_ -> None)
   }
 }
@@ -18,7 +18,7 @@ case class VecspaceRuleWeighter(
   compositeVectorMaker: CompositeVectorMaker)
   extends RuleWeighter {
 
-  override def weightForRules(antecedentContext: Iterable[BoxerPred], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]) = {
+  override def weightForRules(antecedentContext: Iterable[String], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]) = {
     val pv = compositeVectorMaker.make(antecedentContext, vectorspace)
     consequents.mapTo { consequent =>
       Some(vectorspace.get(consequent.name) match {
@@ -33,7 +33,7 @@ case class RankingRuleWeighter(
   delegate: RuleWeighter)
   extends RuleWeighter {
 
-  override def weightForRules(antecedentContext: Iterable[BoxerPred], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]) = {
+  override def weightForRules(antecedentContext: Iterable[String], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]) = {
     val weighted = delegate.weightForRules(antecedentContext, consequents, vectorspace)
     val unoptionedWeighted = weighted.mapValuesStrict(_.getOrElse(Double.PositiveInfinity))
     val sortedGroupedWeighted = unoptionedWeighted.map(_.swap).groupByKey.toSeq.sortBy(-_._1).map(_._2)
@@ -52,7 +52,7 @@ case class TopRuleWeighter(
   delegate: RuleWeighter)
   extends RuleWeighter {
 
-  override def weightForRules(antecedentContext: Iterable[BoxerPred], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]) = {
+  override def weightForRules(antecedentContext: Iterable[String], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]) = {
     val weighted = delegate.weightForRules(antecedentContext, consequents, vectorspace)
     if (weighted.nonEmpty)
       Iterable(weighted.maxBy(_._2.getOrElse(Double.PositiveInfinity)))

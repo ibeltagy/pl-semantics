@@ -31,8 +31,11 @@ class TextualTheoremProver(
   discourseIterpreter: DiscourseInterpreter[BoxerExpression],
   probabilisticTheoremProver: ProbabilisticTheoremProver[BoxerExpression]) {
 
-  def prove(text: String, hyp: String) = {
-    val List(Some(txtEx), Some(hypEx)) = discourseIterpreter.batchInterpret(List(text, hyp), Some(List("t", "h")), false, false)
+  def prove(text: String, hyp: String): Option[Double] = 
+    prove(List(text), List(hyp))
+
+  def prove(text: List[String], hyp: List[String]): Option[Double] = {
+    val List(Some(txtEx), Some(hypEx)) = discourseIterpreter.batchInterpretMultisentence(List(text, hyp), Some(List("t", "h")), false, false)
 
     val IndvVar = """^(x\d*)$""".r
     val EvntVar = """^(e\d*)$""".r

@@ -26,6 +26,8 @@ import org.apache.log4j.Logger
 import org.apache.log4j.Level
 import utcompling.scalalogic.discourse.impl.BoxerDiscourseInterpreter
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.PassthroughBoxerExpressionInterpreter
+import utcompling.mlnsemantics.vecspace.BowVector
+import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.PredicateCleaningBoxerExpressionInterpreterDecorator
 
 object Baseline {
 
@@ -36,37 +38,70 @@ object Baseline {
     //    val hyp = "a person purchased a new vehicle"
 
     val a = List(
-      "Dave failed to not forget to neglect to leave .",
-      "Dave left .",
-      "Dave did not forget to neglect to leave .",
-      "Dave did not leave .",
-      "Dave forgot to neglect to leave .",
-      "Dave left .",
-      "Dave neglected to leave .",
-      "Dave did not leave .")
-    val b = new BoxerDiscourseInterpreter(new PassthroughBoxerExpressionInterpreter).batchInterpret(a).flatten
-//    val b = new ModalDiscourseInterpreter().batchInterpret(a).flatten
-    val f =
-      new BoxerExpressionInterpreter[FolExpression] {
-        def interpret(x: BoxerExpression): FolExpression =
-          new Boxer2DrtExpressionInterpreter().interpret(
-            new MergingBoxerExpressionInterpreterDecorator().interpret(
-              new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(x))).fol
-      }
-    val d =
-      new BoxerExpressionInterpreter[DrtExpression] {
-        def interpret(x: BoxerExpression): DrtExpression =
-          new Boxer2DrtExpressionInterpreter().interpret(
-            new MergingBoxerExpressionInterpreterDecorator().interpret(
-              new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(x)))
-      }
+      List("A stadium craze is sweeping the country ."),
+      List("A stadium craze is covering the country ."), // True
 
-    val tp = new Prover9TheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/LADR-2009-11A/bin/prover9"), 5, true)
+      List("He left the children with the nurse ."),
+      List("He entrusted the children with the nurse ."), // True // NOTE: changed "to" to "with" 
 
-    for (List(txt, hyp) <- b.grouped(2)) {
-      d.interpret(txt).pprint
-      d.interpret(hyp).pprint
-      println(tp.prove(List(f.interpret(txt)), f.interpret(hyp)))
+      List("South Korea fails to honor U.S. patents ."),
+      List("South Korea does not observe U.S. patents ."), // True
+
+      List("The U.S. is watching closely as South Korea fails to honor U.S. patents ."),
+      List("South Korea does not observe U.S. patents ."), // False, stuff after "as" is treated as a nested subexpression
+
+      List("We return to the young woman who is reading the Wrigley's wrapping paper ."),
+      List("The young woman reading the Wrigley's wrapping paper is revisited ."), // False, "return to" -> "revisit" since the "to" doesn't get dropped
+
+      //      List("After a fire extinguisher is used, it must always be returned for recharging and its use recorded ."),
+      //      List("A fire extinguisher must always be sent back after using it ."), // ERROR, Boxer doesn't handle "after" right
+
+      List("Joe Robbie could not persuade the mayor , so he built his own coliseum .", "He has used it to turn a healthy profit ."), // NOTE: "couldn't" -> "could not"
+      List("Joe Robbie used a stadium to turn a sizable profit ."), // False, "persuade" doesn't produce a "theme" predicate
+
+      List("The significance of this will be apparent when it is realized that , while the sportsman is trying to get a sight of the tiger , the tiger in all probability is trying to stalk the sportsman ."),
+      List("The tiger is following the sportsman ."),
+
+      List("Mary 's grandfather taught her necessary skills : how to tip my tea into my saucer and blow waves across it until it was cool enough to drink ; how to cut an orange in half crossways and pack a sugar lump into each half and then suck out orange-juice and sugar together ; how to walk along the crazy-paving garden path without stepping on any of the cracks or a tiger would get you ; how to butter the loaf and then clutch it to your chest and then shave off paper-thin slices ; what saint to pray to when you woke up at night and saw the devil moving behind the curtains ."),
+      List("Mary was instructed some useful skills by her grandfather ."))
+
+    //
+    //
+    //
+
+    val vsf1 = (words: (String => Boolean)) => Map[String, BowVector]().withDefaultValue(new BowVector(Map("" -> 1)))
+    val vsf2 = (words: (String => Boolean)) => BowVectorSpace("resources/nytgiga.lem.1m.vc.f2000.m50.wInf", words)
+
+    val ttp =
+      new TextualTheoremProver(
+        new ModalDiscourseInterpreter(),
+        new InferenceRuleInjectingProbabilisticTheoremProver(
+          new WordnetImpl(),
+          vsf1,
+          new TopRuleWeighter(
+            new RankingRuleWeighter(
+              new VecspaceRuleWeighter(
+                new SimpleCompositeVectorMaker()))),
+          new TypeConvertingPTP(
+            new BoxerExpressionInterpreter[FolExpression] {
+              def interpret(x: BoxerExpression): FolExpression =
+                new Boxer2DrtExpressionInterpreter().interpret(
+                  new OccurrenceMarkingBoxerExpressionInterpreterDecorator().interpret(
+                    new MergingBoxerExpressionInterpreterDecorator().interpret(
+                      new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(
+                        new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))))).fol
+            },
+            new FakeProbabilisticTheoremProver(
+              new Prover9TheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/LADR-2009-11A/bin/prover9"), 5, false)))))
+
+    //
+    //
+    //
+
+    for (List(txt, hyp) <- a.grouped(2)) {
+      println(txt.mkString(" "))
+      println(hyp.mkString(" "))
+      println(ttp.prove(txt, hyp))
     }
 
     //    def mtpo = new ModalTheoremProver(tpo)

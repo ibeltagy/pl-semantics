@@ -51,3 +51,4 @@ libraryDependencies ++= Seq(
 // END FOR SCRUNCH
 ////////////////////////////////////////////////////////
 
+mainClass in (Compile, run) := Some("utcompling.mlnsemantics.inference.Baseline")
