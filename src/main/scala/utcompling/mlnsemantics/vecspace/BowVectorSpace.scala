@@ -18,7 +18,7 @@ object BowVectorSpace {
               .map(_.toTuple2)
               .filter(_._2.nonEmpty)
               //.map { x => println(x); x }
-              .mapValuesStrict(_.toDouble)
+              .mapVals(_.toDouble)
           if (pairs.nonEmpty)
             Some(word -> new BowVector(pairs.toMap))
           else

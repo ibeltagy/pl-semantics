@@ -1,15 +1,9 @@
-package utcompling.mlnsemantics.inference
+package utcompling.mlnsemantics.run
 
-import utcompling.scalalogic.drt.expression.parse.DrtLogicParser
-import utcompling.mlnsemantics.modal.VisualizingModalTheoremProverDecorator
-import utcompling.scalalogic.discourse.candc.parse.output.impl.Discourse
-import utcompling.scalalogic.fol.expression.parse.FolLogicParser
 import utcompling.scalalogic.inference.impl.Prover9TheoremProver
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.Boxer2DrtExpressionInterpreter
-import utcompling.mlnsemantics.modal.ModalTheoremProver
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
 import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
-import utcompling.scalalogic.discourse.candc.boxer.expression.parse.BoxerExpressionParser
 import utcompling.scalalogic.util.FileUtils
 import utcompling.scalalogic.fol.expression.FolExpression
 import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
@@ -19,15 +13,18 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.M
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.UnnecessarySubboxRemovingBoxerExpressionInterpreter
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.OccurrenceMarkingBoxerExpressionInterpreterDecorator
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.BoxerExpressionInterpreter
-import utcompling.scalalogic.drt.expression.DrtExpression
-import edu.mit.jwi.item.POS
-import scala.collection.JavaConversions.asScalaBuffer
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
-import utcompling.scalalogic.discourse.impl.BoxerDiscourseInterpreter
-import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.PassthroughBoxerExpressionInterpreter
 import utcompling.mlnsemantics.vecspace.BowVector
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.PredicateCleaningBoxerExpressionInterpreterDecorator
+import utcompling.mlnsemantics.inference.InferenceRuleInjectingProbabilisticTheoremProver
+import utcompling.mlnsemantics.inference.RankingRuleWeighter
+import utcompling.mlnsemantics.inference.SimpleCompositeVectorMaker
+import utcompling.mlnsemantics.inference.TextualTheoremProver
+import utcompling.mlnsemantics.inference.TopRuleWeighter
+import utcompling.mlnsemantics.inference.TypeConvertingPTP
+import utcompling.mlnsemantics.inference.VecspaceRuleWeighter
+import utcompling.mlnsemantics.inference.FakeProbabilisticTheoremProver
 
 object Baseline {
 
@@ -38,11 +35,17 @@ object Baseline {
     //    val hyp = "a person purchased a new vehicle"
 
     val a = List(
+      List("A man is riding a bicycle ."),
+      List("A man is riding a bike ."),
+
       List("A stadium craze is sweeping the country ."),
       List("A stadium craze is covering the country ."), // True
 
       List("He left the children with the nurse ."),
-      List("He entrusted the children with the nurse ."), // True // NOTE: changed "to" to "with" 
+      List("He entrusted the children to the nurse ."), // False without "all e all x ((leave_v_dt_1002(e) & r_with(e, x)) -> (entrust_v_dh_2002(e) & r_to(e, x)))"
+
+      List("He left the children with the nurse ."),
+      List("He entrusted the children with the nurse ."),
 
       List("South Korea fails to honor U.S. patents ."),
       List("South Korea does not observe U.S. patents ."), // True
@@ -92,6 +95,16 @@ object Baseline {
                         new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))))).fol
             },
             new FakeProbabilisticTheoremProver(
+              //              new TheoremProver[FolExpression, String] {
+              //                def prove(assumptions: List[FolExpression], goal: Option[FolExpression] = None, verbose: Boolean = false): Option[String] = {
+              //                  assumptions.map(println)
+              //                  println
+              //                  println(goal)
+              //                  println
+              //                  Option("...")
+              //                }
+              //              }))))
+
               new Prover9TheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/LADR-2009-11A/bin/prover9"), 5, false)))))
 
     //

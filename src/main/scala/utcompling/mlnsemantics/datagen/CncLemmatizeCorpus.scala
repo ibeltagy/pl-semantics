@@ -99,7 +99,7 @@ class CncLemmatizeCorpusMapper extends Mapper[Object, Text, IntWritable, Text] {
 
   private def lemmatize(outputs: Map[Int, String]): Map[Int, List[(String, String)]] = {
     val TerminalRe = """.*t\(\S+, ?'(\S+)', ?'(\S+)', ?'\S+', ?'\S+', ?'\S+'\).*""".r
-    outputs.mapValuesStrict(_.split("\n").collect { case TerminalRe(word, lemma) => (cleanEscaped(word), cleanEscaped(lemma)) }.toList)
+    outputs.mapVals(_.split("\n").collect { case TerminalRe(word, lemma) => (cleanEscaped(word), cleanEscaped(lemma)) }.toList)
   }
 
   private def cleanEscaped(s: String) = {

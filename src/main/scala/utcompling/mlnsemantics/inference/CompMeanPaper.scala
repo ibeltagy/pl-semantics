@@ -13,6 +13,7 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
 import utcompling.scalalogic.fol.expression.FolExpression
 import utcompling.scalalogic.inference.impl.Prover9TheoremProver
 import utcompling.scalalogic.util.CollectionUtils._
+import utcompling.scalalogic.util.Pattern.{ :+, +: }
 import utcompling.scalalogic.util.FileUtils
 import utcompling.scalalogic.util.FileUtils._
 import utcompling.scalalogic.discourse.DiscourseInterpreter
@@ -36,7 +37,7 @@ object CompMeanPaper {
         Source.fromFile("resources/wsj-rte/wsj0020_wordsense_pairs.txt").getLines
           .filterNot(_.startsWith("#"))
           .split("")
-          .map { case original :: sentences => (original, sentences) }
+          .map { case original +: sentences => (original, sentences) }
           .toList
       val drss = new ModalDiscourseInterpreter().batchInterpret(allSentences.flatMap(_._2))
       writeUsing(filename + ".drs") { out =>

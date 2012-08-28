@@ -54,7 +54,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
   def getAllPredsAndContexts(e: BoxerExpression): Seq[(BoxerPred, Seq[String])] = {
     val preds = getAllPreds(e)
     val predsAndContexts = preds.zipWithIndex.map { case (p, i) => p -> (preds.take(i) ++ preds.drop(i + 1)) }
-    predsAndContexts.mapValuesStrict(_.map(p => stripNot(p.name)))
+    predsAndContexts.mapVals(_.map(p => stripNot(p.name)))
   }
 
   private def getAllPreds(e: BoxerExpression): Seq[BoxerPred] =

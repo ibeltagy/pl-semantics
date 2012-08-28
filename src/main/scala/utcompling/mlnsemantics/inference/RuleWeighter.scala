@@ -35,7 +35,7 @@ case class RankingRuleWeighter(
 
   override def weightForRules(antecedentContext: Iterable[String], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]) = {
     val weighted = delegate.weightForRules(antecedentContext, consequents, vectorspace)
-    val unoptionedWeighted = weighted.mapValuesStrict(_.getOrElse(Double.PositiveInfinity))
+    val unoptionedWeighted = weighted.mapVals(_.getOrElse(Double.PositiveInfinity))
     val sortedGroupedWeighted = unoptionedWeighted.map(_.swap).groupByKey.toSeq.sortBy(-_._1).map(_._2)
     val ranked =
       sortedGroupedWeighted
@@ -43,8 +43,8 @@ case class RankingRuleWeighter(
           case ((accum, rank), cs) =>
             (accum ++ cs.map(_ -> rank), rank + cs.size)
         }._1
-    val inverseRanked = ranked.mapValuesStrict(1. / _)
-    inverseRanked.normalizeValues.mapValuesStrict(Option(_))
+    val inverseRanked = ranked.mapVals(1. / _)
+    inverseRanked.normalizeValues.mapVals(Option(_))
   }
 }
 

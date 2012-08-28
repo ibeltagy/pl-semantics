@@ -46,10 +46,10 @@ class TextualTheoremProver(
       val combinedPredTypes =
         predTypes.flatten.groupByKey.map {
           case (k, head :: tail) =>
-            tail.foreach(t => (head zipEqual t).foreach { case (a, b) => assert(a == b, k + ": " + (head :: tail)) })
+            tail.foreach(t => (head zipSafe t).foreach { case (a, b) => assert(a == b, k + ": " + (head :: tail)) })
             (k, head)
         }
-      val combinedConstTypes = constTypes.flatten.groupByKey.mapValuesStrict(_.flatten.toSet)
+      val combinedConstTypes = constTypes.flatten.groupByKey.mapVals(_.flatten.toSet)
       (combinedPredTypes, combinedConstTypes)
     }
 
