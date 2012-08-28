@@ -16,10 +16,10 @@ import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.{ Map => MMap }
 
 /**
- * 
- * 
+ *
+ *
  * HOW TO RUN:
- * 
+ *
  * cd ~
  * vi ~/.hadoop2/conf/hadoop-env.sh: export HADOOP_HEAPSIZE=2000
  * ./fix_HDFS.sh
@@ -58,8 +58,7 @@ class CncLemmatizeCorpusMapper extends Mapper[Object, Text, IntWritable, Text] {
   override def map(key: Object, value: Text, context: Mapper[Object, Text, IntWritable, Text]#Context) {
     val Array(batchNum, sentences @ _*) = value.toString.split("\t")
 
-    val tokenized = sentences.map(s => Tokenize(s).mkString(" "))
-    val lemmatized = parseToLemmas(tokenized)
+    val lemmatized = parseToLemmas(sentences)
     val lemmasOnly = lemmatized.flatten.map(_.map(_._2).mkString(" "))
 
     returnKey.set(batchNum.toInt)
@@ -67,13 +66,15 @@ class CncLemmatizeCorpusMapper extends Mapper[Object, Text, IntWritable, Text] {
     context.write(returnKey, returnVal)
   }
 
-  private def parseToLemmas(sentences: Seq[java.lang.String]): Seq[Option[List[(String, String)]]] = {
+  def parseToLemmas(sentences: Seq[java.lang.String]): Seq[Option[List[(String, String)]]] = {
+    val tokenized = sentences.map(s => Tokenize(s).mkString(" "))
     val candcArgs = Map[String, String](
       "--candc-printer" -> "boxer")
-    val candcOut = candc.batchParse(sentences, candcArgs, None, Some("boxer"))
+    val candcOut = candc.batchParse(tokenized, candcArgs, None, Some("boxer"))
     val outputs = splitOutput(candcOut)
     val lemmatized = lemmatize(outputs)
-    sentences.indices.map(lemmatized.get)
+    val wordsAndLemmas = tokenized.indices.map(lemmatized.get)
+    wordsAndLemmas
   }
 
   private def splitOutput(candcOut: String): Map[Int, String] = {
@@ -85,12 +86,14 @@ class CncLemmatizeCorpusMapper extends Mapper[Object, Text, IntWritable, Text] {
         currNum = Some(line.drop(4).dropRight(1).toInt - 1)
         current.clear()
         current += line
-      } else if (currNum.isDefined) {
+      }
+      else if (currNum.isDefined) {
         if (line.trim.isEmpty) {
           outputs += (currNum.get -> current.mkString("\n"))
           current.clear()
           currNum = None
-        } else
+        }
+        else
           current += line
       }
     }
@@ -112,7 +115,8 @@ class CncLemmatizeCorpusMapper extends Mapper[Object, Text, IntWritable, Text] {
           inquote = true
         else
           out += s(i)
-      } else { //if(inquote)
+      }
+      else { //if(inquote)
         out += s(i)
         inquote = false
       }
