@@ -46,7 +46,7 @@ object Sts {
         }
 
       case Seq("vs", fullVsFile, lemFile, stsVsFile) =>
-        val allLemmas = Source.fromFile(fullVsFile).getLines.flatMap(_.split("\\s+")).toSet
+        val allLemmas = Source.fromFile(lemFile).getLines.flatMap(_.split("\\s+")).toSet
         FileUtils.writeUsing(stsVsFile) { f =>
           for (line <- Source.fromFile(fullVsFile).getLines)
             if (allLemmas(line.split("\\s+")(0)))
