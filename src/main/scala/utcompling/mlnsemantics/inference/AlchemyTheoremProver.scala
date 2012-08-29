@@ -101,10 +101,20 @@ class AlchemyTheoremProver(
       }
       f.write("\n")
 
-      assumptions.foreach {
-        case SoftWeightedExpression(folEx, weight) => f.write(weight + " " + convert(folEx) + "\n")
-        case HardWeightedExpression(folEx) => f.write(convert(folEx) + ".\n")
-      }
+      assumptions
+        .flatMap {
+          case e @ SoftWeightedExpression(folEx, weight) =>
+            weight match {
+              case Double.PositiveInfinity => Some(HardWeightedExpression(folEx))
+              case Double.NegativeInfinity => None
+              case _ => Some(e)
+            }
+          case e @ HardWeightedExpression(folEx) => Some(e)
+        }
+        .foreach {
+          case SoftWeightedExpression(folEx, weight) => f.write(weight + " " + convert(folEx) + "\n")
+          case HardWeightedExpression(folEx) => f.write(convert(folEx) + ".\n")
+        }
 
       f.write("\n")
       f.write(convert(goal -> entailmentConsequent) + ".\n")

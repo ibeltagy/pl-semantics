@@ -88,7 +88,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     val synonymsAndHypernyms = getSynonyms(pred.name, pred.pos) ++ getHypernyms(pred.name, pred.pos)
     val consequents = synonymsAndHypernyms.flatMap(predsByName.get).flatten.filter(_ != pred)
       .filter(_.name match { case NotPred(_) => false; case _ => true })
-    for ((consequent, weight) <- ruleWeighter.weightForRules(antecedentContext, consequents, vectorspace))
+    for ((consequent, weight) <- ruleWeighter.weightForRules(pred, antecedentContext, consequents, vectorspace))
       yield makeRule(pred, consequent, weight)
   }
 
@@ -97,7 +97,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     val synonymsAndHypernyms = getSynonyms(simplePredName, pred.pos) ++ getHyponyms(simplePredName, pred.pos)
     val consequents = synonymsAndHypernyms.flatMap(predsByName.get).flatten.filter(_ != pred)
       .filter(_.name match { case NotPred(_) => true; case _ => false })
-    for ((consequent, weight) <- ruleWeighter.weightForRules(antecedentContext, consequents, vectorspace))
+    for ((consequent, weight) <- ruleWeighter.weightForRules(pred, antecedentContext, consequents, vectorspace))
       yield makeRule(pred, consequent, weight)
   }
 

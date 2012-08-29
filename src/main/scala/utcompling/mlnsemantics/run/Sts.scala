@@ -98,7 +98,8 @@ object Sts {
             new InferenceRuleInjectingProbabilisticTheoremProver(
               new WordnetImpl(),
               words => BowVectorSpace(vsFile, x => words(x) && allLemmas(x)),
-              new VecspaceRuleWeighter(new SimpleCompositeVectorMaker()),
+              new SameLemmaHardClauseRuleWeighter(
+                new VecspaceRuleWeighter(new SimpleCompositeVectorMaker())),
               new TypeConvertingPTP(
                 new BoxerExpressionInterpreter[FolExpression] {
                   def interpret(x: BoxerExpression): FolExpression =
