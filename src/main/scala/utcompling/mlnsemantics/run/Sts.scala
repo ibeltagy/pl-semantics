@@ -108,7 +108,8 @@ object Sts {
                           new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(
                             new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))))).fol
                 },
-                new AlchemyTheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/alchemy/bin/infer")))))
+                new ExistentialEliminatingProbabilisticTheoremProver(
+                  new AlchemyTheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/alchemy/bin/infer"))))))
 
         println(ttp.prove(sepTokens(txt), sepTokens(hyp)))
       }

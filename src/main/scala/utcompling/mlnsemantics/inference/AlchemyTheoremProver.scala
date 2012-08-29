@@ -85,14 +85,20 @@ class AlchemyTheoremProver(
       }
       f.write("\n")
 
-      declarations
-        .mapKeys {
+      val declarationNames =
+        declarations.mapKeys {
           case FolAtom(Variable(pred), _*) => pred
           case FolVariableExpression(Variable(pred)) => pred
         }
-        .foreach {
-          case (pred, varTypes) => f.write("%s(%s)\n".format(pred, varTypes.mkString(",")))
-        }
+
+      declarationNames.foreach {
+        case (pred, varTypes) => f.write("%s(%s)\n".format(pred, varTypes.mkString(",")))
+      }
+      f.write("\n")
+
+      declarationNames.foreach {
+        case (pred, varTypes) => f.write("-1 %s(%s)\n".format(pred, varTypes.indices.map("z" + _).mkString(",")))
+      }
       f.write("\n")
 
       assumptions.foreach {
