@@ -88,7 +88,7 @@ object Sts {
           .toList
           .grouped(2)
 
-      for (((txt, hyp), boxPair) <- pairs zipSafe boxPairs) {
+      for (((txt, hyp), boxPair) <- (pairs zipSafe boxPairs).take(1)) {
         println(txt)
         println(hyp)
 
@@ -110,7 +110,8 @@ object Sts {
                             new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))))).fol
                 },
                 new ExistentialEliminatingProbabilisticTheoremProver(
-                  new AlchemyTheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/alchemy/bin/infer"))))))
+                  new HardAssumptionAsEvidenceProbabilisticTheoremProver(
+                    new AlchemyTheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/alchemy/bin/infer")))))))
 
         println(ttp.prove(sepTokens(txt), sepTokens(hyp)))
       }

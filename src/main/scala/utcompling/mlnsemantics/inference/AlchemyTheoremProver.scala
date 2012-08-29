@@ -2,29 +2,21 @@ package utcompling.mlnsemantics.inference
 
 import org.apache.commons.logging.LogFactory
 import scala.io.Source
+import scala.math._
+import utcompling.scalalogic.top.expression._
+import utcompling.scalalogic.base.expression._
+import utcompling.scalalogic.fol.expression._
 import utcompling.scalalogic.fol.expression.parse.FolLogicParser
-import utcompling.scalalogic.fol.expression.FolAllExpression
-import utcompling.scalalogic.fol.expression.FolAndExpression
-import utcompling.scalalogic.fol.expression.FolAtom
-import utcompling.scalalogic.fol.expression.FolEqualityExpression
-import utcompling.scalalogic.fol.expression.FolExistsExpression
-import utcompling.scalalogic.fol.expression.FolExpression
-import utcompling.scalalogic.fol.expression.FolIfExpression
-import utcompling.scalalogic.fol.expression.FolIffExpression
-import utcompling.scalalogic.fol.expression.FolNegatedExpression
-import utcompling.scalalogic.fol.expression.FolOrExpression
-import utcompling.scalalogic.fol.expression.FolVariableExpression
-import utcompling.scalalogic.top.expression.Variable
 import opennlp.scalabha.util.FileUtils._
 import opennlp.scalabha.util.FileUtils
 import opennlp.scalabha.util.CollectionUtils._
 import utcompling.scalalogic.util.SubprocessCallable
 import utcompling.mlnsemantics.inference.support._
-import utcompling.scalalogic.base.expression.BaseApplicationExpression
-import utcompling.scalalogic.base.expression.BaseVariableExpression
 
 class AlchemyTheoremProver(
-  override val binary: String)
+  override val binary: String,
+  prior: Double = -1.0,
+  logBase: Double = E)
   extends SubprocessCallable(binary)
   with ProbabilisticTheoremProver[FolExpression] {
 
@@ -35,7 +27,6 @@ class AlchemyTheoremProver(
   private val entailedConst = ("entail" -> Set("entailed"))
   private val entailedDec = FolVariableExpression(Variable("entailment")) -> Seq("entail")
   private val entailmentConsequent = FolAtom(Variable("entailment"), Variable("entailed"))
-  private val entailmentConsequentPrior = -1.
   private val ResultsRE = """entailment\("entailed"\) (\d*\.\d*)""".r
 
   override def prove(
@@ -54,17 +45,21 @@ class AlchemyTheoremProver(
       }
     }
 
-    val entailedGoal: FolExpression = goal -> entailmentConsequent
+    val declarationNames =
+      (declarations + entailedDec).mapKeys {
+        case FolAtom(Variable(pred), _*) => pred
+        case FolVariableExpression(Variable(pred)) => pred
+      }
 
     val mlnFile = makeMlnFile(
       constants + entailedConst,
-      declarations + entailedDec,
+      declarationNames,
       assumptions,
       goal)
     val evidenceFile = makeEvidenceFile(evidence)
     val resultFile = FileUtils.mktemp(suffix = ".res")
 
-    val args = List("-q", "entailment")
+    val args = List("-ow", declarationNames.keys.mkString(","), "-q", "entailment")
 
     callAlchemy(mlnFile, evidenceFile, resultFile, args) map {
       case ResultsRE(score) => score.toDouble
@@ -74,7 +69,7 @@ class AlchemyTheoremProver(
 
   private def makeMlnFile(
     constants: Map[String, Set[String]],
-    declarations: Map[FolExpression, Seq[String]],
+    declarationNames: Map[String, Seq[String]],
     assumptions: List[WeightedFolEx],
     goal: FolExpression) = {
 
@@ -85,19 +80,13 @@ class AlchemyTheoremProver(
       }
       f.write("\n")
 
-      val declarationNames =
-        declarations.mapKeys {
-          case FolAtom(Variable(pred), _*) => pred
-          case FolVariableExpression(Variable(pred)) => pred
-        }
-
       declarationNames.foreach {
         case (pred, varTypes) => f.write("%s(%s)\n".format(pred, varTypes.mkString(",")))
       }
       f.write("\n")
 
       declarationNames.foreach {
-        case (pred, varTypes) => f.write("-1 %s(%s)\n".format(pred, varTypes.indices.map("z" + _).mkString(",")))
+        case (pred, varTypes) => f.write("%s %s(%s)\n".format(prior, pred, varTypes.indices.map("z" + _).mkString(",")))
       }
       f.write("\n")
 
@@ -112,15 +101,38 @@ class AlchemyTheoremProver(
           case e @ HardWeightedExpression(folEx) => Some(e)
         }
         .foreach {
-          case SoftWeightedExpression(folEx, weight) => f.write(weight + " " + convert(folEx) + "\n")
+          case SoftWeightedExpression(folEx, weight) =>
+            val usedWeight = log(weight / (1 - weight)) / log(logBase) // treat 'weight' as a prob and find the log-odds
+            f.write(usedWeight + " " + convert(folEx) + "\n")
           case HardWeightedExpression(folEx) => f.write(convert(folEx) + ".\n")
         }
 
       f.write("\n")
-      f.write(convert(goal -> entailmentConsequent) + ".\n")
-      f.write(entailmentConsequentPrior + " " + convert(entailmentConsequent) + "\n")
+      f.write(convert(universalifyGoalFormula(goal -> entailmentConsequent)) + ".\n")
     }
     tempFile
+  }
+
+  private def universalifyGoalFormula(goalFormula: FolIfExpression) = {
+    val FolIfExpression(goal, consequent) = goalFormula
+
+    def isConjoinedAtoms(e: FolExpression): Boolean = {
+      e match {
+        case FolAtom(_, _*) => true
+        case FolAndExpression(a, b) => isConjoinedAtoms(a) && isConjoinedAtoms(b)
+        case _ => false
+      }
+    }
+
+    def universalify(e: FolExpression): FolExpression = {
+      e match {
+        case FolExistsExpression(v, term) => FolAllExpression(v, universalify(term))
+        case _ if isConjoinedAtoms(e) => e -> consequent
+        case _ => sys.error(e.toString)
+      }
+    }
+
+    universalify(goal)
   }
 
   private def makeEvidenceFile(evidence: List[FolExpression]) = {
@@ -155,14 +167,20 @@ class AlchemyTheoremProver(
 
   private def convert(input: FolExpression, bound: Set[Variable] = Set()): String =
     input match {
-      case FolExistsExpression(variable, term) => "exist " + variable.name + " " + convert(term, bound + variable)
-      case FolAllExpression(variable, term) => "forall " + variable.name + " " + convert(term, bound + variable)
-      case FolNegatedExpression(term) => "!(" + convert(term, bound) + ")"
-      case FolAndExpression(first, second) => "(" + convert(first, bound) + " ^ " + convert(second, bound) + ")"
-      case FolOrExpression(first, second) => "(" + convert(first, bound) + " v " + convert(second, bound) + ")"
-      case FolIfExpression(first, second) => "(" + convert(first, bound) + " => " + convert(second, bound) + ")"
-      case FolIffExpression(first, second) => "(" + convert(first, bound) + " <=> " + convert(second, bound) + ")"
-      case FolEqualityExpression(first, second) => "(" + convert(first, bound) + " = " + convert(second, bound) + ")"
+      case FolAllExpression(variable, term) => convert(term, bound + variable) // don't add outermost 'forall'
+      case _ => _convert(input, bound)
+    }
+
+  private def _convert(input: FolExpression, bound: Set[Variable]): String =
+    input match {
+      case FolExistsExpression(variable, term) => "exist " + variable.name + " (" + _convert(term, bound + variable) + ")"
+      case FolAllExpression(variable, term) => "forall " + variable.name + " (" + _convert(term, bound + variable) + ")"
+      case FolNegatedExpression(term) => "!(" + _convert(term, bound) + ")"
+      case FolAndExpression(first, second) => "(" + _convert(first, bound) + " ^ " + _convert(second, bound) + ")"
+      case FolOrExpression(first, second) => "(" + _convert(first, bound) + " v " + _convert(second, bound) + ")"
+      case FolIfExpression(first, second) => "(" + _convert(first, bound) + " => " + _convert(second, bound) + ")"
+      case FolIffExpression(first, second) => "(" + _convert(first, bound) + " <=> " + _convert(second, bound) + ")"
+      case FolEqualityExpression(first, second) => "(" + _convert(first, bound) + " = " + _convert(second, bound) + ")"
       case FolAtom(pred, args @ _*) => pred.name.replace("'", "") + "(" + args.map(v => if (bound(v)) v.name else quote(v.name)).mkString(",") + ")"
       case FolVariableExpression(v) => if (bound(v)) v.name else quote(v.name)
     }
