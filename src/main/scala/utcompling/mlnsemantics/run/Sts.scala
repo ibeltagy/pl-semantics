@@ -24,7 +24,6 @@ import utcompling.mlnsemantics.datagen.Tokenize
 import utcompling.mlnsemantics.datagen.CncLemmatizeCorpusMapper
 import scala.io.Source
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.PassthroughBoxerExpressionInterpreter
-import utcompling.scalalogic.discourse.impl.FakeDiscourseInterpreter
 import utcompling.scalalogic.discourse.impl.PreparsedBoxerDiscourseInterpreter
 
 /**
@@ -40,7 +39,7 @@ object Sts {
   val SomeRe = """Some\((.*)\)""".r
 
   def main(args: Array[String]) {
-    Logger.getRootLogger.setLevel(Level.INFO)
+    Logger.getRootLogger.setLevel(Level.DEBUG)
 
     args.toSeq match {
       case Seq("lem", stsFile, lemFile) =>

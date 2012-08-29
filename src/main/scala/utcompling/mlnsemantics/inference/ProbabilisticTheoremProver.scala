@@ -10,7 +10,7 @@ trait ProbabilisticTheoremProver[T] {
    */
   def prove(
     constants: Map[String, Set[String]], // type -> constant
-    declarations: Map[String, Seq[String]], // predicate -> seq[type] 
+    declarations: Map[T, Seq[String]], // predicate -> seq[type] 
     evidence: List[T],
     assumptions: List[WeightedExpression[T]],
     goal: T): Option[Double]

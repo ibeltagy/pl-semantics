@@ -32,7 +32,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 
   override def prove(
     constants: Map[String, Set[String]],
-    declarations: Map[String, Seq[String]],
+    declarations: Map[BoxerExpression, Seq[String]],
     evidence: List[BoxerExpression],
     assumptions: List[WeightedExpression[BoxerExpression]],
     goal: BoxerExpression): Option[Double] = {

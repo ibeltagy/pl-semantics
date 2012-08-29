@@ -13,6 +13,7 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.Boxer2DrtExpressionInterpreter
 import utcompling.mlnsemantics.inference.support._
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.BoxerExpressionInterpreter
+import opennlp.scalabha.util.CollectionUtils._
 
 class TypeConvertingPTP(
   converter: BoxerExpressionInterpreter[FolExpression],
@@ -21,19 +22,21 @@ class TypeConvertingPTP(
 
   override def prove(
     constants: Map[String, Set[String]],
-    declarations: Map[String, Seq[String]],
+    declarations: Map[BoxerExpression, Seq[String]],
     evidence: List[BoxerExpression],
     assumptions: List[WeightedExpression[BoxerExpression]],
     goal: BoxerExpression): Option[Double] = {
 
-    val newEvidence = evidence.map(e => converter.interpret(e))
+    //val newConstants = constants.mapVals(_.map(converter.interpret))
+    val newDeclarations = declarations.mapKeys(converter.interpret)
+    val newEvidence = evidence.map(converter.interpret)
     val newAssumptions = assumptions.map {
       case HardWeightedExpression(e) => HardWeightedExpression(converter.interpret(e))
       case SoftWeightedExpression(e, w) => SoftWeightedExpression(converter.interpret(e), w)
     }
     val newGoal = converter.interpret(goal)
 
-    delegate.prove(constants, declarations, newEvidence, newAssumptions, newGoal)
+    delegate.prove(constants, newDeclarations, newEvidence, newAssumptions, newGoal)
   }
 
 }

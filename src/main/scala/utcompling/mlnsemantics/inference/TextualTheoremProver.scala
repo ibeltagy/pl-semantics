@@ -41,7 +41,7 @@ class TextualTheoremProver(
     val EvntVar = """^(e\d*)$""".r
     val PropVar = """^(p\d*)$""".r
 
-    def combinePredicatesAndArgTypes(list: List[(Map[String, List[String]], Map[String, Set[String]])]): (Map[String, List[String]], Map[String, Set[String]]) = {
+    def combinePredicatesAndArgTypes(list: List[(Map[BoxerExpression, List[String]], Map[String, Set[String]])]): (Map[BoxerExpression, List[String]], Map[String, Set[String]]) = {
       val (predTypes, constTypes) = list.unzip
       val combinedPredTypes =
         predTypes.flatten.groupByKey.map {
@@ -53,26 +53,26 @@ class TextualTheoremProver(
       (combinedPredTypes, combinedConstTypes)
     }
 
-    def getPredicatesAndArgTypes(e: BoxerExpression): (Map[String, List[String]], Map[String, Set[String]]) =
+    def getPredicatesAndArgTypes(e: BoxerExpression): (Map[BoxerExpression, List[String]], Map[String, Set[String]]) =
       e match {
         case BoxerPred(discId, indices, variable, name, pos, sense) =>
-          _getPredAndArgTypesTypes(name, List(variable))
+          _getPredAndArgTypesTypes(e, List(variable))
         case BoxerNamed(discId, indices, variable, name, typ, sense) =>
-          _getPredAndArgTypesTypes(name, List(variable))
+          _getPredAndArgTypesTypes(e, List(variable))
         case BoxerRel(discId, indices, event, variable, name, sense) =>{
           if(name == "theme") println(e)
-          _getPredAndArgTypesTypes(name, List(event, variable))
+          _getPredAndArgTypesTypes(e, List(event, variable))
         }
         case _ => {
-          e.visit(getPredicatesAndArgTypes, combinePredicatesAndArgTypes, (Map[String, List[String]](), Map[String, Set[String]]()))
+          e.visit(getPredicatesAndArgTypes, combinePredicatesAndArgTypes, (Map[BoxerExpression, List[String]](), Map[String, Set[String]]()))
         }
       }
 
-    def _getPredAndArgTypesTypes(name: String, args: List[BoxerVariable]): (Map[String, List[String]], Map[String, Set[String]]) = {
+    def _getPredAndArgTypesTypes(name: BoxerExpression, args: List[BoxerVariable]): (Map[BoxerExpression, List[String]], Map[String, Set[String]]) = {
       val (argTypes, constants) =
-        args.map(_.name).foldLeft(List[String](), List[(String, String)]()) {
-          case ((argTypes, constants), varName) =>
-            varName match {
+        args.foldLeft(List[String](), List[(String, String)]()) {
+          case ((argTypes, constants), v) =>
+            v.name match {
               case IndvVar(v) => ("indv" :: argTypes, constants)
               case EvntVar(v) => ("evnt" :: argTypes, constants)
               case PropVar(v) => ("prop" :: argTypes, constants)

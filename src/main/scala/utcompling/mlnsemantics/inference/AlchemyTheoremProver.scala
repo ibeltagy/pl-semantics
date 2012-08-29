@@ -17,8 +17,11 @@ import utcompling.scalalogic.fol.expression.FolVariableExpression
 import utcompling.scalalogic.top.expression.Variable
 import opennlp.scalabha.util.FileUtils._
 import opennlp.scalabha.util.FileUtils
+import opennlp.scalabha.util.CollectionUtils._
 import utcompling.scalalogic.util.SubprocessCallable
 import utcompling.mlnsemantics.inference.support._
+import utcompling.scalalogic.base.expression.BaseApplicationExpression
+import utcompling.scalalogic.base.expression.BaseVariableExpression
 
 class AlchemyTheoremProver(
   override val binary: String)
@@ -30,23 +33,25 @@ class AlchemyTheoremProver(
   private val LOG = LogFactory.getLog(AlchemyTheoremProver.getClass)
 
   private val entailedConst = ("entail" -> Set("entailed"))
-  private val entailedDec = "entailment" -> Seq("entail")
+  private val entailedDec = FolVariableExpression(Variable("entailment")) -> Seq("entail")
   private val entailmentConsequent = FolAtom(Variable("entailment"), Variable("entailed"))
   private val entailmentConsequentPrior = -1.
   private val ResultsRE = """entailment\("entailed"\) (\d*\.\d*)""".r
 
   override def prove(
     constants: Map[String, Set[String]],
-    declarations: Map[String, Seq[String]],
+    declarations: Map[FolExpression, Seq[String]],
     evidence: List[FolExpression],
     assumptions: List[WeightedFolEx],
     goal: FolExpression): Option[Double] = {
 
-    declarations.foreach {
-      case FolAtom(Variable(pred), args @ _*) =>
-        for (a <- args.map(_.name))
-          require(constants.contains(a), "No contants were found for type '%s' of declared predicate '%s'.".format(a, pred))
-      case d => throw new RuntimeException("Only atoms may be declared.  '%s' is not an atom.".format(d))
+    declarations.foreach { dec =>
+      dec match {
+        case (FolAtom(Variable(pred), args @ _*), argTypes) =>
+          for (a <- argTypes)
+            require(constants.contains(a), "No contants were found for type '%s' of declared predicate '%s'.".format(a, pred))
+        case d => throw new RuntimeException("Only atoms may be declared.  '%s' is not an atom.".format(d))
+      }
     }
 
     val entailedGoal: FolExpression = goal -> entailmentConsequent
@@ -63,12 +68,13 @@ class AlchemyTheoremProver(
 
     callAlchemy(mlnFile, evidenceFile, resultFile, args) map {
       case ResultsRE(score) => score.toDouble
+      case err => sys.error(err)
     }
   }
 
   private def makeMlnFile(
     constants: Map[String, Set[String]],
-    declarations: Map[String, Seq[String]],
+    declarations: Map[FolExpression, Seq[String]],
     assumptions: List[WeightedFolEx],
     goal: FolExpression) = {
 
@@ -79,9 +85,14 @@ class AlchemyTheoremProver(
       }
       f.write("\n")
 
-      declarations.foreach {
-        case (pred, varTypes) => f.write("%s(%s)\n".format(pred, varTypes.mkString(",")))
-      }
+      declarations
+        .mapKeys {
+          case FolAtom(Variable(pred), _*) => pred
+          case FolVariableExpression(Variable(pred)) => pred
+        }
+        .foreach {
+          case (pred, varTypes) => f.write("%s(%s)\n".format(pred, varTypes.mkString(",")))
+        }
       f.write("\n")
 
       assumptions.foreach {
@@ -154,11 +165,11 @@ object AlchemyTheoremProver {
 
     val atp = new AlchemyTheoremProver(pathjoin(System.getenv("HOME"), "bin/alchemy/bin/infer"))
 
-    val constants = Map("ind" -> Set("socrates"))
-    val declarations = Map("man" -> Seq("ind"), "mortal" -> Seq("ind"))
-    val evidence = List("man(socrates)").map(parse)
+    val constants = Map("ind" -> Set("Socrates"))
+    val declarations = Map[FolExpression, Seq[String]](FolAtom(Variable("man")) -> Seq("ind"), FolAtom(Variable("mortal")) -> Seq("ind"))
+    val evidence = List("man(Socrates)").map(parse)
     val assumptions = List(HardWeightedExpression(parse("all x.(man(x) -> mortal(x))")))
-    val goal = parse("mortal(socrates)")
+    val goal = parse("mortal(Socrates)")
     println(atp.prove(constants, declarations, evidence, assumptions, goal))
 
   }
