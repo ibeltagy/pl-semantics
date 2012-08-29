@@ -12,7 +12,7 @@ import utcompling.scalalogic.inference.impl.Prover9TheoremProver
 import utcompling.scalalogic.util.StringUtils._
 import utcompling.mlnsemantics.modal.VisualizingModalTheoremProverDecorator
 import utcompling.scalalogic.discourse.candc.boxer.expression.parse.BoxerExpressionParser
-import utcompling.scalalogic.util.FileUtils
+import opennlp.scalabha.util.FileUtils
 import org.junit.Test
 
 class FracasReaderTests {

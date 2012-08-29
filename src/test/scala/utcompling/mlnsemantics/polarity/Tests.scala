@@ -11,7 +11,7 @@ import utcompling.scalalogic.discourse.impl.BoxerDiscourseInterpreter
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.BoxerExpressionInterpreter
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.Boxer2DrtExpressionInterpreter
 import utcompling.scalalogic.discourse.candc.call.impl._
-import utcompling.scalalogic.util.FileUtils
+import opennlp.scalabha.util.FileUtils
 import org.junit.Test
 import org.junit.Test
 

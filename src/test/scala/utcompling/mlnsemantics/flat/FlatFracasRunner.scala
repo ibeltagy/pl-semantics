@@ -15,7 +15,7 @@ import utcompling.mlnsemantics.data.RtePair
 import utcompling.scalalogic.util.StringUtils._
 import utcompling.mlnsemantics.data.DataReader
 import utcompling.mlnsemantics.data.ExampleChoosingRtePairReaderDecorator
-import utcompling.scalalogic.util.FileUtils
+import opennlp.scalabha.util.FileUtils
 import org.junit.Test
 
 class FracasTestRunner {

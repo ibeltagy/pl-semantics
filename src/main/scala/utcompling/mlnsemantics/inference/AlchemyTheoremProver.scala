@@ -15,8 +15,8 @@ import utcompling.scalalogic.fol.expression.FolNegatedExpression
 import utcompling.scalalogic.fol.expression.FolOrExpression
 import utcompling.scalalogic.fol.expression.FolVariableExpression
 import utcompling.scalalogic.top.expression.Variable
-import utcompling.scalalogic.util.FileUtils.pathjoin
-import utcompling.scalalogic.util.FileUtils
+import opennlp.scalabha.util.FileUtils._
+import opennlp.scalabha.util.FileUtils
 import utcompling.scalalogic.util.SubprocessCallable
 import utcompling.mlnsemantics.inference.support._
 
@@ -72,7 +72,8 @@ class AlchemyTheoremProver(
     assumptions: List[WeightedFolEx],
     goal: FolExpression) = {
 
-    FileUtils.writeUsing(FileUtils.mktemp(suffix = ".mln")) { f =>
+    val tempFile = FileUtils.mktemp(suffix = ".mln")
+    FileUtils.writeUsing(tempFile) { f =>
       constants.foreach {
         case (name, tokens) => f.write("%s = {%s}\n".format(name, tokens.map(quote).mkString(",")))
       }
@@ -92,27 +93,30 @@ class AlchemyTheoremProver(
       f.write(convert(goal -> entailmentConsequent) + ".\n")
       f.write(entailmentConsequentPrior + " " + convert(entailmentConsequent) + "\n")
     }
+    tempFile
   }
 
   private def makeEvidenceFile(evidence: List[FolExpression]) = {
-    FileUtils.writeUsing(FileUtils.mktemp(suffix = ".db")) { f =>
+    val tempFile = FileUtils.mktemp(suffix = ".db")
+    FileUtils.writeUsing(tempFile) { f =>
       evidence.foreach {
         case e @ FolAtom(pred, args @ _*) => f.write(convert(e) + "\n")
         case e => throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
       }
     }
+    tempFile
   }
 
   private def callAlchemy(mln: String, evidence: String, result: String, args: List[String] = List()): Option[String] = {
     if (LOG.isDebugEnabled) {
-      LOG.debug("mln file:\n" + Source.fromFile(mln).getLines.mkString("\n").trim)
-      LOG.debug("evidence file:\n" + Source.fromFile(evidence).getLines.mkString("\n").trim)
+      LOG.debug("mln file:\n" + readLines(mln).mkString("\n").trim)
+      LOG.debug("evidence file:\n" + readLines(evidence).mkString("\n").trim)
     }
 
     val allArgs = "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args
     val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, LOG.isDebugEnabled)
 
-    val results = Source.fromFile(result).getLines.mkString("\n").trim
+    val results = readLines(result).mkString("\n").trim
 
     LOG.debug("results file:\n" + results)
 

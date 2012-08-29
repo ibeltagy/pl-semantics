@@ -12,10 +12,10 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.BoxerE
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
 import utcompling.scalalogic.fol.expression.FolExpression
 import utcompling.scalalogic.inference.impl.Prover9TheoremProver
-import utcompling.scalalogic.util.CollectionUtils._
-import utcompling.scalalogic.util.Pattern.{ :+, +: }
-import utcompling.scalalogic.util.FileUtils
-import utcompling.scalalogic.util.FileUtils._
+import opennlp.scalabha.util.CollectionUtils._
+import opennlp.scalabha.util.Pattern.{ :+, +: }
+import opennlp.scalabha.util.FileUtils
+import opennlp.scalabha.util.FileUtils._
 import utcompling.scalalogic.discourse.DiscourseInterpreter
 import utcompling.scalalogic.discourse.candc.boxer.expression.parse.BoxerExpressionParser
 import org.apache.log4j.Logger
@@ -34,7 +34,7 @@ object CompMeanPaper {
 
     if (args.size >= 1 && args(0) == "interpret") {
       val allSentences =
-        Source.fromFile("resources/wsj-rte/wsj0020_wordsense_pairs.txt").getLines
+        readLines("resources/wsj-rte/wsj0020_wordsense_pairs.txt")
           .filterNot(_.startsWith("#"))
           .split("")
           .map { case original +: sentences => (original, sentences) }
@@ -74,7 +74,7 @@ object CompMeanPaper {
 
       class FakeDiscourseInterpreter(filename: String) extends DiscourseInterpreter[BoxerExpression] {
         val cache =
-          Source.fromFile(filename).getLines.toList
+          readLines(filename)
             .filterNot(_.startsWith("#"))
             .split("")
             .filter(_.nonEmpty)
@@ -112,7 +112,7 @@ object CompMeanPaper {
                 new Prover9TheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/LADR-2009-11A/bin/prover9"), 5, false)))))
 
       val premises =
-        Source.fromFile("resources/wsj-rte/wsj0020_wordsense_pairs.txt").getLines.toList
+        readLines("resources/wsj-rte/wsj0020_wordsense_pairs.txt").toList
           .filterNot(_.startsWith("#"))
           .split("")
           .map { case _ :: premise :: hypotheses => (premise, hypotheses.grouped(2).toList) }

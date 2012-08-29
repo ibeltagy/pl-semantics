@@ -3,9 +3,11 @@ import Keys._
 
 object MlnSemanticsBuild extends Build {
 
-  lazy val main = Project(id = "mln-semantics", base = file(".")) dependsOn(dependent)
+  lazy val main = Project("mln-semantics", file(".")) aggregate(scalaLogic) dependsOn(scalaLogic)
 
-  lazy val dependent = Project(id = "scala-logic", base = file("scala-logic"))
+  lazy val scalaLogic = Project("scala-logic", file("scala-logic")) aggregate(scalabha) dependsOn(scalabha)
+
+  lazy val scalabha = Project("Scalabha", file("scala-logic/scalabha"))
 
 }
 

@@ -4,8 +4,9 @@ import utcompling.scalalogic.inference.impl.Prover9TheoremProver
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.Boxer2DrtExpressionInterpreter
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
 import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
-import utcompling.scalalogic.util.FileUtils
-import utcompling.scalalogic.util.CollectionUtils._
+import opennlp.scalabha.util.FileUtils
+import opennlp.scalabha.util.FileUtils._
+import opennlp.scalabha.util.CollectionUtils._
 import utcompling.scalalogic.fol.expression.FolExpression
 import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
 import utcompling.mlnsemantics.wordnet.WordnetImpl
@@ -28,6 +29,7 @@ import scala.io.Source
  *
  * sbt "run-main utcompling.mlnsemantics.run.Sts lem resources/semantic-textual-similarity/STS.input.MSRvid.txt resources/semantic-textual-similarity/STS.input.MSRvid.lem""
  * sbt "run-main utcompling.mlnsemantics.run.Sts vs resources/full.vs resources/semantic-textual-similarity/STS.input.MSRvid.lem resources/semantic-textual-similarity/STS.input.MSRvid.vs"
+ * sbt "run-main utcompling.mlnsemantics.run.Sts box resources/semantic-textual-similarity/STS.input.MSRvid.txt resources/semantic-textual-similarity/STS.input.MSRvid.box"
  * sbt "run-main utcompling.mlnsemantics.run.Sts fromStsVs resources/semantic-textual-similarity/STS.input.MSRvid.txt resources/semantic-textual-similarity/STS.input.MSRvid.vs"
  */
 object Sts {
@@ -37,31 +39,41 @@ object Sts {
 
     args.toSeq match {
       case Seq("lem", stsFile, lemFile) =>
-        val sentences = Source.fromFile(stsFile).getLines.flatMap(_.split("\t")).toVector
+        val sentences = readLines(stsFile).flatMap(_.split("\t")).toVector
         val lemmatized = new CncLemmatizeCorpusMapper().parseToLemmas(sentences)
         FileUtils.writeUsing(lemFile) { f =>
           lemmatized
-            .map(_.map(_.map(_._2).mkString(" ")).getOrElse("______________"))
+            .map(_.map(_.map(_._2).mkString(" ")).getOrElse("______parse_failed______"))
             .grouped(2).foreach { case Seq(a, b) => f.write("%s\t%s\n".format(a, b)) }
         }
 
       case Seq("vs", fullVsFile, lemFile, stsVsFile) =>
-        val allLemmas = Source.fromFile(lemFile).getLines.flatMap(_.split("\\s+")).toSet
+        val allLemmas = readLines(lemFile).flatMap(_.split("\\s+")).toSet
         FileUtils.writeUsing(stsVsFile) { f =>
-          for (line <- Source.fromFile(fullVsFile).getLines)
+          for (line <- readLines(fullVsFile))
             if (allLemmas(line.split("\\s+")(0)))
               f.write(line + "\n")
         }
 
-      case Seq("full", stsFile, fullVsFile) =>
-        val sentences = Source.fromFile(stsFile).getLines.flatMap(_.split("\t")).toVector
-        val lemmatized = new CncLemmatizeCorpusMapper().parseToLemmas(sentences)
-        val allLemmas = lemmatized.flatten.flatMap(_.map(_._2)).toSet
-        run(stsFile, fullVsFile, _ => true)
+      case Seq("box", stsFile, boxFile) =>
+        val di = new ModalDiscourseInterpreter()
+        val sentences = readLines(stsFile).flatMap(_.split("\t")).map(sepTokens).toList.take(4)
+        writeUsing(boxFile) { f =>
+          for (x <- di.batchInterpret(sentences))
+            f.write(x + "\n")
+        }
 
-      case Seq("fromStsVs", stsFile, stsVsFile) =>
+      case Seq("run", stsFile, stsVsFile, boxFile) =>
         run(stsFile, stsVsFile, UniversalSet())
+
+      //      case Seq("full", stsFile, fullVsFile) =>
+      //        val sentences = readLines(stsFile).flatMap(_.split("\t")).toVector
+      //        val lemmatized = new CncLemmatizeCorpusMapper().parseToLemmas(sentences)
+      //        val allLemmas = lemmatized.flatten.flatMap(_.map(_._2)).toSet
+      //        run(stsFile, fullVsFile, _ => true)
     }
+
+    def sepTokens(a: String) = Tokenize(a).mkString(" ")
 
     def run(stsFile: String, vsFile: String, allLemmas: String => Boolean) {
       val ttp =
@@ -69,11 +81,8 @@ object Sts {
           new ModalDiscourseInterpreter(),
           new InferenceRuleInjectingProbabilisticTheoremProver(
             new WordnetImpl(),
-            BowVectorSpace(vsFile, allLemmas).filterKeys,
-            new TopRuleWeighter(
-              new RankingRuleWeighter(
-                new VecspaceRuleWeighter(
-                  new SimpleCompositeVectorMaker()))),
+            words => BowVectorSpace(vsFile, x => words(x) && allLemmas(x)),
+            new VecspaceRuleWeighter(new SimpleCompositeVectorMaker()),
             new TypeConvertingPTP(
               new BoxerExpressionInterpreter[FolExpression] {
                 def interpret(x: BoxerExpression): FolExpression =
@@ -85,12 +94,12 @@ object Sts {
               },
               new AlchemyTheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/alchemy/bin/infer")))))
 
-      val pairs = Source.fromFile(stsFile).getLines.map(_.split("\t")).map { case Array(a, b) => (a, b) }.toVector
+      val pairs = readLines(stsFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
 
       for ((txt, hyp) <- pairs) {
-        println(txt.mkString(" "))
-        println(hyp.mkString(" "))
-        println(ttp.prove(txt, hyp))
+        println(txt)
+        println(hyp)
+        println(ttp.prove(sepTokens(txt), sepTokens(hyp)))
       }
     }
   }

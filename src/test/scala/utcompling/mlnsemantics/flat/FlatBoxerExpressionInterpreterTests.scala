@@ -10,7 +10,7 @@ import utcompling.scalalogic.inference.impl.Prover9TheoremProver
 import utcompling.scalalogic.fol.expression._
 import utcompling.scalalogic.top.expression.Variable
 import utcompling.scalalogic.util.StringUtils._
-import utcompling.scalalogic.util.FileUtils
+import opennlp.scalabha.util.FileUtils
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.BoxerExpressionInterpreter
 import org.junit.Test
 

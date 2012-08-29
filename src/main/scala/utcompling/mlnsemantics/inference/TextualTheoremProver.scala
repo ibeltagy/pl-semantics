@@ -6,9 +6,9 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.parse.BoxerExpress
 import utcompling.scalalogic.discourse.candc.boxer.expression._
 import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.OccurrenceMarkingBoxerExpressionInterpreterDecorator
-import utcompling.scalalogic.util.FileUtils.pathjoin
-import utcompling.scalalogic.util.FileUtils
-import utcompling.scalalogic.util.CollectionUtils._
+import opennlp.scalabha.util.FileUtils.pathjoin
+import opennlp.scalabha.util.FileUtils
+import opennlp.scalabha.util.CollectionUtils._
 import utcompling.scalalogic.inference.TheoremProver
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.MergingBoxerExpressionInterpreterDecorator
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.UnnecessarySubboxRemovingBoxerExpressionInterpreter

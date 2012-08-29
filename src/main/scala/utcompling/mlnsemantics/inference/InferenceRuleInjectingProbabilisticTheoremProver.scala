@@ -14,7 +14,7 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerImp
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerPred
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerVariable
 import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
-import utcompling.scalalogic.util.CollectionUtils._
+import opennlp.scalabha.util.CollectionUtils._
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.OccurrenceMarkingBoxerExpressionInterpreterDecorator
 
 class InferenceRuleInjectingProbabilisticTheoremProver(

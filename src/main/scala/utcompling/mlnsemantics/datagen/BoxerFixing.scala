@@ -5,7 +5,7 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.B
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.OccurrenceMarkingBoxerExpressionInterpreterDecorator
 import utcompling.scalalogic.discourse.impl.BoxerDiscourseInterpreter
 import utcompling.scalalogic.discourse.candc.call.impl._
-import utcompling.scalalogic.util.FileUtils
+import opennlp.scalabha.util.FileUtils
 
 object BoxerFixing {
 

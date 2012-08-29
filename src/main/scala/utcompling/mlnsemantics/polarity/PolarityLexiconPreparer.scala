@@ -9,7 +9,7 @@ import utcompling.scalalogic.discourse.impl.BoxerDiscourseInterpreter
 import utcompling.scalalogic.discourse.impl.CandcDiscourseParser
 import utcompling.scalalogic.discourse.DiscourseInterpreter
 import utcompling.scalalogic.discourse.DiscourseParser
-import utcompling.scalalogic.util.FileUtils
+import opennlp.scalabha.util.FileUtils
 import utcompling.scalalogic.discourse._
 import utcompling.scalalogic.discourse.impl._
 import utcompling.scalalogic.discourse.candc.boxer._
@@ -24,7 +24,7 @@ import utcompling.scalalogic.discourse.candc.parse.output.impl._
 import scala.collection.mutable.ListBuffer
 import utcompling.mlnsemantics.datagen._
 import utcompling.scalalogic.util.SeqUtils
-import utcompling.scalalogic.util.FileUtils
+import opennlp.scalabha.util.FileUtils
 import utcompling.mlnsemantics.datagen.Tokenize
 
 object PolarityLexiconPreparer {
@@ -35,8 +35,8 @@ object PolarityLexiconPreparer {
 
     val pdi = new PrintingDiscourseInterpreter()
 
-    FileUtils.using(FileUtils.openForWrite("resources/polarity-lexicon/polarity_lexicon_expanded.txt")) { f =>
-      for (line <- Source.fromFile("resources/polarity-lexicon/polarity_lexicon.txt").getLines) {
+    FileUtils.writeUsing("resources/polarity-lexicon/polarity_lexicon_expanded.txt") { f =>
+      for (line <- FileUtils.readLines("resources/polarity-lexicon/polarity_lexicon.txt")) {
         val (text, comment) =
           line.split("#", 2) match {
             case Array(text, comment) => (text, comment)

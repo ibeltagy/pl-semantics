@@ -4,7 +4,7 @@ import utcompling.scalalogic.inference.impl.Prover9TheoremProver
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.Boxer2DrtExpressionInterpreter
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
 import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
-import utcompling.scalalogic.util.FileUtils
+import opennlp.scalabha.util.FileUtils
 import utcompling.scalalogic.fol.expression.FolExpression
 import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
 import utcompling.mlnsemantics.wordnet.WordnetImpl

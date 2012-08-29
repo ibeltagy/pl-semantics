@@ -1,6 +1,6 @@
 package utcompling.mlnsemantics.polarity
 
-import utcompling.scalalogic.util.FileUtils
+import opennlp.scalabha.util.FileUtils
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
@@ -23,8 +23,8 @@ object PolarityLexicon {
 
   def fromFile(filepath: String): PolarityLexicon = {
     val polarityEntries = new HashMap[String, ListBuffer[PolarityLexiconEntry]]
-    Source.fromFile(filepath).getLines.map(println)
-    for (line <- Source.fromFile(filepath).getLines.map(_.split("#", 2)(0).trim).filter(_.nonEmpty)) {
+    FileUtils.readLines(filepath).map(println)
+    for (line <- FileUtils.readLines(filepath).map(_.split("#", 2)(0).trim).filter(_.nonEmpty)) {
       val List(lemma, parcSubcat, pos, requiredRelationsString, relation, signature, example) = line.split("\t").toList
 
       val (posEnv, negEnv) =

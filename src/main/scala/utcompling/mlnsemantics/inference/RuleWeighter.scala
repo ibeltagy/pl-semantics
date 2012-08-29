@@ -2,7 +2,7 @@ package utcompling.mlnsemantics.inference
 
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerPred
 import utcompling.mlnsemantics.vecspace.BowVector
-import utcompling.scalalogic.util.CollectionUtils._
+import opennlp.scalabha.util.CollectionUtils._
 
 trait RuleWeighter {
   def weightForRules(antecedentContext: Iterable[String], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]): Iterable[(BoxerPred, Option[Double])]

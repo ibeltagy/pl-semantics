@@ -1,6 +1,7 @@
 package utcompling.mlnsemantics.vecspace
 
-import utcompling.scalalogic.util.CollectionUtils._
+import opennlp.scalabha.util.CollectionUtils._
+import opennlp.scalabha.util.FileUtils._
 import scala.collection.mutable.Buffer
 import scala.annotation.tailrec
 
@@ -10,7 +11,7 @@ object BowVectorSpace {
   }
 
   def apply(filename: String, filter: String => Boolean): Map[String, BowVector] = {
-    io.Source.fromFile(filename).getLines.map(_.split("\t")).flatMap {
+    readLines(filename).map(_.split("\t")).flatMap {
       case Array(word, vector @ _*) =>
         if (filter(word)) {
           val pairs =

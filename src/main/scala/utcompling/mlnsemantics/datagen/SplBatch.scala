@@ -1,8 +1,8 @@
 package utcompling.mlnsemantics.datagen
 
 import scala.collection.JavaConversions._
-import utcompling.scalalogic.util.FileUtils._
-import utcompling.scalalogic.util.CollectionUtils._
+import opennlp.scalabha.util.FileUtils._
+import opennlp.scalabha.util.CollectionUtils._
 
 /**
  * Convert a sentence-per-line file into a file that has 'batchSize'

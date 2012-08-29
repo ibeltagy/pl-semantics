@@ -12,7 +12,7 @@ import utcompling.scalalogic.discourse.DiscourseInterpreter
 import utcompling.scalalogic.discourse.candc.boxer.expression.parse.BoxerExpressionParser
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.MergingBoxerExpressionInterpreterDecorator
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.Boxer2DrtExpressionInterpreter
-import utcompling.scalalogic.util.FileUtils
+import opennlp.scalabha.util.FileUtils
 import org.junit.Test
 import utcompling.mlnsemantics.modal.ModalTestsData._
 
