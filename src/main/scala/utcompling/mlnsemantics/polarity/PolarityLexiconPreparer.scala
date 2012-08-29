@@ -26,6 +26,7 @@ import utcompling.mlnsemantics.datagen._
 import utcompling.scalalogic.util.SeqUtils
 import opennlp.scalabha.util.FileUtils
 import utcompling.mlnsemantics.datagen.Tokenize
+import opennlp.scalabha.util.CollectionUtils._
 
 object PolarityLexiconPreparer {
   def main(args: Array[String]): Unit = {
@@ -91,7 +92,7 @@ object PolarityLexiconPreparer {
       require(boxerResults.length == parseResults.length)
       require(boxerResults.length == 1)
 
-      for ((Some(boxerResult), Some(parseResult)) <- boxerResults zip parseResults) {
+      for ((Some(boxerResult), Some(parseResult)) <- boxerResults zipSafe parseResults) {
         val List(sentence) = parseResult.sentences
         sentence.words.foreach { w => println("%s %s".format(w, if (w.dependencies.nonEmpty) w.dependencies.mapValues(_.toList.sortBy(_.index).map(_.word)).mkString(", ") else "")) }
         boxerResult.pprint

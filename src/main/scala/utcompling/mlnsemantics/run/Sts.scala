@@ -23,6 +23,9 @@ import utcompling.mlnsemantics.inference._
 import utcompling.mlnsemantics.datagen.Tokenize
 import utcompling.mlnsemantics.datagen.CncLemmatizeCorpusMapper
 import scala.io.Source
+import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.PassthroughBoxerExpressionInterpreter
+import utcompling.scalalogic.discourse.impl.FakeDiscourseInterpreter
+import utcompling.scalalogic.discourse.impl.PreparsedBoxerDiscourseInterpreter
 
 /**
  *
@@ -30,9 +33,11 @@ import scala.io.Source
  * sbt "run-main utcompling.mlnsemantics.run.Sts lem resources/semantic-textual-similarity/STS.input.MSRvid.txt resources/semantic-textual-similarity/STS.input.MSRvid.lem""
  * sbt "run-main utcompling.mlnsemantics.run.Sts vs resources/full.vs resources/semantic-textual-similarity/STS.input.MSRvid.lem resources/semantic-textual-similarity/STS.input.MSRvid.vs"
  * sbt "run-main utcompling.mlnsemantics.run.Sts box resources/semantic-textual-similarity/STS.input.MSRvid.txt resources/semantic-textual-similarity/STS.input.MSRvid.box"
- * sbt "run-main utcompling.mlnsemantics.run.Sts fromStsVs resources/semantic-textual-similarity/STS.input.MSRvid.txt resources/semantic-textual-similarity/STS.input.MSRvid.vs"
+ * sbt "run-main utcompling.mlnsemantics.run.Sts run resources/semantic-textual-similarity/STS.input.MSRvid.txt resources/semantic-textual-similarity/STS.input.MSRvid.box resources/semantic-textual-similarity/STS.input.MSRvid.vs"
  */
 object Sts {
+
+  val SomeRe = """Some\((.*)\)""".r
 
   def main(args: Array[String]) {
     Logger.getRootLogger.setLevel(Level.INFO)
@@ -57,14 +62,14 @@ object Sts {
 
       case Seq("box", stsFile, boxFile) =>
         val di = new ModalDiscourseInterpreter()
-        val sentences = readLines(stsFile).flatMap(_.split("\t")).map(sepTokens).toList.take(4)
+        val sentences = readLines(stsFile).flatMap(_.split("\t")).map(sepTokens).toList
         writeUsing(boxFile) { f =>
           for (x <- di.batchInterpret(sentences))
             f.write(x + "\n")
         }
 
-      case Seq("run", stsFile, stsVsFile, boxFile) =>
-        run(stsFile, stsVsFile, UniversalSet())
+      case Seq("run", stsFile, boxFile, stsVsFile) =>
+        run(stsFile, boxFile, stsVsFile, UniversalSet())
 
       //      case Seq("full", stsFile, fullVsFile) =>
       //        val sentences = readLines(stsFile).flatMap(_.split("\t")).toVector
@@ -75,30 +80,37 @@ object Sts {
 
     def sepTokens(a: String) = Tokenize(a).mkString(" ")
 
-    def run(stsFile: String, vsFile: String, allLemmas: String => Boolean) {
-      val ttp =
-        new TextualTheoremProver(
-          new ModalDiscourseInterpreter(),
-          new InferenceRuleInjectingProbabilisticTheoremProver(
-            new WordnetImpl(),
-            words => BowVectorSpace(vsFile, x => words(x) && allLemmas(x)),
-            new VecspaceRuleWeighter(new SimpleCompositeVectorMaker()),
-            new TypeConvertingPTP(
-              new BoxerExpressionInterpreter[FolExpression] {
-                def interpret(x: BoxerExpression): FolExpression =
-                  new Boxer2DrtExpressionInterpreter().interpret(
-                    new OccurrenceMarkingBoxerExpressionInterpreterDecorator().interpret(
-                      new MergingBoxerExpressionInterpreterDecorator().interpret(
-                        new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(
-                          new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))))).fol
-              },
-              new AlchemyTheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/alchemy/bin/infer")))))
-
+    def run(stsFile: String, boxFile: String, vsFile: String, allLemmas: String => Boolean) {
       val pairs = readLines(stsFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
 
-      for ((txt, hyp) <- pairs) {
+      val boxPairs =
+        FileUtils.readLines(boxFile)
+          .map { case SomeRe(drsString) => Some(drsString); case "None" => None }
+          .toList
+          .grouped(2)
+
+      for (((txt, hyp), boxPair) <- pairs zipSafe boxPairs) {
         println(txt)
         println(hyp)
+
+        val ttp =
+          new TextualTheoremProver(
+            new PreparsedBoxerDiscourseInterpreter(boxPair, new PassthroughBoxerExpressionInterpreter()),
+            new InferenceRuleInjectingProbabilisticTheoremProver(
+              new WordnetImpl(),
+              words => BowVectorSpace(vsFile, x => words(x) && allLemmas(x)),
+              new VecspaceRuleWeighter(new SimpleCompositeVectorMaker()),
+              new TypeConvertingPTP(
+                new BoxerExpressionInterpreter[FolExpression] {
+                  def interpret(x: BoxerExpression): FolExpression =
+                    new Boxer2DrtExpressionInterpreter().interpret(
+                      new OccurrenceMarkingBoxerExpressionInterpreterDecorator().interpret(
+                        new MergingBoxerExpressionInterpreterDecorator().interpret(
+                          new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(
+                            new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))))).fol
+                },
+                new AlchemyTheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/alchemy/bin/infer")))))
+
         println(ttp.prove(sepTokens(txt), sepTokens(hyp)))
       }
     }

@@ -14,6 +14,7 @@ import utcompling.scalalogic.discourse.candc.parse.output.impl._
 import scala.collection.mutable.ListBuffer
 import utcompling.mlnsemantics.polarity._
 import utcompling.scalalogic.util.SeqUtils
+import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.FileUtils
 import org.apache.commons.logging.LogFactory
 
@@ -75,17 +76,17 @@ class ModalDiscourseInterpreter(
     val parseResults = candcDiscourseParser.batchParseMultisentence(inputs, Map(), Some(newDiscourseIds), if (question) Some("question") else Some("boxer"), verbose)
     require(boxerResults.length == parseResults.length)
 
-    for (
-      (boxerResultOpt, parseResultOpt) <- (boxerResults zip parseResults);
-      boxerResult <- boxerResultOpt;
-      parseResult <- parseResultOpt
-    ) yield {
-      val modalDrs = modalify(boxerResult)
-      val newRules = this.generateNatlogRules(boxerResult, parseResult)
-      val resultDrs = if (newRules.nonEmpty) BoxerMerge("merge", modalDrs, BoxerDrs(List(), newRules)) else modalDrs
-      Some(resultDrs, newRules)
+    (boxerResults zipSafe parseResults).mapt { (boxerResultOpt, parseResultOpt) =>
+      for (
+        boxerResult <- boxerResultOpt;
+        parseResult <- parseResultOpt
+      ) yield {
+        val modalDrs = modalify(boxerResult)
+        val newRules = this.generateNatlogRules(boxerResult, parseResult)
+        val resultDrs = if (newRules.nonEmpty) BoxerMerge("merge", modalDrs, BoxerDrs(List(), newRules)) else modalDrs
+        (resultDrs, newRules)
+      }
     }
-
   }
 
   /**
