@@ -34,6 +34,30 @@ import utcompling.scalalogic.discourse.impl.PreparsedBoxerDiscourseInterpreter
  * sbt "run-main utcompling.mlnsemantics.run.Sts vs resources/full.vs resources/semantic-textual-similarity/STS.input.MSRvid.lem resources/semantic-textual-similarity/STS.input.MSRvid.vs"
  * sbt "run-main utcompling.mlnsemantics.run.Sts box resources/semantic-textual-similarity/STS.input.MSRvid.txt resources/semantic-textual-similarity/STS.input.MSRvid.box"
  * sbt "run-main utcompling.mlnsemantics.run.Sts run resources/semantic-textual-similarity/STS.input.MSRvid.txt resources/semantic-textual-similarity/STS.input.MSRvid.box resources/semantic-textual-similarity/STS.input.MSRvid.vs"
+ * 
+ * 
+ * 86 hangs
+ * 128: -(x3 = x2)
+ * 191: whq
+ * 217: "Unrecoverable Error" in Alchemy; has factive "try"
+ * 277: "Unrecoverable Error" in Alchemy; has factive "try"
+ * 318: -(x3 = x0)
+ * 336: -(x1 = x0)
+ * 361: contains implication
+ * 417: "Unrecoverable Error" in Alchemy; has factive "try"
+ * 459 won't box
+ * 532: -(x1 = x0)
+ * 608: -(x1 = x0)
+ * 664: hangs
+ * 692: "Unrecoverable Error" in Alchemy; contains implication
+ * 706: "Unrecoverable Error" in Alchemy; nested implicatives
+ * 715: "Unrecoverable Error" in Alchemy; has factive "try"
+ * 720: "Unrecoverable Error" in Alchemy; has factive "try"
+ * 737: -(x1 = x0)
+ * 738: -(x1 = x0)
+ * 750: soft rule weight of NaN
+ * 
+ * 1-85,87-127,129-190,192-216,218-276,278-317,319-335,337-360,362-416,418-458,460-531,533-607,609-663,665-691,693-705,707-714,716-719,721-736,739-749
  */
 object Sts {
 
