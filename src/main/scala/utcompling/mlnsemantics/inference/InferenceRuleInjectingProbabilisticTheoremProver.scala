@@ -135,7 +135,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     (for (
       p <- getPos(pos);
       s <- wordnet.synsets(name, p);
-      h <- wordnet.allHypernyms(s);
+      h <- wordnet.allHypernyms(s, 20);
       w <- h.getWords
     ) yield w.getLemma).toSet
 
@@ -143,7 +143,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     (for (
       p <- getPos(pos);
       s <- wordnet.synsets(name, p);
-      h <- wordnet.allHyponyms(s);
+      h <- wordnet.allHyponyms(s, 20);
       w <- h.getWords
     ) yield w.getLemma).toSet
 
