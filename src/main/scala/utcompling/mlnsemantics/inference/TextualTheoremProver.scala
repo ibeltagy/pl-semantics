@@ -31,7 +31,7 @@ class TextualTheoremProver(
   discourseIterpreter: DiscourseInterpreter[BoxerExpression],
   probabilisticTheoremProver: ProbabilisticTheoremProver[BoxerExpression]) {
 
-  def prove(text: String, hyp: String): Option[Double] = 
+  def prove(text: String, hyp: String): Option[Double] =
     prove(List(text), List(hyp))
 
   def prove(text: List[String], hyp: List[String]): Option[Double] = {
@@ -60,7 +60,7 @@ class TextualTheoremProver(
         case BoxerNamed(discId, indices, variable, name, typ, sense) =>
           _getPredAndArgTypesTypes(e, List(variable))
         case BoxerRel(discId, indices, event, variable, name, sense) =>
-          if(name == "theme") println(e)
+          if (name == "theme") println(e)
           _getPredAndArgTypesTypes(e, List(event, variable))
         case BoxerCard(discId, indices, variable, num) =>
           _getPredAndArgTypesTypes(e, List(variable))

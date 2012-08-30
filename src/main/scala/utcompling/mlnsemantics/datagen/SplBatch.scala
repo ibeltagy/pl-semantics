@@ -3,6 +3,7 @@ package utcompling.mlnsemantics.datagen
 import scala.collection.JavaConversions._
 import opennlp.scalabha.util.FileUtils._
 import opennlp.scalabha.util.CollectionUtils._
+import opennlp.scalabha.util.FileUtils
 
 /**
  * Convert a sentence-per-line file into a file that has 'batchSize'
@@ -15,14 +16,14 @@ object SplBatch {
   def main(args: Array[String]) {
     val List(inputFile, outputFile, sentencesPerFile, batchSize) = args.toList
 
-//    for((fileSents, fileNum) <- io.Source.fromFile(inputFile).getLines.grouped(sentencesPerFile.toInt).zipWithIndex)
+//    for((fileSents, fileNum) <- readLines(inputFile).grouped(sentencesPerFile.toInt).zipWithIndex)
 //      writeUsing(outputFile+"-%d".format(fileNum)) { f =>
 //        for ((batch, batchNum) <- fileSents.grouped(batchSize.toInt).zipWithIndex)
 //          f.write("%d\t%s\n".format(fileNum * sentencesPerFile.toInt + batchNum * batchSize.toInt + 1, batch.mkString("\t")))
 //      }
 
       writeUsing(outputFile) { f =>
-        for ((batch, batchNum) <- io.Source.fromFile(inputFile).getLines.grouped(batchSize.toInt).zipWithIndex)
+        for ((batch, batchNum) <- FileUtils.readLines(inputFile).grouped(batchSize.toInt).zipWithIndex)
           f.write("%d\t%s\n".format(batchNum * batchSize.toInt + 1, batch.mkString("\t")))
       }
 
