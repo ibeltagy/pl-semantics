@@ -128,7 +128,7 @@ class AlchemyTheoremProver(
       e match {
         case FolExistsExpression(v, term) => FolAllExpression(v, universalify(term))
         case _ if isConjoinedAtoms(e) => e -> consequent
-        case _ => sys.error(e.toString)
+        case _ => e -> consequent // sys.error(e.toString)
       }
     }
 

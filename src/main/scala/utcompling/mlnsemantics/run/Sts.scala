@@ -88,7 +88,8 @@ object Sts {
           .toList
           .grouped(2)
 
-      for (((txt, hyp), boxPair) <- (pairs zipSafe boxPairs).take(1)) {
+      for ((((txt, hyp), boxPair), i) <- (pairs zipSafe boxPairs).zipWithIndex) {
+        println("\n\n========================\n  Pair %s\n========================".format(i))
         println(txt)
         println(hyp)
 

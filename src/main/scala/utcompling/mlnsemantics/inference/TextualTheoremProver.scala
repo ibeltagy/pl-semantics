@@ -59,10 +59,11 @@ class TextualTheoremProver(
           _getPredAndArgTypesTypes(e, List(variable))
         case BoxerNamed(discId, indices, variable, name, typ, sense) =>
           _getPredAndArgTypesTypes(e, List(variable))
-        case BoxerRel(discId, indices, event, variable, name, sense) =>{
+        case BoxerRel(discId, indices, event, variable, name, sense) =>
           if(name == "theme") println(e)
           _getPredAndArgTypesTypes(e, List(event, variable))
-        }
+        case BoxerCard(discId, indices, variable, num) =>
+          _getPredAndArgTypesTypes(e, List(variable))
         case _ => {
           e.visit(getPredicatesAndArgTypes, combinePredicatesAndArgTypes, (Map[BoxerExpression, List[String]](), Map[String, Set[String]]()))
         }
