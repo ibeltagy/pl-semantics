@@ -7,6 +7,7 @@ import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
 import opennlp.scalabha.util.FileUtils
 import opennlp.scalabha.util.FileUtils._
 import opennlp.scalabha.util.CollectionUtils._
+import opennlp.scalabha.util.Pattern.Range
 import utcompling.scalalogic.fol.expression.FolExpression
 import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
 import utcompling.mlnsemantics.wordnet.WordnetImpl
@@ -38,6 +39,8 @@ object Sts {
 
   val SomeRe = """Some\((.*)\)""".r
 
+  val wordnet = new WordnetImpl()
+
   def main(args: Array[String]) {
     Logger.getRootLogger.setLevel(Level.DEBUG)
 
@@ -68,7 +71,10 @@ object Sts {
         }
 
       case Seq("run", stsFile, boxFile, stsVsFile) =>
-        run(stsFile, boxFile, stsVsFile, UniversalSet())
+        run(stsFile, boxFile, stsVsFile, _ => true, _ => true)
+
+      case Seq("run", stsFile, boxFile, stsVsFile, Range(range)) =>
+        run(stsFile, boxFile, stsVsFile, UniversalSet(), range.toSet)
 
       //      case Seq("full", stsFile, fullVsFile) =>
       //        val sentences = readLines(stsFile).flatMap(_.split("\t")).toVector
@@ -79,7 +85,7 @@ object Sts {
 
     def sepTokens(a: String) = Tokenize(a).mkString(" ")
 
-    def run(stsFile: String, boxFile: String, vsFile: String, allLemmas: String => Boolean) {
+    def run(stsFile: String, boxFile: String, vsFile: String, allLemmas: String => Boolean, includedPairs: Int => Boolean) {
       val pairs = readLines(stsFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
 
       val boxPairs =
@@ -88,8 +94,8 @@ object Sts {
           .toList
           .grouped(2)
 
-      for ((((txt, hyp), boxPair), i) <- (pairs zipSafe boxPairs).zipWithIndex) {
-        println("\n\n========================\n  Pair %s\n========================".format(i))
+      for ((((txt, hyp), boxPair), i) <- (pairs zipSafe boxPairs).zipWithIndex if includedPairs(i + 1)) {
+        println("\n\n========================\n  Pair %s\n========================".format(i + 1))
         println(txt)
         println(hyp)
 
@@ -97,7 +103,7 @@ object Sts {
           new TextualTheoremProver(
             new PreparsedBoxerDiscourseInterpreter(boxPair, new PassthroughBoxerExpressionInterpreter()),
             new InferenceRuleInjectingProbabilisticTheoremProver(
-              new WordnetImpl(),
+              wordnet,
               words => BowVectorSpace(vsFile, x => words(x) && allLemmas(x)),
               new SameLemmaHardClauseRuleWeighter(
                 new VecspaceRuleWeighter(new SimpleCompositeVectorMaker())),
