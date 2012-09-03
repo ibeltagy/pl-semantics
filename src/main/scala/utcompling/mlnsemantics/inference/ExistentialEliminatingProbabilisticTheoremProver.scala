@@ -5,6 +5,7 @@ import utcompling.scalalogic.fol.expression._
 import utcompling.scalalogic.top.expression.Variable
 import scala.collection.mutable.Buffer
 import opennlp.scalabha.util.CollectionUtils._
+import opennlp.scalabha.util.CollectionUtil._
 import support.HardWeightedExpression
 import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 

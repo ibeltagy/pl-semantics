@@ -13,6 +13,7 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
 import utcompling.scalalogic.fol.expression.FolExpression
 import utcompling.scalalogic.inference.impl.Prover9TheoremProver
 import opennlp.scalabha.util.CollectionUtils._
+import opennlp.scalabha.util.CollectionUtil._
 import opennlp.scalabha.util.Pattern.{ :+, +: }
 import opennlp.scalabha.util.FileUtils
 import opennlp.scalabha.util.FileUtils._

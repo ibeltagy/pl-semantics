@@ -1,6 +1,7 @@
 package utcompling.mlnsemantics.vecspace
 
 import opennlp.scalabha.util.CollectionUtils._
+import opennlp.scalabha.util.CollectionUtil._
 import opennlp.scalabha.util.FileUtils._
 import scala.collection.mutable.Buffer
 import scala.annotation.tailrec

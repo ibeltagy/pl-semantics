@@ -7,6 +7,7 @@ import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
 import opennlp.scalabha.util.FileUtils
 import opennlp.scalabha.util.FileUtils._
 import opennlp.scalabha.util.CollectionUtils._
+import opennlp.scalabha.util.CollectionUtil._
 import opennlp.scalabha.util.Pattern.Range
 import utcompling.scalalogic.fol.expression.FolExpression
 import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter

@@ -10,6 +10,7 @@ import utcompling.scalalogic.fol.expression.parse.FolLogicParser
 import opennlp.scalabha.util.FileUtils._
 import opennlp.scalabha.util.FileUtils
 import opennlp.scalabha.util.CollectionUtils._
+import opennlp.scalabha.util.CollectionUtil._
 import utcompling.scalalogic.util.SubprocessCallable
 import utcompling.mlnsemantics.inference.support._
 

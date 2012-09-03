@@ -27,6 +27,7 @@ import utcompling.scalalogic.util.SeqUtils
 import opennlp.scalabha.util.FileUtils
 import utcompling.mlnsemantics.datagen.Tokenize
 import opennlp.scalabha.util.CollectionUtils._
+import opennlp.scalabha.util.CollectionUtil._
 
 object PolarityLexiconPreparer {
   def main(args: Array[String]): Unit = {

@@ -10,6 +10,7 @@ import org.apache.hadoop.util.GenericOptionsParser
 import scala.collection.JavaConversions._
 import opennlp.scalabha.util.FileUtils._
 import opennlp.scalabha.util.CollectionUtils._
+import opennlp.scalabha.util.CollectionUtil._
 import utcompling.scalalogic.discourse.candc.call.impl.CandcImpl
 import utcompling.scalalogic.discourse.DiscourseInterpreter
 import scala.collection.mutable.ListBuffer

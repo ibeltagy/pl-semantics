@@ -14,6 +14,7 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.B
 import utcompling.mlnsemantics.inference.support._
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.BoxerExpressionInterpreter
 import opennlp.scalabha.util.CollectionUtils._
+import opennlp.scalabha.util.CollectionUtil._
 
 class TypeConvertingPTP(
   converter: BoxerExpressionInterpreter[FolExpression],
