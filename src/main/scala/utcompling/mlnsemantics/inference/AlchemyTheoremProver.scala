@@ -108,6 +108,9 @@ class AlchemyTheoremProver(
             //            val usedWeight = log(weight / (1 - weight)) / log(logBase) // treat 'weight' as a prob and find the log-odds
             //            f.write(usedWeight + " " + convert(folEx) + "\n")
             val usedWeight = weight // 5 * (pow(weight, 10)) //TODO: Set these parameters!!
+            // TODO: we want to design a function `f` such that, for the simplest examples (only one weighted clause), mln(f(s)) == s
+            //   meaning that the probability of entailment (`mln`) using a weight `f(s)` based on similarity score `s <- [0,1]` will be
+            //   roughly equal to the similarity score itself.
             f.write("%.15f %s\n".format(usedWeight, convert(folEx)))
           case HardWeightedExpression(folEx) => f.write(convert(folEx) + ".\n")
         }
