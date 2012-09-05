@@ -16,7 +16,7 @@ import utcompling.mlnsemantics.inference.support._
 
 class AlchemyTheoremProver(
   override val binary: String,
-  prior: Double = -1.0,
+  prior: Double = -0.01,
   logBase: Double = E)
   extends SubprocessCallable(binary)
   with ProbabilisticTheoremProver[FolExpression] {
@@ -107,8 +107,8 @@ class AlchemyTheoremProver(
             // TODO: Convert [0,1] weight into alchemy weight
             //            val usedWeight = log(weight / (1 - weight)) / log(logBase) // treat 'weight' as a prob and find the log-odds
             //            f.write(usedWeight + " " + convert(folEx) + "\n")
-            val usedWeight = 5 * (pow(weight, 10)) //TODO: Set these parameters!!
-            f.write(usedWeight + " " + convert(folEx) + "\n")
+            val usedWeight = weight // 5 * (pow(weight, 10)) //TODO: Set these parameters!!
+            f.write("%.15f %s\n".format(usedWeight, convert(folEx)))
           case HardWeightedExpression(folEx) => f.write(convert(folEx) + ".\n")
         }
 

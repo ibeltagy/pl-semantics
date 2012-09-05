@@ -17,14 +17,7 @@ import org.apache.log4j.Logger
 import org.apache.log4j.Level
 import utcompling.mlnsemantics.vecspace.BowVector
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.PredicateCleaningBoxerExpressionInterpreterDecorator
-import utcompling.mlnsemantics.inference.InferenceRuleInjectingProbabilisticTheoremProver
-import utcompling.mlnsemantics.inference.RankingRuleWeighter
-import utcompling.mlnsemantics.inference.SimpleCompositeVectorMaker
-import utcompling.mlnsemantics.inference.TextualTheoremProver
-import utcompling.mlnsemantics.inference.TopRuleWeighter
-import utcompling.mlnsemantics.inference.TypeConvertingPTP
-import utcompling.mlnsemantics.inference.VecspaceRuleWeighter
-import utcompling.mlnsemantics.inference.FakeProbabilisticTheoremProver
+import utcompling.mlnsemantics.inference._
 
 object Baseline {
 
@@ -83,7 +76,7 @@ object Baseline {
           vsf1,
           new TopRuleWeighter(
             new RankingRuleWeighter(
-              new VecspaceRuleWeighter(
+              new AwithCtxCwithCtxVecspaceRuleWeighter(
                 new SimpleCompositeVectorMaker()))),
           new TypeConvertingPTP(
             new BoxerExpressionInterpreter[FolExpression] {

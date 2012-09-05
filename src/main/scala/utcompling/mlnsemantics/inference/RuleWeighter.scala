@@ -6,34 +6,49 @@ import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.CollectionUtil._
 
 trait RuleWeighter {
-  def weightForRules(antecedent: BoxerPred, antecedentContext: Iterable[String], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]): Iterable[(BoxerPred, Option[Double])]
+  def weightForRules(antecedent: BoxerPred, antecedentContext: Iterable[String], consequentAndContexts: Map[BoxerPred, Iterable[String]], vectorspace: Map[String, BowVector]): Iterable[(BoxerPred, Option[Double])]
 }
 
 case class UniformHardRuleWeighter() extends RuleWeighter {
-  override def weightForRules(antecedent: BoxerPred, antecedentContext: Iterable[String], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]) = {
-    consequents.map(_ -> None)
+  override def weightForRules(antecedent: BoxerPred, antecedentContext: Iterable[String], consequentAndContexts: Map[BoxerPred, Iterable[String]], vectorspace: Map[String, BowVector]) = {
+    consequentAndContexts.map(_._1 -> None)
   }
 }
 
-case class VecspaceRuleWeighter(
+case class ACtxWithCVecspaceRuleWeighter(
   compositeVectorMaker: CompositeVectorMaker)
   extends RuleWeighter {
 
-  override def weightForRules(antecedent: BoxerPred, antecedentContext: Iterable[String], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]) = {
+  override def weightForRules(antecedent: BoxerPred, antecedentContext: Iterable[String], consequentAndContexts: Map[BoxerPred, Iterable[String]], vectorspace: Map[String, BowVector]) = {
     val pv = compositeVectorMaker.make(antecedentContext, vectorspace)
-    consequents.mapTo { consequent =>
-      Some(vectorspace.get(consequent.name) match {
-        case Some(cv) => pv cosine cv
-        case None => Double.NegativeInfinity
-      })
+    consequentAndContexts.map {
+      case (consequent, consequentContext) =>
+        consequent -> Some(vectorspace.get(consequent.name) match {
+          case Some(cv) => pv cosine cv
+          case None => Double.NegativeInfinity
+        })
+    }
+  }
+}
+
+case class AwithCtxCwithCtxVecspaceRuleWeighter(
+  compositeVectorMaker: CompositeVectorMaker)
+  extends RuleWeighter {
+
+  override def weightForRules(antecedent: BoxerPred, antecedentContext: Iterable[String], consequentAndContexts: Map[BoxerPred, Iterable[String]], vectorspace: Map[String, BowVector]) = {
+    val pv = compositeVectorMaker.make(antecedent.name +: antecedentContext.toSeq, vectorspace)
+    consequentAndContexts.map {
+      case (consequent, consequentContext) =>
+        val cv = compositeVectorMaker.make(consequent.name +: consequentContext.toSeq, vectorspace)
+        consequent -> Some(pv cosine cv)
     }
   }
 }
 
 class SameLemmaHardClauseRuleWeighter(delegate: RuleWeighter) extends RuleWeighter {
-  def weightForRules(antecedent: BoxerPred, antecedentContext: Iterable[String], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]): Iterable[(BoxerPred, Option[Double])] = {
-    val (same, diff) = consequents.partition(_.name == antecedent.name)
-    same.mapToVal(Some(Double.PositiveInfinity)) ++ delegate.weightForRules(antecedent, antecedentContext, diff, vectorspace)
+  def weightForRules(antecedent: BoxerPred, antecedentContext: Iterable[String], consequentAndContexts: Map[BoxerPred, Iterable[String]], vectorspace: Map[String, BowVector]): Iterable[(BoxerPred, Option[Double])] = {
+    val (same, diff) = consequentAndContexts.partition(_._1.name == antecedent.name)
+    same.map(_._1).mapToVal(Some(Double.PositiveInfinity)) ++ delegate.weightForRules(antecedent, antecedentContext, diff, vectorspace)
   }
 }
 
@@ -41,8 +56,8 @@ case class RankingRuleWeighter(
   delegate: RuleWeighter)
   extends RuleWeighter {
 
-  override def weightForRules(antecedent: BoxerPred, antecedentContext: Iterable[String], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]) = {
-    val weighted = delegate.weightForRules(antecedent, antecedentContext, consequents, vectorspace)
+  override def weightForRules(antecedent: BoxerPred, antecedentContext: Iterable[String], consequentAndContexts: Map[BoxerPred, Iterable[String]], vectorspace: Map[String, BowVector]) = {
+    val weighted = delegate.weightForRules(antecedent, antecedentContext, consequentAndContexts, vectorspace)
     val unoptionedWeighted = weighted.mapVals(_.getOrElse(Double.PositiveInfinity))
     val sortedGroupedWeighted = unoptionedWeighted.map(_.swap).groupByKey.toSeq.sortBy(-_._1).map(_._2)
     val ranked =
@@ -60,8 +75,8 @@ case class TopRuleWeighter(
   delegate: RuleWeighter)
   extends RuleWeighter {
 
-  override def weightForRules(antecedent: BoxerPred, antecedentContext: Iterable[String], consequents: Set[BoxerPred], vectorspace: Map[String, BowVector]) = {
-    val weighted = delegate.weightForRules(antecedent, antecedentContext, consequents, vectorspace)
+  override def weightForRules(antecedent: BoxerPred, antecedentContext: Iterable[String], consequentAndContexts: Map[BoxerPred, Iterable[String]], vectorspace: Map[String, BowVector]) = {
+    val weighted = delegate.weightForRules(antecedent, antecedentContext, consequentAndContexts, vectorspace)
     if (weighted.nonEmpty)
       Iterable(weighted.maxBy(_._2.getOrElse(Double.PositiveInfinity)))
     else

@@ -131,7 +131,7 @@ object Sts {
               wordnet,
               words => BowVectorSpace(vsFile, x => words(x) && allLemmas(x)),
               new SameLemmaHardClauseRuleWeighter(
-                new VecspaceRuleWeighter(new SimpleCompositeVectorMaker())),
+                new AwithCtxCwithCtxVecspaceRuleWeighter(new SimpleCompositeVectorMaker())),
               new TypeConvertingPTP(
                 new BoxerExpressionInterpreter[FolExpression] {
                   def interpret(x: BoxerExpression): FolExpression =

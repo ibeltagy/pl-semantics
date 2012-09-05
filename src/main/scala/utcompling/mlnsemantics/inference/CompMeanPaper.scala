@@ -99,7 +99,7 @@ object CompMeanPaper {
             (words: (String => Boolean)) => BowVectorSpace("resources/nytgiga.lem.1m.vc.f2000.m50.wInf", words),
             new TopRuleWeighter(
               new RankingRuleWeighter(
-                new VecspaceRuleWeighter(
+                new AwithCtxCwithCtxVecspaceRuleWeighter(
                   new SimpleCompositeVectorMaker()))),
             new TypeConvertingPTP(
               new BoxerExpressionInterpreter[FolExpression] {
