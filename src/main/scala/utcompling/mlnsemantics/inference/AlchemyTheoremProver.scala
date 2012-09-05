@@ -96,14 +96,18 @@ class AlchemyTheoremProver(
           case e @ SoftWeightedExpression(folEx, weight) =>
             weight match {
               case Double.PositiveInfinity => Some(HardWeightedExpression(folEx))
-              case Double.NegativeInfinity => None
+              case Double.NegativeInfinity => Some(HardWeightedExpression(-folEx))
+              case _ if weight < 0.00001 => None // TODO: Set this threshold
               case _ => Some(e)
             }
           case e @ HardWeightedExpression(folEx) => Some(e)
         }
         .foreach {
           case SoftWeightedExpression(folEx, weight) =>
-            val usedWeight = log(weight / (1 - weight)) / log(logBase) // treat 'weight' as a prob and find the log-odds
+            // TODO: Convert [0,1] weight into alchemy weight
+            //            val usedWeight = log(weight / (1 - weight)) / log(logBase) // treat 'weight' as a prob and find the log-odds
+            //            f.write(usedWeight + " " + convert(folEx) + "\n")
+            val usedWeight = 5 * (pow(weight, 10)) //TODO: Set these parameters!!
             f.write(usedWeight + " " + convert(folEx) + "\n")
           case HardWeightedExpression(folEx) => f.write(convert(folEx) + ".\n")
         }
