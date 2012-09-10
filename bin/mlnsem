@@ -1,0 +1,20 @@
+#/bin/bash
+
+SBT="java -Dfile.encoding=UTF8 -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=256m -jar bin/sbt-launch-*.jar"
+START="target/start"
+STS="resources/semantic-textual-similarity"
+
+CMD=$1
+shift
+
+case $CMD in
+  build)
+    $SBT add-start-script-tasks start-script;
+    ;
+  sts)
+    $START utcompling.mlnsemantics.run.Sts run $STS/STS.input.MSRvid.txt $STS/STS.input.MSRvid.box $STS/STS.input.MSRvid.vs $@;
+    ;
+  boxer)
+    $START utcompling.mlnsemantics.run.BoxerCli $@;
+    ;
+  
