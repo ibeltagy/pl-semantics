@@ -8,13 +8,11 @@ CMD=$1
 shift
 
 case $CMD in
-  build)
-    $SBT add-start-script-tasks start-script;
-    ;
+  compile)
+    $SBT add-start-script-tasks start-script;;
   sts)
-    $START utcompling.mlnsemantics.run.Sts run $STS/STS.input.MSRvid.txt $STS/STS.input.MSRvid.box $STS/STS.input.MSRvid.vs $@;
-    ;
+    $START utcompling.mlnsemantics.run.Sts run $STS/STS.input.MSRvid.txt $STS/STS.input.MSRvid.box $STS/STS.input.MSRvid.vs $@;;
   boxer)
-    $START utcompling.mlnsemantics.run.BoxerCli $@;
-    ;
+    $START utcompling.mlnsemantics.run.BoxerCli $@;;
+esac
   

@@ -1,3 +1,5 @@
+import com.typesafe.startscript.StartScriptPlugin
+
 name := "mln-semantics"
 
 version := "0.0.1"
@@ -58,5 +60,7 @@ libraryDependencies ++= Seq(
 ////////////////////////////////////////////////////////
 // END FOR SCRUNCH
 ////////////////////////////////////////////////////////
+
+seq(StartScriptPlugin.startScriptForClassesSettings: _*)
 
 mainClass in (Compile, run) := Some("utcompling.mlnsemantics.inference.Baseline")
