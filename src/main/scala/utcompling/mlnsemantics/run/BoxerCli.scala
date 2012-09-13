@@ -28,7 +28,6 @@ object BoxerCli {
   }
 
   def main(args: Array[String]) {
-
     val opts = args.toSeq.grouped(2).map { case Seq(o, v) => (o, v) }.toMap
 
     val draw = opts.getOrElse("-draw", "true").toBoolean
