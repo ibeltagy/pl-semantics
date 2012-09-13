@@ -1,7 +1,8 @@
 mln-semantics
 =============
 
-Set up workspace:
+Set up workspace
+----------------
 
     ~$ git clone git@github.com:USERNAME/mln-semantics.git
     ~/mln-semantics$ cd mln-semantics
@@ -20,18 +21,35 @@ Set up workspace:
 
     export CANDCHOME="/u/dhg/workspace/candc.bkp/bin"
     export ALCHEMYHOME="/v/filer4b/v16q001/users/dhg/bin/alchemy/bin"
-	export PROVER9HOME="/v/filer4b/v16q001/users/dhg/bin/LADR-2009-02A/bin"
+    export PROVER9HOME="/v/filer4b/v16q001/users/dhg/bin/LADR-2009-02A/bin"
 
 
-Using Boxer:
+Using Boxer
+-----------
+
+    ~/mln-semantics$ bin/mlnsem boxer OPTIONS
+
+You can parse a single sentence with the `-s` option:
+
+    ~/mln-semantics$ bin/mlnsem boxer -s "A dog walks." [OPTIONS]
+
+or an entire file of sentences (one sentence per line):
+
+    ~/mln-semantics$ bin/mlnsem boxer -f sentences.txt [OPTIONS]
+
+Output options:
+
+    -draw true/false (default: true)        Prints a graphical DRT representation
+    -boxer true/false (default: true)       Prints logical form in Boxer notation
+    -drt true/false (default: true)         Prints the logical form as a DRS
+    -fol true/false (default: true)         Prints the logical form in first-order logic
     
-    ~/mln-semantics$ bin/mlnsem boxer 
+Regarding tokenization: The code will automatically tokenize all input sentences, so it does not matter if
+the input is given tokenized or not.  It will not do sentence-splitting, however, but this can be included
+if it would be useful.
 
-    //val draw = opts.getOrElse("-draw", "true").toBoolean
-    //val boxer = opts.getOrElse("-boxer", "true").toBoolean
-    //val drt = opts.get("-drs").orElse(opts.get("-drt")).map(_.toBoolean).getOrElse(true)
-    //val fol = opts.getOrElse("-fol", "true").toBoolean
-
-    //assert(opts.contains("-f") || opts.contains("-s"), "specify '-f FILENAME' or '-s SENTENCE'")
         
+Running STS test suite
+----------------------
+
     ~/mln-semantics$ bin/mlnsem sts
