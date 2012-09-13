@@ -34,9 +34,9 @@ import utcompling.scalalogic.discourse.impl.PreparsedBoxerDiscourseInterpreter
  * sbt "run-main utcompling.mlnsemantics.run.Sts lem resources/semantic-textual-similarity/STS.input.MSRvid.txt resources/semantic-textual-similarity/STS.input.MSRvid.lem"
  * sbt "run-main utcompling.mlnsemantics.run.Sts vs resources/full.vs resources/semantic-textual-similarity/STS.input.MSRvid.lem resources/semantic-textual-similarity/STS.input.MSRvid.vs"
  * sbt "run-main utcompling.mlnsemantics.run.Sts box resources/semantic-textual-similarity/STS.input.MSRvid.txt resources/semantic-textual-similarity/STS.input.MSRvid.box"
- * sbt "run-main utcompling.mlnsemantics.run.Sts run resources/semantic-textual-similarity/STS.input.MSRvid.txt resources/semantic-textual-similarity/STS.input.MSRvid.box resources/semantic-textual-similarity/STS.input.MSRvid.vs"
- * 
- * 
+ * sbt "run-main utcompling.mlnsemantics.run.Sts run resources/semantic-textual-similarity/STS.input.MSRvid.txt resources/semantic-textual-similarity/STS.input.MSRvid.box resources/semantic-textual-similarity/STS.input.MSRvid.vs STS.gs.MSRvid.txt STS.out.MSRvid.txt"
+ *
+ *
  * 86 hangs
  * 128: -(x3 = x2)
  * 191: whq
@@ -57,16 +57,22 @@ import utcompling.scalalogic.discourse.impl.PreparsedBoxerDiscourseInterpreter
  * 737: -(x1 = x0)
  * 738: -(x1 = x0)
  * 750: soft rule weight of NaN
- * 
+ *
  * 1-85,87-127,129-190,192-216,218-276,278-317,319-335,337-360,362-416,418-458,460-531,533-607,609-663,665-691,693-705,707-714,716-719,721-736,739-749
  */
 object Sts {
+
+  val Range(defaultRange) = "1-85,87-127,129-190,192-216,218-276,278-317,319-335,337-360,362-416,418-458,460-531,533-607,609-663,665-691,693-705,707-714,716-719,721-736,739-749"
 
   val SomeRe = """Some\((.*)\)""".r
 
   val wordnet = new WordnetImpl()
 
   def main(args: Array[String]) {
+    val opts = args.toSeq.grouped(2).map { case Seq(o, v) => (o, v) }.toMap
+
+    val loglevel = opts.get("-log").map(Level.toLevel).getOrElse(Level.DEBUG)
+
     Logger.getRootLogger.setLevel(Level.DEBUG)
 
     args.toSeq match {
@@ -95,11 +101,11 @@ object Sts {
             f.write(x + "\n")
         }
 
-      case Seq("run", stsFile, boxFile, stsVsFile) =>
-        run(stsFile, boxFile, stsVsFile, _ => true, _ => true)
+      case Seq("run", stsFile, boxFile, stsVsFile, goldSimFile, outputSimFile) =>
+        run(stsFile, boxFile, stsVsFile, goldSimFile, outputSimFile, _ => true, defaultRange.toSet)
 
-      case Seq("run", stsFile, boxFile, stsVsFile, Range(range)) =>
-        run(stsFile, boxFile, stsVsFile, UniversalSet(), range.toSet)
+      case Seq("run", stsFile, boxFile, stsVsFile, goldSimFile, outputSimFile, Range(range)) =>
+        run(stsFile, boxFile, stsVsFile, goldSimFile, outputSimFile, UniversalSet(), range.toSet)
 
       //      case Seq("full", stsFile, fullVsFile) =>
       //        val sentences = readLines(stsFile).flatMap(_.split("\t")).toVector
@@ -110,7 +116,7 @@ object Sts {
 
     def sepTokens(a: String) = Tokenize(a).mkString(" ")
 
-    def run(stsFile: String, boxFile: String, vsFile: String, allLemmas: String => Boolean, includedPairs: Int => Boolean) {
+    def run(stsFile: String, boxFile: String, vsFile: String, goldSimFile: String, outputSimFile: String, allLemmas: String => Boolean, includedPairs: Int => Boolean) {
       val pairs = readLines(stsFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
 
       val boxPairs =
@@ -118,35 +124,41 @@ object Sts {
           .map { case SomeRe(drsString) => Some(drsString); case "None" => None }
           .toList
           .grouped(2)
+      val goldSims = FileUtils.readLines(goldSimFile).map(_.toDouble)
 
-      for ((((txt, hyp), boxPair), i) <- (pairs zipSafe boxPairs).zipWithIndex if includedPairs(i + 1)) {
-        println("\n\n========================\n  Pair %s\n========================".format(i + 1))
-        println(txt)
-        println(hyp)
+      val results =
+        for (((((txt, hyp), boxPair), goldSim), i) <- (pairs zipSafe boxPairs zipSafe goldSims).zipWithIndex if includedPairs(i + 1)) yield {
+          println("\n\n========================\n  Pair %s\n========================".format(i + 1))
+          println(txt)
+          println(hyp)
 
-        val ttp =
-          new TextualTheoremProver(
-            new PreparsedBoxerDiscourseInterpreter(boxPair, new PassthroughBoxerExpressionInterpreter()),
-            new InferenceRuleInjectingProbabilisticTheoremProver(
-              wordnet,
-              words => BowVectorSpace(vsFile, x => words(x) && allLemmas(x)),
-              new SameLemmaHardClauseRuleWeighter(
-                new AwithCtxCwithCtxVecspaceRuleWeighter(new SimpleCompositeVectorMaker())),
-              new TypeConvertingPTP(
-                new BoxerExpressionInterpreter[FolExpression] {
-                  def interpret(x: BoxerExpression): FolExpression =
-                    new Boxer2DrtExpressionInterpreter().interpret(
-                      new OccurrenceMarkingBoxerExpressionInterpreterDecorator().interpret(
-                        new MergingBoxerExpressionInterpreterDecorator().interpret(
-                          new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(
-                            new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))))).fol
-                },
-                new ExistentialEliminatingProbabilisticTheoremProver(
-                  new HardAssumptionAsEvidenceProbabilisticTheoremProver(
-                    new AlchemyTheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/alchemy/bin/infer")))))))
+          val ttp =
+            new TextualTheoremProver(
+              new PreparsedBoxerDiscourseInterpreter(boxPair, new PassthroughBoxerExpressionInterpreter()),
+              new InferenceRuleInjectingProbabilisticTheoremProver(
+                wordnet,
+                words => BowVectorSpace(vsFile, x => words(x) && allLemmas(x)),
+                new SameLemmaHardClauseRuleWeighter(
+                  new AwithCtxCwithCtxVecspaceRuleWeighter(new SimpleCompositeVectorMaker())),
+                new TypeConvertingPTP(
+                  new BoxerExpressionInterpreter[FolExpression] {
+                    def interpret(x: BoxerExpression): FolExpression =
+                      new Boxer2DrtExpressionInterpreter().interpret(
+                        new OccurrenceMarkingBoxerExpressionInterpreterDecorator().interpret(
+                          new MergingBoxerExpressionInterpreterDecorator().interpret(
+                            new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(
+                              new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))))).fol
+                  },
+                  new ExistentialEliminatingProbabilisticTheoremProver(
+                    new HardAssumptionAsEvidenceProbabilisticTheoremProver(
+                      new AlchemyTheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/alchemy/bin/infer")))))))
 
-        println(ttp.prove(sepTokens(txt), sepTokens(hyp)))
-      }
+          val p = ttp.prove(sepTokens(txt), sepTokens(hyp))
+          println("%s  [actual: %s, gold: %s]".format(p, p.get * 5, goldSim))
+          i -> p
+        }
+
+      results foreach { r => }
     }
   }
 
