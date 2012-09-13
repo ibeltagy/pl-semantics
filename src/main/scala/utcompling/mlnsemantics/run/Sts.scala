@@ -135,6 +135,8 @@ object Sts {
           .grouped(2)
       val goldSims = FileUtils.readLines(goldSimFile).map(_.toDouble)
 
+      def probOfEnt2simScore(p: Double) = p * 5
+
       val results =
         for (((((txt, hyp), boxPair), goldSim), i) <- (pairs zipSafe boxPairs zipSafe goldSims).zipWithIndex if includedPairs(i + 1)) yield {
           println("\n\n========================\n  Pair %s\n========================".format(i + 1))
@@ -163,11 +165,13 @@ object Sts {
                       new AlchemyTheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/alchemy/bin/infer")))))))
 
           val p = ttp.prove(sepTokens(txt), sepTokens(hyp))
-          println("%s  [actual: %s, gold: %s]".format(p, p.get * 5, goldSim))
-          i -> p
+          println("%s  [actual: %s, gold: %s]".format(p, probOfEnt2simScore(p.get), goldSim))
+          i -> (probOfEnt2simScore(p.get), goldSim)
         }
 
-      results foreach { r => }
+      val (ps, golds) = results.map(_._2).unzip
+      println(ps.mkString("["," ","]"))
+      println(golds.mkString("["," ","]"))
     }
   }
 
