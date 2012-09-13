@@ -17,6 +17,7 @@ import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.CollectionUtil._
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.OccurrenceMarkingBoxerExpressionInterpreterDecorator
+import org.apache.commons.logging.LogFactory
 
 class InferenceRuleInjectingProbabilisticTheoremProver(
   wordnet: Wordnet,
@@ -24,6 +25,8 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
   ruleWeighter: RuleWeighter,
   delegate: ProbabilisticTheoremProver[BoxerExpression])
   extends ProbabilisticTheoremProver[BoxerExpression] {
+
+  private val LOG = LogFactory.getLog(classOf[InferenceRuleInjectingProbabilisticTheoremProver])
 
   private val NotPred = """^not_(.+)$""".r
 
@@ -38,9 +41,9 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     assumptions: List[WeightedExpression[BoxerExpression]],
     goal: BoxerExpression): Option[Double] = {
 
-    assumptions.foreach(x => println(d(x.expression).pretty))
+    assumptions.foreach(x => LOG.info("\n" + d(x.expression).pretty))
     val rules = makeNewRules(assumptions.map(_.expression), goal)
-    println(d(goal).pretty)
+    LOG.info("\n" + d(goal).pretty)
     delegate.prove(constants, declarations, evidence, assumptions ++ rules, goal)
   }
 
@@ -48,7 +51,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     val allPredsAndContexts = (assumptions :+ goal).flatMap(getAllPredsAndContexts)
     val vectorspace = vecspaceFactory(allPredsAndContexts.flatMap { case (pred, context) => (pred.name +: context).map(stripNot) }.toSet)
     val rules = makeRules(allPredsAndContexts, vectorspace)
-    rules.foreach(x => println(d(x.expression).pretty))
+    rules.foreach(x => LOG.info("\n" + d(x.expression).pretty))
     return rules
   }
 
@@ -68,7 +71,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     (for (
       (pos, preds1) <- allPredsAndContexts.groupBy(_._1.pos);
       (vartype, preds2) <- preds1.groupBy(p => variableType(p._1));
-      predsAndContextsByName = preds2.map { case (p, ctx) => (stripNot(p.name), (p-> ctx)) }.groupByKey.mapVals(_.groupByKey.mapVals(_.flatten)); //TODO: double check this.
+      predsAndContextsByName = preds2.map { case (p, ctx) => (stripNot(p.name), (p -> ctx)) }.groupByKey.mapVals(_.groupByKey.mapVals(_.flatten)); //TODO: double check this.
       (pred, antecedentContext) <- preds2;
       rule <- makeRulesForPred(pred, antecedentContext, predsAndContextsByName, vectorspace)
     ) yield rule).toSet

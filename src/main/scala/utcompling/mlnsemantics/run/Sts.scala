@@ -69,13 +69,22 @@ object Sts {
   val wordnet = new WordnetImpl()
 
   def main(args: Array[String]) {
-    val opts = args.toSeq.grouped(2).map { case Seq(o, v) => (o, v) }.toMap
+    val (newArgs, optPairs) =
+      ("" +: args.toSeq).sliding2.foldLeft((Vector[String](), Vector[(String, String)]())) {
+        case ((newArgs, opts), (a, b)) => a match {
+          case _ if a.startsWith("-") => (newArgs, opts :+ (a -> b))
+          case _ if b.startsWith("-") => (newArgs, opts)
+          case _ => (newArgs :+ b, opts)
+        }
+      }
+
+    val opts = optPairs.toMap
 
     val loglevel = opts.get("-log").map(Level.toLevel).getOrElse(Level.DEBUG)
 
     Logger.getRootLogger.setLevel(loglevel)
 
-    args.toSeq match {
+    newArgs.toSeq match {
       case Seq("lem", stsFile, lemFile) =>
         val sentences = readLines(stsFile).flatMap(_.split("\t")).toVector
         val lemmatized = new CncLemmatizeCorpusMapper().parseToLemmas(sentences)
