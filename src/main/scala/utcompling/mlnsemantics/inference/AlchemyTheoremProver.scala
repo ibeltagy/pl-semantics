@@ -23,7 +23,7 @@ class AlchemyTheoremProver(
 
   type WeightedFolEx = WeightedExpression[FolExpression]
 
-  private val LOG = LogFactory.getLog(AlchemyTheoremProver.getClass)
+  private val LOG = LogFactory.getLog(classOf[AlchemyTheoremProver])
 
   private val entailedConst = ("entail" -> Set("entailed"))
   private val entailedDec = FolVariableExpression(Variable("entailment")) -> Seq("entail")

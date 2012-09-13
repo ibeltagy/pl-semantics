@@ -73,7 +73,7 @@ object Sts {
 
     val loglevel = opts.get("-log").map(Level.toLevel).getOrElse(Level.DEBUG)
 
-    Logger.getRootLogger.setLevel(Level.DEBUG)
+    Logger.getRootLogger.setLevel(loglevel)
 
     args.toSeq match {
       case Seq("lem", stsFile, lemFile) =>
