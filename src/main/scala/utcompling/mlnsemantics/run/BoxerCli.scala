@@ -45,7 +45,7 @@ object BoxerCli {
           val cleaned = clean(boxerOutput)
           val drs = toDrs(cleaned)
 
-          if (draw) println(drs.pretty.split("\n").map("\\ " + _).mkString("\n"))
+          if (draw) println(drs.pretty.split("\n").map("""\\ """ + _).mkString("\n"))
           if (boxer) println(cleaned)
           if (drt) println(drs)
           if (fol) println(drs.fol)
