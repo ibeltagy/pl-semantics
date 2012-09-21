@@ -17,6 +17,7 @@ Set up workspace
     ~/mln-semantics/resources$ ln -s /v/filer4b/v16q001/users/dhg/Corpora/semantic-textual-similarity/ semantic-textual-similarity
     ~/mln-semantics/resources$ ln -s /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt full.vs
     ~/mln-semantics/resources$ ln -s /u/dhg/Corpora/polarity-lexicon polarity-lexicon
+    ~/mln-semantics/resources$ ln -s /u/dhg/Corpora/wordnet-3.0/ wordnet
     ~/mln-semantics/resources$ cd ..
 
     export CANDCHOME="/u/dhg/workspace/candc.bkp/bin"
