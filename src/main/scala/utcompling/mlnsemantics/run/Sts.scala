@@ -162,7 +162,7 @@ object Sts {
                   },
                   new ExistentialEliminatingProbabilisticTheoremProver(
                     new HardAssumptionAsEvidenceProbabilisticTheoremProver(
-                      new AlchemyTheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/alchemy/bin/infer")))))))
+                      AlchemyTheoremProver.findBinary())))))
 
           val p = ttp.prove(sepTokens(txt), sepTokens(hyp))
           println("%s  [actual: %s, gold: %s]".format(p, probOfEnt2simScore(p.get), goldSim))
