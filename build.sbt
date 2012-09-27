@@ -64,3 +64,6 @@ libraryDependencies ++= Seq(
 seq(StartScriptPlugin.startScriptForClassesSettings: _*)
 
 mainClass in (Compile, run) := Some("utcompling.mlnsemantics.inference.Baseline")
+
+scalacOptions ++= Seq("-optimize", "-deprecation")
+

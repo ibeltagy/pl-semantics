@@ -34,9 +34,9 @@ import org.apache.commons.logging.LogFactory
 class ModalDiscourseInterpreter(
   delegate: DiscourseInterpreter[BoxerExpression] = new BoxerDiscourseInterpreter[BoxerExpression](
     new PassthroughBoxerExpressionInterpreter(),
-    CandcImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin"))),
-    BoxerImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin")))),
-  candcDiscourseParser: DiscourseParser[Discourse] = new CandcDiscourseParser(CandcImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin")))),
+    CandcImpl.findBinary(),
+    BoxerImpl.findBinary()),
+  candcDiscourseParser: DiscourseParser[Discourse] = new CandcDiscourseParser(CandcImpl.findBinary()),
   polarityLexicon: PolarityLexicon = PolarityLexicon.fromFile("resources/polarity-lexicon/polarity_lexicon_expanded.txt"))
   extends DiscourseInterpreter[BoxerExpression] {
 
