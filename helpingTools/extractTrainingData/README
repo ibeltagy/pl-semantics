@@ -1,0 +1,2 @@
+javac -classpath src/ -d bin/ src/*    
+java -classpath bin Main 
