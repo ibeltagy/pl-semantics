@@ -23,6 +23,7 @@ Set up workspace
     export CANDCHOME="/u/dhg/workspace/candc.bkp/bin"
     export ALCHEMYHOME="/v/filer4b/v16q001/users/dhg/bin/alchemy/bin"
     export PROVER9HOME="/v/filer4b/v16q001/users/dhg/bin/LADR-2009-02A/bin"
+    export TUFFYHOME="/u/beltagy/workspace/deft/tuffy"
 
 
 Using Boxer

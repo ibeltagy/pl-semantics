@@ -25,7 +25,26 @@ case class ACtxWithCVecspaceRuleWeighter(
       case (consequent, consequentContext) =>
         consequent -> Some(vectorspace.get(consequent.name) match {
           case Some(cv) => pv cosine cv
-          case None => Double.NegativeInfinity
+          case None => 0
+        })
+    }
+  }
+}
+
+case class AwithCvecspaceRuleWeighter(
+  compositeVectorMaker: CompositeVectorMaker)
+  extends RuleWeighter {
+
+  override def weightForRules(antecedent: BoxerPred, antecedentContext: Iterable[String], consequentAndContexts: Map[BoxerPred, Iterable[String]], vectorspace: Map[String, BowVector]) = {
+    val pv = vectorspace.get(antecedent.name)
+    consequentAndContexts.map {
+      case (consequent, consequentContext) =>
+        consequent -> Some(vectorspace.get(consequent.name) match {
+          case Some(cv) => pv match {
+    		case Some(pv) => pv cosine cv
+    		case None => 0  //it is 0 not Double.NegativeInfinity
+          	}
+          case None => 0  //it is 0 not Double.NegativeInfinity
         })
     }
   }
