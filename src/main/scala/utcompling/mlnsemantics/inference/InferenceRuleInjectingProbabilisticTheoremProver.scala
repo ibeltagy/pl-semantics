@@ -13,11 +13,13 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerImp
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerPred
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerVariable
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerEqv
 import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.CollectionUtil._
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.OccurrenceMarkingBoxerExpressionInterpreterDecorator
 import org.apache.commons.logging.LogFactory
+import support.HardWeightedExpression
 
 class InferenceRuleInjectingProbabilisticTheoremProver(
   wordnet: Wordnet,
@@ -53,7 +55,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     val allPredsAndContexts =  List.concat(assumPredsAndContexts, goalPredsAndContexts);
     val vectorspace = vecspaceFactory(allPredsAndContexts.flatMap { case (pred, context) => (pred.name +: context).map(stripNot) }.toSet)
     val rules = makeRules(assumPredsAndContexts, goalPredsAndContexts, vectorspace)
-    rules.foreach(x => LOG.info("\n" + d(x.expression).pretty))
+    //rules.foreach(x => LOG.info("\n" + d(x.expression).pretty))
     return rules
   }
 
@@ -125,7 +127,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     val BoxerPred(cDiscId, cIndices, cVariable, cName, cPos, cSense) = consequent
     val v = BoxerVariable(variableType(antecedent))
     val unweightedRule =
-      BoxerImp(aDiscId, aIndices,
+      BoxerEqv(aDiscId, aIndices,
         BoxerDrs(List(Nil -> v), List(BoxerPred(aDiscId, aIndices, v, aName, aPos, aSense))),
         BoxerDrs(Nil, List(BoxerPred(cDiscId, cIndices, v, cName, cPos, cSense))))
     weight match {

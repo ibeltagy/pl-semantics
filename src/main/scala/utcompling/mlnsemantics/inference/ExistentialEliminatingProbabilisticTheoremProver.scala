@@ -29,7 +29,7 @@ class ExistentialEliminatingProbabilisticTheoremProver(
       e match {
         case FolExistsExpression(v, term) =>
           val newV = v.name.toUpperCase
-          val typ = v.name.head match {
+          val typ = v.name.charAt(1) match { //char at index 0 is either t or h
             case 'x' => "indv"
             case 'e' => "evnt"
             case 'p' => "prop"
@@ -51,12 +51,20 @@ class ExistentialEliminatingProbabilisticTheoremProver(
         case SoftWeightedExpression(e, w) => SoftWeightedExpression(go(e), w)
       }
 
+    def goKeepOuter(e: FolExpression): FolExpression = {
+	    e match {
+	        case FolExistsExpression(v, term) => FolExistsExpression(v, goKeepOuter(term)) 
+	        case _ => go (e) 
+	    }
+    }
+    val newGoal = goKeepOuter(goal) 
+    
     delegate.prove(
       constants +++ (b.toSet.groupByKey: Map[String, Set[String]]),
       declarations,
       evidence,
       newAssumptions,
-      goal)
+      newGoal)
 
   }
 

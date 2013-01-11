@@ -49,7 +49,7 @@ class AlchemyTheoremProver(
     }
     
     
-/*  // This block to add all variables to the entailment clause 
+/*  // This block to add all variables to the entailment clause. I may need it back one day
     val variables: Set[Variable] = findVars(goal);
     var queryParam : String = """entailment\("entailed",""";
     var typeParam : List[String]= List("entail");
@@ -58,11 +58,11 @@ class AlchemyTheoremProver(
     	  //println(v+"\n")
     	  queryParam += """""""+v.name.toUpperCase() + """",""";
      	  entailmentConsequent = FolApplicationExpression(entailmentConsequent, FolVariableExpression(Variable(v.name)));
-    	  if (v.name.charAt(0) == 'x')
+    	  if (v.name.charAt(1) == 'x')
     	    typeParam ::= "indv";
-    	  else if (v.name.charAt(0) == 'e')
+    	  else if (v.name.charAt(1) == 'e')
     	    typeParam ::= "evnt";
-    	  else if (v.name.charAt(0) == 'p')
+    	  else if (v.name.charAt(1) == 'p')
     	    typeParam ::= "prop";
     	  else throw new RuntimeException ("unsupported type");
     }
@@ -233,6 +233,7 @@ class AlchemyTheoremProver(
     0.0000,
     4.8500
     */
+    /*1.0000,
     1.0000,
     1.0000,
     1.0000,
@@ -263,11 +264,45 @@ class AlchemyTheoremProver(
     1.0000,
     1.0000,
     1.0000,
-    1.0000,
-    1.0000,
-    1.0000,
-    1.0000,
+    1.0000,*/
     1.0000
+    /*      
+    1.0000,
+    1.0000,
+    1.0000,
+    0.9930,
+    1.0000,
+    0.9454,
+    0.9834,
+    0.8455,
+    1.0000,
+    0.9225,
+    0.6601,
+    2.1020,
+    1.6146,
+    0.4903,
+    1.0000,
+    0.9183,
+    1.0000,
+    0.4377,
+    1.0000,
+    1.0000,
+    1.0000,
+    1.0000,
+    1.0000,
+    1.0000,
+    1.0000,
+    1.0000,
+    1.0000,
+    1.0000,
+    1.0000,
+    1.0000,
+    1.0000,
+    1.0000,
+    1.0000,
+    1.0000,
+    1.7986
+    */
     );
    
       f.write("//begin combination function\n");
@@ -321,7 +356,7 @@ class AlchemyTheoremProver(
       
       //if n is not in the list of weights, set it to 1
       if (n >= entWeights.size)
-    	  entWeight = 1;
+    	  entWeight = 0.4;
       else
     	  entWeight = entWeights(n);
       
@@ -377,7 +412,19 @@ class AlchemyTheoremProver(
     val tempFile = FileUtils.mktemp(suffix = ".db")
     FileUtils.writeUsing(tempFile) { f =>
       evidence.foreach {
-        case e @ FolAtom(pred, args @ _*) => f.write(convert(e) + "\n")
+        case e @ FolAtom(pred, args @ _*) => {
+        	var evdString = convert(e);
+       	
+        	if (evdString.startsWith("r_")) //TODO: This is a hack. IT should be moved from here to FromEntToEqv 
+        	{
+        	  evdString = evdString.replace("_dh", "_XXX");
+        	  evdString = evdString.replace("_dt", "_YYY");
+        	  evdString = evdString.replace("_XXX", "_dt");
+        	  evdString = evdString.replace("_YYY", "_dh");
+        	}
+        	
+            f.write(evdString + "\n")
+      	}        
         case e => throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
       }
     }
@@ -390,9 +437,10 @@ class AlchemyTheoremProver(
       LOG.debug("evidence file:\n" + readLines(evidence).mkString("\n").trim)
     }
 
-    //lifted belife propagation works better  
-    val allArgs = "-bp" :: "-lifted" :: "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
-    //val allArgs = "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
+    //lifted belife propagation works better
+    //val allArgs = "-bp" :: "-lifted" :: "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
+    //Dunno, but it seems that MC-SAT is better
+    val allArgs = "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
     println("Args: " + allArgs);
     //val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, LOG.isDebugEnabled, false);
     val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, false);
@@ -476,8 +524,10 @@ class AlchemyTheoremProver(
 
   private def _average(input: FolExpression, bound: Set[Variable]): String =
     input match {
-      case FolAndExpression(first, second) => _average(first, bound) +  _average(second, bound) 
-      case _ => entWeight + "  " + _convert(input -> entailmentConsequent, bound) + "\n"
+      case FolAndExpression(first, second) => _average(first, bound) +  _average(second, bound)
+      //case _ => entWeight + "  " + _convert(input -> entailmentConsequent, bound) + "\n"
+      case _ => entWeight + "  " + convert(universalifyGoalFormula(input -> entailmentConsequent), bound) + "\n"
+      
       /*case FolExistsExpression(variable, term) => "exist " + variable.name + " (" + _convert(term, bound + variable) + ")"
       case FolAllExpression(variable, term) => "forall " + variable.name + " (" + _convert(term, bound + variable) + ")"
       case FolNegatedExpression(term) => "!(" + _convert(term, bound) + ")"

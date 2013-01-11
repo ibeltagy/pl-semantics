@@ -33,25 +33,7 @@ class FromEntToEqvProbabilisticTheoremProver(
     val newAssumptions = assumptions.filterNot( _ == assumptions.head) ++ 
     					List (HardWeightedExpression (hyp)) ++ 
     					List (HardWeightedExpression (prem)) ; 
-    
-    /*def go(e: FolExpression): List[FolExpression] = {
-      e match {
-        case FolAndExpression(first, second) => go(first) ++ go(second)
-        case _ => List(e)
-      }
-    }
 
-    val (evidenceAssumptions: List[WeightedExpression[FolExpression]], newAssumptions: List[WeightedExpression[FolExpression]]) =
-      assumptions
-        .flatMap {
-          case HardWeightedExpression(e) => go(e).map(HardWeightedExpression(_))
-          case a @ SoftWeightedExpression(e, w) => List(a)
-        }
-        .partition {
-          case HardWeightedExpression(e @ FolAtom(_, _*)) => true
-          case _ => false
-        }
-*/
     delegate.prove(
       constants,
       declarations,

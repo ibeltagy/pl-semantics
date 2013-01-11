@@ -11,7 +11,9 @@ case $CMD in
   compile)
     $SBT add-start-script-tasks start-script;;
   sts)
-    $START utcompling.mlnsemantics.run.Sts run $STS/STS.input.MSRvid.txt $STS/STS.input.MSRvid.box $STS/STS.input.MSRvid.vs $STS/STS.gs.MSRvid.txt $STS/STS.out.MSRvid.txt "$@";;
+    $START utcompling.mlnsemantics.run.Sts run $STS/STS.input.MSRvid.txt data/STS.input.MSRvid.box $STS/STS.input.MSRvid.vs $STS/STS.gs.MSRvid.txt $STS/STS.out.MSRvid.txt "$@";;
+  sts-box)
+    $START utcompling.mlnsemantics.run.Sts box $STS/STS.input.MSRvid.txt /u/beltagy/workspace/deft/mln-semantics/data/STS.input.MSRvid.box "$@";;
   boxer)
     $START utcompling.mlnsemantics.run.BoxerCli "$@";;
 esac

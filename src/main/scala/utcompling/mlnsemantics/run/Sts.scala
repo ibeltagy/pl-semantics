@@ -36,10 +36,12 @@ import utcompling.scalalogic.discourse.impl.PreparsedBoxerDiscourseInterpreter
  * sbt "run-main utcompling.mlnsemantics.run.Sts box resources/semantic-textual-similarity/STS.input.MSRvid.txt resources/semantic-textual-similarity/STS.input.MSRvid.box"
  * sbt "run-main utcompling.mlnsemantics.run.Sts run resources/semantic-textual-similarity/STS.input.MSRvid.txt resources/semantic-textual-similarity/STS.input.MSRvid.box resources/semantic-textual-similarity/STS.input.MSRvid.vs STS.gs.MSRvid.txt STS.out.MSRvid.txt"
  *
+ * 
  * 86: hangs
  * 128: -(x3 = x2)
  * 191: whq
  * 217: "Unrecoverable Error" in Alchemy; has factive "try"
+ * 250: sentensec has complex forall and exist, generating evidences, additional assumption, entailment, all of them are wrong
  * 277: "Unrecoverable Error" in Alchemy; has factive "try"
  * 318: -(x3 = x0)
  * 336: -(x1 = x0)
@@ -69,7 +71,8 @@ import utcompling.scalalogic.discourse.impl.PreparsedBoxerDiscourseInterpreter
  */
 object Sts {
 
-  val Range(defaultRange) = "1-85,87-127,129-190,192-216,218-276,278-317,319-335,337-351,353-360,362-416,418-458,460-497,499-531,533-554,556-564,566-568,570-604,606-607,609-663,665-685,687-691,693-705,707-714,716-719,721-736,739-750"
+  val Range(defaultRange) = "1-85,87-127,129-190,192-216,218-249,251-276,278-317,319-335,337-351,353-360,362-416,418-458,460-497,499-531,533-554,556-564,566-568,570-604,606-607,609-663,665-685,687-691,693-705,707-714,716-719,721-736,739-750"
+  //val Range(defaultRange) = "482,495"
 
   val SomeRe = """Some\((.*)\)""".r
 
@@ -112,6 +115,7 @@ object Sts {
       case Seq("box", stsFile, boxFile) =>
         val di = new ModalDiscourseInterpreter()
         val sentences = readLines(stsFile).flatMap(_.split("\t")).map(sepTokens).toList
+        
         writeUsing(boxFile) { f =>
           for (x <- di.batchInterpret(sentences))
             f.write(x + "\n")
@@ -130,8 +134,8 @@ object Sts {
       //        run(stsFile, fullVsFile, _ => true)
     }
 
-    def sepTokens(a: String) = Tokenize(a).mkString(" ")
-
+    def sepTokens(a: String) = Tokenize(a.replace("-","" )).mkString(" ");
+    
     def run(stsFile: String, boxFile: String, vsFile: String, goldSimFile: String, outputSimFile: String, allLemmas: String => Boolean, includedPairs: Int => Boolean) {
       val pairs = readLines(stsFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
 
@@ -151,14 +155,14 @@ object Sts {
           println(hyp)
  
           val ttp =
-            new TextualTheoremProver(
+            new TextualTheoremProver( //1
               new PreparsedBoxerDiscourseInterpreter(boxPair, new PassthroughBoxerExpressionInterpreter()),
-              new InferenceRuleInjectingProbabilisticTheoremProver(
+              new InferenceRuleInjectingProbabilisticTheoremProver( //2
                 wordnet,
                 words => BowVectorSpace(vsFile, x => words(x) && allLemmas(x)),
                 new SameLemmaHardClauseRuleWeighter(
                   new AwithCvecspaceRuleWeighter(new SimpleCompositeVectorMaker())), 
-                new TypeConvertingPTP(
+                new TypeConvertingPTP( //3
                   new BoxerExpressionInterpreter[FolExpression] {
                     def interpret(x: BoxerExpression): FolExpression =
                       new Boxer2DrtExpressionInterpreter().interpret(
@@ -167,9 +171,10 @@ object Sts {
                             new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(
                               new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))))).fol
                   },
-                  new ExistentialEliminatingProbabilisticTheoremProver(
-                    new HardAssumptionAsEvidenceProbabilisticTheoremProver(
-                      AlchemyTheoremProver.findBinary())))))
+                  new FromEntToEqvProbabilisticTheoremProver( //4
+                      new ExistentialEliminatingProbabilisticTheoremProver( //5
+                    		  new HardAssumptionAsEvidenceProbabilisticTheoremProver( //6
+                    				  AlchemyTheoremProver.findBinary())))))) //7
 
           val p = ttp.prove(sepTokens(txt), sepTokens(hyp))
           println("%s  [actual: %s, gold: %s]".format(p, probOfEnt2simScore(p.get), goldSim))
