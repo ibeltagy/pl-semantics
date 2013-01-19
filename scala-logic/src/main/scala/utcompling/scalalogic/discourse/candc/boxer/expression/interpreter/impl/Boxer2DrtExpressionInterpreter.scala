@@ -18,6 +18,9 @@ class Boxer2DrtExpressionInterpreter extends BaseBoxerExpressionInterpreter[DrtE
 
     override protected def interpretBoxerImp(discId: String, indices: List[BoxerIndex], first: BoxerExpression, second: BoxerExpression): DrtExpression =
         this.interpret(first) -> this.interpret(second)
+    
+    override protected def interpretBoxerEqv(discId: String, indices: List[BoxerIndex], first: BoxerExpression, second: BoxerExpression): DrtExpression =
+        this.interpret(first) <-> this.interpret(second)
 
     override protected def interpretBoxerMerge(pred: String, first: BoxerExpression, second: BoxerExpression): DrtExpression =
         this.interpret(first) + this.interpret(second)
@@ -37,7 +40,7 @@ class Boxer2DrtExpressionInterpreter extends BaseBoxerExpressionInterpreter[DrtE
     override protected def interpretBoxerRel(discId: String, indices: List[BoxerIndex], event: BoxerVariable, variable: BoxerVariable, name: String, sense: Int): DrtExpression =
         DrtAtom(Variable("%s".format(name)), Variable(event.name), Variable(variable.name))
     
-    override protected def interpretBoxerCard(discId: String, index: List[BoxerIndex], variable: BoxerVariable, num: String): DrtExpression =
+    override protected def interpretBoxerCard(discId: String, index: List[BoxerIndex], variable: BoxerVariable, num: String, typ: String): DrtExpression =
         DrtAtom(Variable("card_%s".format(num)), Variable(variable.name))
         
     override protected def interpretBoxerOr(discId: String, indices: List[BoxerIndex], first: BoxerExpression, second: BoxerExpression): DrtExpression =

@@ -52,6 +52,11 @@ class CandcOutputInterpreterImpl extends CandcOutputInterpreter[Discourse] {
                     discourseDict += cleanDiscourseId -> Some(Discourse(cleanDiscourseId, sentences))
                     rawSentences.clear
                 }
+                case _ => None  //TODO: I am not sure if this is correct or not. I added it because for some input strings, 
+                				//the outoput parse does not match any of the formats above. This is the sentecen that raised the issue
+                //"On my own behalf and on behalf of my colleagues in the Committee on Fisheries, I would ask you, Madam President, 
+                //to send Parliament' s condolences to the families of the victims and to the local authorities in both Brittany and
+                //in Marín, Galicia, from where the majority of the victims came."
             }
         }
         return discourseDict.result

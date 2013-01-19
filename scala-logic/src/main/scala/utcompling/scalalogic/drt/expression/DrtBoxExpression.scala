@@ -6,7 +6,7 @@ import utcompling.scalalogic.fol.expression.FolExpression
 import scala.collection.mutable.ListBuffer
 import utcompling.scalalogic.util.StringUtils
 
-case class DrtBoxExpression(refs: List[Variable], conds: List[DrtExpression], consequent: Option[DrtExpression] = None)
+case class DrtBoxExpression(refs: List[Variable], conds: List[DrtExpression], consequent: Option[DrtExpression] = None, isEqv: Option[Boolean] = Some(false))
     extends DrtExpression {
 
     /**
@@ -125,7 +125,12 @@ case class DrtBoxExpression(refs: List[Variable], conds: List[DrtExpression], co
             case Some(consequent) => {
                 var accum = {
                     if (this.conds.nonEmpty)
+                    {
+                      if (!isEqv.isEmpty &  isEqv.get )
+                        this.conds.map(_.fol).reduceLeft(_ & _) <-> this.consequent.get.fol()
+                      else
                         this.conds.map(_.fol).reduceLeft(_ & _) -> this.consequent.get.fol()
+                    }
                     else
                         this.consequent.get.fol()
                 }

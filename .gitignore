@@ -1,4 +1,3 @@
-scala-logic
 target/
 project/project/
 /data/
@@ -6,4 +5,10 @@ project/project/
 .classpath
 .cache
 .settings
+lib_managed/
+scala-logic/scalabha/
+scala-logic/target/
+scala-logic/.classpath
+scala-logic/.project
+scala-logic/.cache
 

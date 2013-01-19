@@ -16,6 +16,9 @@ class PassthroughBoxerExpressionInterpreter extends BaseBoxerExpressionInterpret
 
     override protected def interpretBoxerImp(discId: String, indices: List[BoxerIndex], first: BoxerExpression, second: BoxerExpression) =
         BoxerImp(discId, indices, interpret(first), interpret(second))
+    
+    override protected def interpretBoxerEqv(discId: String, indices: List[BoxerIndex], first: BoxerExpression, second: BoxerExpression) =
+        BoxerEqv(discId, indices, interpret(first), interpret(second))
 
     override protected def interpretBoxerMerge(pred: String, first: BoxerExpression, second: BoxerExpression) =
         BoxerMerge(pred, interpret(first), interpret(second))
@@ -35,8 +38,8 @@ class PassthroughBoxerExpressionInterpreter extends BaseBoxerExpressionInterpret
     override protected def interpretBoxerRel(discId: String, indices: List[BoxerIndex], event: BoxerVariable, variable: BoxerVariable, name: String, sense: Int) =
         BoxerRel(discId, indices, event, variable, name, sense)
         
-    override protected def interpretBoxerCard(discId: String, indices: List[BoxerIndex], variable: BoxerVariable, num: String) =
-        BoxerCard(discId, indices, variable, num)
+    override protected def interpretBoxerCard(discId: String, indices: List[BoxerIndex], variable: BoxerVariable, num: String, typ: String) =
+        BoxerCard(discId, indices, variable, num, typ)
     
     override protected def interpretBoxerOr(discId: String, indices: List[BoxerIndex], first: BoxerExpression, second: BoxerExpression) =
         BoxerOr(discId, indices, interpret(first), interpret(second))

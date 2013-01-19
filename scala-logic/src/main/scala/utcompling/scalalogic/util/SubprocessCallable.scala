@@ -28,14 +28,15 @@ class SubprocessCallable(val binary: String) {
             println("Input: " + (inputStr match { case Some(v) => "\"" + v + "\""; case None => "None" }))
             println("Command: " + binary + " " + args.mkString(" "))
         }
-
+        val command =  binary + " " +  args.mkString(" ");
         // Call via a subprocess
         val (exitcode, stdout, stderr) =
             inputStr match {
                 case None => {
                     val out = new StringBuilder
                     val err = new StringBuilder
-                    val exitcode = Process(binary :: args) ! ProcessLogger(out.append(_).append("\n"), err.append(_).append("\n"))
+                    val exitcode = Process(command) ! ProcessLogger(out.append(_).append("\n"), err.append(_).append("\n"))
+                    //val exitcode = Process("/usr/bin/java -jar /u/beltagy/workspace/deft/tuffy/tuffy.jar -conf /u/beltagy/workspace/deft/tuffy/tuffy.conf -marginal -i /u/beltagy/workspace/deft/tuffy/samples/smoke/prog.mln -e /u/beltagy/workspace/deft/tuffy/samples/smoke/evidence.db -r /u/beltagy/workspace/deft/tuffy/samples/smoke/out.res -q Cancer") ! ProcessLogger(out.append(_).append("\n"), err.append(_).append("\n"))
                     (exitcode, out.result, err.result)
                 }
                 case Some(input) => {

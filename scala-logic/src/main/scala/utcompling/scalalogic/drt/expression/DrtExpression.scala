@@ -18,8 +18,13 @@ abstract case class DrtExpression
     def |(other: DrtExpression) = DrtOrExpression(this, other)
     def ->(other: DrtExpression) = this match {
         case DrtApplicationExpression(function, argument, _) => DrtApplicationExpression(function, argument, Some(other))
-        case DrtBoxExpression(refs, conds, _) => DrtBoxExpression(refs, conds, Some(other))
+        case DrtBoxExpression(refs, conds, _, _) => DrtBoxExpression(refs, conds, Some(other))
         case DrtConcatenationExpression(first, second, _) => DrtConcatenationExpression(first, second, Some(other))
+    }
+    def <->(other: DrtExpression) = this match {
+        //case DrtApplicationExpression(function, argument, _) => DrtApplicationExpression(function, argument, Some(other))
+        case DrtBoxExpression(refs, conds, _, _) => DrtBoxExpression(refs, conds, Some(other), Some(true))
+        //case DrtConcatenationExpression(first, second, _) => DrtConcatenationExpression(first, second, Some(other))
     }
 
     override def applyto(other: DrtExpression) =
