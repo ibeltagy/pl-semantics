@@ -83,7 +83,10 @@ class ModalDiscourseInterpreter(
         parseResult <- parseResultOpt
       ) yield {
         val modalDrs = modalify(boxerResult)
+        //TODO: This is very important for RTE but it is not relevent for similarity. I am deleting it now just to get 
+        //The similarity works, but I have to return it back for RTE when we start using RTE-7
         val newRules = this.generateNatlogRules(boxerResult, parseResult)
+        //val newRules : List[BoxerExpression] = List(); 
         val resultDrs = if (newRules.nonEmpty) BoxerMerge("merge", modalDrs, BoxerDrs(List(), newRules)) else modalDrs
         (resultDrs, newRules)
       }
