@@ -9,11 +9,39 @@ shift
 
 case $CMD in
   compile)
-    $SBT add-start-script-tasks start-script;;
-  sts)
-    $START utcompling.mlnsemantics.run.Sts run $STS/STS.input.MSRvid.txt data/STS.input.MSRvid.box $STS/STS.input.MSRvid.vs $STS/STS.gs.MSRvid.txt $STS/STS.out.MSRvid.txt "$@";;
-  sts-box)
-    $START utcompling.mlnsemantics.run.Sts box $STS/STS.input.MSRvid.txt /u/beltagy/workspace/deft/mln-semantics/data/STS.input.MSRvid.box "$@";;
+	$SBT add-start-script-tasks start-script;;
+  run)
+	$START utcompling.mlnsemantics.run.Sts run $STS/prob.in.txt $STS/prob.in.box $STS/prob.in.vs $STS/prob.gs.txt $STS/prob.out.txt "$@"
+#	$START utcompling.mlnsemantics.run.Sts run $STS/STS.MSRvid.in.txt $STS/STS.MSRvid.in.box $STS/STS.MSRvid.in.vs $STS/STS.MSRvid.gs.txt $STS/STS.MSRvid.out.txt "$@";;
+#	$START utcompling.mlnsemantics.run.Sts run $STS/STS.MSRpar.in.txt $STS/STS.MSRpar.in.box $STS/STS.MSRpar.in.vs $STS/STS.MSRpar.gs.txt $STS/STS.MSRpar.out.txt "$@";;
+#	$START utcompling.mlnsemantics.run.Sts run $STS/STS.OnWN.in.txt $STS/STS.OnWN.in.box $STS/STS.OnWN.in.vs $STS/STS.OnWN.gs.txt $STS/STS.OnWN.out.txt "$@";;
+#	$START utcompling.mlnsemantics.run.Sts run $STS/STS.SMTeuroparl.in.txt $STS/STS.SMTeuroparl.in.box $STS/STS.SMTeuroparl.in.vs $STS/STS.SMTeuroparl.gs.txt $STS/STS.SMTeuroparl.out.txt "$@";;
+#	$START utcompling.mlnsemantics.run.Sts run $STS/STS.SMTnews.in.txt $STS/STS.SMTnews.in.box $STS/STS.SMTnews.in.vs $STS/STS.SMTnews.gs.txt $STS/STS.SMTnews.out.txt "$@";;
+	;;
+  box)
+	$START utcompling.mlnsemantics.run.Sts box $STS/prob.in.txt $STS/prob.in.box "$@"
+#	$START utcompling.mlnsemantics.run.Sts box $STS/STS.MSRvid.in.txt $STS/STS.MSRvid.in.box "$@"
+#	$START utcompling.mlnsemantics.run.Sts box $STS/STS.MSRpar.in.txt $STS/STS.MSRpar.in.box "$@"
+#	$START utcompling.mlnsemantics.run.Sts box $STS/STS.OnWN.in.txt $STS/STS.OnWN.in.box "$@"
+#	$START utcompling.mlnsemantics.run.Sts box $STS/STS.SMTeuroparl.in.txt $STS/STS.SMTeuroparl.in.box "$@"
+#	$START utcompling.mlnsemantics.run.Sts box $STS/STS.SMTnews.in.txt $STS/STS.SMTnews.in.box "$@"
+	;;
+  vs)
+	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/prob.in.lem $STS/prob.in.vs "$@"
+#	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/STS.MSRvid.in.lem $STS/STS.MSRvid.in.vs "$@"
+#	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/STS.MSRpar.in.lem $STS/STS.MSRpar.in.vs "$@"
+#	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/STS.OnWN.in.lem $STS/STS.OnWN.in.vs "$@"
+#	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/STS.SMTeuroparl.in.lem $STS/STS.SMTeuroparl.in.vs "$@"
+#	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/STS.SMTnews.in.lem $STS/STS.SMTnews.in.vs "$@"
+	;;
+  lem)
+	$START utcompling.mlnsemantics.run.Sts lem $STS/prob.in.txt $STS/prob.in.lem "$@"
+#	$START utcompling.mlnsemantics.run.Sts lem $STS/STS.MSRvid.in.txt $STS/STS.MSRvid.in.lem "$@"
+#	$START utcompling.mlnsemantics.run.Sts lem $STS/STS.MSRpar.in.txt $STS/STS.MSRpar.in.lem "$@"
+#	$START utcompling.mlnsemantics.run.Sts lem $STS/STS.OnWN.in.txt $STS/STS.OnWN.in.lem "$@"
+#	$START utcompling.mlnsemantics.run.Sts lem $STS/STS.SMTeuroparl.in.txt $STS/STS.SMTeuroparl.in.lem "$@"
+#	$START utcompling.mlnsemantics.run.Sts lem $STS/STS.SMTnews.in.txt $STS/STS.SMTnews.in.lem "$@"
+	;;
   boxer)
     $START utcompling.mlnsemantics.run.BoxerCli "$@";;
 esac

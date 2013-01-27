@@ -97,12 +97,23 @@ object Sts {
     newArgs.toSeq match {
       case Seq("lem", stsFile, lemFile) =>
         val sentences = readLines(stsFile).flatMap(_.split("\t")).toVector
-        val lemmatized = new CncLemmatizeCorpusMapper().parseToLemmas(sentences)
-        FileUtils.writeUsing(lemFile) { f =>
-          lemmatized
-            .map(_.map(_.map(_._2).mkString(" ")).getOrElse("______parse_failed______"))
-            .grouped(2).foreach { case Seq(a, b) => f.write("%s\t%s\n".format(a, b)) }
-        }
+        val step = 500;  //file is large. It should be partitioned before passed to the parser
+        val totalSen = sentences.length;
+        val itrCount = (Math.ceil (totalSen*1.0 / step)).intValue();
+        
+	        FileUtils.writeUsing(lemFile) { f =>
+	          for (i <- 0 to itrCount-1 )
+	          {
+		          val from  = i * step;
+		          val to = Math.min((i+1)*step, totalSen);
+		          val lemmatized = new CncLemmatizeCorpusMapper().parseToLemmas(sentences.slice(from, to))
+		          
+		          lemmatized
+		            .map(_.map(_.map(_._2).mkString(" ")).getOrElse("______parse_failed______"))
+		            .grouped(2).foreach { case Seq(a, b) => f.write("%s\t%s\n".format(a, b)) }
+	          }
+	        }
+        
 
       case Seq("vs", fullVsFile, lemFile, stsVsFile) =>
         val allLemmas = readLines(lemFile).flatMap(_.split("\\s+")).toSet
@@ -115,10 +126,19 @@ object Sts {
       case Seq("box", stsFile, boxFile) =>
         val di = new ModalDiscourseInterpreter()
         val sentences = readLines(stsFile).flatMap(_.split("\t")).map(sepTokens).toList
-        
+        val step = 400; //file is large. It should be partitioned before passed to the parser
+        val totalSen = sentences.length;
+        val itrCount = (Math.ceil (totalSen*1.0 / step)).intValue();   
         writeUsing(boxFile) { f =>
-          for (x <- di.batchInterpret(sentences))
-            f.write(x + "\n")
+          for (i <- 0 to itrCount-1 )
+          {
+        	  val from  = i * step;
+        	  val to = Math.min((i+1)*step, totalSen);
+	          for (x <- di.batchInterpret(sentences.slice(from, to)))
+	          {
+	            f.write(x + "\n")
+	          }
+          }
         }
 
       case Seq("run", stsFile, boxFile, stsVsFile, goldSimFile, outputSimFile) =>
@@ -134,7 +154,9 @@ object Sts {
       //        run(stsFile, fullVsFile, _ => true)
     }
 
-    def sepTokens(a: String) = Tokenize(a.replace("-","" )).mkString(" ");
+    def sepTokens(a: String) = {
+      Tokenize(a.replace("-","" )).mkString(" ");
+    } 
     
     def run(stsFile: String, boxFile: String, vsFile: String, goldSimFile: String, outputSimFile: String, allLemmas: String => Boolean, includedPairs: Int => Boolean) {
       val pairs = readLines(stsFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
