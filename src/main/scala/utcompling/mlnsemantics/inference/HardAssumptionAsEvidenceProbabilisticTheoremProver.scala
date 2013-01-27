@@ -32,7 +32,10 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
     val (evidenceAssumptions: List[WeightedExpression[FolExpression]], newAssumptions: List[WeightedExpression[FolExpression]]) =
       assumptions
         .flatMap {
-          case HardWeightedExpression(e) => go(e).map(HardWeightedExpression(_))
+          case HardWeightedExpression(e) => {
+        	  println(e);
+        	  go(e).map(HardWeightedExpression(_))
+          }
           case a @ SoftWeightedExpression(e, w) => List(a)
         }
         .partition {

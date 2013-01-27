@@ -71,8 +71,9 @@ import utcompling.scalalogic.discourse.impl.PreparsedBoxerDiscourseInterpreter
  */
 object Sts {
 
-  val Range(defaultRange) = "1-85,87-127,129-190,192-216,218-249,251-276,278-317,319-335,337-351,353-360,362-416,418-458,460-497,499-531,533-554,556-564,566-568,570-604,606-607,609-663,665-685,687-691,693-705,707-714,716-719,721-736,739-750"
-  //val Range(defaultRange) = "482,495"
+  //val Range(defaultRange) = "1-85,87-127,129-190,192-216,218-249,251-276,278-317,319-335,337-351,353-360,362-416,418-458,460-497,499-531,533-554,556-564,566-568,570-604,606-607,609-663,665-685,687-691,693-705,707-714,716-719,721-736,739-750"
+  //val Range(defaultRange) = "28,128,532"
+  val Range(defaultRange) = "1-1500"
 
   val SomeRe = """Some\((.*)\)""".r
 
@@ -139,7 +140,7 @@ object Sts {
 	            f.write(x + "\n")
 	          }
           }
-        }
+        } 
 
       case Seq("run", stsFile, boxFile, stsVsFile, goldSimFile, outputSimFile) =>
         run(stsFile, boxFile, stsVsFile, goldSimFile, outputSimFile, _ => true, defaultRange.toSet)
@@ -155,6 +156,7 @@ object Sts {
     }
 
     def sepTokens(a: String) = {
+      //Tokenize(a.replace("-","" ).replace("on to", "onto")).mkString(" ");
       Tokenize(a.replace("-","" )).mkString(" ");
     } 
     
@@ -193,10 +195,11 @@ object Sts {
                             new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(
                               new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))))).fol
                   },
-                  new FromEntToEqvProbabilisticTheoremProver( //4
-                      new ExistentialEliminatingProbabilisticTheoremProver( //5
-                    		  new HardAssumptionAsEvidenceProbabilisticTheoremProver( //6
-                    				  AlchemyTheoremProver.findBinary())))))) //7
+                  new PositiveEqEliminatingProbabilisticTheoremProver( //4
+                      new FromEntToEqvProbabilisticTheoremProver( //5                      
+                    		  new ExistentialEliminatingProbabilisticTheoremProver( //6
+                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver( //7
+                    						  AlchemyTheoremProver.findBinary()))))))) //8
 
           val p = ttp.prove(sepTokens(txt), sepTokens(hyp))
           println("%s  [actual: %s, gold: %s]".format(p, probOfEnt2simScore(p.get), goldSim))

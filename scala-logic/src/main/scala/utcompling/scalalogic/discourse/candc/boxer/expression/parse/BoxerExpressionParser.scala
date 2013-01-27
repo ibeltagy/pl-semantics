@@ -30,8 +30,16 @@ class BoxerExpressionParser(discourseId: String = "0") extends LogicParser[Boxer
             this.parseApp()
         else if (tok0 == "date")
         	this.parseDate()
-        else if (tok0 == "[") {
-            val predIdx = this.findToken("]") + 2
+        else if (tok0 == "[" || tok0.startsWith("_"))  {
+        	var predIdx = 0;
+        	if (tok0 == "[" )
+        		predIdx = this.findToken("]") + 2;
+        	else 
+        		predIdx = this.findToken(":") + 1; // This is to handle a bug 
+        											//in the latest boxer with parameter
+        										//--instantiate true.
+        										//Sometimes, it outoputs "_G???" instead of 
+        										// "[idx]:"	
             val pred = this.getToken(predIdx)
             if (pred == "not")
                 this.parseNot()
@@ -228,11 +236,16 @@ class BoxerExpressionParser(discourseId: String = "0") extends LogicParser[Boxer
     }
 
     protected def parseVariable(): BoxerVariable = {
-        return BoxerVariable(this.nextToken())
+    	return BoxerVariable(this.nextToken());
     }
 
     protected def parseIndexList(): List[BoxerIndex] = {
-        this.assertNextToken("[")
+    	val nextTok =  this.nextToken();
+    	if (nextTok.startsWith("_") )  //this is to handle the --instantiate bug
+    	  return List ();
+    	else if (!nextTok.equals("["))
+    	  throw new UnexpectedTokenException (this.getCurrentIndex, Some(nextTok), List("["));
+    	//this.assertNextToken("[")
         val indices = new ListBuffer[BoxerIndex]
         while (this.getToken(0) != "]") {
             if (indices.nonEmpty)
@@ -289,7 +302,8 @@ class BoxerExpressionParser(discourseId: String = "0") extends LogicParser[Boxer
         this.assertNextToken(",")
         val second = this.doParseExpression()
         this.assertNextToken(")")
-        return BoxerMerge("whq", first, second)
+        return BoxerMerge("merge", first, second) //our system is not interested in questions now
+        					//so, replece all questions with a merge for the two parts of the question.  
     }
     
     protected def parseOr(): BoxerExpression = {
