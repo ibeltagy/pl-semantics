@@ -73,7 +73,22 @@ object Sts {
 
   //val Range(defaultRange) = "1-85,87-127,129-190,192-216,218-249,251-276,278-317,319-335,337-351,353-360,362-416,418-458,460-497,499-531,533-554,556-564,566-568,570-604,606-607,609-663,665-685,687-691,693-705,707-714,716-719,721-736,739-750"
   //val Range(defaultRange) = "28,128,532"
-  val Range(defaultRange) = "1-1500"
+  /*
+   * 86: many FORALLS. It takes forever
+   * 113: one long FORALLS. It takes forever
+   * 250: one long FORALLS. It takes forever
+   * 361: one long FORALLS. It takes forever
+   * [HANDELED:return 0.5] 459: Parsing failed
+   * 706: crazy. Many bugs
+   * [HANDELED:return 0.5] 941: Parsing failed
+   * 1041: crazy. Many bugs
+   * [HANDELED:replace ' ] 1046: Someone is slicing tortila's. Everything is wrong because of the " ' "
+   * 1216: crazy. Many bugs
+   * 1239: crazy. Many bugs
+   * 1367: one long FORALLS. It takes forever
+   */
+  //val Range(defaultRange) = "1-85,87-112,114-249,251-360,362-705,707-1040,1042-1215,1217-1238,1240-1366,1368-1500"
+  val Range(defaultRange) = "1216"
 
   val SomeRe = """Some\((.*)\)""".r
 

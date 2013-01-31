@@ -38,7 +38,9 @@ abstract class LogicParser[T] {
     final def parse(data: String): T = {
         this.beforeParse()
 
-        val trimmed = """\n[ \t]*""".r.replaceAllIn(data, " ").trim()
+        //I do not want the character " ' " in predicates names because it confuses 
+        //our parser
+        val trimmed = """\n[ \t]*""".r.replaceAllIn(data, " ").trim().replace("'", "");
 
         this.currentIndex = 0
 

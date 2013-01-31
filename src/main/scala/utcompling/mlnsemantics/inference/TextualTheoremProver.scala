@@ -36,8 +36,26 @@ class TextualTheoremProver(
     prove(List(text), List(hyp))
 
   def prove(text: List[String], hyp: List[String]): Option[Double] = {
-    val List(Some(txtEx), Some(hypEx)) = discourseIterpreter.batchInterpretMultisentence(List(text, hyp), Some(List("t", "h")), false, false)
+    val List(t, h) = discourseIterpreter.batchInterpretMultisentence(List(text, hyp), Some(List("t", "h")), false, false)
 
+    val txtEx  = (t match {
+      case Some(txt) => txt;
+      case _ => {
+        println ("Parsing failed. Return 0.5");
+        return Some (0.5);
+      }
+    })
+    
+    val hypEx  = (h match {
+      case Some(txt) => txt;
+      case _ => {
+        println ("Parsing failed. Return 0.5");
+        return Some (0.5);
+      }
+    })
+
+    //List(Some(txtEx), Some(hypEx))
+    
     val IndvVar = """^(x\d*)$""".r
     val EvntVar = """^(e\d*)$""".r
     val PropVar = """^(p\d*)$""".r

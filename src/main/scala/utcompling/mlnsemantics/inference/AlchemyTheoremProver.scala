@@ -311,13 +311,15 @@ class AlchemyTheoremProver(
       var nonRelationsMap : Map[FolExpression, Set[Variable]] = Map();
       var relationsMap : Map[FolExpression, Set[Variable]] = Map();//relation predicates are 2 valued and start with r_. 
       															//e.g: agent, patient, in, ...
+      var notEqMap : Map[FolExpression, Set[Variable]] = Map();//expressions of the form !(x1=x2)
+      var impMap : Map[FolExpression, Set[Variable]] = Map();//expressions of the form a->(b^c^...)
       
       for(expr <- ands )
       {
         val allVars = findAllVars(expr); 
         expr match
         {
-	        case FolApplicationExpression(fun, arg) =>{
+	      case FolApplicationExpression(fun, arg) =>{
 		        fun match {
 		          case FolApplicationExpression (fun2, arg2) =>
 		            fun2 match {
@@ -332,6 +334,14 @@ class AlchemyTheoremProver(
 		          case _=>  nonRelationsMap = nonRelationsMap + ( expr -> allVars); 
 		        }
 	        }
+	      case FolEqualityExpression(first, second)=>; //delete equality expressions because it is already handeled by renaming variables
+	      case FolAllExpression(first, second)=>  impMap  = impMap + ( expr -> allVars);
+	      case FolNegatedExpression(term)=> {
+	        term match {
+	          case FolEqualityExpression(first, second) => notEqMap  = notEqMap + ( expr -> allVars);
+	          case _ => nonRelationsMap = nonRelationsMap + ( expr -> allVars); //this case will be changed later
+	        }
+	      };
 	      case _ => nonRelationsMap = nonRelationsMap + ( expr -> allVars);
         }
       }
@@ -353,6 +363,9 @@ class AlchemyTheoremProver(
 	      if (!printedAtLeastOnce)
 	        n = n +1 ;
       }
+      n += notEqMap.size;   //Each notEqual expression corresponds to an extra line in the combination function
+      n += impMap.size;   //Each imp expression corresponds to an extra line in the combination function
+      						//THis may change 
       
       //if n is not in the list of weights, set it to 1
       if (n >= entWeights.size)
@@ -360,7 +373,9 @@ class AlchemyTheoremProver(
       else
     	  entWeight = entWeights(n);
       
-      val allGoalVariables: Set[Variable] = findVars(goal);      
+      val allGoalVariables: Set[Variable] = findAllVars(goal);      
+
+      //write relation predicates
       for(nonRelationExpr<- nonRelationsMap )
       {
     	  var printedAtLeastOnce = false;
@@ -374,6 +389,26 @@ class AlchemyTheoremProver(
 	      }
 	      if (!printedAtLeastOnce)
 	        f.write(entWeight + "  " + convert(nonRelationExpr._1 -> entailmentConsequent, allGoalVariables) + "\n");
+      }
+      
+      //write notEqual predicates
+      for(notEqExpr <- notEqMap )
+      {
+          var oneLine = notEqExpr._1;
+	      for(nonRelationExpr <- nonRelationsMap )
+	      {
+	    	  if ((notEqExpr._2 & nonRelationExpr._2).size != 0)
+	    	  {
+	    		  oneLine = oneLine & nonRelationExpr._1;
+	    	  }
+	      }
+	      f.write(entWeight + "  " + convert(oneLine -> entailmentConsequent, allGoalVariables) + "\n");
+      }
+      
+      //write imp expressions 
+      for(impExpr <- impMap )
+      {
+	      f.write(entWeight + "  " + convert(impExpr._1 -> entailmentConsequent, allGoalVariables) + "\n");
       }
       
       
@@ -414,15 +449,17 @@ class AlchemyTheoremProver(
       evidence.foreach {
         case e @ FolAtom(pred, args @ _*) => {
         	var evdString = convert(e);
-       	
-        	if (evdString.startsWith("r_")) //TODO: This is a hack. IT should be moved from here to FromEntToEqv 
+       	    
+        	
+        	/*MOVED to HardAssumptionsAsEvid
+        	if (evdString.startsWith("r_")) //This is a hack. IT should be moved from here to FromEntToEqv 
         	{
         	  evdString = evdString.replace("_dh", "_XXX");
         	  evdString = evdString.replace("_dt", "_YYY");
         	  evdString = evdString.replace("_XXX", "_dt");
         	  evdString = evdString.replace("_YYY", "_dh");
         	}
-        	
+        	*/
             f.write(evdString + "\n")
       	}        
         case e => throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
@@ -551,15 +588,15 @@ class AlchemyTheoremProver(
   private def _convert(input: FolExpression, bound: Set[Variable]): String =
     input match {
       case FolExistsExpression(variable, term) => "exist " + variable.name + " (" + _convert(term, bound + variable) + ")"
-      case FolAllExpression(variable, term) => "forall " + variable.name + " (" + _convert(term, bound + variable) + ")"
+      case FolAllExpression(variable, term) => "(forall " + variable.name + " (" + _convert(term, bound + variable) + "))"
       case FolNegatedExpression(term) => "!(" + _convert(term, bound) + ")"
       case FolAndExpression(first, second) => "(" + _convert(first, bound) + " ^ " + _convert(second, bound) + ")"
       case FolOrExpression(first, second) => "(" + _convert(first, bound) + " v " + _convert(second, bound) + ")"
       case FolIfExpression(first, second) => "(" + _convert(first, bound) + " => " + _convert(second, bound) + ")"
       case FolIffExpression(first, second) => "(" + _convert(first, bound) + " <=> " + _convert(second, bound) + ")"
       case FolEqualityExpression(first, second) => "(" + _convert(first, bound) + " = " + _convert(second, bound) + ")"
-      case FolAtom(pred, args @ _*) => pred.name.replace("'", "") + "(" + args.map(v => if (bound(v)) v.name else quote(v.name)).mkString(",") + ")"
-      case FolVariableExpression(v) => if (bound(v)) v.name else quote(v.name)
+      case FolAtom(pred, args @ _*) => pred.name.replace("'", "") + "(" + args.map(v => if (bound(v)) v.name.toLowerCase() else quote(v.name)).mkString(",") + ")"
+      case FolVariableExpression(v) => if (bound(v)) v.name.toLowerCase() else quote(v.name)
     }
 
   private def quote(s: String) = '"' + s + '"'

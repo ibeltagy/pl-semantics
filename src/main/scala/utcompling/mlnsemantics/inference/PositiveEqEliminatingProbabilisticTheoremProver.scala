@@ -14,7 +14,13 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
   extends ProbabilisticTheoremProver[FolExpression] {
 
   /**
-   * Return the proof, or None if the proof failed
+   * Assuming: 
+   * --negated equality expressions are like !eq(x1,x2) and it is never 
+   * !( eq(x1,x2) ^ ..... ^ ... )
+   * --equality expressions are between variables, not formulas
+   * --no duplicate equality expressions
+   * --equality expressions like x1 = x2 ^ x2 = x3 will cause a problem, but 
+   * we do not care. Let's hope this case does not happen
    */
   def prove(
     constants: Map[String, Set[String]], // type -> constant
@@ -23,49 +29,51 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
     assumptions: List[WeightedExpression[FolExpression]],
     goal: FolExpression): Option[Double] = {
 
-    val newAssumption = removeEq(assumptions.head.expression);
-    val newGoal = removeEq(goal);
+    val equalities = findEq(goal);
+    val newAssumption = removeEq(assumptions.head.expression, equalities);
+    
+    val newGoal = removeEq(goal, equalities);
    
-    val newAssumptions = assumptions.filterNot( _ == assumptions.head) ++ 
-    					List (HardWeightedExpression (newAssumption));    
-
+    val newAssumptions = List (HardWeightedExpression (newAssumption)) ++ 
+    					assumptions.filterNot( _ == assumptions.head);    
     delegate.prove(
       constants,
       declarations,
       evidence, 
       newAssumptions,
       newGoal)
-
   }
   
-  private def removeEq(input: FolExpression): FolExpression =
+  private def removeEq(input: FolExpression, eq: List[(String, String)]): FolExpression =
   {
-    val b = List[(Variable, Variable)]()
-    	return input;
-    /*input match {
-   	case FolExistsExpression(variable, term) => FolExistsExpression (Variable(namePrefix+variable.name), renameVars(term, namePrefix)) ;
-   	case FolAllExpression(variable, term) => FolAllExpression (Variable(namePrefix+variable.name), renameVars(term, namePrefix)) ;
-   	case FolNegatedExpression(term) => FolNegatedExpression(renameVars(term, namePrefix))
-   	case FolAndExpression(first, second) => FolAndExpression(renameVars(first, namePrefix), renameVars(second, namePrefix))
-   	case FolOrExpression(first, second) => FolOrExpression(renameVars(first, namePrefix), renameVars(second, namePrefix))   	
-   	case FolIfExpression(first, second) => FolIfExpression(renameVars(first, namePrefix), renameVars(second, namePrefix))
-   	case FolIffExpression(first, second) => FolIffExpression(renameVars(first, namePrefix), renameVars(second, namePrefix))
-   	case FolEqualityExpression(first, second) => FolEqualityExpression(renameVars(first, namePrefix), renameVars(second, namePrefix))
+    input match {
+   	case FolExistsExpression(variable, term) => FolExistsExpression (removeEq(variable, eq), removeEq(term, eq));
+   	case FolAllExpression(variable, term) => FolAllExpression(removeEq(variable, eq), removeEq(term, eq));
+   	case FolNegatedExpression(term) => FolNegatedExpression(removeEq(term, eq))
+   	case FolAndExpression(first, second) => FolAndExpression(removeEq(first, eq), removeEq(second, eq))
+   	case FolOrExpression(first, second) => FolOrExpression(removeEq(first, eq), removeEq(second, eq))   	
+   	case FolIfExpression(first, second) => FolIfExpression(removeEq(first, eq), removeEq(second, eq))
+   	case FolIffExpression(first, second) => FolIffExpression(removeEq(first, eq), removeEq(second, eq))
+   	case FolEqualityExpression(first, second) => FolEqualityExpression(first, second)//do not apply it to eq expr
    	//case FolAtom(pred, args @ _*) => FolAtom(pred, args.map(v => Variable(namePrefix+v.name)))
-   	case FolVariableExpression(v) => FolVariableExpression(Variable(namePrefix+v.name))
-    case FolApplicationExpression(fun, arg) =>{
-        fun match {
-          case FolVariableExpression (v) => FolApplicationExpression (fun, renameVars(arg, namePrefix))
-          case _=> FolApplicationExpression (renameVars(fun, namePrefix), renameVars(arg, namePrefix))
-        }
-    }        
+   	case FolVariableExpression(v) => FolVariableExpression(removeEq(v, eq))
+    case FolApplicationExpression(fun, arg) => FolApplicationExpression(removeEq(fun, eq), removeEq(arg, eq))        
    }
-   */
+  }
+  
+  private def removeEq(input: Variable, eq: List[(String, String)]): Variable=
+  {
+    for (val p <- eq)
+    {
+    	if (p._2.equals(input.name))
+    	  return Variable(p._1);
+    }
+    return input;
   }
   
   private def findEq(input: FolExpression): List[(String, String)] =
   {
-    val b = List[(String, String)]()
+    //val b = List[(String, String)]()
     input match {
    	case FolExistsExpression(variable, term) => findEq(term) ;
    	case FolAllExpression(variable, term) => findEq(term);
@@ -74,14 +82,29 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
    	case FolIfExpression(first, second) => findEq(first) ++  findEq(second);
    	case FolIffExpression(first, second) => findEq(first) ++  findEq(second);
 
-   	//case FolNegatedExpression(term) => FolNegatedExpression(renameVars(term, namePrefix))
-   	//case FolEqualityExpression(first, second) => FolEqualityExpression(renameVars(first, namePrefix), renameVars(second, namePrefix))
+   	case FolNegatedExpression(term) => {
+   	 term match {
+   	   case FolEqualityExpression(first, second) => List();
+   	   case _ => findEq(term);
+   	 } 
+   	}
+   	
+   	case FolEqualityExpression(first, second) => {
+   	  List((first match {
+   	    case FolVariableExpression(variable) => variable.name
+   	    case _ => throw new Exception ("Unrecongnized format, argumets of equality expression should be variables");
+   	  },
+   	  second match {
+   	    case FolVariableExpression(variable) => variable.name
+   	    case _ => throw new Exception ("Unrecongnized format, argumets of equality expression should be variables");
+   	  }))
+   	}
 
    	//case FolAtom(pred, args @ _*) => FolAtom(pred, args.map(v => Variable(namePrefix+v.name)))
-   	case FolVariableExpression(v) => ;
+   	case FolVariableExpression(v) => List();
     case FolApplicationExpression(fun, arg) => findEq(fun);
    }
-   return b;   
+   //return b;   
   }
 
 }
