@@ -88,7 +88,11 @@ class AlchemyTheoremProver(
     val evidenceFile = makeEvidenceFile(evidence)
     val resultFile = FileUtils.mktemp(suffix = ".res")
 
-    val args = List("-ow", declarationNames.keys.mkString(","), "-q", "entailment")
+    //Adding all predicates to the query force them to be open world
+    //This could be slower but, this is the only way to set the predicates to open-world in 
+    //Alchamy 2.0 because they removed this option
+    //val args = List("-ow", declarationNames.keys.mkString(","), "-q", "entailment")
+    val args = List( "-q", declarationNames.keys.mkString(","))
 
     //old call for alchemy.
     /*callAlchemy(mlnFile, evidenceFile, resultFile, args) map {
@@ -163,8 +167,8 @@ class AlchemyTheoremProver(
 
       declarationNames.foreach {
         //different priors for ent and other predicates 
-        case ("entailment", varTypes) => f.write("%s %s(%s)\n".format(prior, "entailment", varTypes.indices.map("z" + _).mkString(",")))
-        case (pred, varTypes) => f.write("%s %s(%s)\n".format(prior, pred, varTypes.indices.map("z" + _).mkString(",")))
+        case ("entailment", varTypes) => f.write("%s !%s(%s)\n".format(-prior, "entailment", varTypes.indices.map("z" + _).mkString(",")))
+        case (pred, varTypes) => f.write("%s !%s(%s)\n".format(-prior, pred, varTypes.indices.map("z" + _).mkString(",")))
       }
       f.write("\n")
 
@@ -449,7 +453,6 @@ class AlchemyTheoremProver(
       evidence.foreach {
         case e @ FolAtom(pred, args @ _*) => {
         	var evdString = convert(e);
-       	    
         	
         	/*MOVED to HardAssumptionsAsEvid
         	if (evdString.startsWith("r_")) //This is a hack. IT should be moved from here to FromEntToEqv 

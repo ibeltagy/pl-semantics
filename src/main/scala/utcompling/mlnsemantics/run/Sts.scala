@@ -74,21 +74,30 @@ object Sts {
   //val Range(defaultRange) = "1-85,87-127,129-190,192-216,218-249,251-276,278-317,319-335,337-351,353-360,362-416,418-458,460-497,499-531,533-554,556-564,566-568,570-604,606-607,609-663,665-685,687-691,693-705,707-714,716-719,721-736,739-750"
   //val Range(defaultRange) = "28,128,532"
   /*
-   * 86: many FORALLS. It takes forever
-   * 113: one long FORALLS. It takes forever
-   * 250: one long FORALLS. It takes forever
-   * 361: one long FORALLS. It takes forever
+   * [HANDELED: noImp] 86: many FORALLS. It takes forever
+   * [HANDELED: noImp] 113: one long FORALLS. It takes forever
+   * [HANDELED: noImp] 250: one long FORALLS. It takes forever
+   * [HANDELED: noImp] 361: one long FORALLS. It takes forever
    * [HANDELED:return 0.5] 459: Parsing failed
-   * 706: crazy. Many bugs
+   * [HANDELED: cancel POS/NEG] 706: fails because of POS/NEG
    * [HANDELED:return 0.5] 941: Parsing failed
-   * 1041: crazy. Many bugs
+   * [HANDELED: cancel POS/NEG] 1041: fails because of POS/NEG
    * [HANDELED:replace ' ] 1046: Someone is slicing tortila's. Everything is wrong because of the " ' "
-   * 1216: crazy. Many bugs
-   * 1239: crazy. Many bugs
-   * 1367: one long FORALLS. It takes forever
+   * [HANDELED: cancel POS/NEG] 1216: fails because of POS/NEG
+   * [HANDELED: cancel POS/NEG] 1239: fails because of POS/NEG
+   * [HANDELED: noImp] 1367: one long FORALLS. It takes forever
+   * 
+   * Examples with IMP but work fine on Alchamy: 4, 478, 572, 621, 649, 665, 681, 996, 1008, 1292, 1329, 1399
+   * Examples with IMP do not work on Alchamy: 86, 113, 250, 361, 1367
    */
+          
   //val Range(defaultRange) = "1-85,87-112,114-249,251-360,362-705,707-1040,1042-1215,1217-1238,1240-1366,1368-1500"
-  val Range(defaultRange) = "1216"
+  //val Range(defaultRange) = "706, 1041, 1216, 1239"
+  //val Range(defaultRange) = "28,95,223,227,238"
+  //Try example 517
+  val Range(defaultRange) = "1-1500"
+    
+    
 
   val SomeRe = """Some\((.*)\)""".r
 

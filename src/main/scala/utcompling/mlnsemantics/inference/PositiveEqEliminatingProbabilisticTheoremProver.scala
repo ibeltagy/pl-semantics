@@ -48,11 +48,16 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
   {
     input match {
    	case FolExistsExpression(variable, term) => FolExistsExpression (removeEq(variable, eq), removeEq(term, eq));
-   	case FolAllExpression(variable, term) => FolAllExpression(removeEq(variable, eq), removeEq(term, eq));
+
+   	//This is very important: Chanding all IMP to AND because alchamy is very slow on processing IMP
+   	//case FolAllExpression(variable, term) => FolAllExpression(removeEq(variable, eq), removeEq(term, eq));
+   	//case FolIfExpression(first, second) => FolIfExpression(removeEq(first, eq), removeEq(second, eq))
+   	case FolAllExpression(variable, term) => removeEq(term, eq);
+   	case FolIfExpression(first, second) => FolAndExpression(removeEq(first, eq), removeEq(second, eq))
+   	
    	case FolNegatedExpression(term) => FolNegatedExpression(removeEq(term, eq))
    	case FolAndExpression(first, second) => FolAndExpression(removeEq(first, eq), removeEq(second, eq))
    	case FolOrExpression(first, second) => FolOrExpression(removeEq(first, eq), removeEq(second, eq))   	
-   	case FolIfExpression(first, second) => FolIfExpression(removeEq(first, eq), removeEq(second, eq))
    	case FolIffExpression(first, second) => FolIffExpression(removeEq(first, eq), removeEq(second, eq))
    	case FolEqualityExpression(first, second) => FolEqualityExpression(first, second)//do not apply it to eq expr
    	//case FolAtom(pred, args @ _*) => FolAtom(pred, args.map(v => Variable(namePrefix+v.name)))

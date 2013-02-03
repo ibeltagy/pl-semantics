@@ -76,7 +76,7 @@ class ModalDiscourseInterpreter(
     val boxerResults = delegate.batchInterpretMultisentence(inputs, Some(newDiscourseIds), question, verbose)
     val parseResults = candcDiscourseParser.batchParseMultisentence(inputs, Map(), Some(newDiscourseIds), if (question) Some("question") else Some("boxer"), verbose)
     require(boxerResults.length == parseResults.length)
-
+    var idx = 0;
     (boxerResults zipSafe parseResults).mapt { (boxerResultOpt, parseResultOpt) =>
       for (
         boxerResult <- boxerResultOpt;
@@ -85,8 +85,12 @@ class ModalDiscourseInterpreter(
         val modalDrs = modalify(boxerResult)
         //TODO: This is very important for RTE but it is not relevent for similarity. I am deleting it now just to get 
         //The similarity works, but I have to return it back for RTE when we start using RTE-7
-        val newRules = this.generateNatlogRules(boxerResult, parseResult)
-        //val newRules : List[BoxerExpression] = List(); 
+        //val newRules = this.generateNatlogRules(boxerResult, parseResult)
+        val newRules : List[BoxerExpression] = List(); 
+        //Print boxes, for debugging reasons 
+        println(inputs.apply(idx).head)
+        println((new Boxer2DrtExpressionInterpreter().interpret(modalDrs)).pretty);
+        idx = idx+1;
         val resultDrs = if (newRules.nonEmpty) BoxerMerge("merge", modalDrs, BoxerDrs(List(), newRules)) else modalDrs
         (resultDrs, newRules)
       }
