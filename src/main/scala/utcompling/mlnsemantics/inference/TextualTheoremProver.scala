@@ -74,18 +74,25 @@ class TextualTheoremProver(
 
     def getPredicatesAndArgTypes(e: BoxerExpression): (Map[BoxerExpression, List[String]], Map[String, Set[String]]) =
       e match {
-        case BoxerPred(discId, indices, variable, name, pos, sense) =>
-          _getPredAndArgTypesTypes(e, List(variable))
+        case BoxerPred(discId, indices, variable, name, pos, sense) =>{
+          val res1 = _getPredAndArgTypesTypes(e, List(variable))
+          //add every predicate twice. Once as hypothesis and once an premise.
+          //Duplicates will be eliminated later
+          val e2 = BoxerPred(discId match {case "t" => "h"; case "h" => "t"}, indices, variable, name, pos, sense);
+          val res2 = _getPredAndArgTypesTypes(e2, List(variable))
+          return (res1._1 ++ res2._1, res1._2 ++ res2._2)
+        }
         case BoxerNamed(discId, indices, variable, name, typ, sense) =>
           _getPredAndArgTypesTypes(e, List(variable))
-        case BoxerRel(discId, indices, event, variable, name, sense) =>
+        case BoxerRel(discId, indices, event, variable, name, sense) =>{          
           if (name == "theme") println(e)
           val res1 = _getPredAndArgTypesTypes(e, List(event, variable))
           //add every relation predicate twice. Once as hypothesis and once an premise.
           //Duplicates will be eliminated later
           val e2 = BoxerRel(discId match {case "t" => "h"; case "h" => "t"}, indices, event, variable, name, sense);
           val res2 = _getPredAndArgTypesTypes(e2, List(event, variable))
-          return (res1._1 ++ res2._1, res1._2 ++ res2._2) 
+          return (res1._1 ++ res2._1, res1._2 ++ res2._2)
+        }
         case BoxerCard(discId, indices, variable, num, typ) =>
           _getPredAndArgTypesTypes(e, List(variable))
         case _ => {

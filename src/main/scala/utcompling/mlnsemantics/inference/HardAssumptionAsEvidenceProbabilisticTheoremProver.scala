@@ -81,13 +81,13 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
         fun match {
           case FolVariableExpression (v) => {
             var newName = v.name;
-            if (newName.startsWith("r_")) //if it is a relation predicate
-        	{
-        	  newName = newName.replace("_dh", "_XXX");
-        	  newName = newName.replace("_dt", "_YYY");
-        	  newName = newName.replace("_XXX", "_dt");
-        	  newName = newName.replace("_YYY", "_dh");
-        	}
+            //if (newName.startsWith("r_")) //if it is a relation predicate
+        	//{
+            newName = newName.replace("_dh", "_XXX");
+            newName = newName.replace("_dt", "_YYY");
+            newName = newName.replace("_XXX", "_dt");
+            newName = newName.replace("_YYY", "_dh");
+        	//}
         	FolApplicationExpression(FolVariableExpression(Variable(newName)), arg) 
           }
           case _=> FolApplicationExpression (renameVars(fun), renameVars(arg))
@@ -95,23 +95,4 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
     }
     }        
   }
-  /*
-  val tempFile = FileUtils.mktemp(suffix = ".db")
-    FileUtils.writeUsing(tempFile) { f =>
-      evidence.foreach {
-        case e @ FolAtom(pred, args @ _*) => {
-        	var evdString = convert(e);
-       	
-        	
-        	
-            f.write(evdString + "\n")
-      	}        
-        case e => throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
-      }
-    }
-    tempFile
-  }
-    */
-    
-
 }

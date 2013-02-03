@@ -78,14 +78,23 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 	{
 		for (goalPred <- goalPredsAndContexts)
 		{
-			if (assumPred._1.pos == goalPred._1.pos)
+			//DO not add rules if the word is the same
+			if (assumPred._1.pos == goalPred._1.pos && assumPred._1.name != goalPred._1.name)
 			{
 				var pred = assumPred._1;
 				var antecedentContext = assumPred._2;
 				var rhs = Map(goalPred._1 -> goalPred._2);
-				var predsAndContextsByName = Map(goalPred._1.name -> rhs); 
-				var rule = makeRulesForPred(pred, antecedentContext, predsAndContextsByName, vectorspace);
+				var goalPredsAndContextsByName = Map(goalPred._1.name -> rhs);
+				pred = BoxerPred("h", pred.indices, pred.variable, pred.name, pred.pos, pred.sense);
+				var rule = makeRulesForPred(pred, antecedentContext, goalPredsAndContextsByName , vectorspace);
 				ret = List.concat(ret, rule);
+
+				var lhs = Map(assumPred._1 -> assumPred._2);
+				var assumPredsAndContextsByName = Map(assumPred._1.name -> lhs); 
+				pred = goalPred._1;
+				pred = BoxerPred("t", pred.indices, pred.variable, pred.name, pred.pos, pred.sense);
+				rule = makeRulesForPred(pred, goalPred._2, assumPredsAndContextsByName , vectorspace);
+				ret = List.concat(ret, rule);				
 			}
 		}
 	} 
@@ -127,7 +136,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     val BoxerPred(cDiscId, cIndices, cVariable, cName, cPos, cSense) = consequent
     val v = BoxerVariable(variableType(antecedent))
     val unweightedRule =
-      BoxerEqv(aDiscId, aIndices,
+      BoxerImp(aDiscId, aIndices,
         BoxerDrs(List(Nil -> v), List(BoxerPred(aDiscId, aIndices, v, aName, aPos, aSense))),
         BoxerDrs(Nil, List(BoxerPred(cDiscId, cIndices, v, cName, cPos, cSense))))
     weight match {

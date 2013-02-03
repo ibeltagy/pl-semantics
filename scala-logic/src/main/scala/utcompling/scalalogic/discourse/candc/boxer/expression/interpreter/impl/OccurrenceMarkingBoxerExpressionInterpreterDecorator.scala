@@ -11,7 +11,8 @@ class OccurrenceMarkingBoxerExpressionInterpreterDecorator extends BoxerExpressi
         //BoxerNamed(discId, indices, variable, "%s_%s%s".format(name, typ, indexString(discId, indices)), typ, sense)
         BoxerNamed(discId, indices, variable, "%s_%s".format(name, typ), typ, sense)
       case BoxerPred(discId, indices, variable, name, pos, sense) =>
-        BoxerPred(discId, indices, variable, "%s_%s%s".format(name, pos, indexString(discId, indices)), pos, sense)
+        //BoxerPred(discId, indices, variable, "%s_%s%s".format(name, pos, indexString(discId, indices)), pos, sense)
+        BoxerPred(discId, indices, variable, "%s_%s_d%s".format(name, pos, discId), pos, sense)
       case BoxerRel(discId, indices, event, variable, name, sense) =>
         //BoxerRel(discId, indices, event, variable, "r_%s%s".format(name, indexString(discId, indices)), sense)
         //BoxerRel(discId, indices, event, variable, "r_%s".format(name), sense)
