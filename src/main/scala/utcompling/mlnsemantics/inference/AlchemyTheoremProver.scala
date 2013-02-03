@@ -83,6 +83,7 @@ class AlchemyTheoremProver(
       constants + entailedConst,
       declarationNames,
       assumptions,
+      evidence,
       goal)
       
     val evidenceFile = makeEvidenceFile(evidence)
@@ -92,7 +93,10 @@ class AlchemyTheoremProver(
     //This could be slower but, this is the only way to set the predicates to open-world in 
     //Alchamy 2.0 because they removed this option
     //val args = List("-ow", declarationNames.keys.mkString(","), "-q", "entailment")
-    val args = List( "-q", declarationNames.keys.mkString(","))
+    //val args = List( "-q", declarationNames.keys.mkString(","))
+    
+    //all evd are in the mln file
+    val args = List( "-q", "entailment")
 
     //old call for alchemy.
     /*callAlchemy(mlnFile, evidenceFile, resultFile, args) map {
@@ -136,6 +140,7 @@ class AlchemyTheoremProver(
     constants: Map[String, Set[String]],
     declarationNames: Map[String, Seq[String]],
     assumptions: List[WeightedFolEx],
+    evidence: List[FolExpression],
     goal: FolExpression) = {
     
     var reducedConstants = constants;
@@ -421,6 +426,15 @@ class AlchemyTheoremProver(
 
       //normal anding
       //f.write("// " + convert(universalifyGoalFormula(goal -> entailmentConsequent)) + ". //(ditAnd)\n")
+      
+      f.write("//begin evd part\n");
+      evidence.foreach {
+        case e @ FolAtom(pred, args @ _*) => f.write(convert(e) + ".\n")
+        case e => throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
+      }   
+      f.write("//end evd part\n");
+      
+      
     }
     tempFile
   }
@@ -450,24 +464,14 @@ class AlchemyTheoremProver(
   private def makeEvidenceFile(evidence: List[FolExpression]) = {
     val tempFile = FileUtils.mktemp(suffix = ".db")
     FileUtils.writeUsing(tempFile) { f =>
-      evidence.foreach {
-        case e @ FolAtom(pred, args @ _*) => {
-        	var evdString = convert(e);
-        	
-        	/*MOVED to HardAssumptionsAsEvid
-        	if (evdString.startsWith("r_")) //This is a hack. IT should be moved from here to FromEntToEqv 
-        	{
-        	  evdString = evdString.replace("_dh", "_XXX");
-        	  evdString = evdString.replace("_dt", "_YYY");
-        	  evdString = evdString.replace("_XXX", "_dt");
-        	  evdString = evdString.replace("_YYY", "_dh");
-        	}
-        	*/
-            f.write(evdString + "\n")
-      	}        
+      f.write("//THis is an empty evd file");
+     /* evidence.foreach {
+        case e @ FolAtom(pred, args @ _*) => f.write(convert(e) + "\n")
         case e => throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
       }
+      */
     }
+    
     tempFile
   }
 
@@ -483,7 +487,7 @@ class AlchemyTheoremProver(
     val allArgs = "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
     println("Args: " + allArgs);
     //val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, LOG.isDebugEnabled, false);
-    val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, false);
+    val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, true);
 
     val results = readLines(result).mkString("\n").trim
 
