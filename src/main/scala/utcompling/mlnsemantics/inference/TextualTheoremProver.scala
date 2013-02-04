@@ -117,10 +117,10 @@ class TextualTheoremProver(
     }
 
     var eventVars = findEventVar(txtEx);
-    txtEx = convertToEvntVar(txtEx);
+    //txtEx = convertToEvntVar(txtEx);
 
     eventVars = findEventVar(hypEx);
-    hypEx = convertToEvntVar(hypEx);
+    //hypEx = convertToEvntVar(hypEx);
     
     def convertToEvntVar(e: BoxerExpression): BoxerExpression = {
       e match {

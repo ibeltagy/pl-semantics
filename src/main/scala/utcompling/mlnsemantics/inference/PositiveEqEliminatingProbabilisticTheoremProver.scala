@@ -35,7 +35,12 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
     val newGoal = removeEq(goal, equalities);
    
     val newAssumptions = List (HardWeightedExpression (newAssumption)) ++ 
-    					assumptions.filterNot( _ == assumptions.head);    
+    					assumptions.filterNot( _ == assumptions.head);
+    
+    val newDeclarations = for (declaration <- declarations)
+    					yield {
+      
+    }
     delegate.prove(
       constants,
       declarations,
@@ -49,7 +54,7 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
     input match {
    	case FolExistsExpression(variable, term) => FolExistsExpression (removeEq(variable, eq), removeEq(term, eq));
 
-   	//This is very important: Chanding all IMP to AND because alchamy is very slow on processing IMP
+   	//This is very important: Changing all IMP to AND because alchamy is very slow on processing IMP
    	//case FolAllExpression(variable, term) => FolAllExpression(removeEq(variable, eq), removeEq(term, eq));
    	//case FolIfExpression(first, second) => FolIfExpression(removeEq(first, eq), removeEq(second, eq))
    	case FolAllExpression(variable, term) => removeEq(term, eq);

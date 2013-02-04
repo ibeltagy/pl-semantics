@@ -4,9 +4,8 @@ mln-semantics
 Set up workspace
 ----------------
 
-    ~$ git clone git@github.com:USERNAME/mln-semantics.git
+    ~$ git clone git@github.com:islambeltagy/mln-semantics.git
     ~/mln-semantics$ cd mln-semantics
-    ~/mln-semantics$ git clone git@github.com:dhgarrette/scala-logic.git
     ~/mln-semantics$ cd scala-logic
     ~/mln-semantics/scala-logic$ git clone git@github.com:utcompling/Scalabha.git scalabha
     ~/mln-semantics/scala-logic$ cd ..
@@ -14,14 +13,14 @@ Set up workspace
     ~/mln-semantics$ bin/mlnsem compile
     
     ~/mln-semantics$ cd resources
-    ~/mln-semantics/resources$ ln -s /v/filer4b/v16q001/users/dhg/Corpora/semantic-textual-similarity/ semantic-textual-similarity
+    ~/mln-semantics/resources$ ln -s /u/beltagy/workspace/deft/STS/ sts
     ~/mln-semantics/resources$ ln -s /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt full.vs
     ~/mln-semantics/resources$ ln -s /u/dhg/Corpora/polarity-lexicon polarity-lexicon
     ~/mln-semantics/resources$ ln -s /u/dhg/Corpora/wordnet-3.0/ wordnet
     ~/mln-semantics/resources$ cd ..
-
-    export CANDCHOME="/u/dhg/workspace/candc.bkp/bin"
-    export ALCHEMYHOME="/v/filer4b/v16q001/users/dhg/bin/alchemy/bin"
+   
+    export CANDCHOME="/u/beltagy/workspace/deft/candcLatest/bin"
+    export ALCHEMYHOME="/u/beltagy/workspace/deft/alchemy-2/bin"
     export PROVER9HOME="/v/filer4b/v16q001/users/dhg/bin/LADR-2009-02A/bin"
     export TUFFYHOME="/u/beltagy/workspace/deft/tuffy"
 
@@ -54,4 +53,4 @@ if it would be useful.
 Running STS test suite
 ----------------------
 
-    ~/mln-semantics$ bin/mlnsem sts
+    ~/mln-semantics$ bin/mlnsem run
