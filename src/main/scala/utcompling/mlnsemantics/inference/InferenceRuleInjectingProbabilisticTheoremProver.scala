@@ -79,7 +79,10 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 		for (goalPred <- goalPredsAndContexts)
 		{
 			//DO not add rules if the word is the same
-			if (assumPred._1.pos == goalPred._1.pos && assumPred._1.name != goalPred._1.name)
+		     //Words should have the same POS and same entity type (individual or event)
+			if (assumPred._1.pos == goalPred._1.pos && 
+			    assumPred._1.name != goalPred._1.name &&
+			    assumPred._1.variable.name.charAt(0) == goalPred._1.variable.name.charAt(0))
 			{
 				var pred = assumPred._1;
 				var antecedentContext = assumPred._2;

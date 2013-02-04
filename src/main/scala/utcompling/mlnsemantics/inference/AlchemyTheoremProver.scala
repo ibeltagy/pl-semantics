@@ -426,15 +426,14 @@ class AlchemyTheoremProver(
 
       //normal anding
       //f.write("// " + convert(universalifyGoalFormula(goal -> entailmentConsequent)) + ". //(ditAnd)\n")
-      
+      /*
       f.write("//begin evd part\n");
       evidence.foreach {
         case e @ FolAtom(pred, args @ _*) => f.write(convert(e) + ".\n")
         case e => throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
       }   
       f.write("//end evd part\n");
-      
-      
+      */
     }
     tempFile
   }
@@ -464,12 +463,11 @@ class AlchemyTheoremProver(
   private def makeEvidenceFile(evidence: List[FolExpression]) = {
     val tempFile = FileUtils.mktemp(suffix = ".db")
     FileUtils.writeUsing(tempFile) { f =>
-      f.write("//THis is an empty evd file");
-     /* evidence.foreach {
+      f.write("//\n");
+      evidence.foreach {
         case e @ FolAtom(pred, args @ _*) => f.write(convert(e) + "\n")
         case e => throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
       }
-      */
     }
     
     tempFile

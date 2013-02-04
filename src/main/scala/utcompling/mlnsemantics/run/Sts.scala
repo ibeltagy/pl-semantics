@@ -219,11 +219,11 @@ object Sts {
                             new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(
                               new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))))).fol
                   },
-                  new PositiveEqEliminatingProbabilisticTheoremProver( //4
-                      new FromEntToEqvProbabilisticTheoremProver( //5                      
-                    		  new ExistentialEliminatingProbabilisticTheoremProver( //6
-                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver( //7
-                    						  AlchemyTheoremProver.findBinary()))))))) //8
+                	new PositiveEqEliminatingProbabilisticTheoremProver(
+                          new FromEntToEqvProbabilisticTheoremProver(   
+                    		  new ExistentialEliminatingProbabilisticTheoremProver(
+                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver(
+                    						  AlchemyTheoremProver.findBinary())))))))
 
           val p = ttp.prove(sepTokens(txt), sepTokens(hyp))
           println("%s  [actual: %s, gold: %s]".format(p, probOfEnt2simScore(p.get), goldSim))

@@ -38,7 +38,7 @@ class TextualTheoremProver(
   def prove(text: List[String], hyp: List[String]): Option[Double] = {
     val List(t, h) = discourseIterpreter.batchInterpretMultisentence(List(text, hyp), Some(List("t", "h")), false, false)
 
-    val txtEx  = (t match {
+    var txtEx  = (t match {
       case Some(txt) => txt;
       case _ => {
         println ("Parsing failed. Return 0.5");
@@ -46,7 +46,7 @@ class TextualTheoremProver(
       }
     })
     
-    val hypEx  = (h match {
+    var hypEx  = (h match {
       case Some(txt) => txt;
       case _ => {
         println ("Parsing failed. Return 0.5");
@@ -116,6 +116,43 @@ class TextualTheoremProver(
       (predTypes, constTypes)
     }
 
+    var eventVars = findEventVar(txtEx);
+    txtEx = convertToEvntVar(txtEx);
+
+    eventVars = findEventVar(hypEx);
+    hypEx = convertToEvntVar(hypEx);
+    
+    def convertToEvntVar(e: BoxerExpression): BoxerExpression = {
+      e match {
+        case BoxerRel(discId, indices, event, variable, name, sense) =>{
+        	if (name == "agent" || name == "patient")
+        		BoxerRel(discId, indices, convertVarToEvntVar(event), variable, name, sense);
+        	else
+        	  e        	  
+        }
+        case BoxerPred(discId, indices, variable, name, pos, sense) => 
+          			BoxerPred(discId, indices, convertVarToEvntVar(variable), name, pos, sense)
+        case BoxerDrs (ref, cond) => BoxerDrs (ref.map ( (listRef:(List[BoxerIndex], BoxerVariable)) =>{
+          (listRef._1, convertVarToEvntVar(listRef._2))
+        } ), cond.map (convertToEvntVar));
+        case BoxerCard(discId, indices, variable, num,typ) =>
+          			BoxerCard(discId, indices, convertVarToEvntVar(variable), num,typ)
+        case BoxerProp(discId, indices, variable, drs) => 
+          				BoxerProp(discId, indices, convertVarToEvntVar(variable), convertToEvntVar(drs))
+        case BoxerEq(discId, indices, first, second) => BoxerEq(discId, indices, convertVarToEvntVar(first), convertVarToEvntVar(second))
+        case BoxerNamed(discId, indices, variable, name, typ, sense) => BoxerNamed(discId, indices, convertVarToEvntVar(variable), name, typ, sense)
+        case BoxerTimex(discId, indices, variable, timeExp) => BoxerTimex(discId, indices, convertVarToEvntVar(variable), timeExp);
+        case _ => e.visitConstruct(convertToEvntVar)
+      }
+    }
+    
+    def convertVarToEvntVar(v: BoxerVariable): BoxerVariable = {
+    	if (eventVars.contains(v))
+    		return BoxerVariable("e" + v.name.substring(1))
+    	else 
+    		return v;
+    }
+    
     val (predTypes, constTypes) = combinePredicatesAndArgTypes(List(txtEx, hypEx).map(getPredicatesAndArgTypes))
     val constants =
       Map(
@@ -129,5 +166,25 @@ class TextualTheoremProver(
     probabilisticTheoremProver.prove(constants, declarations, evidence, assumptions, goal)
 
   }
-
+  
+   private def findEventVar(e: BoxerExpression): List[BoxerVariable] = {
+      e match {
+        case BoxerRel(discId, indices, event, variable, name, sense) => {
+          if (name == "agent" || name == "patient")
+        	  return List(event);
+          else 
+            return List();
+        }
+        case _ => {
+          e.visit(findEventVar, (parts: List[List[BoxerVariable]]) => {
+            var compined = List[BoxerVariable]();
+            for(val p <- parts)
+              compined  = compined ++ p;
+            return compined.toSet.toList
+          }  ,List())
+        }
+      }
+   }
+   
+  
 }
