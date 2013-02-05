@@ -97,7 +97,6 @@ object Sts {
   //Try example 517
   val Range(defaultRange) = "1-1500"
     
-    
 
   val SomeRe = """Some\((.*)\)""".r
 

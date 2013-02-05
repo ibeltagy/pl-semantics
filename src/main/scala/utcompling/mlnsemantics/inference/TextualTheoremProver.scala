@@ -75,40 +75,39 @@ class TextualTheoremProver(
     def getPredicatesAndArgTypes(e: BoxerExpression): (Map[BoxerExpression, List[String]], Map[String, Set[String]]) =
       e match {
         case BoxerPred(discId, indices, variable, name, pos, sense) =>{
-          val res1 = _getPredAndArgTypesTypes(e, List(variable))
-          //add every predicate twice. Once as hypothesis and once an premise.
-          //Duplicates will be eliminated later
+          val res1 = _getPredAndArgTypesTypes(e, List(variable), discId)
           val e2 = BoxerPred(discId match {case "t" => "h"; case "h" => "t"}, indices, variable, name, pos, sense);
-          val res2 = _getPredAndArgTypesTypes(e2, List(variable))
+          val res2 = _getPredAndArgTypesTypes(e2, List(variable), e2.discId)
           return (res1._1 ++ res2._1, res1._2 ++ res2._2)
         }
         case BoxerNamed(discId, indices, variable, name, typ, sense) =>
-          _getPredAndArgTypesTypes(e, List(variable))
+          _getPredAndArgTypesTypes(e, List(variable), discId)
         case BoxerRel(discId, indices, event, variable, name, sense) =>{          
           if (name == "theme") println(e)
-          val res1 = _getPredAndArgTypesTypes(e, List(event, variable))
-          //add every relation predicate twice. Once as hypothesis and once an premise.
-          //Duplicates will be eliminated later
+          val res1 = _getPredAndArgTypesTypes(e, List(event, variable), discId)
           val e2 = BoxerRel(discId match {case "t" => "h"; case "h" => "t"}, indices, event, variable, name, sense);
-          val res2 = _getPredAndArgTypesTypes(e2, List(event, variable))
+          val res2 = _getPredAndArgTypesTypes(e2, List(event, variable), e2.discId)
           return (res1._1 ++ res2._1, res1._2 ++ res2._2)
         }
         case BoxerCard(discId, indices, variable, num, typ) =>
-          _getPredAndArgTypesTypes(e, List(variable))
+          val res1 = _getPredAndArgTypesTypes(e, List(variable), discId)
+          val e2 = BoxerCard(discId match {case "t" => "h"; case "h" => "t"}, indices, variable, num, typ);
+          val res2 = _getPredAndArgTypesTypes(e2, List(variable), e2.discId)
+          return (res1._1 ++ res2._1, res1._2 ++ res2._2)
         case _ => {
           e.visit(getPredicatesAndArgTypes, combinePredicatesAndArgTypes, (Map[BoxerExpression, List[String]](), Map[String, Set[String]]()))
         }
       }
 
-    def _getPredAndArgTypesTypes(name: BoxerExpression, args: List[BoxerVariable]): (Map[BoxerExpression, List[String]], Map[String, Set[String]]) = {
+    def _getPredAndArgTypesTypes(name: BoxerExpression, args: List[BoxerVariable], txtOrHyp: String): (Map[BoxerExpression, List[String]], Map[String, Set[String]]) = {
       val (argTypes, constants) =
         args.foldLeft(List[String](), List[(String, String)]()) {
           case ((argTypes, constants), v) =>
             v.name match {
-              case IndvVar(v) => ("indv" :: argTypes, constants)
-              case EvntVar(v) => ("evnt" :: argTypes, constants)
-              case PropVar(v) => ("prop" :: argTypes, constants)
-              case c => ("indv" :: argTypes, "indv" -> c :: constants)
+              case IndvVar(v) => ("indv_"+txtOrHyp :: argTypes, constants)
+              case EvntVar(v) => ("evnt_"+txtOrHyp :: argTypes, constants)
+              case PropVar(v) => ("prop_"+txtOrHyp :: argTypes, constants)
+              case c => ("indv_"+txtOrHyp :: argTypes, "indv_"+txtOrHyp -> c :: constants)
             }
         }
       val predTypes = Map(name -> argTypes.reverse)
@@ -121,6 +120,7 @@ class TextualTheoremProver(
 
     eventVars = findEventVar(hypEx);
     hypEx = convertToEvntVar(hypEx);
+    
     
     def convertToEvntVar(e: BoxerExpression): BoxerExpression = {
       e match {
@@ -153,12 +153,57 @@ class TextualTheoremProver(
     		return v;
     }
     
-    val (predTypes, constTypes) = combinePredicatesAndArgTypes(List(txtEx, hypEx).map(getPredicatesAndArgTypes))
+    var txtExPredArg = getPredicatesAndArgTypes(txtEx)
+    var hypExPredArg = getPredicatesAndArgTypes(hypEx)
+    //if there is a duplicate predicate declaration, remove the one generated from the other sentence
+    for (tPred <- txtExPredArg._1)
+    {
+      var tName = "";
+      var tDiscId= "";
+      var tPos= "";
+      tPred._1 match {
+        case BoxerPred(discId, indices, variable, name, pos, sense) => tName = name; tDiscId = discId; tPos = pos;
+        case BoxerRel(discId, indices, event, variable, name, sense) => tName = name; tDiscId = discId;
+        case _ => tDiscId = "t";
+      }
+      
+      for (hPred <- hypExPredArg._1)
+      {
+	      var hName = "";
+	      var hDiscId= "";
+	      var hPos= "";
+	      hPred._1 match {
+	        case BoxerPred(discId, indices, variable, name, pos, sense) => hName = name; hDiscId = discId; hPos = pos;
+	        case BoxerRel(discId, indices, event, variable, name, sense) => hName = name; hDiscId = discId;
+	        case _ => hDiscId = "h";
+	      }
+	      
+	      //same name, same discIf, same pos -> conflict so remove one of them
+	      if (tName == hName && tDiscId == hDiscId && tPos == hPos)
+	      {
+	        //Dubplicate. Delete one of them
+	        if (tDiscId == "h")
+	          //delete from txt
+	        	txtExPredArg = (txtExPredArg._1 - tPred._1) -> txtExPredArg._2 
+	        else if (hDiscId == "t")
+	          //delete from hyp
+	          	hypExPredArg = (hypExPredArg._1 - hPred._1) -> hypExPredArg._2
+	        else throw	new Exception ("Unknown error while generating predicates declarations")
+	      }
+      }
+      
+    }
+    val (predTypes, constTypes) = combinePredicatesAndArgTypes(List(txtExPredArg, hypExPredArg))
+    //val (predTypes, constTypes) = combinePredicatesAndArgTypes(List(txtEx, hypEx).map(getPredicatesAndArgTypes))
+    
     val constants =
       Map(
-        "indv" -> Set("default_indv_variable"),
-        "evnt" -> Set("default_evnt_variable"),
-        "prop" -> Set("default_prop_variable")) ++ constTypes
+        "indv_h" -> Set("default_indv_h_variable"),
+        "evnt_h" -> Set("default_evnt_h_variable"),
+        "prop_h" -> Set("default_prop_h_variable"), 
+        "indv_t" -> Set("default_indv_t_variable"),
+        "evnt_t" -> Set("default_evnt_t_variable"),
+        "prop_t" -> Set("default_prop_t_variable")) ++ constTypes
     val declarations = predTypes //List("man(ind)", "mortal(ind)")
     val evidence = List() //"man(socrates)"
     val assumptions = List(HardWeightedExpression(txtEx))
@@ -178,7 +223,7 @@ class TextualTheoremProver(
         case _ => {
           e.visit(findEventVar, (parts: List[List[BoxerVariable]]) => {
             var compined = List[BoxerVariable]();
-            for(val p <- parts)
+            for(p <- parts)
               compined  = compined ++ p;
             return compined.toSet.toList
           }  ,List())

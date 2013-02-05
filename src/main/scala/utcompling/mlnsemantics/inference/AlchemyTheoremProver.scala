@@ -482,6 +482,7 @@ class AlchemyTheoremProver(
     //lifted belife propagation works better
     //val allArgs = "-bp" :: "-lifted" :: "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
     //Dunno, but it seems that MC-SAT is better
+    //val allArgs = "-ptpe" :: "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
     val allArgs = "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
     println("Args: " + allArgs);
     //val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, LOG.isDebugEnabled, false);
@@ -611,6 +612,7 @@ class AlchemyTheoremProver(
 object AlchemyTheoremProver {
 
   def findBinary(binDir: Option[String] = None, envar: Option[String] = Some("ALCHEMYHOME"), verbose: Boolean = false) =
+    //new AlchemyTheoremProver(FileUtils.findBinary("liftedinfer", binDir, envar, verbose))
     new AlchemyTheoremProver(FileUtils.findBinary("infer", binDir, envar, verbose))
 
   def main(args: Array[String]) {

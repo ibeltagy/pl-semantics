@@ -29,10 +29,13 @@ class ExistentialEliminatingProbabilisticTheoremProver(
       e match {
         case FolExistsExpression(v, term) =>
           val newV = v.name.toUpperCase
-          val typ = v.name.charAt(1) match { //char at index 0 is either t or h
-            case 'x' => "indv"
-            case 'e' => "evnt"
-            case 'p' => "prop"
+          val typ = v.name.substring(0, 2) match { 
+            case "hx" => "indv_h"
+            case "he" => "evnt_h"
+            case "hp" => "prop_h"
+            case "tx" => "indv_t"
+            case "te" => "evnt_t"
+            case "tp" => "prop_t"
             case _ => "indv"
           }
 
