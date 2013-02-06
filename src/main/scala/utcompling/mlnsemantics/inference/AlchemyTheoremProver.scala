@@ -105,33 +105,42 @@ class AlchemyTheoremProver(
     }*/
     
     //Output has many lines
-    val result = callAlchemy(mlnFile, evidenceFile, resultFile, args);
-    result match 
+    try 
     {
-      case Some(x) =>
-      {
-        val outputLines =  x.split("\n");
-        var maxScore: Double = -1;
-        var bestWorld: String = "";
-        for (line <- outputLines)
-        {
-         val lineSplits = line.split(" ");
-          if (lineSplits.length == 2)
-          {
-	          val score = lineSplits(1).toDouble;
-	          if (score > maxScore && lineSplits(0).startsWith("entailment"))
+	    val result = callAlchemy(mlnFile, evidenceFile, resultFile, args);
+	    result match 
+	    {
+	      case Some(x) =>
+	      {
+	        val outputLines =  x.split("\n");
+	        var maxScore: Double = -1;
+	        var bestWorld: String = "";
+	        for (line <- outputLines)
+	        {
+	         val lineSplits = line.split(" ");
+	          if (lineSplits.length == 2)
 	          {
-	        	  maxScore = score;
-	        	  bestWorld = lineSplits(0);
+		          val score = lineSplits(1).toDouble;
+		          if (score > maxScore && lineSplits(0).startsWith("entailment"))
+		          {
+		        	  maxScore = score;
+		        	  bestWorld = lineSplits(0);
+		          }
 	          }
-          }
-        }
-        if (maxScore == -1)
-          throw new RuntimeException("no valid output in the result file");
-        else
-        	return Some(maxScore);
-      }      
-      case None => throw new RuntimeException("empty result file");
+	        }
+	        if (maxScore == -1)
+	          throw new RuntimeException("no valid output in the result file");
+	        else
+	        	return Some(maxScore);
+	      }      
+	      case None => throw new RuntimeException("empty result file");
+	    }
+    }catch 
+    {
+    	case e: Exception =>{
+    	  println (e);
+    	  return Some(-1.0);
+    	}   				 
     }
     
   }

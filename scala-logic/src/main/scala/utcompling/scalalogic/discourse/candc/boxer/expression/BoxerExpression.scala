@@ -2,7 +2,7 @@ package utcompling.scalalogic.discourse.candc.boxer.expression
 
 abstract class BoxerExpression {
 
-  val forbiddenChars = """-|_|\.|,""".r;
+  val forbiddenChars = """-|_|\.|,|\+""".r;
   
   def nameToMlnIdentifier(name: String ): String = 
   {

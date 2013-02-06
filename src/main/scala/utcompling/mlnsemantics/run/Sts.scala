@@ -94,8 +94,8 @@ object Sts {
   //val Range(defaultRange) = "1-85,87-112,114-249,251-360,362-705,707-1040,1042-1215,1217-1238,1240-1366,1368-1500"
   //val Range(defaultRange) = "706, 1041, 1216, 1239"
   //val Range(defaultRange) = "28,95,223,227,238"
-  //Try example 517
-  val Range(defaultRange) = "1-1500"
+  //Try example 597,610,679
+  val Range(defaultRange) = "597,610,679"
     
 
   val SomeRe = """Some\((.*)\)""".r
@@ -182,7 +182,7 @@ object Sts {
       //Tokenize(a.replace("-","" ).replace("\"", " ").replace("\'", " ").replace("‘", " ").replace("’", " ").replace("/", " ").replace("“", " ").replace("”", " ").replace(")", " ").replace("(", " ")).mkString(" ");
       //remove non-ascii characters
       //remove control 
-      Tokenize("""-|'|`|‘|’|/|"|“|”|\)|\(|&|>|<|=|\$|:""".r.replaceAllIn(a, " ").filterNot(  (c:Char) => ( c > 127)  )).mkString(" ");
+      Tokenize("""-|'|`|‘|’|/|"|“|”|\)|\(|&|>|<|=|\$|:|\+""".r.replaceAllIn(a, " ").filterNot(  (c:Char) => ( c > 127)  )).mkString(" ");
       //Tokenize(a.replace("-","" )).mkString(" ");
     } 
     
