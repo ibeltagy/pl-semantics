@@ -11,7 +11,7 @@ case class BoxerCard(discId: String, indices: List[BoxerIndex], variable: BoxerV
     def ::(index: Int) = BoxerCard(discId, List(BoxerIndex(index)), variable, num,typ)
 
     override def toString(): String =
-        "[%s]:card(%s,%s,%s)".format(indices.mkString(","), variable.name, num,typ)
+        "[%s]:card(%s,%s,%s)".format(indices.mkString(","), variable.name, forbiddenChars.replaceAllIn(num, ""),typ)
 
 }
 

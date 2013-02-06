@@ -89,15 +89,41 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 				var rhs = Map(goalPred._1 -> goalPred._2);
 				var goalPredsAndContextsByName = Map(goalPred._1.name -> rhs);
 				pred = BoxerPred("h", pred.indices, pred.variable, pred.name, pred.pos, pred.sense);
-				var rule = makeRulesForPred(pred, antecedentContext, goalPredsAndContextsByName , vectorspace);
-				ret = List.concat(ret, rule);
+				
+				var compatible = true;
+				for (checkGoal <- goalPredsAndContexts){
+					if (checkGoal._1.name == pred.name &&
+					    checkGoal._1.pos == pred.pos &&
+					    checkGoal._1.variable.name.charAt(0) != pred.variable.name.charAt(0))
+					  compatible = false;
+				}
+				if (compatible){
+					val rule = makeRulesForPred(pred, antecedentContext, goalPredsAndContextsByName , vectorspace);
+					ret = List.concat(ret, rule);
+				}
+				else {
+				  println ("hh" + goalPred._1.toString() + assumPred._1.toString() + " \n");
+				}
 
 				var lhs = Map(assumPred._1 -> assumPred._2);
 				var assumPredsAndContextsByName = Map(assumPred._1.name -> lhs); 
 				pred = goalPred._1;
 				pred = BoxerPred("t", pred.indices, pred.variable, pred.name, pred.pos, pred.sense);
-				rule = makeRulesForPred(pred, goalPred._2, assumPredsAndContextsByName , vectorspace);
-				ret = List.concat(ret, rule);				
+				
+				compatible = true;
+				for (checkAssum <- assumPredsAndContexts){
+					if (checkAssum._1.name == pred.name &&
+					    checkAssum._1.pos == pred.pos &&
+					    checkAssum._1.variable.name.charAt(0) != pred.variable.name.charAt(0))
+					  compatible = false;
+				}
+				if (compatible){
+					val rule = makeRulesForPred(pred, goalPred._2, assumPredsAndContextsByName , vectorspace);
+					ret = List.concat(ret, rule);
+				}
+				else {
+				  println ("tt" + goalPred._1.toString() + assumPred._1.toString() + " \n");
+				}				
 			}
 		}
 	} 

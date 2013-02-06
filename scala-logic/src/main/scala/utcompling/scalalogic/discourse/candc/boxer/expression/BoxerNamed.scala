@@ -9,7 +9,7 @@ case class BoxerNamed(discId: String, indices: List[BoxerIndex], variable: Boxer
     BoxerNamed(discId, indices, variable, name, typ, sense)
 
   override def toString(): String =
-    "[%s]:named(%s,%s,%s,%d)".format(indices.mkString(","), variable.name, name, typ, sense)
+    "[%s]:named(%s,%s,%s,%d)".format(indices.mkString(","), variable.name, nameToMlnIdentifier(name), typ, sense)
 
 }
 

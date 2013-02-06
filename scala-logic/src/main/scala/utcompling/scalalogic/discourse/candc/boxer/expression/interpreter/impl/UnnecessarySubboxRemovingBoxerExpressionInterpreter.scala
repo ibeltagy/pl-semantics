@@ -78,6 +78,7 @@ class UnnecessarySubboxRemovingBoxerExpressionInterpreter extends BoxerExpressio
         
       case BoxerCard(discId, indices, variable, num, typ) =>
         (BoxerCard(discId, indices, variable, num, typ), Set(variable))
+      case _ => (e, Set());
     }
 
   private def findPropAndNonPropVars(e: BoxerExpression): Set[BoxerVariable] =

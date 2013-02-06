@@ -80,8 +80,12 @@ class TextualTheoremProver(
           val res2 = _getPredAndArgTypesTypes(e2, List(variable), e2.discId)
           return (res1._1 ++ res2._1, res1._2 ++ res2._2)
         }
-        case BoxerNamed(discId, indices, variable, name, typ, sense) =>
-          _getPredAndArgTypesTypes(e, List(variable), discId)
+        case BoxerNamed(discId, indices, variable, name, typ, sense) =>{
+          val res1 = _getPredAndArgTypesTypes(e, List(variable), discId)
+          val e2 = BoxerNamed(discId match {case "t" => "h"; case "h" => "t"}, indices, variable, name, typ, sense);
+          val res2 = _getPredAndArgTypesTypes(e2, List(variable), e2.discId)
+          return (res1._1 ++ res2._1, res1._2 ++ res2._2)
+        }
         case BoxerRel(discId, indices, event, variable, name, sense) =>{          
           if (name == "theme") println(e)
           val res1 = _getPredAndArgTypesTypes(e, List(event, variable), discId)
@@ -94,6 +98,16 @@ class TextualTheoremProver(
           val e2 = BoxerCard(discId match {case "t" => "h"; case "h" => "t"}, indices, variable, num, typ);
           val res2 = _getPredAndArgTypesTypes(e2, List(variable), e2.discId)
           return (res1._1 ++ res2._1, res1._2 ++ res2._2)
+        
+        case BoxerTimex(discId, indices, variable, timeExp) =>
+          val res1 = _getPredAndArgTypesTypes(e, List(variable), discId)
+          val e2 = BoxerTimex(discId match {case "t" => "h"; case "h" => "t"}, indices, variable, timeExp);
+          val res2 = _getPredAndArgTypesTypes(e2, List(variable), e2.discId)
+          return (res1._1 ++ res2._1, res1._2 ++ res2._2)
+        
+        //case BoxerDate(indicesPol, pol, indicesYear, year, indicesMonth, month, indicesDay, day) =>
+         // _getPredAndArgTypesTypes(e, List(BoxerVariable("d")), "")
+          
         case _ => {
           e.visit(getPredicatesAndArgTypes, combinePredicatesAndArgTypes, (Map[BoxerExpression, List[String]](), Map[String, Set[String]]()))
         }

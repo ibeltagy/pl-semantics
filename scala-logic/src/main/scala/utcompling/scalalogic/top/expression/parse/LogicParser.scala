@@ -42,9 +42,9 @@ abstract class LogicParser[T] {
         //our parser.
         //Update: It is not here. It is in processQuotedToken
         val trimmed = """\n[ \t]*""".r.replaceAllIn(data, " ").trim()//.replace("'", "");
-
+        println(data)
         this.currentIndex = 0
-
+        
         val (buffer, mapping) = this.process(trimmed)
         this.buffer = buffer
 

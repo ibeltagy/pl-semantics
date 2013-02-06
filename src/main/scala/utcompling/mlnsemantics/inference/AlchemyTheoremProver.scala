@@ -404,14 +404,17 @@ class AlchemyTheoremProver(
       for(notEqExpr <- notEqMap )
       {
           var oneLine = notEqExpr._1;
+          var foundOne = false;
 	      for(nonRelationExpr <- nonRelationsMap )
 	      {
 	    	  if ((notEqExpr._2 & nonRelationExpr._2).size != 0)
 	    	  {
 	    		  oneLine = oneLine & nonRelationExpr._1;
+	    		  foundOne = true;
 	    	  }
 	      }
-	      f.write(entWeight + "  " + convert(oneLine -> entailmentConsequent, allGoalVariables) + "\n");
+	      if (foundOne)
+	    	  f.write(entWeight + "  " + convert(oneLine -> entailmentConsequent, allGoalVariables) + "\n");
       }
       
       //write imp expressions 

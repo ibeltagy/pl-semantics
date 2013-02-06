@@ -178,9 +178,12 @@ object Sts {
       //        run(stsFile, fullVsFile, _ => true)
     }
 
-    def sepTokens(a: String) = {
-      //Tokenize(a.replace("-","" ).replace("on to", "onto")).mkString(" ");
-      Tokenize(a.replace("-","" )).mkString(" ");
+    def sepTokens(a: String)= {
+      //Tokenize(a.replace("-","" ).replace("\"", " ").replace("\'", " ").replace("‘", " ").replace("’", " ").replace("/", " ").replace("“", " ").replace("”", " ").replace(")", " ").replace("(", " ")).mkString(" ");
+      //remove non-ascii characters
+      //remove control 
+      Tokenize("""-|'|`|‘|’|/|"|“|”|\)|\(|&|>|<|=|\$|:""".r.replaceAllIn(a, " ").filterNot(  (c:Char) => ( c > 127)  )).mkString(" ");
+      //Tokenize(a.replace("-","" )).mkString(" ");
     } 
     
     def run(stsFile: String, boxFile: String, vsFile: String, goldSimFile: String, outputSimFile: String, allLemmas: String => Boolean, includedPairs: Int => Boolean) {
