@@ -26,7 +26,10 @@ class Boxer2DrtExpressionInterpreter extends BaseBoxerExpressionInterpreter[DrtE
         this.interpret(first) + this.interpret(second)
 
     override protected def interpretBoxerNamed(discId: String, indices: List[BoxerIndex], variable: BoxerVariable, name: String, typ: String, sense: Int): DrtExpression =
-        DrtAtom(Variable("%s_%s_d%s".format(name, typ, discId)), Variable(variable.name))
+        //DrtAtom(Variable("%s_%s_d%s".format(name, typ, discId)), Variable(variable.name))
+      	//DrtAtom(Variable("%s_d%s".format(name, discId)), Variable(variable.name))
+      //print it in the same format as BoxerPred so hopefully they work together. 
+      DrtAtom(Variable("%s_n_d%s".format(name, discId)), Variable(variable.name))
 
     override protected def interpretBoxerNot(discId: String, indices: List[BoxerIndex], drs: BoxerExpression): DrtExpression =
         -this.interpret(drs)
@@ -38,7 +41,12 @@ class Boxer2DrtExpressionInterpreter extends BaseBoxerExpressionInterpreter[DrtE
         DrtPropositionExpression(Variable(variable.name), this.interpret(drs))
 
     override protected def interpretBoxerRel(discId: String, indices: List[BoxerIndex], event: BoxerVariable, variable: BoxerVariable, name: String, sense: Int): DrtExpression =
-        DrtAtom(Variable("r_%s_d%s".format(name, discId)), Variable(event.name), Variable(variable.name))
+    	DrtAtom(Variable("r_%s_d%s".format(name, discId)), Variable(event.name), Variable(variable.name))
+        /*  if (name == "agent" || name == "patient")
+        	  DrtAtom(Variable("r_%s_d%s".format(name, discId)), Variable(event.name), Variable(variable.name))
+          else
+            DrtAtom(Variable("r_rel_d%s".format(discId)), Variable(event.name), Variable(variable.name))
+         */
     
     override protected def interpretBoxerCard(discId: String, index: List[BoxerIndex], variable: BoxerVariable, num: String, typ: String): DrtExpression =
         DrtAtom(Variable("card_%s_d%s".format(num, discId)), Variable(variable.name))

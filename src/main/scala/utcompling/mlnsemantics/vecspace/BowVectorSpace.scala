@@ -37,6 +37,10 @@ class BowVector(val counts: Map[String, Double]) {
   def +(other: BowVector) = {
     new BowVector((this zip2 other).map { case (k, (t, o)) => (k, t + o) })
   }
+  
+  def /(d: Double) = {
+    new BowVector(counts.mapValues(_ / d))
+  }
 
   def cosine(other: BowVector) = {
     val numer = (this zip other).sumBy { case ((_, t), (_, o)) => t * o }

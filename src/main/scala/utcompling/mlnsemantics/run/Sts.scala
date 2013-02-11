@@ -27,6 +27,7 @@ import utcompling.mlnsemantics.datagen.CncLemmatizeCorpusMapper
 import scala.io.Source
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.PassthroughBoxerExpressionInterpreter
 import utcompling.scalalogic.discourse.impl.PreparsedBoxerDiscourseInterpreter
+import utcompling.mlnsemantics.inference.CompositionalRuleWeighter
 
 /**
  *
@@ -96,7 +97,8 @@ object Sts {
   //val Range(defaultRange) = "28,95,223,227,238"
   //Try example 597,610,679
   //val Range(defaultRange) = "597,610,679,803,825,904,905,1067,1171,1341,1399,1446"
-  val Range(defaultRange) = "1-829,831-1500"
+  //val Range(defaultRange) = "1-829,831-1500"
+  val Range(defaultRange) = "1-1500"
     
 
   val SomeRe = """Some\((.*)\)""".r
@@ -208,25 +210,28 @@ object Sts {
           val ttp =
             new TextualTheoremProver( //1
               new PreparsedBoxerDiscourseInterpreter(boxPair, new PassthroughBoxerExpressionInterpreter()),
-              new InferenceRuleInjectingProbabilisticTheoremProver( //2
-                wordnet,
-                words => BowVectorSpace(vsFile, x => words(x) && allLemmas(x)),
-                new SameLemmaHardClauseRuleWeighter(
-                  new AwithCvecspaceRuleWeighter(new SimpleCompositeVectorMaker())), 
-                new TypeConvertingPTP( //3
-                  new BoxerExpressionInterpreter[FolExpression] {
-                    def interpret(x: BoxerExpression): FolExpression =
-                      new Boxer2DrtExpressionInterpreter().interpret(
-                        new OccurrenceMarkingBoxerExpressionInterpreterDecorator().interpret(
-                          new MergingBoxerExpressionInterpreterDecorator().interpret(
-                            new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(
-                              new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))))).fol
-                  },
-                	new PositiveEqEliminatingProbabilisticTheoremProver(
-                          new FromEntToEqvProbabilisticTheoremProver(   
-                    		  new ExistentialEliminatingProbabilisticTheoremProver(
-                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver(
-                    						  AlchemyTheoremProver.findBinary())))))))
+              new MergeSameVarPredProbabilisticTheoremProver(
+                //new FindEventsProbabilisticTheoremProver(
+	              new GetPredicatesDeclarationsProbabilisticTheoremProver(
+		              new InferenceRuleInjectingProbabilisticTheoremProver( //2
+		                wordnet,
+		                words => BowVectorSpace(vsFile, x => words(x) && allLemmas(x)),
+		                new SameLemmaHardClauseRuleWeighter(
+		                  new AwithCvecspaceWithSpillingSimilarityRuleWeighter(new SimpleCompositeVectorMaker())), 
+		                new TypeConvertingPTP( //3
+		                  new BoxerExpressionInterpreter[FolExpression] {
+		                    def interpret(x: BoxerExpression): FolExpression =
+		                      new Boxer2DrtExpressionInterpreter().interpret(
+		                        new OccurrenceMarkingBoxerExpressionInterpreterDecorator().interpret(
+		                          new MergingBoxerExpressionInterpreterDecorator().interpret(
+		                            new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(
+		                              new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))))).fol
+		                  },
+		                	new PositiveEqEliminatingProbabilisticTheoremProver(
+		                          new FromEntToEqvProbabilisticTheoremProver(   
+		                    		  new ExistentialEliminatingProbabilisticTheoremProver(
+		                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver(
+		                    						  AlchemyTheoremProver.findBinary())))))))))
 
           val p = ttp.prove(sepTokens(txt), sepTokens(hyp))
           println("%s  [actual: %s, gold: %s]".format(p, probOfEnt2simScore(p.get), goldSim))

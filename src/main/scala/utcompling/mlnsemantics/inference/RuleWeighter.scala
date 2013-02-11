@@ -4,6 +4,7 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerPred
 import utcompling.mlnsemantics.vecspace.BowVector
 import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.CollectionUtil._
+import utcompling.mlnsemantics.inference.CompositeVectorMaker
 
 trait RuleWeighter {
   def weightForRules(antecedent: BoxerPred, antecedentContext: Iterable[String], consequentAndContexts: Map[BoxerPred, Iterable[String]], vectorspace: Map[String, BowVector]): Iterable[(BoxerPred, Option[Double])]
@@ -49,6 +50,67 @@ case class AwithCvecspaceRuleWeighter(
     }
   }
 }
+
+case class AwithCvecspaceWithSpillingSimilarityRuleWeighter(
+  compositeVectorMaker: CompositeVectorMaker)
+  extends RuleWeighter {
+
+  private def spillingSimilarity (s1: String, s2: String): Double = {
+    if (s1.length() < 5)
+      return 0;
+    if (s2.length() < 5)
+      return 0;
+    var score = s1.toSet.intersect(s2.toSet).size * 1.0/ (s1.toSet ++ s2.toSet).size;
+    score = Math.min (0.99, score);
+    if (score > 0.5)
+      return score;
+    else
+      return 0;
+  }
+  override def weightForRules(antecedent: BoxerPred, antecedentContext: Iterable[String], consequentAndContexts: Map[BoxerPred, Iterable[String]], vectorspace: Map[String, BowVector]) = {
+    val pv = compositeVectorMaker.make (antecedent.name.split("_"), vectorspace);
+    consequentAndContexts.map {
+      case (consequent, consequentContext) =>
+        val w = spillingSimilarity(antecedent.name, consequent.name);
+        val v = compositeVectorMaker.make (consequent.name.split("_"), vectorspace);
+        consequent -> Some(v match {
+          case cv => pv match {
+    		case pv => pv cosine cv
+    		//case None => w  //if vector space does not work, use spilling
+          	}
+          //case None => w  //if vector space does not work, use spilling
+        })
+    }
+  }
+}
+
+case class CompositionalRuleWeighter(
+  compositeVectorMaker: CompositeVectorMaker)
+  extends RuleWeighter {
+
+  val ruleWeighter = AwithCvecspaceWithSpillingSimilarityRuleWeighter(compositeVectorMaker);
+  
+  override def weightForRules(antecedent: BoxerPred, antecedentContext: Iterable[String], consequentAndContexts: Map[BoxerPred, Iterable[String]], vectorspace: Map[String, BowVector]) = {
+	val antecedentWords =  antecedent.name.split("_")
+    consequentAndContexts.map {
+      case (consequent, consequentContext) =>{
+        val consequentWords = consequent.name.split("_")
+        var totalW = 0.0;
+        
+        antecedentWords.foreach(aw =>{
+           val ap = BoxerPred(antecedent.discId, antecedent.indices, antecedent.variable, aw, antecedent.pos, antecedent.sense);
+           consequentWords.foreach(cw =>{
+             val cp = BoxerPred(consequent.discId, consequent.indices, consequent.variable, cw, consequent.pos, consequent.sense);
+        	 totalW = totalW + ruleWeighter.weightForRules(ap, antecedentContext, Map(cp->consequentContext), vectorspace).head._2.get;
+           });
+        });
+        totalW = totalW/(antecedentWords.size * consequentWords.size) 
+        consequent -> Some(totalW)
+      }
+    }
+  }
+}
+
 
 case class AwithCtxCwithCtxVecspaceRuleWeighter(
   compositeVectorMaker: CompositeVectorMaker)

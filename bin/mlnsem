@@ -19,8 +19,8 @@ case $CMD in
 #	$START utcompling.mlnsemantics.run.Sts run $STS/STS.SMTnews.in.txt $STS/STS.SMTnews.in.box $STS/STS.SMTnews.in.vs $STS/STS.SMTnews.gs.txt $STS/STS.SMTnews.out.txt "$@"
 	;;
   box)
-	$START utcompling.mlnsemantics.run.Sts box $STS/prob.in.txt $STS/prob.in.box "$@"
-#	$START utcompling.mlnsemantics.run.Sts box $STS/STS.MSRvid.in.txt $STS/STS.MSRvid.in.box "$@"
+#	$START utcompling.mlnsemantics.run.Sts box $STS/prob.in.txt $STS/prob.in.box "$@"
+	$START utcompling.mlnsemantics.run.Sts box $STS/STS.MSRvid.in.txt $STS/STS.MSRvid.in.box "$@"
 #	$START utcompling.mlnsemantics.run.Sts box $STS/STS.MSRpar.in.txt $STS/STS.MSRpar.in.box "$@"
 #	$START utcompling.mlnsemantics.run.Sts box $STS/STS.OnWN.in.txt $STS/STS.OnWN.in.box "$@"
 #	$START utcompling.mlnsemantics.run.Sts box $STS/STS.SMTeuroparl.in.txt $STS/STS.SMTeuroparl.in.box "$@"

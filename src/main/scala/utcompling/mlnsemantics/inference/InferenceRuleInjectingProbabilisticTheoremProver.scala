@@ -14,12 +14,14 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerImp
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerPred
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerVariable
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerEqv
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerRel
 import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.CollectionUtil._
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.OccurrenceMarkingBoxerExpressionInterpreterDecorator
 import org.apache.commons.logging.LogFactory
 import support.HardWeightedExpression
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerNamed
 
 class InferenceRuleInjectingProbabilisticTheoremProver(
   wordnet: Wordnet,
@@ -53,8 +55,17 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     val assumPredsAndContexts = assumptions.flatMap(getAllPredsAndContexts)
     val goalPredsAndContexts = (List(goal)).flatMap(getAllPredsAndContexts)
     val allPredsAndContexts =  List.concat(assumPredsAndContexts, goalPredsAndContexts);
-    val vectorspace = vecspaceFactory(allPredsAndContexts.flatMap { case (pred, context) => (pred.name +: context).map(stripNot) }.toSet)
-    val rules = makeRules(assumPredsAndContexts, goalPredsAndContexts, vectorspace)
+    val vectorspace = vecspaceFactory(allPredsAndContexts.flatMap {
+      case (pred, context) => {
+        val l = pred.name.split("_") ++ context
+        l
+       }.map(stripNot)
+    }.toSet)
+    
+    val assumRel = assumptions.flatMap(getAllRelations);
+    val goalRel = List(goal).flatMap(getAllRelations);
+    var rules = makeRules(assumPredsAndContexts, goalPredsAndContexts, vectorspace)
+    rules = rules ++ makeLongerRules(assumPredsAndContexts, goalPredsAndContexts, vectorspace);
     //rules.foreach(x => LOG.info("\n" + d(x.expression).pretty))
     return rules
   }
@@ -62,14 +73,50 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
   def getAllPredsAndContexts(e: BoxerExpression): Seq[(BoxerPred, Seq[String])] = {
     val preds = getAllPreds(e)
     val predsAndContexts = preds.zipWithIndex.map { case (p, i) => p -> (preds.take(i) ++ preds.drop(i + 1)) }
-    predsAndContexts.mapVals(_.map(p => stripNot(p.name)))
+    val newPredsAndContexts = predsAndContexts.mapVals(_.map(p => stripNot(p.name)));
+    val newPredsAndContextsSplit = newPredsAndContexts.mapVals(l=>{
+      var flatL: List[String] = List();
+      l.foreach(e=>{
+        flatL = flatL ++ e.split("_");
+      })
+      flatL
+    }) 
+    
+    return newPredsAndContextsSplit;//predsAndContexts.mapVals(_.map(p => stripNot(p.name))) ;
   }
 
   private def getAllPreds(e: BoxerExpression): Seq[BoxerPred] =
     e match {
       case p: BoxerPred => Seq(p)
+      case BoxerNamed(discId, indices, variable, name, typ, sense) => Seq(BoxerPred(discId, indices, variable, name, "n", sense))
       case _ => e.visit(getAllPreds, (parts: List[Seq[BoxerPred]]) => parts.flatten, Seq.empty[BoxerPred])
     }
+  
+  private def getAllRelations(e: BoxerExpression): Seq[BoxerRel] =
+    e match {
+      case p: BoxerRel => {
+    	if (p.name == "patient" || p.name == "agent" )  
+    		Seq.empty[BoxerRel]
+    	else Seq(p)
+      }
+      case _ => e.visit(getAllRelations, (parts: List[Seq[BoxerRel]]) => parts.flatten, Seq.empty[BoxerRel])
+    }
+
+  private def findPredPred(preds: Iterable[(BoxerPred, Iterable[String])]): Set[WeightedExpression[BoxerExpression]] = {
+		  
+    return Set[WeightedExpression[BoxerExpression]]();
+  }
+  
+  private def findRelPred(preds: Iterable[(BoxerPred, Iterable[String])]): Set[WeightedExpression[BoxerExpression]] = {
+		  
+    return Set[WeightedExpression[BoxerExpression]]();    
+  }
+  
+  
+  private def makeLongerRules(assumPredsAndContexts: Iterable[(BoxerPred, Iterable[String])], goalPredsAndContexts: Iterable[(BoxerPred, Iterable[String])], vectorspace: Map[String, BowVector]): Set[WeightedExpression[BoxerExpression]] = {
+		  
+    return Set[WeightedExpression[BoxerExpression]]();
+  }
 
   private def makeRules(assumPredsAndContexts: Iterable[(BoxerPred, Iterable[String])], goalPredsAndContexts: Iterable[(BoxerPred, Iterable[String])], vectorspace: Map[String, BowVector]): Set[WeightedExpression[BoxerExpression]] = {
     
@@ -80,7 +127,9 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 		{
 			//DO not add rules if the word is the same
 		     //Words should have the same POS and same entity type (individual or event)
-			if (assumPred._1.pos == goalPred._1.pos && 
+			
+		  //TODO: Think again about this. Are you sure you want to add rules between non-matching POS words 
+		  if (//assumPred._1.pos == goalPred._1.pos && 
 			    assumPred._1.name != goalPred._1.name &&
 			    assumPred._1.variable.name.charAt(0) == goalPred._1.variable.name.charAt(0))
 			{
@@ -130,7 +179,9 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 	return ret.toSet;
   }
 
-  private def stripNot(p: String) = p match { case NotPred(x) => x; case x => x }
+  private def stripNot(p: String): String = {	
+    p match { case NotPred(x) => x; case x => x } 
+  }
 
   private def makeRulesForPred(pred: BoxerPred, antecedentContext: Iterable[String], predsAndContextsByName: Map[String, Map[BoxerPred, Iterable[String]]], vectorspace: Map[String, BowVector]) = {
     pred.name match {

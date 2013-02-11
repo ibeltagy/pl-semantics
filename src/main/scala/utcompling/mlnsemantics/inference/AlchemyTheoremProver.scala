@@ -31,7 +31,7 @@ class AlchemyTheoremProver(
   private var entailedDec = FolVariableExpression(Variable("entailment")) -> Seq("entail")
   private var entailmentConsequent = FolAtom(Variable("entailment"), Variable("entailed")); //FolVariableExpression(Variable("entailment")) -> Seq("");//= 
   private var ResultsRE = """entailment\("entailed"\) (\d*\.\d*)""".r
-
+  
   override def prove(
     constants: Map[String, Set[String]],
     declarations: Map[FolExpression, Seq[String]],
@@ -203,7 +203,7 @@ class AlchemyTheoremProver(
             //            val usedWeight = log(weight / (1 - weight)) / log(logBase) // treat 'weight' as a prob and find the log-odds
             //            f.write(usedWeight + " " + convert(folEx) + "\n")
             var usedWeight = min(weight, 0.999);
-            usedWeight = max(weight, 0.001);
+            usedWeight = max(usedWeight, 0.001);
             usedWeight = -prior + log(usedWeight) - log(1-usedWeight);
             if (usedWeight  > 0)
             	f.write("%.15f %s\n".format(usedWeight, convert(folEx)))
@@ -216,6 +216,8 @@ class AlchemyTheoremProver(
         }
 
       f.write("\n")
+      
+      //f.write(handwrittenRules);
       
       val entWeights = Array(0.0, 
  
@@ -344,11 +346,15 @@ class AlchemyTheoremProver(
 		              case FolVariableExpression(v) =>{
 		            	  if (v.name.startsWith("r_"))
 		            	    relationsMap = relationsMap + ( expr -> allVars);
-		            	  else 
+		            	  else
 		            	    nonRelationsMap = nonRelationsMap + ( expr -> allVars);
 		              }		                
 		              case _ => nonRelationsMap = nonRelationsMap + ( expr -> allVars);
-		            }		            
+		            }
+		          case FolVariableExpression(v) =>{
+		        	  if (!v.name.startsWith("topic_"))
+		        		  nonRelationsMap = nonRelationsMap + ( expr -> allVars);
+		          }
 		          case _=>  nonRelationsMap = nonRelationsMap + ( expr -> allVars); 
 		        }
 	        }
@@ -387,7 +393,7 @@ class AlchemyTheoremProver(
       
       //if n is not in the list of weights, set it to 1
       if (n >= entWeights.size)
-    	  entWeight = 0.4;
+    	  entWeight = 0.1;
       else
     	  entWeight = entWeights(n);
       
