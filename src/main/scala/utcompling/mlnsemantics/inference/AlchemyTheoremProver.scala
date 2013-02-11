@@ -393,7 +393,8 @@ class AlchemyTheoremProver(
       
       //if n is not in the list of weights, set it to 1
       if (n >= entWeights.size)
-    	  entWeight = 0.1;
+    	  //entWeight = 0.1;
+    	  entWeight = (-prior + log(0.98) - log(1-0.98))/n;
       else
     	  entWeight = entWeights(n);
       
