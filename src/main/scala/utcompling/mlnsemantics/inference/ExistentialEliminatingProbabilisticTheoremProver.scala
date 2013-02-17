@@ -48,18 +48,19 @@ class ExistentialEliminatingProbabilisticTheoremProver(
       }
     }
 
-    val newAssumptions: List[WeightedExpression[FolExpression]] =
-      assumptions.map {
-        case HardWeightedExpression(e) => HardWeightedExpression(go(e))
-        case SoftWeightedExpression(e, w) => SoftWeightedExpression(go(e), w)
-      }
-
     def goKeepOuter(e: FolExpression): FolExpression = {
 	    e match {
 	        case FolExistsExpression(v, term) => FolExistsExpression(v, goKeepOuter(term)) 
 	        case _ => go (e) 
 	    }
     }
+    
+    val newAssumptions: List[WeightedExpression[FolExpression]] =
+      assumptions.map {
+        case HardWeightedExpression(e) => HardWeightedExpression(go(e))
+        case SoftWeightedExpression(e, w) => SoftWeightedExpression(go(e), w)
+      }
+
     val newGoal = goKeepOuter(goal) 
     
     delegate.prove(

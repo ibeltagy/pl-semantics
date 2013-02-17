@@ -42,12 +42,11 @@ class Boxer2DrtExpressionInterpreter extends BaseBoxerExpressionInterpreter[DrtE
 
     override protected def interpretBoxerRel(discId: String, indices: List[BoxerIndex], event: BoxerVariable, variable: BoxerVariable, name: String, sense: Int): DrtExpression =
     	DrtAtom(Variable("r_%s_d%s".format(name, discId)), Variable(event.name), Variable(variable.name))
-        /*  if (name == "agent" || name == "patient")
+        /*if (name == "agent" || name == "patient")
         	  DrtAtom(Variable("r_%s_d%s".format(name, discId)), Variable(event.name), Variable(variable.name))
-          else
+        else
             DrtAtom(Variable("r_rel_d%s".format(discId)), Variable(event.name), Variable(variable.name))
-         */
-    
+    	*/
     override protected def interpretBoxerCard(discId: String, index: List[BoxerIndex], variable: BoxerVariable, num: String, typ: String): DrtExpression =
         DrtAtom(Variable("card_%s_d%s".format(num, discId)), Variable(variable.name))
         

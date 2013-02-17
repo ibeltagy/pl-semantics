@@ -3,6 +3,8 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -20,11 +22,34 @@ public class wordGramSimilarity {
 		}		
 		return concat;
 	}
+	
+	static String[] filterStopwords(String [] words, HashSet<String> sw)
+	{
+		ArrayList<String> filteredWords = new ArrayList<String>();
+		for (String w: words)
+		{
+			if (! sw.contains(w))
+				filteredWords.add(w);
+		}		
+		Object[] f = filteredWords.toArray();
+		String[] stringArray = Arrays.copyOf(f, f.length, String[].class);
+		return stringArray;
+	}
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		String filePath = "/home/beltagy/workspace/deft/mln-semantics/resources/sts/STS.MSRpar.in.lem";
+		String stopWordsFilePath = "stopwords.txt";
 		
 		try {
+			BufferedReader swfr = new BufferedReader(new FileReader(stopWordsFilePath));
+			String sw;
+			HashSet<String> stopWords = new HashSet<String>();
+			while ((sw = swfr.readLine()) != null)
+			{
+				stopWords.add(sw);
+			}
+			swfr.close();
+			
 			BufferedReader fr = new BufferedReader(new FileReader(filePath));
 
 			String l;
@@ -35,8 +60,8 @@ public class wordGramSimilarity {
 			while ((l = fr.readLine()) != null)
 			{
 				String [] pair = l.split("\t");
-				String [] txt = pair[0].split(" ");
-				String [] hyp = pair[1].split(" ");
+				String [] txt = filterStopwords(pair[0].split(" "), stopWords);
+				String [] hyp = filterStopwords(pair[1].split(" "), stopWords);
 				for (int ngramSize = 1; ngramSize <=4; ngramSize ++)
 				{
 					HashSet<String> txtNgrams = new HashSet<String>();

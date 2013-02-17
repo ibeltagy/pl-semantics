@@ -46,26 +46,122 @@ class MergeSameVarPredProbabilisticTheoremProver(
     }
   }
   
+  
+  private def eliminateRedundantEquality(e: BoxerExpression): Option[BoxerExpression] = {
+    e match {
+      case BoxerDrs(refs, conds) =>{ 
+        val drs = BoxerDrs(refs, conds.flatMap( c => {
+          c match {
+            case BoxerEq(discId, indices, first, second) => if (first.name != second.name) List(c) else None;  
+            case _ => eliminateRedundantEquality(c)
+          }
+       }));
+       if (drs.conds.length == 0) return None;
+       return Some(drs)
+      };
+      
+      case BoxerAlfa(variable, first, second) =>
+        val firstMod = eliminateRedundantEquality(first);
+        val secondMod = eliminateRedundantEquality(second);
+        if (firstMod  == None && secondMod  == None)
+          return None;
+        else if (firstMod  == None)
+          return secondMod;
+        else if (secondMod  == None)
+          return firstMod;
+        else Some(BoxerAlfa(variable, firstMod.get, secondMod.get));
+        
+      case BoxerImp(discId, indices, first, second) =>
+        val firstMod = eliminateRedundantEquality(first);
+        val secondMod = eliminateRedundantEquality(second);
+        if (firstMod  == None && secondMod  == None)
+          return None;
+        else if (firstMod  == None)
+          return secondMod;
+        else if (secondMod  == None)
+          return firstMod;
+        else Some(BoxerImp(discId, indices, firstMod.get, secondMod.get));
+
+      case BoxerEqv(discId, indices, first, second) =>
+        val firstMod = eliminateRedundantEquality(first);
+        val secondMod = eliminateRedundantEquality(second);
+        if (firstMod  == None && secondMod  == None)
+          return None;
+        else if (firstMod  == None)
+          return secondMod;
+        else if (secondMod  == None)
+          return firstMod;
+        else Some(BoxerEqv(discId, indices, firstMod.get, secondMod.get));
+        
+      case BoxerOr(discId, indices, first, second) =>
+        val firstMod = eliminateRedundantEquality(first);
+        val secondMod = eliminateRedundantEquality(second);
+        if (firstMod  == None && secondMod  == None)
+          return None;
+        else if (firstMod  == None)
+          return secondMod;
+        else if (secondMod  == None)
+          return firstMod;
+        else Some(BoxerOr(discId, indices, firstMod.get, secondMod.get));
+        
+      case BoxerMerge(pred, first, second) =>
+        val firstMod = eliminateRedundantEquality(first);
+        val secondMod = eliminateRedundantEquality(second);
+        if (firstMod  == None && secondMod  == None)
+          return None;
+        else if (firstMod  == None)
+          return secondMod;
+        else if (secondMod  == None)
+          return firstMod;
+        else Some(BoxerMerge(pred, firstMod.get, secondMod.get));        
+
+      case BoxerNot(discId, indices, drs) =>
+        val drsMod = eliminateRedundantEquality(drs);
+        if (drsMod  == None)
+          return None;
+        else Some(BoxerNot(discId, indices, drsMod.get));        
+
+      case BoxerProp(discId, indices, variable, drs) =>
+        val drsMod = eliminateRedundantEquality(drs);
+        if (drsMod  == None)
+          return None;
+        else Some(BoxerProp(discId, indices, variable, drsMod.get));
+        
+     //case BoxerApp(function, argument) => Some(BoxerApp(function, argument))
+        
+      case _ => Some(e)//e.visitConstruct(eliminateRedundantEquality)
+    }
+  }  
   private def mergePred(e: BoxerExpression): BoxerExpression = {
     
     val pred =  getAllPreds(e);
-    var varPredMap: Map[String, List[String]]= Map();
+    var varPredMap: Map[String, List[BoxerPred]]= Map();
     
     pred.foreach(p => {
       val predList = varPredMap.get(p.variable.name) match {
         case Some(l) => l
         case None => List();
       };
-      varPredMap = varPredMap + (p.variable.name -> (p.name::predList))
+      varPredMap = varPredMap + (p.variable.name -> (p::predList))
     })
+    //Print data for later processing
     println("MaxPredicatesCount: "  + varPredMap.map(_._2.size).max)
+    varPredMap.foreach(p =>
+      if (p._2.length>1)
+      {
+        val names = p._2.map(e=> e.name + "-" + e.pos);
+    	println("//PHRASE(nn): " + names.mkString(" ") )
+      }
+      else
+        println("//PHRASE(n): " + p._2.head.name+ "-"+p._2.head.pos))
+
     def combinePred(e: BoxerExpression): BoxerExpression = {
       e match {
         case BoxerPred(discId, indices, variable, name, pos, sense) =>{
           varPredMap.get(variable.name) match {
 	          case Some(l) => {
 	            varPredMap = varPredMap - variable.name;
-	            BoxerPred(discId, indices, variable, l.mkString("_"), pos, sense);
+	            BoxerPred(discId, indices, variable, l.map(_.name).mkString("_"), pos, sense);
 	          }
 	          case None => BoxerEq(discId, indices, variable, variable)
           };
@@ -75,7 +171,7 @@ class MergeSameVarPredProbabilisticTheoremProver(
           varPredMap.get(variable.name) match {
 	          case Some(l) => {
 	            varPredMap = varPredMap - variable.name;
-	            BoxerPred(discId, indices, variable, l.mkString("_"), "n", sense);
+	            BoxerPred(discId, indices, variable, l.map(_.name).mkString("_"), "n", sense);
 	          }
 	          case None => BoxerEq(discId, indices, variable, variable)
           };
@@ -83,6 +179,7 @@ class MergeSameVarPredProbabilisticTheoremProver(
         case _ => e.visitConstruct(combinePred)
       }
     }
+    //return eliminateRedundantEquality(combinePred(e)).get;
     return combinePred(e);
   }
 }

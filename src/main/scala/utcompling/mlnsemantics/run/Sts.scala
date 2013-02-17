@@ -98,7 +98,7 @@ object Sts {
   //Try example 597,610,679
   //val Range(defaultRange) = "597,610,679,803,825,904,905,1067,1171,1341,1399,1446"
   //val Range(defaultRange) = "1-829,831-1500"
-  val Range(defaultRange) = "1-1500"
+  val Range(defaultRange) = "250,1299,1381"
     
 
   val SomeRe = """Some\((.*)\)""".r
