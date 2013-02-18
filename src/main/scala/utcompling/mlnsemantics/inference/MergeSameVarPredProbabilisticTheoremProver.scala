@@ -179,7 +179,6 @@ class MergeSameVarPredProbabilisticTheoremProver(
         case _ => e.visitConstruct(combinePred)
       }
     }
-    //return eliminateRedundantEquality(combinePred(e)).get;
-    return combinePred(e);
+    return eliminateRedundantEquality(combinePred(e)).get;
   }
 }

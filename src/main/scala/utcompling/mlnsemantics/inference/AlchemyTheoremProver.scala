@@ -629,13 +629,16 @@ class AlchemyTheoremProver(
       case FolIfExpression(first, second) => "(" + _convert(first, bound) + " => " + _convert(second, bound) + ")"
       case FolIffExpression(first, second) => "(" + _convert(first, bound) + " <=> " + _convert(second, bound) + ")"
       case FolEqualityExpression(first, second) =>
+        	"(" + _convert(first, bound) + " = " + _convert(second, bound) + ")";	
         	//both variables of the same type
-	        if (first.asInstanceOf[FolVariableExpression].variable.name.charAt(1) == 
+	        /* This part is not needed anymore because we do not have separate types for Events and Indvs anymore. 
+	        * if (first.asInstanceOf[FolVariableExpression].variable.name.charAt(1) == 
 	        		second.asInstanceOf[FolVariableExpression].variable.name.charAt(1))
 	        	"(" + _convert(first, bound) + " = " + _convert(second, bound) + ")";
 	        else
 	        	// dummy exp
-	        	"(" + _convert(first, bound) + " = " + _convert(first, bound) + ")";
+	        	"(" + _convert(first, bound) + " = " + _convert(second, bound) + ")";
+	        */
       case FolAtom(pred, args @ _*) => pred.name.replace("'", "") + "(" + args.map(v => if (bound(v)) v.name.toLowerCase() else quote(v.name)).mkString(",") + ")"
       case FolVariableExpression(v) => if (bound(v)) v.name.toLowerCase() else quote(v.name)
     }
