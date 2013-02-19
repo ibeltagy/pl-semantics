@@ -105,12 +105,16 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
  
   private def findRelPred(preds: Iterable[(BoxerPred, Iterable[String])], rel: Iterable[BoxerRel]): Set[(BoxerExpression, Iterable[String], String)] = {
     val mapPredVar  = (preds.map(row => row._1.variable.name -> row)).toMap;
+    var notUsedPred = preds.toMap; 
     
     rel.flatMap(r => {
     	if (mapPredVar.contains(r.event.name) && mapPredVar.contains(r.variable.name))
     	{
 	    	val arg1 = mapPredVar(r.event.name)
 	    	val arg2 = mapPredVar(r.variable.name)
+	    	
+	    	notUsedPred =  notUsedPred - arg1._1; 
+	    	notUsedPred =  notUsedPred - arg2._1;
 	    	
 	    	val arg1Changed = BoxerPred(arg1._1.discId, arg1._1.indices, BoxerVariable("x0"), arg1._1.name, arg1._1.pos, arg1._1.sense)
 	    	val arg2Changed = BoxerPred(arg2._1.discId, arg2._1.indices, BoxerVariable("x1"), arg2._1.name, arg2._1.pos, arg2._1.sense)
@@ -126,7 +130,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 	    	Some((exp, context, words))
     	}
     	else None;
-    }).toSet ++ preds.map(p => (
+    }).toSet ++ notUsedPred.map(p => (
         BoxerDrs(List(), List(BoxerPred(p._1.discId, p._1.indices, BoxerVariable("x1"), p._1.name, p._1.pos, p._1.sense))),
         p._2,
         p._1.name
