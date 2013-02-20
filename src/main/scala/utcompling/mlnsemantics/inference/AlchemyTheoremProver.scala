@@ -190,29 +190,36 @@ class AlchemyTheoremProver(
           case e @ SoftWeightedExpression(folEx, weight) =>
             weight match {
               case Double.PositiveInfinity => Some(HardWeightedExpression(folEx))
-              case Double.NegativeInfinity => Some(HardWeightedExpression(-folEx))
+              case Double.NegativeInfinity => None ;//Some(HardWeightedExpression(-folEx))
               case _ if weight < 0.00001 => None // TODO: Set this threshold
               case _ => Some(e)
             }
           case e @ HardWeightedExpression(folEx) => Some(e)
-        }
-        .foreach {
-          case SoftWeightedExpression(folEx, weight) =>
-            // DONE: Convert [0,1] weight into alchemy weight
-            //            val usedWeight = log(weight / (1 - weight)) / log(logBase) // treat 'weight' as a prob and find the log-odds
-            //            f.write(usedWeight + " " + convert(folEx) + "\n")
-            var usedWeight = min(weight, 0.999);
-            usedWeight = max(usedWeight, 0.001);
-            usedWeight = -prior + log(usedWeight) - log(1-usedWeight);
-            if (usedWeight  > 0)
-            	f.write("%.15f %s\n".format(usedWeight, convert(folEx)))
-            //val usedWeight = 10 * weight // 5 * (pow(weight, 10)) //DONE: Set these parameters!!
-            // DONE: we want to design a function `f` such that, for the simplest examples (only one weighted clause), mln(f(s)) == s
-            //   meaning that the probability of entailment (`mln`) using a weight `f(s)` based on similarity score `s <- [0,1]` will be
-            //   roughly equal to the similarity score itself.
-            
-          case HardWeightedExpression(folEx) => f.write(convert(folEx) + ".\n")
-        }
+        }.foreach { e => 
+          e match {
+	          case SoftWeightedExpression(folExp, weight) =>
+	            // DONE: Convert [0,1] weight into alchemy weight
+	            //            val usedWeight = log(weight / (1 - weight)) / log(logBase) // treat 'weight' as a prob and find the log-odds
+	            //            f.write(usedWeight + " " + convert(folEx) + "\n")
+	            var usedWeight = min(weight, 0.999);
+	            usedWeight = max(usedWeight, 0.001);
+	            usedWeight = -prior + log(usedWeight) - log(1-usedWeight);
+	            if (usedWeight  > 0)
+	            {
+	              val folExpString = convert(folExp);
+	              //This is a nasty hack to inverse what alchamy does when it splits a formula into smaller formulas
+	              val count = folExpString.split("=>").apply(1).count(_ == '^') + 1;
+	              usedWeight = usedWeight * count; 
+	              f.write("%.15f %s\n".format(usedWeight, folExpString))
+	            }
+	            //val usedWeight = 10 * weight // 5 * (pow(weight, 10)) //DONE: Set these parameters!!
+	            // DONE: we want to design a function `f` such that, for the simplest examples (only one weighted clause), mln(f(s)) == s
+	            //   meaning that the probability of entailment (`mln`) using a weight `f(s)` based on similarity score `s <- [0,1]` will be
+	            //   roughly equal to the similarity score itself.
+	            
+	          case HardWeightedExpression(folExp) => f.write(convert(folExp) + ".\n")
+         }
+       }
 
       f.write("\n")
       
