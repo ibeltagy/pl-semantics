@@ -145,7 +145,7 @@ class MergeSameVarPredProbabilisticTheoremProver(
       varPredMap = varPredMap + (p.variable.name -> (p::predList))
     })
     //Print data for later processing
-    println("MaxPredicatesCount: "  + varPredMap.map(_._2.size).max)
+    /*println("MaxPredicatesCount: "  + varPredMap.map(_._2.size).max)
     varPredMap.foreach(p =>
       if (p._2.length>1)
       {
@@ -154,6 +154,7 @@ class MergeSameVarPredProbabilisticTheoremProver(
       }
       else
         println("//PHRASE(n): " + p._2.head.name+ "-"+p._2.head.pos))
+		*/
 
     def combinePred(e: BoxerExpression): BoxerExpression = {
       e match {

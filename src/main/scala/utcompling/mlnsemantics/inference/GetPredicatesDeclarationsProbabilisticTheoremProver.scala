@@ -58,7 +58,6 @@ class GetPredicatesDeclarationsProbabilisticTheoremProver(
           return (res1._1 ++ res2._1, res1._2 ++ res2._2)
         }
         case BoxerRel(discId, indices, event, variable, name, sense) =>{          
-          if (name == "theme") println(e)
           val res1 = _getPredAndArgTypesTypes(e, List(event, variable), discId)
           val e2 = BoxerRel(discId match {case "t" => "h"; case "h" => "t"}, indices, event, variable, name, sense);
           val res2 = _getPredAndArgTypesTypes(e2, List(event, variable), e2.discId)

@@ -46,7 +46,6 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
       assumptions
         .flatMap {
           case HardWeightedExpression(e) => {
-        	  println(e);
         	  go(e).map(HardWeightedExpression(_))
           }
           case a @ SoftWeightedExpression(e, w) => List(a)

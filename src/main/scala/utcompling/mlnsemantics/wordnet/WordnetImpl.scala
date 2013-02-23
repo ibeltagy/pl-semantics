@@ -14,7 +14,7 @@ class WordnetImpl(dict: IDictionary) extends Wordnet {
     this({ val d = new Dictionary(new URL("file", null, path)); d.open(); d })
 
   def this() =
-    this("resources/wordnet")
+    this(System.getenv("WORDNETHOME"))
 
   def open(): IDictionary =
     if (dict.open())

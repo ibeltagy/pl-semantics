@@ -1,14 +1,14 @@
 #!/bin/bash
 
 
-#export CANDCHOME="/u/beltagy/workspace/deft/candcLatest/bin"
-#export ALCHEMYHOME="/u/beltagy/workspace/deft/alchemy-2/bin"
+export CANDCHOME="/u/beltagy/workspace/deft/candcLatest/bin"
+export ALCHEMYHOME="/u/beltagy/workspace/deft/alchemy-2/bin"
 export WORDNETHOME="/u/beltagy/workspace/deft/mln-semantics/resources/wordnet"
 
 
 SBT="java -Dfile.encoding=UTF8 -Xdebug -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=256m -jar bin/sbt-launch-*.jar"
-START="target/start"
-STS="resources/sts"
+START="/u/beltagy/workspace/deft/mln-semantics/target/start"
+STS="/u/beltagy/workspace/deft/mln-semantics/resources/sts"
 
 CMD=$1
 shift

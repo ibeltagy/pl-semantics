@@ -22,6 +22,7 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.O
 import org.apache.commons.logging.LogFactory
 import support.HardWeightedExpression
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerNamed
+import utcompling.mlnsemantics.run.Sts
 
 class InferenceRuleInjectingProbabilisticTheoremProver(
   wordnet: Wordnet,
@@ -120,7 +121,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 	    	val arg2Changed = BoxerPred(arg2._1.discId, arg2._1.indices, BoxerVariable("x1"), arg2._1.name, arg2._1.pos, arg2._1.sense)
 	    	val rChanged = BoxerRel(r.discId, r.indices, BoxerVariable("x0"), BoxerVariable("x1"), r.name, r.sense)
 	    	
-	    	println ("//PHRASE(npn): " + arg1._1.name+"-"+arg1._1.pos + " " + r.name + " " + arg2._1.name+"-"+arg2._1.pos)
+	    	//println ("//PHRASE(npn): " + arg1._1.name+"-"+arg1._1.pos + " " + r.name + " " + arg2._1.name+"-"+arg2._1.pos)
 	    	val context = (arg1._2 ++ arg2._2).toList.diff(arg1._1.name.split("_")).diff(arg2._1.name.split("_"));
 	    	val words = arg1._1.name + "_" + arg2._1.name;
 	    	//val vars = List(List() ->BoxerVariable("x0")) ++ List(List() ->BoxerVariable("x1"))
@@ -130,7 +131,13 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 	    	Some((exp, context, words))
     	}
     	else None;
-    }).toSet ++ notUsedPred.map(p => (
+    }).toSet ++ (Sts.opts.get("-noDup") match {
+                     case Some(s) => s.toBoolean match {
+                        case false => preds;
+                        case _ => notUsedPred;
+                     }
+                     case _ => notUsedPred;
+                 }).map(p => (
         BoxerDrs(List(), List(BoxerPred(p._1.discId, p._1.indices, BoxerVariable("x1"), p._1.name, p._1.pos, p._1.sense))),
         p._2,
         p._1.name

@@ -14,6 +14,7 @@ import opennlp.scalabha.util.CollectionUtil._
 import utcompling.scalalogic.util.SubprocessCallable
 import utcompling.mlnsemantics.inference.support._
 import java.util.StringTokenizer
+import utcompling.mlnsemantics.run.Sts
 
 class AlchemyTheoremProver(
   override val binary: String,
@@ -185,13 +186,17 @@ class AlchemyTheoremProver(
       }
       f.write("\n")
 
-      assumptions
+      val weightThreshold  = Sts.opts.get("-wThr") match {
+			case Some(thr) => thr.toDouble;
+			case _ => 0.0001;
+		}
+		assumptions
         .flatMap {
           case e @ SoftWeightedExpression(folEx, weight) =>
             weight match {
               case Double.PositiveInfinity => Some(HardWeightedExpression(folEx))
               case Double.NegativeInfinity => None ;//Some(HardWeightedExpression(-folEx))
-              case _ if weight < 0.00001 => None // TODO: Set this threshold
+              case _ if weight < weightThreshold => None
               case _ => Some(e)
             }
           case e @ HardWeightedExpression(folEx) => Some(e)
@@ -208,7 +213,14 @@ class AlchemyTheoremProver(
 	            {
 	              val folExpString = convert(folExp);
 	              //This is a nasty hack to inverse what alchamy does when it splits a formula into smaller formulas
-	              val count = folExpString.split("=>").apply(1).count(_ == '^') + 1;
+	              var count = folExpString.split("=>").apply(1).count(_ == '^') + 1;
+					  Sts.opts.get("-scaleW") match {
+							case Some(s) => s.toBoolean match {
+								case false => count = 1;
+								case _ =>;
+							} 
+							case _ => ;
+					  }
 	              usedWeight = usedWeight * count; 
 	              f.write("%.15f %s\n".format(usedWeight, folExpString))
 	            }
@@ -401,18 +413,22 @@ class AlchemyTheoremProver(
       n += notEqMap.size;   //Each notEqual expression corresponds to an extra line in the combination function
       n += impMap.size;   //Each imp expression corresponds to an extra line in the combination function
       						//THis may change
-      println("//n: " + n +"\n");
+      //println("//n: " + n +"\n");
       //AlchemyTheoremProver.pairIndx
       //entWeight  = entWeights(AlchemyTheoremProver.pairIndx)
       //if n is not in the list of weights, set it to 1
-      
+
+      val maxProb = Sts.opts.get("-maxProb") match {
+         case Some(prob) => prob.toDouble;
+         case _ => 0.95;
+      }     
+
       if (n >= entWeights.size)
-    	  //entWeight = 0.7;
-    	  entWeight = (-prior + log(0.90) - log(1-0.90))/n;
+    	  entWeight = (-prior + log(maxProb) - log(1-maxProb))/n;
       else
     	  entWeight = entWeights(n);
       if (entWeight == 0)
-      	  entWeight = (-prior + log(0.90) - log(1-0.90))/n;
+      	  entWeight = (-prior + log(maxProb) - log(1-maxProb))/n;
       
       val allGoalVariables: Set[Variable] = findAllVars(goal);      
 
@@ -519,9 +535,8 @@ class AlchemyTheoremProver(
     //Dunno, but it seems that MC-SAT is better
     //val allArgs = "-ptpe" :: "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
     val allArgs = "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
-    println("Args: " + allArgs);
     //val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, LOG.isDebugEnabled, false);
-    val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, true);
+    val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, false);
 
     val results = readLines(result).mkString("\n").trim
 

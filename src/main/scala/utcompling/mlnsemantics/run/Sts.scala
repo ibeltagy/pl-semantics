@@ -100,7 +100,8 @@ object Sts {
   //val Range(defaultRange) = "1-829,831-1500"
   val Range(defaultRange) = "1-1500"
     
-
+  var opts:Map[String, String] = Map(); //additional parameters passed from command line
+  
   val SomeRe = """Some\((.*)\)""".r
 
   val wordnet = new WordnetImpl()
@@ -115,7 +116,7 @@ object Sts {
         }
       }
 
-    val opts = optPairs.toMap
+    opts = optPairs.toMap
 
     val loglevel = opts.get("-log").map(Level.toLevel).getOrElse(Level.DEBUG)
 
@@ -203,7 +204,7 @@ object Sts {
 
       val results =
         for (((((txt, hyp), boxPair), goldSim), i) <- (pairs zipSafe boxPairs zipSafe goldSims).zipWithIndex if includedPairs(i + 1)) yield {
-          println("\n\n========================\n  Pair %s\n========================".format(i + 1))
+          println("=============\n  Pair %s\n=============".format(i + 1))
           println(txt)
           println(hyp)
  
