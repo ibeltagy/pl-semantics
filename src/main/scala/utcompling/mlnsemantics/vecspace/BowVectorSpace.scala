@@ -38,6 +38,10 @@ class BowVector(val counts: Map[String, Double]) {
     new BowVector((this zip2 other).map { case (k, (t, o)) => (k, t + o) })
   }
   
+  def *(other: BowVector) = {
+    new BowVector((this zip2 other).map { case (k, (t, o)) => (k, t * o) })
+  }
+  
   def /(d: Double) = {
     new BowVector(counts.mapValues(_ / d))
   }

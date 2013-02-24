@@ -14,3 +14,15 @@ case class SimpleCompositeVectorMaker() extends CompositeVectorMaker {
     preds.flatMap(vectorspace.get).fold(new BowVector(Map()))(_ + _)
   }
 }
+
+case class MultiplicationCompositeVectorMaker() extends CompositeVectorMaker {
+  override def make(preds: Iterable[String], vectorspace: Map[String, BowVector]): BowVector = {
+    var vectors = preds.flatMap(vectorspace.get)
+    vectors.size match {
+      case 0 => new BowVector(Map());
+      case 1 => vectors.head
+      case _ => vectors = vectors.slice(1, vectors.size);
+      			vectors.fold(vectors.head)(_ * _); 
+    }
+  }
+}

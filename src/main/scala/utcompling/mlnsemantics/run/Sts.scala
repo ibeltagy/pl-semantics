@@ -117,6 +117,7 @@ object Sts {
       }
 
     opts = optPairs.toMap
+    println("args: " + opts.mkString(", "))
 
     val loglevel = opts.get("-log").map(Level.toLevel).getOrElse(Level.DEBUG)
 
@@ -208,6 +209,10 @@ object Sts {
           println(txt)
           println(hyp)
  
+          val compositeVectorMaker = opts.get("-vectorMaker") match {
+            case Some("mul") => MultiplicationCompositeVectorMaker();
+            case _ => SimpleCompositeVectorMaker();
+          }
           val ttp =
             new TextualTheoremProver( //1
               new PreparsedBoxerDiscourseInterpreter(boxPair, new PassthroughBoxerExpressionInterpreter()),
@@ -218,7 +223,7 @@ object Sts {
 		                wordnet,
 		                words => BowVectorSpace(vsFile, x => words(x) && allLemmas(x)),
 		                new SameLemmaHardClauseRuleWeighter(
-		                  new AwithCvecspaceWithSpillingSimilarityRuleWeighter(new SimpleCompositeVectorMaker())), 
+		                  new AwithCvecspaceWithSpillingSimilarityRuleWeighter(compositeVectorMaker)), 
 		                new TypeConvertingPTP( //3
 		                  new BoxerExpressionInterpreter[FolExpression] {
 		                    def interpret(x: BoxerExpression): FolExpression =
