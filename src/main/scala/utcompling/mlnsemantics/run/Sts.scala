@@ -148,8 +148,11 @@ object Sts {
         val allLemmas = readLines(lemFile).flatMap(_.split("\\s+")).toSet
         FileUtils.writeUsing(stsVsFile) { f =>
           for (line <- readLines(fullVsFile))
-            if (allLemmas(line.split("\\s+")(0)))
-              f.write(line + "\n")
+            if (allLemmas(line.split("\\s+|-")(0)))
+            {
+              val modifiedLine = """-j\t|-r\t""".r.replaceAllIn(line, "-a\t");
+              f.write(modifiedLine + "\n")
+            }
         }
 
       case Seq("box", stsFile, boxFile) =>
@@ -200,6 +203,11 @@ object Sts {
           .toList
           .grouped(2)
       val goldSims = FileUtils.readLines(goldSimFile).map(_.toDouble)
+      
+      val vsFileMod = vsFile  + (opts.get("-vsWithPos") match {
+		case Some(s) if (s.toBoolean == true) => ".pos";
+		case _ => "";
+      })
 
       def probOfEnt2simScore(p: Double) = p * 5
 
@@ -221,7 +229,7 @@ object Sts {
 	              new GetPredicatesDeclarationsProbabilisticTheoremProver(
 		              new InferenceRuleInjectingProbabilisticTheoremProver( //2
 		                wordnet,
-		                words => BowVectorSpace(vsFile, x => words(x) && allLemmas(x)),
+		                words => BowVectorSpace(vsFileMod, x => words(x) && allLemmas(x)),
 		                new SameLemmaHardClauseRuleWeighter(
 		                  new AwithCvecspaceWithSpillingSimilarityRuleWeighter(compositeVectorMaker)), 
 		                new TypeConvertingPTP( //3

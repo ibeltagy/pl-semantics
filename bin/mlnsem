@@ -24,6 +24,9 @@ case $CMD in
   run-par)
 	$START utcompling.mlnsemantics.run.Sts run $STS/STS.MSRpar.in.txt $STS/STS.MSRpar.in.box $STS/STS.MSRpar.in.vs $STS/STS.MSRpar.gs.txt $STS/STS.MSRpar.out.txt "$@"
    ;;
+  run-par-full)
+	$START utcompling.mlnsemantics.run.Sts run $STS/msrParFull.in.txt $STS/msrParFull.in.box $STS/msrParFull.in.vs $STS/msrParFull.gs.txt $STS/msrParFull.out.txt "$@"
+   ;;
   run)
 #	$START utcompling.mlnsemantics.run.Sts run $STS/prob.in.txt $STS/prob.in.box $STS/prob.in.vs $STS/prob.gs.txt $STS/prob.out.txt "$@"
 	$START utcompling.mlnsemantics.run.Sts run $STS/STS.MSRvid.in.txt $STS/STS.MSRvid.in.box $STS/STS.MSRvid.in.vs $STS/STS.MSRvid.gs.txt $STS/STS.MSRvid.out.txt "$@"
@@ -34,23 +37,32 @@ case $CMD in
 	;;
   box)
 #	$START utcompling.mlnsemantics.run.Sts box $STS/prob.in.txt $STS/prob.in.box "$@"
-	$START utcompling.mlnsemantics.run.Sts box $STS/STS.MSRvid.in.txt $STS/STS.MSRvid.in.box "$@"
+#	$START utcompling.mlnsemantics.run.Sts box $STS/STS.MSRvid.in.txt $STS/STS.MSRvid.in.box "$@"
+	$START utcompling.mlnsemantics.run.Sts box $STS/msrParFull.in.txt $STS/msrParFull.in.box "$@"
 #	$START utcompling.mlnsemantics.run.Sts box $STS/STS.MSRpar.in.txt $STS/STS.MSRpar.in.box "$@"
 #	$START utcompling.mlnsemantics.run.Sts box $STS/STS.OnWN.in.txt $STS/STS.OnWN.in.box "$@"
 #	$START utcompling.mlnsemantics.run.Sts box $STS/STS.SMTeuroparl.in.txt $STS/STS.SMTeuroparl.in.box "$@"
 #	$START utcompling.mlnsemantics.run.Sts box $STS/STS.SMTnews.in.txt $STS/STS.SMTnews.in.box "$@"
 	;;
   vs)
-	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/prob.in.lem $STS/prob.in.vs "$@"
-#	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/STS.MSRvid.in.lem $STS/STS.MSRvid.in.vs "$@"
+#	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/prob.in.lem $STS/prob.in.vs "$@"
+#	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/msrParFull.in.lem $STS/msrParFull.in.vs "$@"
+	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/STS.MSRvid.in.lem $STS/STS.MSRvid.in.vs "$@"
 #	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/STS.MSRpar.in.lem $STS/STS.MSRpar.in.vs "$@"
 #	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/STS.OnWN.in.lem $STS/STS.OnWN.in.vs "$@"
 #	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/STS.SMTeuroparl.in.lem $STS/STS.SMTeuroparl.in.vs "$@"
 #	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/STS.SMTnews.in.lem $STS/STS.SMTnews.in.vs "$@"
 	;;
+  vs-pos)
+#        $START utcompling.mlnsemantics.run.Sts vs /scratch/cluster/beltagy/deft/CORE_SS.bnc-ukwac-wacky.min50.10K.ppmi.svd_500.dan $STS/prob.in.lem $STS/prob.in.vs.pos "$@"
+#	$START utcompling.mlnsemantics.run.Sts vs /scratch/cluster/beltagy/deft/CORE_SS.bnc-ukwac-wacky.min50.10K.ppmi.svd_500.dan $STS/msrParFull.in.lem $STS/msrParFull.in.vs.pos "$@"
+#	$START utcompling.mlnsemantics.run.Sts vs /scratch/cluster/beltagy/deft/CORE_SS.bnc-ukwac-wacky.min50.10K.ppmi.svd_500.dan $STS/STS.MSRvid.in.lem $STS/STS.MSRvid.in.vs.pos "$@"
+	$START utcompling.mlnsemantics.run.Sts vs /scratch/cluster/beltagy/deft/CORE_SS.bnc-ukwac-wacky.min50.10K.ppmi.svd_500.dan $STS/STS.MSRpar.in.lem $STS/STS.MSRpar.in.vs.pos "$@"
+	;;
   lem)
-	$START utcompling.mlnsemantics.run.Sts lem $STS/prob.in.txt $STS/prob.in.lem "$@"
+#	$START utcompling.mlnsemantics.run.Sts lem $STS/prob.in.txt $STS/prob.in.lem "$@"
 #	$START utcompling.mlnsemantics.run.Sts lem $STS/STS.MSRvid.in.txt $STS/STS.MSRvid.in.lem "$@"
+	$START utcompling.mlnsemantics.run.Sts lem $STS/msrParFull.in.txt $STS/msrParFull.in.lem "$@"
 #	$START utcompling.mlnsemantics.run.Sts lem $STS/STS.MSRpar.in.txt $STS/STS.MSRpar.in.lem "$@"
 #	$START utcompling.mlnsemantics.run.Sts lem $STS/STS.OnWN.in.txt $STS/STS.OnWN.in.lem "$@"
 #	$START utcompling.mlnsemantics.run.Sts lem $STS/STS.SMTeuroparl.in.txt $STS/STS.SMTeuroparl.in.lem "$@"

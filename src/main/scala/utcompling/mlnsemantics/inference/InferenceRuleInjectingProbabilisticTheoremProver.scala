@@ -34,6 +34,8 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
   private val LOG = LogFactory.getLog(classOf[InferenceRuleInjectingProbabilisticTheoremProver])
 
   private val NotPred = """^not_(.+)$""".r
+  
+  private var vectorspaceFormatWithPOS = false; 
 
   private def d(drs: BoxerExpression) =
     new Boxer2DrtExpressionInterpreter().interpret(
@@ -46,6 +48,11 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     assumptions: List[WeightedExpression[BoxerExpression]],
     goal: BoxerExpression): Option[Double] = {
 
+    vectorspaceFormatWithPOS = Sts.opts.get("-vsWithPos") match {
+		case Some(vst) => vst.toBoolean;
+		case _ => false;
+    }
+   
     assumptions.foreach(x => LOG.info("\n" + d(x.expression).pretty))
     val rules = makeNewRules(assumptions.map(_.expression), goal)
     LOG.info("\n" + d(goal).pretty)
@@ -58,7 +65,10 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     val allPredsAndContexts =  List.concat(assumPredsAndContexts, goalPredsAndContexts);
     val vectorspace = vecspaceFactory(allPredsAndContexts.flatMap {
       case (pred, context) => {
-        val l = pred.name.split("_") ++ context
+        val l = pred.name.split("_").map (n => n + (vectorspaceFormatWithPOS match {
+        case true => "-" + pred.pos;
+        case false => "";
+        })) ++ context
         l
        }.map(stripNot)
     }.toSet)
@@ -75,7 +85,10 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
   def getAllPredsAndContexts(e: BoxerExpression): Seq[(BoxerPred, Seq[String])] = {
     val preds = getAllPreds(e)
     val predsAndContexts = preds.zipWithIndex.map { case (p, i) => p -> (preds.take(i) ++ preds.drop(i + 1)) }
-    val newPredsAndContexts = predsAndContexts.mapVals(_.map(p => stripNot(p.name)));
+    val newPredsAndContexts = predsAndContexts.mapVals(_.map(p => (stripNot(p.name) + (vectorspaceFormatWithPOS match {
+        case true => "-" +p.pos;
+        case false => "";
+    }))));
     val newPredsAndContextsSplit = newPredsAndContexts.mapVals(l=>{
       var flatL: List[String] = List();
       l.foreach(e=>{
@@ -105,8 +118,8 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     }
  
   private def findRelPred(preds: Iterable[(BoxerPred, Iterable[String])], rel: Iterable[BoxerRel]): Set[(BoxerExpression, Iterable[String], String)] = {
-    val mapPredVar  = (preds.map(row => row._1.variable.name -> row)).toMap;
-    var notUsedPred = preds.toMap; 
+    var mapPredVar  = (preds.map(row => row._1.variable.name -> row)).toMap;
+    var notUsedPred = preds.toMap;
     
     rel.flatMap(r => {
     	if (mapPredVar.contains(r.event.name) && mapPredVar.contains(r.variable.name))
@@ -123,7 +136,11 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 	    	
 	    	//println ("//PHRASE(npn): " + arg1._1.name+"-"+arg1._1.pos + " " + r.name + " " + arg2._1.name+"-"+arg2._1.pos)
 	    	val context = (arg1._2 ++ arg2._2).toList.diff(arg1._1.name.split("_")).diff(arg2._1.name.split("_"));
-	    	val words = arg1._1.name + "_" + arg2._1.name;
+	    	var words = vectorspaceFormatWithPOS match {
+	    		case true => arg1._1.name +"-" +arg1._1.pos + "_" + arg2._1.name+"-" +arg2._1.pos ;
+	    		case false => arg1._1.name + "_" + arg2._1.name;
+	    	}
+	    		
 	    	//val vars = List(List() ->BoxerVariable("x0")) ++ List(List() ->BoxerVariable("x1"))
 	    	val vars = List();
 	    	val cond = List(arg1Changed) ++ List(arg2Changed) ++ List(rChanged);
@@ -140,7 +157,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
                  }).map(p => (
         BoxerDrs(List(), List(BoxerPred(p._1.discId, p._1.indices, BoxerVariable("x1"), p._1.name, p._1.pos, p._1.sense))),
         p._2,
-        p._1.name
+        vectorspaceFormatWithPOS match {case true => p._1.name +"-" + p._1.pos; case false => p._1.name;}  
         )) 
   
   }
