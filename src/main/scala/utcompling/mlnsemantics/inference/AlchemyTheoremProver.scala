@@ -42,6 +42,8 @@ class AlchemyTheoremProver(
 
   private var entailmentConsequent:FolExpression = FolVariableExpression(Variable("entailment"));
   
+  private var varBind: Option[Boolean] = None;   
+  
   override def prove(
     constants: Map[String, Set[String]],
     declarations: Map[FolExpression, Seq[String]],
@@ -49,6 +51,14 @@ class AlchemyTheoremProver(
     assumptions: List[WeightedFolEx],
     goal: FolExpression): Option[Double] = {
 
+    if (varBind == None)
+    	varBind  = Sts.opts.get("-varBind") match {
+			case Some("true") => Some(true);
+			case _ => Some(false);
+		}
+    else varBind  = Some(false); //second call
+    
+    
     declarations.foreach { dec =>
       dec match {
         case (FolAtom(Variable(pred), args @ _*), argTypes) =>
@@ -65,12 +75,9 @@ class AlchemyTheoremProver(
     var typeParam_h : List[String]= List();
     var typeParam_t : List[String]= List();
     
-    val varBind  = Sts.opts.get("-varBind") match {
-			case Some("true") => true;
-			case _ => false;
-		}
     
-    if(!varBind){
+    
+    if(!varBind.get){
 	    typeParam_h = List("ent");
 	    typeParam_t = List("ent");
 	    
@@ -191,7 +198,11 @@ class AlchemyTheoremProver(
     {
     	case e: Exception =>{
     	  System.err.println (e);
-    	  return Some(-1.0);
+    	  if (varBind.get) //try again 
+    	  {
+    	    return this.prove(constants, declarations, evidence, assumptions, goal);
+    	  }
+    	  else return Some(-1.0);
     	}   				 
     }
     
