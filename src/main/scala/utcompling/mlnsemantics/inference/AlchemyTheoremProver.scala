@@ -574,7 +574,11 @@ class AlchemyTheoremProver(
     //Dunno, but it seems that MC-SAT is better
     //val allArgs = "-ptpe" :: "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
     val allArgs = "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
-    val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, LOG.isDebugEnabled);
+    val timeout = Sts.opts.get("-timeout") match {
+			case Some(t) => Some(t.toLong);
+			case  _=> None;
+		}
+    val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, LOG.isDebugEnabled, timeout);
     
     val results = readLines(result).mkString("\n").trim
 

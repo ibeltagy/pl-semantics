@@ -20,8 +20,8 @@ class SubprocessCallable(val binary: String) {
             throw new RuntimeException("ERROR CALLING: %s %s\nReturncode: %d\n%s".format(binary, args.mkString(" "), exitcode, stderr))
         return stdout
     }
-
-    def callAllReturns(inputStr: Option[String], args: List[String] = List(), verbose: Boolean = false): (Int, String, String) = {
+ 
+    def callAllReturns(inputStr: Option[String], args: List[String] = List(), verbose: Boolean = false, timeout: Option[Long] = None): (Int, String, String) = {
         if (verbose) {
             println("Calling: " + binary)
             println("Args: " + args)
@@ -35,8 +35,18 @@ class SubprocessCallable(val binary: String) {
                 case None => {
                     val out = new StringBuilder
                     val err = new StringBuilder
-                    val exitcode = Process(command) ! ProcessLogger(out.append(_).append("\n"), err.append(_).append("\n"))
-                    //val exitcode = Process("/usr/bin/java -jar /u/beltagy/workspace/deft/tuffy/tuffy.jar -conf /u/beltagy/workspace/deft/tuffy/tuffy.conf -marginal -i /u/beltagy/workspace/deft/tuffy/samples/smoke/prog.mln -e /u/beltagy/workspace/deft/tuffy/samples/smoke/evidence.db -r /u/beltagy/workspace/deft/tuffy/samples/smoke/out.res -q Cancer") ! ProcessLogger(out.append(_).append("\n"), err.append(_).append("\n"))
+                    var exitcode = 1;
+                    //val exitcode = Process(command) ! ProcessLogger(out.append(_).append("\n"), err.append(_).append("\n"))
+                    val proc  = Process(command).run(ProcessLogger(out.append(_).append("\n"), err.append(_).append("\n")))
+                    timeout match {
+                      case Some(time) => {
+                        val t = new Thread { override def run() { exitcode = proc.exitValue() } }
+                        t.start()
+                        t.join(time)
+                        proc.destroy();
+                      }
+                      case _ => exitcode = proc.exitValue()
+                    }
                     (exitcode, out.result, err.result)
                 }
                 case Some(input) => {

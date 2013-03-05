@@ -70,6 +70,24 @@ import utcompling.mlnsemantics.inference.CompositionalRuleWeighter
  *
  * 1-85,87-127,129-190,192-216,218-276,278-317,319-335,337-360,362-416,418-458,460-531,533-554,556-564,566-568,570-607,609-663,665-691,693-705,707-714,716-719,721-736,739-75
  */
+
+/**
+ * Input parameters
+ * -vsWithPos true, false
+ * -vectorMaker add, mul
+ * -chopLvl rpr, rp
+ * -noDup true, false
+ * -scaleW true, false
+ * -maxProb 0.90
+ * -wThr 0.45
+ * -range 1-10
+ * -log OFF
+ * -varBind true, false
+ * -timeout integerInMilliseconds
+ */
+
+
+
 object Sts {
 
   //val Range(defaultRange) = "1-85,87-127,129-190,192-216,218-249,251-276,278-317,319-335,337-351,353-360,362-416,418-458,460-497,499-531,533-554,556-564,566-568,570-604,606-607,609-663,665-685,687-691,693-705,707-714,716-719,721-736,739-750"
