@@ -60,7 +60,7 @@ class AlchemyTheoremProver(
     
     
   // This block to add all variables to the entailment clause. I may need it back one day
-    val variables: Set[Variable] = findVars(goal);
+    val variables: Set[Variable] = findAllVars(goal);
     //var queryParam : String = """entailment\("entailed",""";
     var typeParam_h : List[String]= List();
     var typeParam_t : List[String]= List();
@@ -190,7 +190,7 @@ class AlchemyTheoremProver(
     }catch 
     {
     	case e: Exception =>{
-    	  println (e);
+    	  System.err.println (e);
     	  return Some(-1.0);
     	}   				 
     }
@@ -207,14 +207,14 @@ class AlchemyTheoremProver(
     var reducedConstants = constants;
     for (s <- constants)
     {
-      if (s._2.size > 1)
+      if (s._2.size > 1 && !s._1.equals("ent"))
 		{
 			var constsList: Set[String] =Set();
-			for(c<- s._2)
+			/*for(c<- s._2)
 			{
 				if(!c.startsWith("default"))
 					constsList = constsList + c;
-			}
+			}*/
          reducedConstants = reducedConstants + (s._1 -> constsList); 
 		}
     }
