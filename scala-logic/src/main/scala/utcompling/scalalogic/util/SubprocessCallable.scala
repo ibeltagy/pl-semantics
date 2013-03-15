@@ -37,7 +37,10 @@ class SubprocessCallable(val binary: String) {
                     val err = new StringBuilder
                     var exitcode = 1;
                     //val exitcode = Process(command) ! ProcessLogger(out.append(_).append("\n"), err.append(_).append("\n"))
-                    val proc  = Process(command).run(ProcessLogger(out.append(_).append("\n"), System.err.println(_)))
+                    val proc  = verbose match {
+                      case true => Process(command).run(ProcessLogger(out.append(_).append("\n"), System.err.println(_)))
+                      case false => Process(command).run(ProcessLogger(_=>out, _=>err))
+                    }
                     timeout match {
                       case Some(time) => {
                         val t = new Thread { override def run() { exitcode = proc.exitValue() } }

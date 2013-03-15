@@ -15,6 +15,8 @@ import utcompling.scalalogic.util.SubprocessCallable
 import utcompling.mlnsemantics.inference.support._
 import java.util.StringTokenizer
 import utcompling.mlnsemantics.run.Sts
+import scala.sys.process.Process
+import scala.sys.process.ProcessLogger
 
 class AlchemyTheoremProver(
   override val binary: String,
@@ -142,14 +144,20 @@ class AlchemyTheoremProver(
     //all evd are in the mln file
     val args = List( "-q", "entailment_h,entailment_t")
 
-    //old call for alchemy.
-    /*callAlchemy(mlnFile, evidenceFile, resultFile, args) map {
-      case ResultsRE(score) => score.toDouble
-      case err => sys.error(err)
-    }*/
-    //Output has many lines
     try 
     {
+         //old call for alchemy.
+	    /*callAlchemy(mlnFile, evidenceFile, resultFile, args) map {
+	      case ResultsRE(score) => score.toDouble
+	      case err => sys.error(err)
+	    }*/
+      
+    	callAlchemy(mlnFile, evidenceFile, resultFile, args) match {
+	      case Some(t) => Some(t.toDouble)
+	      case _ => throw new RuntimeException("no valid output in the result file");
+    	}
+    	//Output has many lines
+      /*
 	    val result = callAlchemy(mlnFile, evidenceFile, resultFile, args);
 	    result match 
 	    {
@@ -190,16 +198,18 @@ class AlchemyTheoremProver(
 	        if (maxScore_h == -1 || maxScore_t == -1)
 	          throw new RuntimeException("no valid output in the result file");
 	        else
-	        	return Some((maxScore_h + maxScore_h)/2);
+	        	return Some((maxScore_h + maxScore_t)/2);
 	      }      
 	      case None => throw new RuntimeException("empty result file");
 	    }
+	    */
     }catch 
     {
     	case e: Exception =>{
     	  System.err.println (e);
     	  if (varBind.get) //try again 
     	  {
+			 println("backoff to dependency parse")
     	    return this.prove(constants, declarations, evidence, assumptions, goal);
     	  }
     	  else return Some(-1.0);
@@ -590,13 +600,32 @@ class AlchemyTheoremProver(
 			case  _=> None;
 		}
     val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, LOG.isDebugEnabled, timeout);
+	val out = new StringBuilder
+	val err = new StringBuilder
+ 
+    var command = "grep entailment_h "+result+" | awk '{print $2}'| sort -n -r  | head -n 1"
+    Process("/bin/sh", Seq("-c", command)) ! (ProcessLogger(out.append(_).append("\n"), System.err.println(_)))
     
-    val results = readLines(result).mkString("\n").trim
-
-    LOG.debug("results file:\n" + results)
+    val score1 = out.mkString("").trim().toDouble;
+    out.clear();
+    
+    command = "grep entailment_t "+result+" | awk '{print $2}'| sort -n -r  | head -n 1"
+    Process("/bin/sh", Seq("-c", command)) ! (ProcessLogger(out.append(_).append("\n"), System.err.println(_)))
+    
+    val score2 = out.mkString("").trim().toDouble;
+    out.clear();
+    
+    val score = (score1 + score2) / 2.0
+    
+    //println(out);
+    if (LOG.isDebugEnabled())
+    {
+    	val results = readLines(result).mkString("\n").trim
+    	LOG.debug("results file:\n" + results)
+    }
 
     exitcode match {
-      case 0 => Some(results)
+      case 0 => Some(score.toString())
       case _ => throw new RuntimeException("Failed with exitcode=%s.\n%s\n%s".format(exitcode, stdout, stderr))
     }
   }

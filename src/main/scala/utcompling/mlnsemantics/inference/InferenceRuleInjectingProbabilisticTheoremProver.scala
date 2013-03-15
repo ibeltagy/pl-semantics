@@ -36,6 +36,10 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
   private val NotPred = """^not_(.+)$""".r
   
   private var vectorspaceFormatWithPOS = false; 
+  
+  private var withPatientAgentInferenceRules = false;
+
+  private var inferenceRulesLevel = 2;  //0: no IR, 1: words only, 2: words + phrases 
 
   private def d(drs: BoxerExpression) =
     new Boxer2DrtExpressionInterpreter().interpret(
@@ -52,9 +56,23 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 		case Some(vst) => vst.toBoolean;
 		case _ => false;
     }
+ 
+    inferenceRulesLevel = Sts.opts.get("-irLvl") match {
+		case Some(vst) => vst.toInt;
+		case _ => 2;
+    }
+    
+   
+    withPatientAgentInferenceRules = Sts.opts.get("-peInf") match {
+		case Some(vst) => vst.toBoolean;
+		case _ => false;
+    }
    
     assumptions.foreach(x => LOG.info("\n" + d(x.expression).pretty))
-    val rules = makeNewRules(assumptions.map(_.expression), goal)
+    val rules = inferenceRulesLevel match {
+		case 0 => Set();
+		case _ => makeNewRules(assumptions.map(_.expression), goal);
+	 }
     LOG.info("\n" + d(goal).pretty)
     delegate.prove(constants, declarations, evidence, assumptions ++ rules, goal)
   }
@@ -110,7 +128,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
   private def getAllRelations(e: BoxerExpression): Seq[BoxerRel] =
     e match {
       case p: BoxerRel => {
-    	if (p.name == "patient" || p.name == "agent" )  
+    	if ((p.name == "patient" || p.name == "agent") && !withPatientAgentInferenceRules )  
     		Seq.empty[BoxerRel]
     	else Seq(p)
       }
@@ -120,6 +138,9 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
   private def findRelPred(preds: Iterable[(BoxerPred, Iterable[String])], rel: Iterable[BoxerRel]): Set[(BoxerExpression, Iterable[String], String)] = {
     var mapPredVar  = (preds.map(row => row._1.variable.name -> row)).toMap;
     var notUsedPred = preds.toMap;
+
+	  if (inferenceRulesLevel == 1) //no phrases
+			mapPredVar = mapPredVar.empty
     
     rel.flatMap(r => {
     	if (mapPredVar.contains(r.event.name) && mapPredVar.contains(r.variable.name))

@@ -47,7 +47,7 @@ case $CMD in
   vs)
 #	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/prob.in.lem $STS/prob.in.vs "$@"
 #	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/msrParFull.in.lem $STS/msrParFull.in.vs "$@"
-	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/STS.MSRvid.in.lem $STS/STS.MSRvid.in.vs "$@"
+	$START utcompling.mlnsemantics.run.Sts vs /scratch/cluster/gboleda/dist-sem-models/bnc-ukwac-wacky.min50.lemma.alphasorted.ppmi.dan $STS/STS.MSRvid.in.lem $STS/STS.MSRvid.in.vs "$@"
 #	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/STS.MSRpar.in.lem $STS/STS.MSRpar.in.vs "$@"
 #	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/STS.OnWN.in.lem $STS/STS.OnWN.in.vs "$@"
 #	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/STS.SMTeuroparl.in.lem $STS/STS.SMTeuroparl.in.vs "$@"

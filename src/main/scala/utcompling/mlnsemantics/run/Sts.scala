@@ -84,6 +84,8 @@ import utcompling.mlnsemantics.inference.CompositionalRuleWeighter
  * -log OFF
  * -varBind true, false
  * -timeout integerInMilliseconds
+ * -peInf true false
+ * -irLvl 0 1 2
  */
 
 
