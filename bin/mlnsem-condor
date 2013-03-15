@@ -37,8 +37,8 @@ case $CMD in
 	;;
   box)
 #	$START utcompling.mlnsemantics.run.Sts box $STS/prob.in.txt $STS/prob.in.box "$@"
-#	$START utcompling.mlnsemantics.run.Sts box $STS/STS.MSRvid.in.txt $STS/STS.MSRvid.in.box "$@"
-	$START utcompling.mlnsemantics.run.Sts box $STS/msrParFull.in.txt $STS/msrParFull.in.box "$@"
+	$START utcompling.mlnsemantics.run.Sts box $STS/STS.MSRvid.in.txt $STS/STS.MSRvid.in.box "$@"
+#	$START utcompling.mlnsemantics.run.Sts box $STS/msrParFull.in.txt $STS/msrParFull.in.box "$@"
 #	$START utcompling.mlnsemantics.run.Sts box $STS/STS.MSRpar.in.txt $STS/STS.MSRpar.in.box "$@"
 #	$START utcompling.mlnsemantics.run.Sts box $STS/STS.OnWN.in.txt $STS/STS.OnWN.in.box "$@"
 #	$START utcompling.mlnsemantics.run.Sts box $STS/STS.SMTeuroparl.in.txt $STS/STS.SMTeuroparl.in.box "$@"
