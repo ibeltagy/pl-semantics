@@ -11,4 +11,5 @@ scala-logic/target/
 scala-logic/.classpath
 scala-logic/.project
 scala-logic/.cache
-
+tmp/
+resources/sts
