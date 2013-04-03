@@ -115,10 +115,10 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
    	case FolExistsExpression(variable, term) => FolExistsExpression (removeEq(variable, eq), removeEq(term, eq));
 
    	//This is very important: Changing all IMP to AND because alchamy is very slow on processing IMP
-   	//case FolAllExpression(variable, term) => FolAllExpression(removeEq(variable, eq), removeEq(term, eq));
-   	//case FolIfExpression(first, second) => FolIfExpression(removeEq(first, eq), removeEq(second, eq))
-   	case FolAllExpression(variable, term) => removeEq(term, eq);
-   	case FolIfExpression(first, second) => FolAndExpression(removeEq(first, eq), removeEq(second, eq))
+   	case FolAllExpression(variable, term) => FolAllExpression(removeEq(variable, eq), removeEq(term, eq));
+   	case FolIfExpression(first, second) => FolIfExpression(removeEq(first, eq), removeEq(second, eq))
+   	//case FolAllExpression(variable, term) => removeEq(term, eq);
+   	//case FolIfExpression(first, second) => FolAndExpression(removeEq(first, eq), removeEq(second, eq))
    	
    	case FolNegatedExpression(term) => FolNegatedExpression(removeEq(term, eq))
    	case FolAndExpression(first, second) => FolAndExpression(removeEq(first, eq), removeEq(second, eq))
