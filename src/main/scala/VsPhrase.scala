@@ -19,8 +19,7 @@ object VsPhrase {
     	println("....")
         val allLemmas = readLines(lemFile) //.flatMap(_.split("\\s+"))
         val line  = ""
-        val rw1: RuleWeighter = AwithCvecspaceWithSpillingSimilarityRuleWeighter(MultiplicationCompositeVectorMaker());
-    	val rw2: RuleWeighter = AwithCvecspaceWithSpillingSimilarityRuleWeighter(SimpleCompositeVectorMaker());
+        val rw: RuleWeighter = AwithCvecspaceWithSpillingSimilarityRuleWeighter(MultiplicationCompositeVectorMaker());
         allLemmas.foreach(line => {
         	val splits = line.split("\t");
         	val txt = splits.apply(0);
