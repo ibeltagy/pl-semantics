@@ -1,6 +1,6 @@
 package dhg.depparse
 
-case class Predicate(idx: Integer, name: String, varName: String, tag: String, typ: String, token: String, varName2: Option[String]=None) {
+case class Predicate(idx: Int, name: String, varName: String, tag: String, typ: String, token: String, varName2: Option[String]=None) {
   
   override def toString: String = {
    varName2 match {

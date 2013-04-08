@@ -15,7 +15,7 @@ trait Dependency {
 /*        */ class Dep(override val value: String) extends Dependency // dependent
 /*        */ object Dep { val Re = "(dep\\S*)".r; def unapply(r: Any) = r.toString match { case Re(x) => Some(new Dep(x)); case _ => None } }
 /*            */ class Aux(override val value: String) extends Dep(value) // auxiliary
-/*            */ object Aux { val Re = "(aux\\S*)".r; def unapply(r: Any) = r.toString match { case Re(x) => Some(new Aux(x)); case _ => None } }
+/* CodeChange */ object Aux { val Re = "(aux)".r; def unapply(r: Any) = r.toString match { case Re(x) => Some(new Aux(x)); case _ => None } }
 /*                */ class AuxPass(override val value: String) extends Aux(value) // passive auxiliary
 /*                */ object AuxPass { val Re = "(auxpass\\S*)".r; def unapply(r: Any) = r.toString match { case Re(x) => Some(new AuxPass(x)); case _ => None } }
 /*                */ class Cop(override val value: String) extends Aux(value) // copula
@@ -25,7 +25,7 @@ trait Dependency {
 /*                */ class Agent(override val value: String) extends Arg(value) // agent
 /*                */ object Agent { val Re = "(agent\\S*)".r; def unapply(r: Any) = r.toString match { case Re(x) => Some(new Agent(x)); case _ => None } }
 /*                */ class Comp(override val value: String) extends Arg(value) // complement
-/*                */ object Comp { val Re = "(comp\\S*)".r; def unapply(r: Any) = r.toString match { case Re(x) => Some(new Comp(x)); case _ => None } }
+/*  CodeChange    */ object Comp { val Re = "(comp)".r; def unapply(r: Any) = r.toString match { case Re(x) => Some(new Comp(x)); case _ => None } }
 /*                    */ class AComp(override val value: String) extends Comp(value) // adjectival complement
 /*                    */ object AComp { val Re = "(acomp\\S*)".r; def unapply(r: Any) = r.toString match { case Re(x) => Some(new AComp(x)); case _ => None } }
 /*                    */ class Attr(override val value: String) extends Comp(value) // attributive
@@ -53,15 +53,15 @@ trait Dependency {
 /*                */ class Subj(override val value: String) extends Arg(value) // subject
 /*                */ object Subj { val Re = "(subj\\S*)".r; def unapply(r: Any) = r.toString match { case Re(x) => Some(new Subj(x)); case _ => None } }
 /*                    */ class NSubj(override val value: String) extends Subj(value) // nominal subject
-/*                    */ object NSubj { val Re = "(nsubj\\S*)".r; def unapply(r: Any) = r.toString match { case Re(x) => Some(new NSubj(x)); case _ => None } }
+/* CodeChange         */ object NSubj { val Re = "(nsubj)".r; def unapply(r: Any) = r.toString match { case Re(x) => Some(new NSubj(x)); case _ => None } }
 /*                        */ class NSubjPass(override val value: String) extends NSubj(value) // passive nominal subject
 /*                        */ object NSubjPass { val Re = "(nsubjpass\\S*)".r; def unapply(r: Any) = r.toString match { case Re(x) => Some(new NSubjPass(x)); case _ => None } }
 /*                    */ class CSubj(override val value: String) extends Subj(value) // clausal subject
-/*                    */ object CSubj { val Re = "(csubj\\S*)".r; def unapply(r: Any) = r.toString match { case Re(x) => Some(new CSubj(x)); case _ => None } }
+/* CodeChange         */ object CSubj { val Re = "(csubj)".r; def unapply(r: Any) = r.toString match { case Re(x) => Some(new CSubj(x)); case _ => None } }
 /*                        */ class CSubjPass(override val value: String) extends CSubj(value) // passive clausal subject
 /*                        */ object CSubjPass { val Re = "(csubjpass\\S*)".r; def unapply(r: Any) = r.toString match { case Re(x) => Some(new CSubjPass(x)); case _ => None } }
 /*            */ class CC(override val value: String) extends Dep(value) // coordination
-/*            */ object CC { val Re = "(cc\\S*)".r; def unapply(r: Any) = r.toString match { case Re(x) => Some(new CC(x)); case _ => None } }
+/* CodeChange */ object CC { val Re = "(cc)".r; def unapply(r: Any) = r.toString match { case Re(x) => Some(new CC(x)); case _ => None } }
 /*            */ class Conj(override val value: String) extends Dep(value) // conjunct
 /*            */ object Conj { val Re = "(conj\\S*)".r; def unapply(r: Any) = r.toString match { case Re(x) => Some(new Conj(x)); case _ => None } }
 /*            */ class Expl(override val value: String) extends Dep(value) // expletive (expletive \there")
