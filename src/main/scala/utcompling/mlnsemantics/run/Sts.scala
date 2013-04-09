@@ -28,6 +28,9 @@ import scala.io.Source
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.PassthroughBoxerExpressionInterpreter
 import utcompling.scalalogic.discourse.impl.PreparsedBoxerDiscourseInterpreter
 import utcompling.mlnsemantics.inference.CompositionalRuleWeighter
+import utcompling.scalalogic.discourse.DiscourseInterpreter
+import utcompling.mlnsemantics.inference.DependencyParsedBoxerDiscourseInterpreter
+import dhg.depparse._
 
 /**
  *
@@ -86,6 +89,7 @@ import utcompling.mlnsemantics.inference.CompositionalRuleWeighter
  * -timeout integerInMilliseconds
  * -peInf true false
  * -irLvl 0 1 2
+ * -logic dep box
  */
 
 
@@ -231,6 +235,7 @@ object Sts {
 
       def probOfEnt2simScore(p: Double) = p * 5
 
+      def depParser = DepParser.load();
       val results =
         for (((((txt, hyp), boxPair), goldSim), i) <- (pairs zipSafe boxPairs zipSafe goldSims).zipWithIndex if includedPairs(i + 1)) yield {
           println("=============\n  Pair %s\n=============".format(i + 1))
@@ -241,9 +246,15 @@ object Sts {
             case Some("mul") => MultiplicationCompositeVectorMaker();
             case _ => SimpleCompositeVectorMaker();
           }
+          
+          val logicFormSource: DiscourseInterpreter[BoxerExpression] = opts.get("-logic") match {
+            case Some("dep") => new DependencyParsedBoxerDiscourseInterpreter(depParser);
+            case _ => new PreparsedBoxerDiscourseInterpreter(boxPair, new PassthroughBoxerExpressionInterpreter());
+          }
+          
           val ttp =
             new TextualTheoremProver( //1
-              new PreparsedBoxerDiscourseInterpreter(boxPair, new PassthroughBoxerExpressionInterpreter()),
+              logicFormSource,
               new MergeSameVarPredProbabilisticTheoremProver(
                 //new FindEventsProbabilisticTheoremProver(
 	              new GetPredicatesDeclarationsProbabilisticTheoremProver(

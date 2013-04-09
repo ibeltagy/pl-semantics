@@ -52,18 +52,18 @@ object Run {
 /*QuantMod*/ "About 200 people came to the party",
 /*NN(x)*/ "a man eats a pizza slice", 
 /*NpAdvMod*/ "it is 6 feet long", //TODO
-/*TMod*/
-/*Number*/
-/*Num*/
-/*Prep*/
-/*Possessive*/
-/*Poss*/
-/*Prt*/
-/*Parataxis*/
-/*Punct*/
-/*Ref*/
-/*SDep*/
-/*XSubj*/
+/*TMod*/ "Last night, I swam in the pool", //TODO 
+/*Number*/ "I lost $ 3.2 billion", //TODO
+/*Num*/ "Sam eats 3 sheeps.", //TODO
+/*Prep*/ "I saw a cat in a hat", 
+/*Possessive*/ "Bill's clothes", 
+/*Poss*/ "Bill's clothes",
+/*Prt*/ "They shut down the station", //TODO
+/*Parataxis*/ //TODO: could not find an example
+/*Punct*/ "Go home!",
+/*Ref*/ //TODO: could not find an example 
+/*SDep*/ // n/a
+/*XSubj*/ //TODO: could not find an example
 /***************************************************************/
 	"null"        
     //"John saw the man with the red clean bike.",

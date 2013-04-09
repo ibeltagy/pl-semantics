@@ -30,10 +30,10 @@ class DepParser(
   private[this] val lp = LexicalizedParser.loadModel(dataLocation, "-maxLength", maxSentenceLength.toString, "-retainTmpSubcategories")
   private[this] val gsf = new PennTreebankLanguagePack().grammaticalStructureFactory
 
-  def apply(sent: String): Option[DepGraph[String, String]] = parse(Tokens.tokenizeToWords(sent))
-  def apply(sent: Seq[String]): Option[DepGraph[String, String]] = parse(sent.map(new Word(_)))
+  def apply(sent: String): Option[DepGraph] = parse(Tokens.tokenizeToWords(sent))
+  def apply(sent: Seq[String]): Option[DepGraph] = parse(sent.map(new Word(_)))
 
-  private[this] def parse(sent: Seq[Word]): Option[DepGraph[String, String]] = {
+  private[this] def parse(sent: Seq[Word]): Option[DepGraph] = {
         
     val parsed =
       BooleanAsErrorBox(sent.nonEmpty && sent.length <= maxSentenceLength).errorBox("invalid sentence length")
