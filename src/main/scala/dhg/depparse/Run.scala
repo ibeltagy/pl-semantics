@@ -45,7 +45,7 @@ object Run {
 /*PreConj*/ "Both the boys and the girls are here", //TODO
 /*Infmod*/ "Points to establish are . . .", //TODO
 /*MWE*/ "he went home rather than work ", 
-/*PartMod*/ //TODO: could not find an example
+/*PartMod*/ "A small dog laying on the bed.", //TODO: could not find an example
 /*AdvMod(x)*/"a man drives quickly", 
 /*Neg*/ "a man can not walk", //TODO
 /*RcMod*/ "I saw the book  you bought", //TODO
@@ -63,7 +63,7 @@ object Run {
 /*Punct*/ "Go home!",
 /*Ref*/ //TODO: could not find an example 
 /*SDep*/ // n/a
-/*XSubj*/ //TODO: could not find an example
+/*XSubj*/ "Tom likes to eat fish", 
 /***************************************************************/
 	"null"        
     //"John saw the man with the red clean bike.",

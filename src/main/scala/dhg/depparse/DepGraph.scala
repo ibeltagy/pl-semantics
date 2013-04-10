@@ -33,17 +33,17 @@ case class DepGraph(nodes:Iterable[DepNode[String]], relations: Set[DepRel], sou
     					"NN", "NNP", "NNPS", "NNS", 
     					"RB" /*stirringly prominently technologically*/, "RBR" /*further gloomier grander graver*/, "RBS"/*best biggest bluntest earliest*/, 
     					"PRP" /*hers, herself, me, ...*/, "PRP$" /*her his mine my our ours their thy your*//*need better handling with corrference resolution*/, 
-    					"RP"/*particle*/, "CD"/*Cardinality*/);
+    					"RP"/*particle*/, "CD"/*Cardinality*/, "WRB" /*Wh-adverb*/);
     
     val ignoreTags = List("CC" /*Coordinating conjunction*/, "DT"/*Determiner*/, "EX"/*existential there*/, "IN", "LS"/*list item marker*/,
     					  "POS" /*'s*/, "SYM", "TO");
     val todoTags = List("FW"/*Foreign word*/, "MD"/*modal auxiliary*/, "PDT" /*all both half many quite such sure this*/, 
     					"UH" /*goodbye, honey, ..*/);
-    val whTags = List("WDT", "WP", "WP$", "WRB");//all of them are TODO
+    val whTags = List("WDT", "WP", "WP$");//all of them are TODO
 
     var unaryPreds = nodes.toList.flatMap ( n=> 
       if (eventTags.contains(n.tag))
-    	  List((n.index, Predicate(n.index, n.lemma, "e"+n.index, n.tag, "", n.token)));
+    	  List((n.index, Predicate(n.index, n.lemma, "x"+n.index, n.tag, "", n.token)));
       else if (indvTags.contains(n.tag))
     	  List((n.index, Predicate(n.index, n.lemma, "x"+n.index, n.tag, "", n.token)));
       else 
@@ -106,13 +106,19 @@ case class DepGraph(nodes:Iterable[DepNode[String]], relations: Set[DepRel], sou
 	    case AComp(x) => addBinaryPred(rel, "patient") //TODO: This is wrong.
 	    case Attr(x) =>  //TODO: I think it is ok to do nothing
 	    case CComp(x) => addBinaryPred(rel, "prop") //TODO: this should be replaced with proposition and EXIST.
-	    case PComp(x) => throw new Exception("Unexpected dependency: %s".format(x) ) // n/a because of collapsed dependencies 
+	    case PComp(x) => addBinaryPred(rel, "rel")
+	      	//There is something weird and wrong with preposition collapsing
+	    	//Sentence: A child runs into and out of the ocean waves.
+	      	//throw new Exception("Unexpected dependency: %s".format(x) ) // n/a because of collapsed dependencies 
 	    case XComp(x) => addBinaryPred(rel, "prop") //TODO: this should be replaced with proposition and EXIST
 	    case Complm(x) => removeUnaryPred(rel.dep.index);
 	 case Obj(x) =>  throw new Exception("Unexpected dependency: %s".format(x) ) // n/a
 	    case DObj(x) => addBinaryPred(rel, "patient")
 	    case IObj(x) => addBinaryPred(rel, "theme")
-	    case PObj(x) => throw new Exception("Unexpected dependency: %s".format(x) ) // n/a because of collapsed dependencies
+	    case PObj(x) => addBinaryPred(rel, "rel")
+	    	//For some weird reason, it showed up
+	    	//Here is the sentence: "A person drops a camera down an escalator."
+	    	//throw new Exception("Unexpected dependency: %s".format(x) ) // n/a because of collapsed dependencies
 	    case Mark(x) => //TODO: this is really complex. Every marker needs a separate handling
 	    case Rel(x) => throw new Exception("Unexpected dependency: %s".format(x) ) // TODO: weird. I did not understand it. 
 	    case Subj(x) => throw new Exception("Unexpected dependency: %s".format(x) ) // n/a
@@ -134,7 +140,7 @@ case class DepGraph(nodes:Iterable[DepNode[String]], relations: Set[DepRel], sou
 	    case PreConj(x) => //TODO: for now, do nothing. It is important to handle all preconjunctions carefully. Probably, the right thing to do is nothing
 	    case Infmod(x) => addBinaryPred(rel, "rel") //TODO: well, it does not seem there is another way to do this. 
 	    case MWE(x) => throw new Exception("Unexpected dependency: %s".format(x) ) // n/a because of collapsed dependencies
-	    case PartMod(x) => throw new Exception("Unsupported dependency: %s".format(x) ) //TODO: did not understand it.
+	    case PartMod(x) => addBinaryPred(rel, "rel")  //TODO: did not understand it. There is diffintly a binaryPredicate between the two words 
 	    case AdvMod(x) => renameVar(rel);
 	    case Neg(x) => //TODO: this should be replaced with a negation and EXIST.
 	      addUnaryPred(rel.dep);
@@ -154,7 +160,7 @@ case class DepGraph(nodes:Iterable[DepNode[String]], relations: Set[DepRel], sou
 	    case Punct(x) => //DO nothing
 	    case Ref(x) => throw new Exception("Unsupported dependency: %s".format(x) ) //TODO: did not understand it.
 	    case SDep(x) => throw new Exception("Unexpected dependency: %s".format(x) ) // n/a
-	    case XSubj(x) => throw new Exception("Unsupported dependency: %s".format(x) ) //TODO: did not understand it.
+	    case XSubj(x) => addBinaryPred(rel, "agent")
 //////////////////////	  
     	  case _=> println("ERROR: unsupported relation: " + rel.rel.value)
     	} 

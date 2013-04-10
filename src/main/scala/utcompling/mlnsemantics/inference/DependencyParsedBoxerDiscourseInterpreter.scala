@@ -1,5 +1,6 @@
 package utcompling.mlnsemantics.inference
 
+import org.apache.commons.logging.LogFactory
 import utcompling.scalalogic.discourse._
 import utcompling.scalalogic.discourse.impl._
 import utcompling.scalalogic.discourse.candc.boxer._
@@ -25,6 +26,7 @@ class DependencyParsedBoxerDiscourseInterpreter[T](
     depParser: DepParser)
   extends DiscourseInterpreter[T] {
 
+  private val LOG = LogFactory.getLog(classOf[DependencyParsedBoxerDiscourseInterpreter[T]])
   /**
    * Hook to which all interpret calls delegate.
    */
@@ -32,26 +34,41 @@ class DependencyParsedBoxerDiscourseInterpreter[T](
     val newDiscourseIds = discourseIds.getOrElse((0 until inputs.length).map(_.toString).toList)
     
     require(inputs.length == newDiscourseIds.length)
-    val graphs = inputs.map(t => depParser.apply(t).head)
-    val box = graphs.map(g =>  Some(predicatesToBoxerExpression(g.logic)))
+    
+    //val graphs = inputs.map(t => depParser.apply(t.head).head)
+    //val box = graphs.map(g =>  Option(predicatesToBoxerExpression(g.logic, "t").asInstanceOf[T]))
 
-    return box;
-    /*
-    (interpretations zipSafe newDiscourseIds)
+    //return box;
+    
+    (inputs zipSafe newDiscourseIds)
       .map {
-        case (Some(drsString), discourseId) =>
-          val lineParser = new BoxerExpressionParser(discourseId)
-          Some(boxerExpressionInterpreter.interpret(lineParser.parse(drsString)))
-        case (None, _) => None
+        case (sentence, discourseId) =>
+          val graph = depParser.apply(sentence.head).head
+          println(graph.graphviz)
+          Option(predicatesToBoxerExpression(graph.logic, discourseId).asInstanceOf[T])
+        case _ => None
       }
       .toList
-      */
   }
   
-  protected def predicatesToBoxerExpression(preds: List[Predicate]): T;
+  //protected def predicatesToBoxerExpression(preds: List[Predicate]): T;
   
-  def predicatesToBoxerExpression(preds: List[Predicate]): T = {
-    return DrtVariableExpression(Variable("Var"))
+  def predicatesToBoxerExpression(preds: List[Predicate], discId: String) = {
+    var refs: Set[String] = Set();
+    var conds: Set[BoxerExpression] = Set();
+    preds.foreach(p=>{
+      p.varName2 match {
+        case Some(varName2) => conds += BoxerRel(discId, List(), BoxerVariable(p.varName), BoxerVariable(varName2), p.name, 0); 
+        case _ => {
+         conds += BoxerPred(discId, List(), BoxerVariable(p.varName), p.name, p.tag.charAt(0).toLowerCase.toString(), 0)
+         refs += p.varName
+        }
+      } 
+    })
+    //refs: List[(List[BoxerIndex], BoxerVariable)]
+    //conds: List[BoxerExpression])
+
+    BoxerDrs(refs.map(ref => (List(), BoxerVariable(ref))).toList, conds.toList);
   }
 
 }
