@@ -76,20 +76,20 @@ import dhg.depparse._
 
 /**
  * Input parameters
- * -vsWithPos true, false
- * -vectorMaker add, mul
- * -chopLvl rpr, rp
- * -noDup true, false
- * -scaleW true, false
- * -maxProb 0.90
- * -wThr 0.45
- * -range 1-10
- * -log OFF
- * -varBind true, false
- * -timeout integerInMilliseconds
- * -peInf true false
- * -irLvl 0 1 2
- * -logic dep box
+ * -vsWithPos true, (false)   //use vector space with POS or vector space without POS
+ * -vectorMaker (add), mul    //vector composition, addition or multiplication
+ * -chopLvl prp, (rp)         //chopping level: PredicateRelationPredicate or RelationPredicate 
+ * -noDup (true), false       //noDuplicates when generating Infernece rules
+ * -scaleW (true), false      //Scale Weight when generating inference rules
+ * -maxProb (0.93)            //max probablity 
+ * -wThr (0.35)               //cut off threshold for weights
+ * -range (1-1500)            //pairs range 
+ * -log (DEBUG)               //log OFF, DEBUG, INFO
+ * -varBind true, (false)     //with or without variable binding 
+ * -timeout 0  				  //Timeout integerInMilliseconds  
+ * -peInf true (false)          //include or execlude patient and agent infernece rules when irLvl = 2
+ * -irLvl 0 1 (2)             //infernec rules: 0)no infernece rules, 2)word-wise infernec rules, 3)words and phrases infenrec rules
+ * -logic dep (box)           //get logical form from Boxer or Dependency parse
  */
 
 

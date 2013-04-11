@@ -261,7 +261,7 @@ class AlchemyTheoremProver(
 
       val weightThreshold  = Sts.opts.get("-wThr") match {
 			case Some(thr) => thr.toDouble;
-			case _ => 0.0001;
+			case _ => 0.35;
 		}
 		assumptions
         .flatMap {
@@ -470,7 +470,7 @@ class AlchemyTheoremProver(
         
 	      val maxProb = Sts.opts.get("-maxProb") match {
 	         case Some(prob) => prob.toDouble;
-	         case _ => 0.95;
+	         case _ => 0.93;
 	      }     
 	      //AlchemyTheoremProver.pairIndx
 	      //entWeight  = entWeights(AlchemyTheoremProver.pairIndx)
