@@ -1,6 +1,7 @@
 package utcompling.scalalogic.discourse.impl
 
 import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.Map
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.BoxerExpressionInterpreter
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.Boxer2DrtExpressionInterpreter
 import opennlp.scalabha.util.FileUtils
@@ -13,6 +14,7 @@ import utcompling.scalalogic.discourse.candc.call.Boxer
 import utcompling.scalalogic.discourse.candc.call.Candc
 import utcompling.scalalogic.discourse.candc.call.impl.BoxerImpl
 import utcompling.scalalogic.discourse.candc.call.impl.CandcImpl
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerPrs
 
 /**
  * An interface to the Boxer software
@@ -31,8 +33,10 @@ class BoxerDiscourseInterpreter[T](
 
     val candcArgs = Map[String, String](
       "--candc-printer" -> "boxer",	
+      "--candc-parser-kbest" -> "5",
       "--candc-int-betas" -> "0.00075 0.0003 0.0001 0.00005 0.00001")
-    val candcOut = this.candc.batchParseMultisentence(inputs, candcArgs, Some(newDiscourseIds), Some(if (question) "questions" else "boxer"), verbose = verbose)
+    val candcOut = this.candc.batchParseMultisentence(inputs, candcArgs.toMap, Some(newDiscourseIds), Some(if (question) "questions" else "boxer"), verbose = verbose)
+    println(candcOut)
     val boxerArgs = Map[String, String](
       "--box" -> "false",
       "--semantics" -> "drs",
@@ -41,14 +45,25 @@ class BoxerDiscourseInterpreter[T](
       "--elimeq" -> "true",
       "--format" -> "prolog",
       "--instantiate" -> "true")
-    val boxerOut = this.boxer.callBoxer(candcOut, boxerArgs, verbose = verbose)
+    val boxerOut = this.boxer.callBoxer(candcOut, boxerArgs.toMap, verbose = verbose)
 
     val drsDict = this.parseBoxerOutput(boxerOut)
-    return newDiscourseIds.map(drsDict.getOrElse(_, None)).toList
+
+    return newDiscourseIds.map(s=> {
+      drsDict.find(x => x._1 == s) match {
+        case Some((id, exps)) =>  {
+          val e = BoxerPrs(exps.toList.asInstanceOf[List[BoxerExpression]])
+          Some (this.boxerExpressionInterpreter.interpret(e))
+        }
+        case _ => None 
+      }
+       
+    }).toList
   }
 
-  private def parseBoxerOutput(boxerOut: String): Map[String, Option[T]] = {
-    val drsDict = new MapBuilder[String, Option[T], Map[String, Option[T]]](Map[String, Option[T]]())
+  private def parseBoxerOutput(boxerOut: String): Map[String, ListBuffer[T]] = {
+    //val drsDict = new MapBuilder[String, List[T], Map[String, List[T]]](Map[String, List[T]]())
+    val drsDict:Map[String, ListBuffer[T]] = Map();
     val singleQuotedRe = """^'(.*)'$""".r
 
     val lines = boxerOut.split("\n").iterator
@@ -66,11 +81,15 @@ class BoxerDiscourseInterpreter[T](
 
           val cleanDiscourseId = singleQuotedRe.findFirstMatchIn(discourseId).map(_.group(1)).getOrElse(discourseId)
           val parsed = this.parseOutputDrs(drsInput, cleanDiscourseId)
-          drsDict += cleanDiscourseId -> Some(this.boxerExpressionInterpreter.interpret(parsed))
+          drsDict.find(x => x._1 == cleanDiscourseId) match {
+            case Some((id, l)) => l += this.boxerExpressionInterpreter.interpret(parsed);
+            case _ => drsDict += cleanDiscourseId -> ListBuffer(this.boxerExpressionInterpreter.interpret(parsed)) 
+          }
+          
         case _ =>
       }
     }
-    return drsDict.result
+    return drsDict
   }
 
   private def parseOutputDrs(drsString: String, discourseId: String): BoxerExpression = {

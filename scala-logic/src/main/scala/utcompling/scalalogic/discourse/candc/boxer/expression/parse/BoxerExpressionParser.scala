@@ -18,7 +18,9 @@ class BoxerExpressionParser(discourseId: String = "0") extends LogicParser[Boxer
 
     override protected def doParseExpression(context: Option[String] = None): BoxerExpression = {
         val tok0 = this.getToken(0)
-        if (tok0 == "drs")
+        if (tok0 == "prs")
+            this.parsePrs()
+        else if (tok0 == "drs")
             this.parseDrs()
         else if (tok0 == "alfa")
             this.parseAlfa()
@@ -67,7 +69,7 @@ class BoxerExpressionParser(discourseId: String = "0") extends LogicParser[Boxer
             else
                 throw new UnexpectedTokenException(predIdx, Some(pred), List("not", "imp", "eq", "pred", "rel", "named", "prop", "card", "whq", "or", "timex"))
         } else
-            throw new UnexpectedTokenException(this.getCurrentIndex, Some(tok0), List("drs", "alfa", "merge", "smerge", "date"))
+            throw new UnexpectedTokenException(this.getCurrentIndex, Some(tok0), List("prs", "drs", "alfa", "merge", "smerge", "date"))
     }
 
     protected def parseDrs(): BoxerExpression = {
@@ -97,6 +99,21 @@ class BoxerExpressionParser(discourseId: String = "0") extends LogicParser[Boxer
         this.assertNextToken(")")
 
         return BoxerDrs(refs.result, conds.result)
+    }
+    
+    protected def parsePrs(): BoxerExpression = {
+        this.assertNextToken("prs")
+        this.assertNextToken("(")
+
+        val exps = ListBuffer[BoxerExpression]()
+        while (this.getToken(0) != ")") {
+            if (exps.nonEmpty)
+                this.assertNextToken(",")
+            exps+= this.doParseExpression()
+        }
+        this.assertNextToken(")")
+
+        return BoxerPrs(exps.result)
     }
 
     protected def parseAlfa(): BoxerExpression = {

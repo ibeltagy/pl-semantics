@@ -8,6 +8,8 @@ abstract class BaseBoxerExpressionInterpreter[T] extends BoxerExpressionInterpre
 
     override def interpret(ex: BoxerExpression): T =
         ex match {
+        	case BoxerPrs(exps) =>
+                interpretBoxerPrs(exps)
             case BoxerAlfa(variable, first, second) =>
                 interpretBoxerAlfa(variable, first, second)
             case BoxerDrs(refs, conds) =>
@@ -40,6 +42,7 @@ abstract class BaseBoxerExpressionInterpreter[T] extends BoxerExpressionInterpre
             	interpretBoxerDate(indicesPol, pol, indicesYear, year, indicesMonth, month, indicesDay, day)
         }
 
+    protected def interpretBoxerPrs(exps: List[BoxerExpression]): T
     protected def interpretBoxerAlfa(variable: BoxerVariable, first: BoxerExpression, second: BoxerExpression): T
     protected def interpretBoxerDrs(refs: List[(List[BoxerIndex], BoxerVariable)], conds: List[BoxerExpression]): T
     protected def interpretBoxerEq(discId: String, indices: List[BoxerIndex], first: BoxerVariable, second: BoxerVariable): T
