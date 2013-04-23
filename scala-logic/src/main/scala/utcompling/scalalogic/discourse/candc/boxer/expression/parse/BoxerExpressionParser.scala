@@ -105,11 +105,15 @@ class BoxerExpressionParser(discourseId: String = "0") extends LogicParser[Boxer
         this.assertNextToken("prs")
         this.assertNextToken("(")
 
-        val exps = ListBuffer[BoxerExpression]()
+        val exps = ListBuffer[(BoxerExpression, Double)]()
         while (this.getToken(0) != ")") {
             if (exps.nonEmpty)
                 this.assertNextToken(",")
-            exps+= this.doParseExpression()
+            val p = this.doParseExpression()
+            this.assertNextToken(",")
+            val s = this.parseDouble()
+            
+            exps += ((p, s))
         }
         this.assertNextToken(")")
 
@@ -286,6 +290,17 @@ class BoxerExpressionParser(discourseId: String = "0") extends LogicParser[Boxer
             case e => throw new UnexpectedTokenException(this.getCurrentIndex - 1, Some(this.getToken(-1)), message = Some("Expected an Integer."), nested = e)
         }
     }
+    
+    protected def parseDouble(): Double = {
+        try {
+            return this.nextToken().toDouble
+        } catch {
+            case pe: ParseException => throw pe
+            case e => throw new UnexpectedTokenException(this.getCurrentIndex - 1, Some(this.getToken(-1)), message = Some("Expected a Double."), nested = e)
+        }
+    }
+    
+    
     protected def parseCard(): BoxerExpression = {
         val indices = this.parseIndexList()
         this.assertNextToken(":")

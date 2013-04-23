@@ -18,6 +18,7 @@ import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.CollectionUtil._
 import opennlp.scalabha.util.FileUtils
 import org.apache.commons.logging.LogFactory
+import utcompling.mlnsemantics.run.Sts
 
 /**
  * Discourse Interpreter that decorates a logical form.
@@ -35,7 +36,12 @@ class ModalDiscourseInterpreter(
   delegate: DiscourseInterpreter[BoxerExpression] = new BoxerDiscourseInterpreter[BoxerExpression](
     new PassthroughBoxerExpressionInterpreter(),
     CandcImpl.findBinary(),
-    BoxerImpl.findBinary()),
+    BoxerImpl.findBinary(),
+    Sts.opts.get("-kbest") match {
+		case Some(kbest) => kbest.toInt;
+		case _ => 1;
+    	}
+    ),
   candcDiscourseParser: DiscourseParser[Discourse] = new CandcDiscourseParser(CandcImpl.findBinary()),
   polarityLexicon: PolarityLexicon = PolarityLexicon.fromFile("resources/polarity-lexicon/polarity_lexicon_expanded.txt"))
   extends DiscourseInterpreter[BoxerExpression] {
@@ -64,17 +70,24 @@ class ModalDiscourseInterpreter(
     process(inputs, discourseIds, question).map(_.map(_._1))
   }
 
+  
   /**
    * @param inputs			natural language discourses
    * @param discourseIds
    * @param question
    * @return 				list of (augmented) BoxerExpressons and list of new rules added to that expression
-   */
+  */
   def process(inputs: List[List[String]], discourseIds: Option[List[String]] = None, question: Boolean = false, verbose: Boolean = false): List[Option[(BoxerExpression, List[BoxerExpression])]] = {
 
     val newDiscourseIds = discourseIds.getOrElse((0 until inputs.length).map(_.toString).toList)
     val boxerResults = delegate.batchInterpretMultisentence(inputs, Some(newDiscourseIds), question, verbose)
-    val parseResults = candcDiscourseParser.batchParseMultisentence(inputs, Map(), Some(newDiscourseIds), if (question) Some("question") else Some("boxer"), verbose)
+    return boxerResults.map(x=>
+      x match {
+        case Some(y) => Some((y, List[BoxerExpression]())) 
+        case _ => None
+      }
+    )
+    /*val parseResults = candcDiscourseParser.batchParseMultisentence(inputs, Map(), Some(newDiscourseIds), if (question) Some("question") else Some("boxer"), verbose)
     require(boxerResults.length == parseResults.length)
     var idx = 0;
     (boxerResults zipSafe parseResults).mapt { (boxerResultOpt, parseResultOpt) =>
@@ -95,6 +108,7 @@ class ModalDiscourseInterpreter(
         (resultDrs, newRules)
       }
     }
+    */
   }
 
   /**
