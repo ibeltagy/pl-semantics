@@ -90,6 +90,7 @@ import dhg.depparse._
  * -peInf true (false)          //include or execlude patient and agent infernece rules when irLvl = 2
  * -irLvl 0 1 (2)             //infernec rules: 0)no infernece rules, 2)word-wise infernec rules, 3)words and phrases infenrec rules
  * -logic dep (box)           //get logical form from Boxer or Dependency parse
+ * -kbest 3                    //number of parses. Default: 1
  */
 
 
