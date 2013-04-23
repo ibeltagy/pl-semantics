@@ -5,8 +5,8 @@ import utcompling.scalalogic.top.expression.Variable
 
 class PassthroughBoxerExpressionInterpreter extends BaseBoxerExpressionInterpreter[BoxerExpression] {
 
-    override protected def interpretBoxerPrs(exps: List[BoxerExpression]) =
-        BoxerPrs(exps.map(interpret))
+    override protected def interpretBoxerPrs(exps: List[(BoxerExpression, Double)]) =
+        BoxerPrs(exps.map(p=>(interpret(p._1), p._2)))
         
     override protected def interpretBoxerAlfa(variable: BoxerVariable, first: BoxerExpression, second: BoxerExpression) =
         BoxerAlfa(variable, interpret(first), interpret(second))

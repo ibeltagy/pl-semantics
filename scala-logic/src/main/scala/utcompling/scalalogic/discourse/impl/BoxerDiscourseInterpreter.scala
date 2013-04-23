@@ -16,6 +16,7 @@ import utcompling.scalalogic.discourse.candc.call.impl.BoxerImpl
 import utcompling.scalalogic.discourse.candc.call.impl.CandcImpl
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerPrs
 
+
 /**
  * An interface to the Boxer software
  * [a href='http://svn.ask.it.usyd.edu.au/trac/candc/wiki/boxer']http://svn.ask.it.usyd.edu.au/trac/candc/wiki/boxer[/a]
@@ -37,7 +38,8 @@ class BoxerDiscourseInterpreter[T](
       "--candc-parser-kbest" -> kbest.toString(),
       "--candc-int-betas" -> "0.00075 0.0003 0.0001 0.00005 0.00001")
     val candcOut = this.candc.batchParseMultisentence(inputs, candcArgs.toMap, Some(newDiscourseIds), Some(if (question) "questions" else "boxer"), verbose = verbose)
-    println(candcOut)
+    //println(candcOut)
+    
     val boxerArgs = Map[String, String](
       "--box" -> "false",
       "--semantics" -> "drs",
@@ -46,14 +48,15 @@ class BoxerDiscourseInterpreter[T](
       "--elimeq" -> "true",
       "--format" -> "prolog",
       "--instantiate" -> "true")
+    //val (boxerOut, scores) = this.boxer.callBoxer(candcOut, boxerArgs.toMap, verbose = verbose)
     val boxerOut = this.boxer.callBoxer(candcOut, boxerArgs.toMap, verbose = verbose)
 
-    val drsDict = this.parseBoxerOutput(boxerOut)
+    val drsDict = this.parseBoxerOutput(boxerOut)//(boxerOut, scores)
 
     return newDiscourseIds.map(s=> {
       drsDict.find(x => x._1 == s) match {
         case Some((id, exps)) =>  {
-          val e = BoxerPrs(exps.toList.asInstanceOf[List[BoxerExpression]])
+          val e = BoxerPrs(exps.toList.asInstanceOf[List[(BoxerExpression, Double)]])
           Some (this.boxerExpressionInterpreter.interpret(e))
         }
         case _ => None 
@@ -62,29 +65,42 @@ class BoxerDiscourseInterpreter[T](
     }).toList
   }
 
-  private def parseBoxerOutput(boxerOut: String): Map[String, ListBuffer[T]] = {
+  private def parseBoxerOutput(boxerOut: String/* scores: ListBuffer[String]*/): Map[String, ListBuffer[(T, Double)]] = {
     //val drsDict = new MapBuilder[String, List[T], Map[String, List[T]]](Map[String, List[T]]())
-    val drsDict:Map[String, ListBuffer[T]] = Map();
+    val drsDict:Map[String, ListBuffer[(T, Double)]] = Map();
     val singleQuotedRe = """^'(.*)'$""".r
-
+    //val scoresItr = scores.iterator;
     val lines = boxerOut.split("\n").iterator
     val IdLineRe = """^id\((\S+),\s*(\d+)\)\.$""".r
     val SemLineRe = """^sem\((\d+),$""".r
     for (line <- lines.map(_.trim)) {
+      println(line)
       line match {
-        case IdLineRe(discourseId, drsId) =>
+        case IdLineRe(discourseIdWithScore, drsId) =>
           //lines.next.trim match { case SemLineRe(drsId2) => require(drsId == drsId2, "%s != %s".format(drsId, drsId2)) }
           //lines.next.trim match { case l if l.startsWith("[word(") => }
           //lines.next.trim match { case l if l.startsWith("[pos(") => }
           //lines.next.trim match { case l if l.startsWith("[") => }
           lines.next.trim match { case l if l.startsWith("sem(") => }
           val drsInput = lines.next.trim.stripSuffix(").")
-
+          val idWithScoreSplits = discourseIdWithScore.split("-", 2);
+          val discourseId = idWithScoreSplits.apply(0)
+          val score = idWithScoreSplits.apply(1).replace("'", "").toDouble;
           val cleanDiscourseId = singleQuotedRe.findFirstMatchIn(discourseId).map(_.group(1)).getOrElse(discourseId)
           val parsed = this.parseOutputDrs(drsInput, cleanDiscourseId)
+          /*if (!scoresItr.hasNext)
+            throw new RuntimeException("number of parsing scores is less than number of parses"); 
+          val scoreLine = scoresItr.next;
+          println (scoreLine)
+          val scoreSplits = scoreLine.split(',');
+          val score = scoreSplits.apply(0).substring(11).toDouble;
+          val scoreId = scoreSplits.apply(1).substring(5, scoreSplits.apply(1).length()-2)
+          if (scoreId != cleanDiscourseId)
+            throw new RuntimeException("score's ID does not match Boxer's ID");
+           */
           drsDict.find(x => x._1 == cleanDiscourseId) match {
-            case Some((id, l)) => l += this.boxerExpressionInterpreter.interpret(parsed);
-            case _ => drsDict += cleanDiscourseId -> ListBuffer(this.boxerExpressionInterpreter.interpret(parsed)) 
+            case Some((id, l)) => l += ((this.boxerExpressionInterpreter.interpret(parsed), score));
+            case _ => drsDict += cleanDiscourseId -> ListBuffer((this.boxerExpressionInterpreter.interpret(parsed), score)) 
           }
           
         case _ =>

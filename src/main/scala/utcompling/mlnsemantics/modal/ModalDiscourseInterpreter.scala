@@ -81,7 +81,12 @@ class ModalDiscourseInterpreter(
 
     val newDiscourseIds = discourseIds.getOrElse((0 until inputs.length).map(_.toString).toList)
     val boxerResults = delegate.batchInterpretMultisentence(inputs, Some(newDiscourseIds), question, verbose)
-    return boxerResults.map(x=> Some((x.get, List[BoxerExpression]())))
+    return boxerResults.map(x=>
+      x match {
+        case Some(y) => Some((y, List[BoxerExpression]())) 
+        case _ => None
+      }
+    )
     /*val parseResults = candcDiscourseParser.batchParseMultisentence(inputs, Map(), Some(newDiscourseIds), if (question) Some("question") else Some("boxer"), verbose)
     require(boxerResults.length == parseResults.length)
     var idx = 0;
