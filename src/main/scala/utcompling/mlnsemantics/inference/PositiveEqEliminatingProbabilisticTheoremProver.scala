@@ -112,7 +112,9 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
   private def removeEq(input: FolExpression, eq: List[(String, String)]): FolExpression =
   {
     input match {	
-   	case FolExistsExpression(variable, term) => FolExistsExpression (removeEq(variable, eq), removeEq(term, eq));
+   	
+    case FolParseExpression(exps) => FolParseExpression( exps.map(e=> (removeEq(e._1, eq) , e._2) ) )
+    case FolExistsExpression(variable, term) => FolExistsExpression (removeEq(variable, eq), removeEq(term, eq));
 
    	//This is very important: Changing all IMP to AND because alchamy is very slow on processing IMP
    	case FolAllExpression(variable, term) => FolAllExpression(removeEq(variable, eq), removeEq(term, eq));
@@ -127,7 +129,8 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
    	case FolEqualityExpression(first, second) => FolEqualityExpression(first, second)//do not apply it to eq expr
    	//case FolAtom(pred, args @ _*) => FolAtom(pred, args.map(v => Variable(namePrefix+v.name)))
    	case FolVariableExpression(v) => FolVariableExpression(removeEq(v, eq))
-    case FolApplicationExpression(fun, arg) => FolApplicationExpression(removeEq(fun, eq), removeEq(arg, eq))        
+    case FolApplicationExpression(fun, arg) => FolApplicationExpression(removeEq(fun, eq), removeEq(arg, eq))
+    
    }
   }
   
@@ -145,7 +148,8 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
   {
     //val b = List[(String, String)]()
     input match {
-   	case FolExistsExpression(variable, term) => findEq(term) ;
+   	case FolParseExpression(exps) =>  exps.flatMap(e=>findEq(e._1))
+    case FolExistsExpression(variable, term) => findEq(term) ;
    	case FolAllExpression(variable, term) => findEq(term);
    	case FolAndExpression(first, second) =>  findEq(first) ++  findEq(second);
    	case FolOrExpression(first, second) => findEq(first) ++  findEq(second);   	

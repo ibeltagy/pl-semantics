@@ -46,6 +46,7 @@ class FromEntToEqvProbabilisticTheoremProver(
   private def renameVars(input: FolExpression, namePrefix: String): FolExpression =
   {
     input match {
+    case FolParseExpression(exps) => FolParseExpression( exps.map (e=> ( renameVars(e._1, namePrefix), e._2)) ) ;
    	case FolExistsExpression(variable, term) => FolExistsExpression (Variable(namePrefix+variable.name), renameVars(term, namePrefix)) ;
    	case FolAllExpression(variable, term) => FolAllExpression (Variable(namePrefix+variable.name), renameVars(term, namePrefix)) ;
    	case FolNegatedExpression(term) => FolNegatedExpression(renameVars(term, namePrefix))

@@ -255,11 +255,13 @@ object Sts {
           
           val ttp =
             new TextualTheoremProver( //1
-              logicFormSource,
-              new MergeSameVarPredProbabilisticTheoremProver(
+              logicFormSource,                   //TODO: probably, I need to add a step to rename 
+              									//either variables, or predicates or both.  
+              									//THe rest of the code depends on what I am doing here
+              new MergeSameVarPredProbabilisticTheoremProver( //TODO: do not merge vars of different parses
                 //new FindEventsProbabilisticTheoremProver(
 	              new GetPredicatesDeclarationsProbabilisticTheoremProver(
-		              new InferenceRuleInjectingProbabilisticTheoremProver( //2
+		              new InferenceRuleInjectingProbabilisticTheoremProver( //2 //TODO: all pairs ?? 
 		                wordnet,
 		                words => BowVectorSpace(vsFileMod, x => words(x) && allLemmas(x)),
 		                new SameLemmaHardClauseRuleWeighter(
@@ -273,11 +275,11 @@ object Sts {
 		                            new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(
 		                              new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))))).fol
 		                  },
-		                	new PositiveEqEliminatingProbabilisticTheoremProver(
-		                          new FromEntToEqvProbabilisticTheoremProver(   
+		                	new PositiveEqEliminatingProbabilisticTheoremProver(//TODO: list of parses
+		                          new FromEntToEqvProbabilisticTheoremProver( //TODO: ANDing goals is wrong  
 		                    		  new ExistentialEliminatingProbabilisticTheoremProver(
-		                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver(
-		                    						  AlchemyTheoremProver.findBinary())))))))))
+		                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver(//TODO: how to generate evidences ?
+		                    						  AlchemyTheoremProver.findBinary()))))))))) //TODO: how to generate MLN ?
 
           val p = ttp.prove(sepTokens(txt), sepTokens(hyp))
           println("%s  [actual: %s, gold: %s]".format(p, probOfEnt2simScore(p.get), goldSim))
