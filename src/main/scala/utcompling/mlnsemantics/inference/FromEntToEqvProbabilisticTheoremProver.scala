@@ -8,6 +8,7 @@ import opennlp.scalabha.util.CollectionUtils._
 import support.HardWeightedExpression
 import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 import support.HardWeightedExpression
+import utcompling.mlnsemantics.run.Sts
 
 class FromEntToEqvProbabilisticTheoremProver(
   delegate: ProbabilisticTheoremProver[FolExpression])
@@ -23,24 +24,46 @@ class FromEntToEqvProbabilisticTheoremProver(
     assumptions: List[WeightedExpression[FolExpression]],
     goal: FolExpression): Option[Double] = {
 
-    
-    val prem = renameVars(assumptions.head.expression, "t");
-    val hyp = renameVars(goal, "h");
-    val newGoal =  andingGoals (prem, hyp);
-    
-    
-    //add premise and hypothesis to assumptions. 
-    val newAssumptions = assumptions.filterNot( _ == assumptions.head) ++ 
-    					List (HardWeightedExpression (hyp)) ++ 
-    					List (HardWeightedExpression (prem)) ; 
-
-    delegate.prove(
-      constants,
-      declarations,
-      evidence, 
-      newAssumptions,
-      newGoal)
-
+    val task = Sts.opts.get("-task") match {
+		case Some(tsk) => tsk;
+		case _ => "sts";
+    }
+    task match {
+      case "rte" => {
+	    val prem = renameVars(assumptions.head.expression, "t");
+	    val hyp = renameVars(goal, "h");
+	    val newGoal =  hyp;
+	    
+	    
+	    //add premise and hypothesis to assumptions. 
+	    val newAssumptions = assumptions.filterNot( _ == assumptions.head) ++ 
+	    					List (HardWeightedExpression (prem)) ; 
+	    delegate.prove(
+	      constants,
+	      declarations,
+	      evidence, 
+	      newAssumptions,
+	      newGoal)
+      }
+      
+      case "sts" => {
+	    val prem = renameVars(assumptions.head.expression, "t");
+	    val hyp = renameVars(goal, "h");
+	    val newGoal =  andingGoals (prem, hyp);
+	    
+	    
+	    //add premise and hypothesis to assumptions. 
+	    val newAssumptions = assumptions.filterNot( _ == assumptions.head) ++ 
+	    					List (HardWeightedExpression (hyp)) ++ 
+	    					List (HardWeightedExpression (prem)) ; 
+	    delegate.prove(
+	      constants,
+	      declarations,
+	      evidence, 
+	      newAssumptions,
+	      newGoal)
+      }
+    }
   }
   
   private def renameVars(input: FolExpression, namePrefix: String): FolExpression =

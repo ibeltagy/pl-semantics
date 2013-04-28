@@ -42,9 +42,11 @@ class AlchemyTheoremProver(
   
   private val entailedConst = ("ent" -> Set("ent_h", "ent_t"))
 
-  private var entailmentConsequent:FolExpression = FolVariableExpression(Variable("entailment"));
+  private var entailmentConsequent:FolExpression = FolAtom(Variable("entailment_h"), Variable("ent_h"));
   
-  private var varBind: Option[Boolean] = None;   
+  private var varBind: Option[Boolean] = None;
+  
+  private var task = "sts";
   
   override def prove(
     constants: Map[String, Set[String]],
@@ -59,6 +61,11 @@ class AlchemyTheoremProver(
 			case _ => Some(false);
 		}
     else varBind  = Some(false); //second call
+    
+    task = Sts.opts.get("-task") match {
+		case Some(tsk) => tsk;
+		case _ => "sts";
+      }
     
     
     declarations.foreach { dec =>
@@ -226,7 +233,7 @@ class AlchemyTheoremProver(
     goal: FolExpression) = {
     
     var reducedConstants = constants;
-    for (s <- constants)
+    /*for (s <- constants)
     {
       if (s._2.size > 1 && !s._1.equals("ent"))
 		{
@@ -238,7 +245,7 @@ class AlchemyTheoremProver(
 			}*/
          reducedConstants = reducedConstants + (s._1 -> constsList); 
 		}
-    }
+    }*/
     
     val tempFile = FileUtils.mktemp(suffix = ".mln")
     FileUtils.writeUsing(tempFile) { f =>
@@ -521,15 +528,16 @@ class AlchemyTheoremProver(
 			}
 		}
 
-      writeTwoGoals(goal);
+
+
+      
+      task match {
+      	case "rte" => f.write(convert(universalifyGoalFormula(goal -> entailmentConsequent)) + ". //(ditAnd)\n") //normal anding
+      	case "sts" => writeTwoGoals(goal);
+      }
+      
       
       //f.write(average(goal));  a->ent, where a is one of the anded formulas
-
-      //normal anding
-      //f.write(convert(universalifyGoalFormula(goal -> entailmentConsequent)) + ". //(ditAnd)\n")
-
-      
-
 
       f.write("//end combination function\n");
 
@@ -615,7 +623,10 @@ class AlchemyTheoremProver(
     val score2 = out.mkString("").trim().toDouble;
     out.clear();
     
-    val score = (score1 + score2) / 2.0
+    val score  = task match {
+      case "sts" => (score1 + score2) / 2.0;
+      case "rte" => score1;
+    }  
     
     //println(out);
     if (LOG.isDebugEnabled())

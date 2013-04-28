@@ -91,6 +91,7 @@ import dhg.depparse._
  * -irLvl 0 1 (2)             //infernec rules: 0)no infernece rules, 2)word-wise infernec rules, 3)words and phrases infenrec rules
  * -logic dep (box)           //get logical form from Boxer or Dependency parse
  * -kbest 3                    //number of parses. Default: 1
+ * -task sts					//sts, or rte. Default: sts
  */
 
 
@@ -258,6 +259,7 @@ object Sts {
               logicFormSource,                   //TODO 1: probably, I need to add a step to rename 
               									//either variables, or predicates or both.  
               									//THe rest of the code depends on what I am doing here
+             new DoMultipleParsesTheoremProver( //rename variables and predicates+remove extra parses if any.
               new MergeSameVarPredProbabilisticTheoremProver( //TODO 2: do not merge vars of different parses
                 //new FindEventsProbabilisticTheoremProver(
 	              new GetPredicatesDeclarationsProbabilisticTheoremProver(
@@ -279,7 +281,7 @@ object Sts {
 		                          new FromEntToEqvProbabilisticTheoremProver( //TODO 5: ANDing goals is wrong  
 		                    		  new ExistentialEliminatingProbabilisticTheoremProver(
 		                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver(//TODO 6: how to generate evidences ?
-		                    						  AlchemyTheoremProver.findBinary()))))))))) //TODO 7: how to generate MLN ?
+		                    						  AlchemyTheoremProver.findBinary())))))))))) //TODO 7: how to generate MLN ?
 
           val p = ttp.prove(sepTokens(txt), sepTokens(hyp))
           println("%s  [actual: %s, gold: %s]".format(p, probOfEnt2simScore(p.get), goldSim))
