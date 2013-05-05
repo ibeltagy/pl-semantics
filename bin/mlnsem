@@ -29,11 +29,12 @@ case $CMD in
    ;;
   run)
 #	$START utcompling.mlnsemantics.run.Sts run $STS/prob.in.txt $STS/prob.in.box $STS/prob.in.vs $STS/prob.gs.txt $STS/prob.out.txt "$@"
-	$START utcompling.mlnsemantics.run.Sts run $STS/STS.MSRvid.in.txt $STS/STS.MSRvid.in.box $STS/STS.MSRvid.in.vs $STS/STS.MSRvid.gs.txt $STS/STS.MSRvid.out.txt "$@"
+#	$START utcompling.mlnsemantics.run.Sts run $STS/STS.MSRvid.in.txt $STS/STS.MSRvid.in.box $STS/STS.MSRvid.in.vs $STS/STS.MSRvid.gs.txt $STS/STS.MSRvid.out.txt "$@"
 #	$START utcompling.mlnsemantics.run.Sts run $STS/STS.MSRpar.in.txt $STS/STS.MSRpar.in.box $STS/STS.MSRpar.in.vs $STS/STS.MSRpar.gs.txt $STS/STS.MSRpar.out.txt "$@"
 #	$START utcompling.mlnsemantics.run.Sts run $STS/STS.OnWN.in.txt $STS/STS.OnWN.in.box $STS/STS.OnWN.in.vs $STS/STS.OnWN.gs.txt $STS/STS.OnWN.out.txt "$@"
 #	$START utcompling.mlnsemantics.run.Sts run $STS/STS.SMTeuroparl.in.txt $STS/STS.SMTeuroparl.in.box $STS/STS.SMTeuroparl.in.vs $STS/STS.SMTeuroparl.gs.txt $STS/STS.SMTeuroparl.out.txt "$@"
 #	$START utcompling.mlnsemantics.run.Sts run $STS/STS.SMTnews.in.txt $STS/STS.SMTnews.in.box $STS/STS.SMTnews.in.vs $STS/STS.SMTnews.gs.txt $STS/STS.SMTnews.out.txt "$@"
+	$START utcompling.mlnsemantics.run.Sts run $STS/tmp.txt $STS/tmp.box $STS/tmp.vs $STS/tmp.gs.txt $STS/tmp.out -kbest 2 -task rte "$@"
 	;;
   box)
 #	$START utcompling.mlnsemantics.run.Sts box $STS/prob.in.txt $STS/prob.in.box "$@"
@@ -67,6 +68,12 @@ case $CMD in
 #	$START utcompling.mlnsemantics.run.Sts lem $STS/STS.OnWN.in.txt $STS/STS.OnWN.in.lem "$@"
 #	$START utcompling.mlnsemantics.run.Sts lem $STS/STS.SMTeuroparl.in.txt $STS/STS.SMTeuroparl.in.lem "$@"
 #	$START utcompling.mlnsemantics.run.Sts lem $STS/STS.SMTnews.in.txt $STS/STS.SMTnews.in.lem "$@"
+	;;
+  all)
+	$START utcompling.mlnsemantics.run.Sts box $STS/tmp.txt $STS/tmp.box -kbest 2 "$@"
+	$START utcompling.mlnsemantics.run.Sts lem $STS/tmp.txt $STS/tmp.lem "$@"
+	$START utcompling.mlnsemantics.run.Sts vs /home/myall86/RESEARCH/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/tmp.lem $STS/tmp.vs "$@"
+	$START utcompling.mlnsemantics.run.Sts run $STS/tmp.txt $STS/tmp.box $STS/tmp.vs $STS/tmp.gs.txt $STS/tmp.out -kbest 2 -task rte "$@"
 	;;
   boxer)
     $START utcompling.mlnsemantics.run.BoxerCli "$@";;

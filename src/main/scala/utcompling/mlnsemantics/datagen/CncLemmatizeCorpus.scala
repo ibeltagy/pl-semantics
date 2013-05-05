@@ -74,7 +74,8 @@ class CncLemmatizeCorpusMapper extends Mapper[Object, Text, IntWritable, Text] {
     val candcOut = candc.batchParse(tokenized, candcArgs, None, Some("boxer"))
     val outputs = splitOutput(candcOut)
     val lemmatized = lemmatize(outputs)
-    val wordsAndLemmas = tokenized.indices.map(lemmatized.get)
+//    val wordsAndLemmas = tokenized.indices.map(lemmatized.get)
+	val wordsAndLemmas = lemmatized.keys.toSeq.sorted.map(lemmatized.get)
     wordsAndLemmas
   }
 
@@ -89,7 +90,7 @@ class CncLemmatizeCorpusMapper extends Mapper[Object, Text, IntWritable, Text] {
         current += line
       }
       else if (currNum.isDefined) {
-        if (line.trim.isEmpty) {
+        if (line.trim.isEmpty || line.startsWith("id(")) {
           outputs += (currNum.get -> current.mkString("\n"))
           current.clear()
           currNum = None
