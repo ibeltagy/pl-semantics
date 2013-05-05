@@ -27,8 +27,8 @@ namespace NLP {
 
       virtual ~GRsPrinter(void){ /* do nothing */ }
 
-      virtual void parsed(const KBest ret[], ushort nparses, Sentence &sent, double BETA, ulong DICT_CUTOFF){
-        StreamPrinter::parsed(ret, nparses, sent, BETA, DICT_CUTOFF);
+      virtual void parsed(const KBest ret[], ushort nparses, Sentence &sent, double BETA, ulong DICT_CUTOFF, std::string meta){
+        StreamPrinter::parsed(ret, nparses, sent, BETA, DICT_CUTOFF, meta);
       }
     };
   }

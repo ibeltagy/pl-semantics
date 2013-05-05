@@ -62,7 +62,7 @@ title(judge,   judge, person).
 title(justice, justice, person).
 
 % Titles starting with L
-title(lady, lday, female).
+title(lady, lady, female).
 title(T,    lieutenant, person):- member(T,[lieut,'lieut.',lt,'lt.']).
 title(lord, lord, person).
 

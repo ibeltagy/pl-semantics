@@ -1,5 +1,6 @@
 
-:- module(coordination,[coordMacro/2]).
+:- module(coordination,[coordMacro/2,argCard/2]).
+:- use_module(boxer(slashes)).
 
 /* =========================================================================
    Coordination Macros
@@ -28,5 +29,15 @@ addApplications([A],X,Y,app(X,A),app(Y,A)):- !.
 
 addApplications([A|L],X,Y,app(X1,A),app(Y1,A)):-
    addApplications(L,X,Y,X1,Y1).
+
+
+/* =========================================================================
+   Argument Cardinality
+========================================================================= */
+
+argCard(_:_,C):- !, C = 0.
+argCard(X/_,C):- !, argCard(X,N), C is N + 1.
+argCard(X\_,C):- !, argCard(X,N), C is N + 1.
+argCard(_,0).
 
 

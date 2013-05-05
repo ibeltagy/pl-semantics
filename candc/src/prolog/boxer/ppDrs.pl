@@ -1,7 +1,7 @@
 
 :- module(ppDrs,[ppDrs/3]).
 
-:- use_module(library(lists),[member/2,append/3,select/3]).
+:- use_module(library(lists),[member/2,append/3,select/3,reverse/2]).
 :- use_module(boxer(alphaConversionDRT),[alphaConvertDRS/2]).
 :- use_module(semlib(options),[option/2]).
 :- use_module(knowledge(title),[title/1]).

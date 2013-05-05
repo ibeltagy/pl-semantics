@@ -220,7 +220,7 @@ findAlfaConds([Cond|C1],[Cond|C2],Alfa,Ac,Bi1-Bi2):-
 
 resolveAlfa(Alfa,Type,Ac,Bi,B,L1,L2):-
    option('--presup',max),
-   bindAlfa(Type,Bi,Alfa,L1,L2,_X),
+   bindAlfa(Type,Bi,Alfa,L1,L2),
    dontResolve(Ac),
    \+ bindingViolationDrs(B),
    freeVarCheckDrs(B), !.
@@ -248,11 +248,11 @@ atype(ind,0,1,0). % indefinites
    Binding: select an antecedent, then merge the domain and the conditions
 ------------------------------------------------------------------------ */
 
-bindAlfa(Type,[a(drs([],[]))|P],Alfa,L1,L2,X):- 
+bindAlfa(Type,[a(drs([],[]))|P],Alfa,L1,L2):- 
    !,  %%% cannot bind here, so try next level of DRS
-   bindAlfa(Type,P,Alfa,L1,L2,X).
+   bindAlfa(Type,P,Alfa,L1,L2).
 
-bindAlfa(_,[r(drs(D2,C2),DRS)|P],drs([AnaIndex:X|D1],C1),L,[bind(AnaIndex,AntIndex)|L],X):-
+bindAlfa(_,[r(drs(D2,C2),DRS)|P],drs([AnaIndex:X|D1],C1),L,[bind(AnaIndex,AntIndex)|L]):-
    input:coref(Ana,Ant), 
    common(AnaIndex,Ana),                         % there is external coref info for this anaphor
    member(AntIndex:X,D2),                        % select candidate antecedent discourse referent
@@ -263,7 +263,8 @@ bindAlfa(_,[r(drs(D2,C2),DRS)|P],drs([AnaIndex:X|D1],C1),L,[bind(AnaIndex,AntInd
    DRS = drs(D3,C3),
    dontResolve(P).
 
-bindAlfa(Type,[r(drs(D2,C2),DRS)|P],drs([AnaIndex:X|D1],C1),L,[bind(AnaIndex,AntIndex)|L],X):-
+bindAlfa(Type,[r(drs(D2,C2),DRS)|P],drs([AnaIndex:X|D1],C1),L,[bind(AnaIndex,AntIndex)|L]):-
+   \+ option('--semantics',drg),
    atype(Type,_,_,1),                            % check whether type permits binding
    member(AntIndex:X,D2),                        % select candidate antecedent discourse referent
    match(Type,C1,C2,X),                          % check if this candidate matches
@@ -274,8 +275,20 @@ bindAlfa(Type,[r(drs(D2,C2),DRS)|P],drs([AnaIndex:X|D1],C1),L,[bind(AnaIndex,Ant
    sortalCheckDrs(DRS,X),
    dontResolve(P).
 
-bindAlfa(Type,[r(R,R)|P],Alfa,L1,L2,X):-
-   bindAlfa(Type,P,Alfa,L1,L2,X).
+bindAlfa(Type,[r(drs(D2,C2),DRS)|P],drs([AnaIndex:X|D1],C1),L,[bind(AnaIndex,AntIndex)|L]):-
+   option('--semantics',drg),
+   atype(Type,_,_,1),                            % check whether type permits binding
+   member(AntIndex:Y,D2),                        % select candidate antecedent discourse referent
+   coordinated(AnaIndex,AntIndex,L),             % copied material must have same antecedent
+   \+ \+ (Y=X, match(Type,C1,C2,X)),             % check if this candidate matches
+   mergeDomains(D1,D2,D3), 
+   mergeConditions(C1,C2,C3),
+   DRS = drs([AnaIndex:X|D3],[[]:eq(X,Y)|C3]),
+   \+ \+ (Y=X, sortalCheckDrs(drs(D3,C3),X)),
+   dontResolve(P).
+
+bindAlfa(Type,[r(R,R)|P],Alfa,L1,L2):-
+   bindAlfa(Type,P,Alfa,L1,L2).
 
 
 /* ------------------------------------------------------------------------
@@ -291,6 +304,7 @@ common(Index1,Index2):- member(X,Index1), member(X,Index2), !.
 
 coordinated(AnaIndex,AntIndex,Bound):-
    \+ ( member(bind(AnaIndex,OtherIndex),Bound),
+        \+ AnaIndex=[], \+ OtherIndex=[],
         \+ OtherIndex = AntIndex ).
 
 
@@ -299,7 +313,7 @@ coordinated(AnaIndex,AntIndex,Bound):-
 ------------------------------------------------------------------------*/
 
 match(nam,C1,C2,X0):-
-   member(_:named(X1,Sym,Type,Sense),C1), X0==X1, \+ Type=ttl, \+ Sym='"',
+   member(_:named(X1,Sym,Type,Sense),C1), X0==X1, \+ Type=ttl,
    member(_:named(X2,Sym,Type,Sense),C2), X1==X2, !.
 
 match(nam,C1,C2,X0):-
@@ -307,11 +321,11 @@ match(nam,C1,C2,X0):-
    member(_:timex(X2,date(_:D1,_:D2,_:D3,_:D4)),C2), X1==X2, !.
 
 match(def,C1,C2,X0):-
-   member(_:pred(X1,Sym,n,Sense),C1), X0==X1,  \+ Sym='"',
+   member(_:pred(X1,Sym,n,Sense),C1), X0==X1,
    member(_:pred(X2,Sym,n,Sense),C2), X1==X2, !.
 
 match(def,C1,C2,X0):-
-   member(_:named(X1,Sym,Type,Sense),C1), X0==X1, \+ Type=ttl, \+ Sym='"',
+   member(_:named(X1,Sym,Type,Sense),C1), X0==X1, \+ Type=ttl,
    member(_:named(X2,Sym,Type,Sense),C2), X1==X2, !.
 
 match(def,C1,C2,X0):-
@@ -336,7 +350,7 @@ match(pro,C1,C2,X0):-
 
 match(pro,C1,C2,X0):-
    member(_:pred(X1,neuter,a,_),C1), X0==X1, 
-   ( NE=org ; NE=loc ), 
+   ( NE=org ; NE=loc; NE=art; NE=nat ), 
    member(_:named(X2,_,NE,_),C2),    X1==X2, !.
 
 
@@ -405,13 +419,22 @@ dontResolve([r(X,X)|L]):- !,
 mergeDomains([],L,L):- !.
 
 mergeDomains([I1:X|R],L1,L3):-
-   select(I2:Y,L1,L2), 
-   X==Y, !,
+   option('--semantics',tacitus),
+   select(I2:Y,L1,L2), X==Y, !,
    append(I1,I2,I3), sort(I3,I4),
    mergeDomains(R,[I4:X|L2],L3).
 
+mergeDomains([_:X|R],L1,L3):-
+   select(I:Y,L1,L2), X==Y, !,
+   mergeDomains(R,[I:X|L2],L3).
+
 mergeDomains([X|R],L1,[X|L2]):-
+   option('--semantics',tacitus), !,
    mergeDomains(R,L1,L2).
+
+mergeDomains([_:X|R],L1,[[]:X|L2]):-
+   mergeDomains(R,L1,L2).
+
 
 /* ========================================================================
    Merge Conditions - Check for Duplicates; Copy Indexes
@@ -419,13 +442,22 @@ mergeDomains([X|R],L1,[X|L2]):-
 
 mergeConditions([],L,L):- !.
 
+%mergeConditions([_:named(X,Sym,_,Sense)|R],L1,L3):-      %%% merge names with
+%   select(I:named(Y,Sym,Type,Sense),L1,L2), X==Y, !,     %%% different types
+%   mergeConditions(R,[I:named(X,Sym,Type,Sense)|L2],L3).
+
 mergeConditions([I1:X|R],L1,L3):-
-   select(I2:Y,L1,L2), 
-   X==Y, !,
+   option('--semantics',tacitus),  
+   select(I2:Y,L1,L2), X==Y, !,
    append(I1,I2,I3), sort(I3,I4),
    mergeConditions(R,[I4:X|L2],L3).
 
+mergeConditions([_:X|R],L1,L3):-                         %%% merge identical
+   select(I:Y,L1,L2), X==Y, !,                           %%% conditions, keep
+   mergeConditions(R,[I:X|L2],L3).                       %%% index of antecedent
+
 mergeConditions([I1:timex(X,date(D1,D2,D3,D4))|R],L1,L3):-
+   option('--semantics',drg),
    select(I2:timex(Y,date(E1,E2,E3,E4)),L1,L2), 
    mergeConditions([D1],[E1],[F1]),
    mergeConditions([D2],[E2],[F2]),
@@ -435,7 +467,18 @@ mergeConditions([I1:timex(X,date(D1,D2,D3,D4))|R],L1,L3):-
    append(I1,I2,I3), sort(I3,I4),
    mergeConditions(R,[I4:timex(X,date(F1,F2,F3,F4))|L2],L3).
 
+mergeConditions([_:timex(X,date(D1,D2,D3,D4))|R],L1,L3):-
+   select(I:timex(Y,date(E1,E2,E3,E4)),L1,L2), 
+   mergeConditions([D1],[E1],[F1]),
+   mergeConditions([D2],[E2],[F2]),
+   mergeConditions([D3],[E3],[F3]),
+   mergeConditions([D4],[E4],[F4]),
+   X==Y, !,
+   mergeConditions(R,[I:timex(X,date(F1,F2,F3,F4))|L2],L3).
+
 mergeConditions([X|R],L1,[X|L2]):-
    mergeConditions(R,L1,L2).
+
+
 
 

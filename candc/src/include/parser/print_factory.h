@@ -40,9 +40,9 @@ namespace NLP {
         printer->footer();
       }
 
-      virtual void parsed(const KBest ret[], ushort nparses, Sentence &sent, double BETA, ulong DICT_CUTOFF){
+      virtual void parsed(const KBest ret[], ushort nparses, Sentence &sent, double BETA, ulong DICT_CUTOFF, std::string meta ){
         set(true, true, "parsed", BETA, DICT_CUTOFF);
-        printer->parsed(ret, nparses, sent, BETA, DICT_CUTOFF);
+        printer->parsed(ret, nparses, sent, BETA, DICT_CUTOFF, meta);
       }
 
       virtual void stats(const Statistics &stats){

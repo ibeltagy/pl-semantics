@@ -286,7 +286,7 @@ CandC::parse(IO::Input &in, IO::Output &out, IO::Log &log, bool START,
 
   while(read_buffer(in.stream)){
     if(is_meta(meta)){
-      print_meta(out.stream, StreamPrinter::FMT_ALL);
+      //print_meta(out.stream, StreamPrinter::FMT_ALL);
       // set the new meta tag and clear sentence ids
       set_meta();
       // reset the last tag feature of the NE recogniser
@@ -308,12 +308,12 @@ CandC::parse(IO::Input &in, IO::Output &out, IO::Log &log, bool START,
     if(FORMAT & StreamPrinter::FMT_LEMMA)
       load_lemmas();
 
-    integration.parse(sent, decoder, printer, ret);
+    integration.parse(sent, decoder, printer, ret, meta);
   }
 
   delete [] ret;
   printer.footer();
-  print_meta(out.stream, FORMAT);
+  //print_meta(out.stream, FORMAT);
 
   return nsents ? double(nparsed)/nsents : nsents;
 }

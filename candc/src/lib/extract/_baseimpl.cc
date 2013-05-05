@@ -9,7 +9,7 @@
 // please email candc@it.usyd.edu.au to obtain a copy.
 
 #include "extract/_baseimpl.h"
-
+#include <unistd.h>
 using namespace std;
 
 namespace NLP { namespace Extract {

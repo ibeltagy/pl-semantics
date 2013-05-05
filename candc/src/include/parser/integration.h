@@ -71,7 +71,7 @@ namespace NLP {
 
       ~Integration(void);
 
-      bool parse(Sentence &sent, Decoder &decoder, Printer &printer, KBest ret[], const bool USE_SUPER = true, const bool ALT_POS = false, const bool SUPER_AUTO_POS = false, const bool PARSER_AUTO_POS = false);
+      bool parse(Sentence &sent, Decoder &decoder, Printer &printer, KBest ret[], const std::string meta="", const bool USE_SUPER = true, const bool ALT_POS = false, const bool SUPER_AUTO_POS = false, const bool PARSER_AUTO_POS = false);
 
     protected:
       Taggers::State *const super_state;

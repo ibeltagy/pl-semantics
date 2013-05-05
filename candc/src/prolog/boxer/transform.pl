@@ -1,18 +1,404 @@
 
-:- module(transform,[preprocess/8,
-                     topcat/2]).    % +CCG, -Cat
+:- module(transform,[preprocess/6,
+                     topsem/2,      % +Der, -Sem 
+                     topatt/2,      % +Der, -Att 
+                     topcat/2]).    % +Der, -Cat
 
 :- use_module(library(lists),[append/3,member/2]).
 :- use_module(semlib(options),[option/2]).
+:- use_module(semlib(errors),[error/2,warning/2]).
 :- use_module(boxer(slashes)).
 
 
+/* -------------------------------------------------------------------------
+   Pre-Processing of CCG derivation to ensure correct format
+------------------------------------------------------------------------- */
+
+preprocess(SID,X,Y,Tags,Start,End):-
+   setTokID(SID,Start,TokID),
+   trans(X,TokID,Y,End,Tags), !.
+
+preprocess(SID,_,_,_,_,_):-
+   error('unable to preprocess derivation ~p',[SID]), !, fail.
+
+
+/* -------------------------------------------------------------------------
+   Funny (C&C wrongly analysed cases of N coordination)
+------------------------------------------------------------------------- */
+
+%trans(X,_,_,_,_):- write(X),nl,fail.
+
+trans(fa(n,X,funny(n,Conj,fa(n,Y,Z))),N1,X2,N3,Tags):- !,
+   trans(fa(n,ba(n/n,X,conj((n/n)\(n/n),n/n,Conj,Y)),Z),N1,X2,N3,Tags).
+   
+trans(funny(_,_,X1),N1,X2,N3,Tags):- !,
+   warning('the funny combinatory rule causes skipping token ~p',[N1]),
+   N2 is N1 + 1, %% assuming we skip one word (i.e. 'and')
+   trans(X1,N2,X2,N3,Tags).
+
+
+/* -------------------------------------------------------------------------
+   Punctuation typechange rules
+------------------------------------------------------------------------- */
+
+trans(rtc(C,X1,Pu1),N1,ba(C,nil,Att,X2,X3),N3,Tags1-Tags3):- 
+   Pu1 =.. [t,_|Cs], !,
+   trans(X1,N1,X2,N2,Tags1-Tags2),
+   topcat(X2,Cat),
+   topatt(X2,Att),
+   Pu2 =.. [t,C\Cat|Cs],
+   trans(Pu2,N2,X3,N3,Tags2-Tags3).
+
+trans(ltc(C,Pu1,X1),N1,fa(C,nil,Att,X2,X3),N3,Tags1-Tags3):-
+   trans(Pu1,N1,Pu2,N2,Tags1-Tags2),
+   Pu2 = t(_,Tok2,Sem2,Att2,I), !,
+   trans(X1,N2,X3,N3,Tags2-Tags3),
+   topcat(X3,Cat),
+   topatt(X3,Att),
+   X2 = t(C/Cat,Tok2,Sem2,Att2,I).
+
+
+/* -------------------------------------------------------------------------
+   Punctuation rules
+------------------------------------------------------------------------- */
+
+trans(rp(Cat,X1,Y0),N1,X2,N3,Tags):-
+   Y0 =.. [t,_|L], !, Y1 =.. [t,Cat\Cat|L],
+   trans(ba(Cat,X1,Y1),N1,X2,N3,Tags).
+
+trans(lp(Cat,X0,Y1),N1,X2,N3,Tags):-
+   X0 =.. [t,_|L], !, X1 =.. [t,Cat/Cat|L],
+   trans(fa(Cat,X1,Y1),N1,X2,N3,Tags).
+
+
+/* -------------------------------------------------------------------------
+   Application
+------------------------------------------------------------------------- */
+
+trans(fa(_,X1,Y1),  N1,  fa(C1,nil,Att,X2,Y2), N3, Tags1-Tags3):- !, 
+   trans(X1,N1,X2,N2,Tags1-Tags2), 
+   topcat(X2,C1/C2),
+   trans(Y1,N2,Y2,N3,Tags2-Tags3),
+   topcat(Y2,C2),
+   headAtt(X2,Y2,Att).
+
+trans(ba(_,X1,Y1),  N1,  ba(C2,nil,Att,X2,Y2), N3, Tags1-Tags3):- !, 
+   trans(X1,N1,X2,N2,Tags1-Tags2), 
+   topcat(X2,C1),
+   trans(Y1,N2,Y2,N3,Tags2-Tags3),
+   topcat(Y2,C2\C1),
+   headAtt(X2,Y2,Att).
+
+
+/* -------------------------------------------------------------------------
+   Composition
+------------------------------------------------------------------------- */
+
+trans(fc(_,X1,Y1),  N1,  fc(C1/C3,nil,Att,X2,Y2), N3, Tags1-Tags3):- !, 
+   trans(X1,N1,X2,N2,Tags1-Tags2), 
+   trans(Y1,N2,Y2,N3,Tags2-Tags3),
+   topcat(X2,C1/C2),
+   topcat(Y2,C2/C3),
+   headAtt(X2,Y2,Att).
+
+trans(bc(_,X1,Y1),  N1,  bc(C3\C1,nil,Att,X2,Y2), N3, Tags1-Tags3):- !, 
+   trans(X1,N1,X2,N2,Tags1-Tags2), 
+   trans(Y1,N2,Y2,N3,Tags2-Tags3),
+   topcat(X2,C2\C1),
+   topcat(Y2,C3\C2),
+   headAtt(X2,Y2,Att).
+
+/* -------------------------------------------------------------------------
+   Generalised Composition
+------------------------------------------------------------------------- */
+
+trans(gfc(C,N,X1,Y1),  N1,  gfc(C,N,nil,Att,X2,Y2), N3, Tags1-Tags3):- !, 
+   trans(X1,N1,X2,N2,Tags1-Tags2), 
+   trans(Y1,N2,Y2,N3,Tags2-Tags3),
+   headAtt(X2,Y2,Att).
+
+trans(gbc(C,N,X1,Y1),  N1,  gbc(C,N,nil,Att,X2,Y2), N3, Tags1-Tags3):- !, 
+   trans(X1,N1,X2,N2,Tags1-Tags2), 
+   trans(Y1,N2,Y2,N3,Tags2-Tags3),
+   headAtt(X2,Y2,Att).
+
+
+/* -------------------------------------------------------------------------
+   Crossed Composition
+------------------------------------------------------------------------- */
+
+trans(bxc(_,X1,Y1),  N1,  bxc(C3/C1,nil,Att,X2,Y2), N3, Tags1-Tags3):- !, 
+   trans(X1,N1,X2,N2,Tags1-Tags2), 
+   trans(Y1,N2,Y2,N3,Tags2-Tags3),
+   topcat(X2,C2/C1),
+   topcat(Y2,C3\C2),
+   headAtt(X2,Y2,Att).
+
+trans(fxc(C,X1,Y1), N1, fxc(C,nil,Att,X2,Y2), N3, Tags1-Tags3):- !, 
+   trans(X1,N1,X2,N2,Tags1-Tags2), 
+   trans(Y1,N2,Y2,N3,Tags2-Tags3),
+   headAtt(X2,Y2,Att).
+
+
+/* -------------------------------------------------------------------------
+   Generalised Crossed Composition
+------------------------------------------------------------------------- */
+
+trans(gfxc(C,N,X1,Y1), N1, gfxc(C,N,nil,Att,X2,Y2), N3, Tags1-Tags3):- !, 
+   trans(X1,N1,X2,N2,Tags1-Tags2), 
+   trans(Y1,N2,Y2,N3,Tags2-Tags3),
+   headAtt(X2,Y2,Att).
+
+trans(gbxc(C,N,X1,Y1), N1, gbxc(C,N,nil,Att,X2,Y2), N3, Tags1-Tags3):- !, 
+   trans(X1,N1,X2,N2,Tags1-Tags2), 
+   trans(Y1,N2,Y2,N3,Tags2-Tags3),
+   headAtt(X2,Y2,Att).
+
+
+/* -------------------------------------------------------------------------
+   Conjuction (Coordination)
+------------------------------------------------------------------------- */
+
+%trans(conj(np:nb\np:nb,np:nb,X1,Y1), N1, conj(np\np,np,nil,Att,X2,Y2), N3, Tags1-Tags3):- 
+%   X1 =.. [t,conj|Cs], !,
+%   X3 =.. [t,conj:np|Cs], 
+%   trans(X3,N1,X2,N2,Tags1-Tags2), 
+%   trans(Y1,N2,Y2,N3,Tags2-Tags3),
+%   topatt(Y2,Att).
+
+trans(conj(np\np,np,X1,Y1), N1, conj(np\np,np,nil,Att,X2,Y2), N3, Tags1-Tags3):- 
+   X1 =.. [t,comma   |Cs], !,       % replace apposition comma 
+   X3 =.. [t,conj:app|Cs],          % by category conj:app
+   trans(X3,N1,X2,N2,Tags1-Tags2), 
+   trans(Y1,N2,Y2,N3,Tags2-Tags3),
+   topatt(Y2,Att).
+
+trans(conj(Cat\Cat,Cat,X1,Y1), N1, conj(NewCat\NewCat,NewCat,nil,Att,X2,Y2), N3, Tags1-Tags3):- !,
+   adjustFeatures(Cat,NewCat),
+   trans(X1,N1,X2,N2,Tags1-Tags2), 
+   X2 =.. [_,conj:NewCat|_], 
+   trans(Y1,N2,Y2,N3,Tags2-Tags3),
+   topatt(Y2,Att).
+
+trans(conj(_C1,_C2,Y1,Z1), N1, conj(C\C,C,nil,Att,Y2,Z2), N3, Tags1-Tags3):- !, 
+   trans(Y1,N1,Y2,N2,Tags1-Tags2), 
+   trans(Z1,N2,Z2,N3,Tags2-Tags3),
+   topcat(Z2,C),
+   topatt(Z2,Att).
+
+trans(coord(_C,X1,Y1,Z1), N1, coord(C,nil,Att,X2,Y2,Z2), N4, Tags1-Tags4):- !, 
+   trans(X1,N1,X2,N2,Tags1-Tags2), 
+   trans(Y1,N2,Y2,N3,Tags2-Tags3), 
+   trans(Z1,N3,Z2,N4,Tags3-Tags4),
+   topcat(Z2,C),
+   topatt(Z2,Att).
+
+
+/* -------------------------------------------------------------------------
+   Unary Rules: Type Changing
+------------------------------------------------------------------------- */
+
+trans(lx(C,D,X),N1,T,N2,Tags):- !, trans(tc(C,D,X),N1,T,N2,Tags).
+
+trans(tc(C1,_,X1), N1, tc(C3,C2,nil,Att,X2), N2, Tags):- !, 
+   adjustFeatures(C1,C3),
+   trans(X1,N1,X2,N2,Tags),
+   topcat(X2,C2),
+   topatt(X2,Att).
+
+
+/* -------------------------------------------------------------------------
+   Unary Rules: Type Raising
+------------------------------------------------------------------------- */
+
+trans(tr(C1/(C1\C2),X1), N1, ftr(C1/(C1\C2),C2,nil,Att,X2), N2, Tags):- !, 
+   trans(X1,N1,X2,N2,Tags),
+   topcat(X2,C2),
+   topatt(X2,Att).
+
+trans(tr(C1\(C1/C2),X1), N1, btr(C1\(C1/C2),C2,nil,Att,X2), N2, Tags):- !, 
+   trans(X1,N1,X2,N2,Tags),
+   topcat(X2,C2),
+   topatt(X2,Att).
+
+
+/* -------------------------------------------------------------------------
+   Substitution
+------------------------------------------------------------------------- */
+
+trans(fs(C,X1,Y1),  N1,  fs(C,nil,Att,X2,Y2), N3, Tags1-Tags3):- !, 
+   trans(X1,N1,X2,N2,Tags1-Tags2), 
+   trans(Y1,N2,Y2,N3,Tags2-Tags3),
+   headAtt(X2,Y2,Att).
+
+trans(bs(C,X1,Y1),  N1,  bs(C,nil,Att,X2,Y2), N3, Tags1-Tags3):- !, 
+   trans(X1,N1,X2,N2,Tags1-Tags2), 
+   trans(Y1,N2,Y2,N3,Tags2-Tags3),
+   headAtt(X2,Y2,Att).
+
+trans(fxs(C,X1,Y1), N1, fxs(C,nil,Att,X2,Y2), N3, Tags1-Tags3):- !, 
+   trans(X1,N1,X2,N2,Tags1-Tags2), 
+   trans(Y1,N2,Y2,N3,Tags2-Tags3),
+   headAtt(X2,Y2,Att).
+
+trans(bxs(C,X1,Y1), N1, bxs(C,nil,Att,X2,Y2), N3, Tags1-Tags3):- !, 
+   trans(X1,N1,X2,N2,Tags1-Tags2),  
+   trans(Y1,N2,Y2,N3,Tags2-Tags3),
+   headAtt(X2,Y2,Att).
+
+
+/* -------------------------------------------------------------------------
+   Token (repair rules -- systematically wrong output of C&C parser)
+------------------------------------------------------------------------- */
+
+trans(t(Cat,'\'t',_,'VB',S,Ne),N,Tok,M,Tags):- !,
+   trans(t(Cat,'\'t','RB',[lemma:not,sense:S,namex:Ne]),N,Tok,M,Tags).
+
+trans(t(Cat,'\'t',_,'VB',Att),N,Tok,M,Tags):- !,
+   trans(t(Cat,'\'t','RB',Att),N,Tok,M,Tags).
+
+trans(t(Cat,Contr,Contr,Pos,_,Ne),N,Tok,M,Tags):- 
+   member(Contr,['\'s','\'m','\'re']),
+   member(Pos,['VBZ','VBP']), !,
+   trans(t(Cat,Contr,Pos,[lemma:be,namex:Ne]),N,Tok,M,Tags).
+
+trans(t(Cat,Token,Pos),N,Tok,M,Tags):- !,
+   trans(t(Cat,Token,Pos,[]),N,Tok,M,Tags).
+
+
+/* -------------------------------------------------------------------------
+   Token
+------------------------------------------------------------------------- */
+
+% new input version (t/4 terms)
+trans(t(Cat1,Tok,Pos,Tags),N,t(Cat2,Tok,nil,[pos:Pos|Tags],N),M,T1-T2):-
+   adjustFeatures(Cat1,Cat2),
+   tags(T2,N,[tok:Tok,pos:Pos|Tags],T1),
+   M is N + 1.
+
+% old input version (t/6 terms)
+trans(t(Cat1,Tok,Lem,Pos,S1,Ne),N,t(Cat2,Tok,nil,[pos:Pos,lemma:Lem,namex:Ne|S2],N),M,T1-T2):-
+   context(S1,S2),
+   adjustFeatures(Cat1,Cat2),
+   tags(T2,N,[tok:Tok,pos:Pos,lemma:Lem,namex:Ne|S2],T1),  
+   M is N + 1.
+ 
+
 /* =========================================================================
-   Transformations of input CCG tree:
-   (1) N/N -> D/N  for adjectives modified by most/least
-   (2) PP attachments to NP become to PP attachments to N 
-   (3) possessives and superlatives
+   External Context Information (for now only Word Sense Disambiguation)
 ========================================================================= */
+
+context(Number,Sense):- number(Number), !, Sense = [sense:Number].
+context(_,Sense):- Sense = [].
+
+
+/* =========================================================================
+   Determine Feature on N
+========================================================================= */
+
+featureN('NNPS', nam):- !.
+featureN('NNP',  nam):- !.
+featureN('CD',   num):- !.
+featureN(_,      nom).
+
+
+
+/* =========================================================================
+   Adjust features (mostly bugs in C&C parser)
+========================================================================= */
+
+adjustFeatures(conj/conj, conj:X/conj:X):- !.        
+
+adjustFeatures(conj, conj:_):- !.        
+
+adjustFeatures(comma, conj:_):- !.        
+
+adjustFeatures(semi, conj:_):- !.        
+
+adjustFeatures(s, s:_):- !.             %%% bug in C&C parser
+
+adjustFeatures(s\np, s:dcl\np):- !.     %%% bug in C&C parser
+
+adjustFeatures(s/s:X, s:X/s:X).         %%% bug in C&C parser
+adjustFeatures(s/s:X, s:_/s:X):- !.     %%% bug in C&C parser
+
+adjustFeatures( (((s:Y\np)\(s:Y\np))\((s\np)\(s\np)))/((s\np)\(s\np)),Cat):- !,
+   Cat = (((s:Y\np)\(s:Y\np))\((s:X\np)\(s:X\np)))/((s:Z\np)\(s:Z\np)).
+
+adjustFeatures(np:_, np):- !.
+
+adjustFeatures(n:_, n):- !.
+
+
+/* =========================================================================
+   Adjust features
+========================================================================= */
+
+adjustFeatures(F1/A1,F2/A2):- !,
+   adjustFeatures(F1,F2),
+   adjustFeatures(A1,A2).
+
+adjustFeatures(F1\A1,F2\A2):- !,
+   adjustFeatures(F1,F2),
+   adjustFeatures(A1,A2).
+
+adjustFeatures(Cat,Cat).
+
+
+/* =========================================================================
+   Adding Info
+========================================================================= */
+
+tags(T,ID,Tags,[ID:Tags|T]).
+
+
+/* =========================================================================
+   Get top categorie, semantics or attributes from a derivation
+========================================================================= */
+
+topcat(Der,Cat):- top(Der,Cat,_,_).
+topsem(Der,Sem):- top(Der,_,Sem,_).
+topatt(Der,Att):- top(Der,_,_,Att).
+
+
+/* =========================================================================
+   Top categorie, semantics or attributes from a derivation
+========================================================================= */
+
+top(fa(C,S,A,_,_),C,S,A).
+top(ba(C,S,A,_,_),C,S,A).
+top(fc(C,S,A,_,_),C,S,A).
+top(bc(C,S,A,_,_),C,S,A).
+top(fxc(C,S,A,_,_),C,S,A).
+top(bxc(C,S,A,_,_),C,S,A).
+top(fs(C,S,A,_,_),C,S,A).
+top(bs(C,S,A,_,_),C,S,A).
+top(fxs(C,S,A,_,_),C,S,A).
+top(bxs(C,S,A,_,_),C,S,A).
+top(gfc(C,_,S,A,_,_),C,S,A).
+top(gbc(C,_,S,A,_,_),C,S,A). 
+top(gfxc(C,_,S,A,_,_),C,S,A). 
+top(gbxc(C,_,S,A,_,_),C,S,A). 
+top(gfc(C,S,A,_,_),C,S,A).
+top(gbc(C,S,A,_,_),C,S,A). 
+top(gfxc(C,S,A,_,_),C,S,A). 
+top(gbxc(C,S,A,_,_),C,S,A). 
+top(ftr(C,_,S,A,_),C,S,A).
+top(btr(C,_,S,A,_),C,S,A).
+top(tc(C,_,S,A,_),C,S,A).
+top(lx(C,S,A,_,_),C,S,A).
+top(t(C,_,S,A,_),C,S,A).
+top(conj(C,_,S,A,_,_),C,S,A).
+top(coord(C,S,A,_,_,_),C,S,A).
+
+
+/* -------------------------------------------------------------------------
+   Take attributes from head
+------------------------------------------------------------------------- */
+
+headAtt(D1,D2,Att):- topcat(D1,C/C), !, topatt(D2,Att).
+headAtt(D1,D2,Att):- topcat(D2,C\C), !, topatt(D1,Att).
+headAtt(D1,_ ,Att):- topatt(D1,Att), !.
 
 
 /* -------------------------------------------------------------------------
@@ -26,480 +412,4 @@ setTokID(SID,_,Start):-
    option('--tokid',local), !,
    Start is (SID*1000)+1.
 
-
-/* -------------------------------------------------------------------------
-   Pre-Processing
-------------------------------------------------------------------------- */
-
-preprocess(SID,X,Y,Words,Pos,Ne,Start,End):-
-   setTokID(SID,Start,TokID),
-   trans0(X,TokID,Y,End,Words-[],Pos-[],Ne-[]), !.
-
-
-/* -------------------------------------------------------------------------
-   Repair rule to deal with sentence-final punctuation
-------------------------------------------------------------------------- */
-
-trans0(rp(s:dcl,X1,Y1),N1,ba(t:ynq,X2,Y2),N3,Wo1-Wo3,Po1-Po3,Ne1-Ne3):- 
-   Y1 = t(period,'?',B,C,D,E), !,
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2),
-   trans(t(t:ynq\s:dcl,'?',B,C,D,E),N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3).
-
-trans0(rp(s:M,X1,Y1),N1,ba(t:M,X2,Y2),N3,Wo1-Wo3,Po1-Po3,Ne1-Ne3):- 
-   Y1 = t(period,A,B,C,D,E), !,
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2),
-   trans(t(t:M\s:M,A,B,C,D,E),N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3).
-
-trans0(X,N,Y,End,Words,Pos,Ne):- 
-   trans(X,N,Y,End,Words,Pos,Ne).
-
-
-
-
-% trans(A,B,C,D,E,F,G):- write(trans(A,B,C,D,E,F,G)),nl,fail.
-
-/* -------------------------------------------------------------------------
-   Funny (occurs with wrongly analysed cases of N coordination)
-------------------------------------------------------------------------- */
-
-trans(funny(_,_,X1),N1,X2,N3,Wo,Po,Ne):- !,
-   N2 is N1 + 1, %% assuming we skip one word (i.e. 'and')
-   trans(X1,N2,X2,N3,Wo,Po,Ne).
-
-
-/* -------------------------------------------------------------------------
-   Apposition
-------------------------------------------------------------------------- */
-
-trans(appo(_,X1,Y1),N1,coord(np,X2,t(N1,conj,',',',',',',0,'O'),Y2),N3,Wo1-Wo3,Po1-Po3,Ne1-Ne3):- 
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2),
-   topcat(X2,NP1),
-   member(NP1,[np:nb,np]),
-   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3),
-   topcat(Y2,NP2),
-   member(NP2,[np:nb,np]), !.
-
-trans(appo(_,X1,Y1),N1,fa(s:dcl,tc(s:dcl/s:dcl,s:dcl,X2),Y2),N3,Wo1-Wo3,Po1-Po3,Ne1-Ne3):- 
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2),
-   topcat(X2,s:dcl),
-   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3),
-   topcat(Y2,s:dcl), !.
-
-/* -------------------------------------------------------------------------
-   Punctuation typechange rules
-------------------------------------------------------------------------- */
-
-trans(rtc(C,X1,Pu),N1,Res,N3,Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !,
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2),
-   topcat(X2,OldCat),
-   ( \+ \+ C = OldCat, Res = X2; \+ C = OldCat, Res = tc(C,OldCat,X2) ),
-   trans(Pu,N2,_,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3).
-
-trans(ltc(C,Pu,X1),N1,Res,N3,Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !,
-   trans(Pu,N1,_,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2),
-   trans(X1,N2,X2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3),
-   topcat(X2,OldCat),
-   ( \+ \+ C = OldCat, Res = X2; \+ C = OldCat, Res = tc(C,OldCat,X2) ).
-
-/* -------------------------------------------------------------------------
-   Punctuation rules
-------------------------------------------------------------------------- */
-
-trans(rp(_,X1,Y1),N1,X2,N3,Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !, 
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2),
-   trans(Y1,N2,_,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3).
-
-trans(lp(_,Pu,X1),N1,X2,N3,Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !, 
-   trans(Pu,N1,_,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2),
-   trans(X1,N2,X2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3).
-
-
-/* -------------------------------------------------------------------------
-   Application
-------------------------------------------------------------------------- */
-
-trans(fa(_,X1,Y1),  N1,  fa(C1,X2,Y2), N3, Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !, 
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2), 
-   topcat(X2,C1/C2),
-   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3),
-   topcat(Y2,C2).
-
-trans(ba(_,X1,Y1),  N1,  ba(C2,X2,Y2), N3, Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !, 
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2), 
-   topcat(X2,C1),
-   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3),
-   topcat(Y2,C2\C1).
-
-
-/* -------------------------------------------------------------------------
-   Composition
-------------------------------------------------------------------------- */
-
-trans(fc(_,X1,Y1),  N1,  fc(C1/C3,X2,Y2), N3, Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !, 
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2), 
-   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3),
-   topcat(X2,C1/C2),
-   topcat(Y2,C2/C3).
-
-trans(bc(_,X1,Y1),  N1,  bc(C3\C1,X2,Y2), N3, Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !, 
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2), 
-   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3),
-   topcat(X2,C2\C1),
-   topcat(Y2,C3\C2).
-
-
-/* -------------------------------------------------------------------------
-   Generalised Composition
-------------------------------------------------------------------------- */
-
-trans(gfc(C,X1,Y1),  N1,  gfc(C,X2,Y2), N3, Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !, 
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2), 
-   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3).
-
-trans(gbc(C,X1,Y1),  N1,  gbc(C,X2,Y2), N3, Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !, 
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2), 
-   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3).
-
-trans(gfc(C,N,X1,Y1),  N1,  gfc(C,N,X2,Y2), N3, Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !, 
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2), 
-   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3).
-
-trans(gbc(C,N,X1,Y1),  N1,  gbc(C,N,X2,Y2), N3, Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !, 
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2), 
-   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3).
-
-
-/* -------------------------------------------------------------------------
-   Crossed Composition
-------------------------------------------------------------------------- */
-
-trans(bxc(_,X1,Y1),  N1,  bxc(C3/C1,X2,Y2), N3, Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !, 
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2), 
-   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3),
-   topcat(X2,C2/C1),
-   topcat(Y2,C3\C2).
-
-trans(fxc(C,X1,Y1), N1, fxc(C,X2,Y2), N3, Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !, 
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2), 
-   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3).
-
-
-/* -------------------------------------------------------------------------
-   Generalised Crossed Composition
-------------------------------------------------------------------------- */
-
-trans(gfxc(C,X1,Y1), N1, gfxc(C,X2,Y2), N3, Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !, 
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2), 
-   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3).
-
-trans(gbxc(C,X1,Y1), N1, gbxc(C,X2,Y2), N3, Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !, 
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2), 
-   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3).
-
-trans(gfxc(C,N,X1,Y1), N1, gfxc(C,N,X2,Y2), N3, Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !, 
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2), 
-   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3).
-
-trans(gbxc(C,N,X1,Y1), N1, gbxc(C,N,X2,Y2), N3, Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !, 
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2), 
-   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3).
-
-
-/* -------------------------------------------------------------------------
-   Conjuction
-------------------------------------------------------------------------- */
-
-%trans(conj(Cat,s:dcl,X1,Y1), N1, conj(Cat,s:dcl,X2,Y2), N3, Wo1-Wo3,Po1-Po3,Ne1-Ne3):- 
-%   X1 = t(conj,   C1,C2,C3,C4,C5), !,
-%   X3 = t(conj:s, C1,C2,C3,C4,C5), 
-%   trans(X3,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2), 
-%   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3).
-
-trans(conj(np\np,np,X1,Y1), N1, conj(np\np,np,X2,Y2), N3, Wo1-Wo3,Po1-Po3,Ne1-Ne3):- 
-   X1 = t(comma,    C1,C2,C3,C4,C5), !,
-   X3 = t(conj:app, C1,C2,C3,C4,C5), 
-   trans(X3,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2), 
-   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3).
- 
-trans(conj(_C1,_C2,Y1,Z1), N1, conj(C\C,C,Y2,Z2), N3, Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !, 
-   trans(Y1,N1,Y2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2), 
-   trans(Z1,N2,Z2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3),
-   topcat(Z2,C).
-
-trans(coord(_C,X1,Y1,Z1), N1, coord(C,X2,Y2,Z2), N4, Wo1-Wo4,Po1-Po4,Ne1-Ne4):- !, 
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2), 
-   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3), 
-   trans(Z1,N3,Z2,N4,Wo3-Wo4,Po3-Po4,Ne3-Ne4),
-   topcat(Z2,C).
-
-
-/* -------------------------------------------------------------------------
-   Unary Rules; Type Changing, Type Raising
-------------------------------------------------------------------------- */
-
-trans(lx(C1,_,X1), N1, tc(C3,C2,X2), N2, Wo,Po,Ne):- !, 
-   addFeatureN(C1,C3),
-   trans(X1,N1,X2,N2,Wo,Po,Ne),
-   topcat(X2,C2).
-
-trans(tc(C1,_,X1), N1, tc(C3,C2,X2), N2, Wo,Po,Ne):- !, 
-   addFeatureN(C1,C3),
-   trans(X1,N1,X2,N2,Wo,Po,Ne),
-   topcat(X2,C2).
-
-trans(tr(C,X1),     N1, tr(C,X2),     N2, Wo,Po,Ne):- !, 
-   trans(X1,N1,X2,N2,Wo,Po,Ne).
-
-
-/* -------------------------------------------------------------------------
-   Substitution
-------------------------------------------------------------------------- */
-
-trans(fs(C,X1,Y1),  N1,  fs(C,X2,Y2), N3, Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !, 
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2), 
-   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3).
-
-trans(bs(C,X1,Y1),  N1,  bs(C,X2,Y2), N3, Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !, 
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2), 
-   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3).
-
-trans(fxs(C,X1,Y1), N1, fxs(C,X2,Y2), N3, Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !, 
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2), 
-   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3).
-
-trans(bxs(C,X1,Y1), N1, bxs(C,X2,Y2), N3, Wo1-Wo3,Po1-Po3,Ne1-Ne3):- !, 
-   trans(X1,N1,X2,N2,Wo1-Wo2,Po1-Po2,Ne1-Ne2),  
-   trans(Y1,N2,Y2,N3,Wo2-Wo3,Po2-Po3,Ne2-Ne3).
-
-
-/* -------------------------------------------------------------------------
-   Token (repair rules -- systematically wrong output of C&C parser)
-------------------------------------------------------------------------- */
-
-trans(t(Cat,'\'t',_,'VB',S,Ne),N,Tok,M,Ws,Ps,Ns):- !,
-   trans(t(Cat,'\'t',not,'RB',S,Ne),N,Tok,M,Ws,Ps,Ns).
-
-trans(t(Cat,Contr,Contr,Pos,S,Ne),N,Tok,M,Ws,Ps,Ns):- 
-   member(Contr,['\'s','\'m','\'re']),
-   member(Pos,['VBZ','VBP']), !,
-   trans(t(Cat,Contr,be,Pos,S,Ne),N,Tok,M,Ws,Ps,Ns).
-
-
-/* -------------------------------------------------------------------------
-   Quotations
-------------------------------------------------------------------------- */
-
-trans(t(n,Token,_,_,_,_),N,t(N,n:F,Quoted,Lemma,Pos,0,Ne),M,W1-W2,P1-P2,N1-N2):- 
-   atom(Token), atom_chars(Token,['L','Q','O','_'|Rest]), 
-   append(QuotedChars,['_','R','Q','O'],Rest), !,
-   atom_chars(Quoted,QuotedChars),
-   downcase_atom(Quoted,Lemma), Pos = 'NNP', Ne = 'I-QUO',
-   words(W2,N,Token,W1), 
-   pos(P2,N,Pos,P1), 
-   ne(N2,N,Ne,N1), 
-   featureN(Pos,F),
-   M is N + 1.
-
-trans(t(n/n,Token,_,_,_,_),N,t(N,Cat,Quoted,Lemma,Pos,0,Ne),M,W1-W2,P1-P2,N1-N2):- 
-   atom(Token), atom_chars(Token,['L','Q','O','_'|Rest]), 
-   append(QuotedChars,['_','R','Q','O'],Rest), !,
-   atom_chars(Quoted,QuotedChars),
-   downcase_atom(Quoted,Lemma), Pos = 'NNP', Ne = 'I-QUO',
-   addFeatureN(n/n,Cat),
-   words(W2,N,Token,W1), 
-   pos(P2,N,Pos,P1), 
-   ne(N2,N,Ne,N1), 
-   M is N + 1.
- 
-
-/* -------------------------------------------------------------------------
-   Token, special case n (add feature)
-------------------------------------------------------------------------- */
-
-trans(t(n,Token,Lemma,Pos,S1,Ne),N,t(N,n:F,Token,Lemma,Pos,S2,Ne),M,W1-W2,P1-P2,N1-N2):- !,
-   context(S1,S2),
-   words(W2,N,Token,W1), 
-   pos(P2,N,Pos,P1), 
-   ne(N2,N,Ne,N1), 
-   featureN(Pos,F),
-   M is N + 1.
-
-/* -------------------------------------------------------------------------
-   Compound Token (try decomposition) 
-------------------------------------------------------------------------- */
-
-trans(t(Cat,Token,_,Pos,_,Ne),N,CCG,M,W1-W2,P1-P2,N1-N2):- 
-   decompose(Cat,Token,N,CCG), !,
-   words(W2,N,Token,W1), 
-   pos(P2,N,Pos,P1), 
-   ne(N2,N,Ne,N1), 
-   M is N + 1.
-
-/* -------------------------------------------------------------------------
-   Token
-------------------------------------------------------------------------- */
-
-trans(t(Cat1,Token,Lemma,Pos,S1,Ne),N,t(N,Cat2,Token,Lemma,Pos,S2,Ne),M,W1-W2,P1-P2,N1-N2):-
-   context(S1,S2),
-   addFeatureN(Cat1,Cat2),
-   words(W2,N,Token,W1), 
-   pos(P2,N,Pos,P1), 
-   ne(N2,N,Ne,N1), 
-   M is N + 1.
- 
-
-/* =========================================================================
-   External Context Information (for now only Word Sense Disambiguation)
-========================================================================= */
-
-context(Number,Sense):- number(Number), !, Sense = Number.
-context(_,Sense):- Sense = 0.
-
-
-/* =========================================================================
-   Decomposition
-========================================================================= */
-
-decompose(Cat,Token,N,CCG):-
-   Cat=n/n,
-   atomic_list_concat([Prefix,Suffix],'-',Token),
-   decomposition(Cat,Suffix,Lemma,Type,Pos,Ne), !,
-   CCG = ba(n:F/n:F,
-            ba(pp,
-               t(N,n:Type,Prefix,Prefix,Pos,0,Ne),
-               t(N,pp\n:Type,'-','-','-',0,'O')),
-            t(N,(n:F/n:F)\pp,Suffix,Lemma,'VBN',0,'O')).
-
-decompose(Cat,Token,N,CCG):-
-   Cat=n/n,
-   member(Unit,[year,month,day,week,
-                story,meter,foot,centimeter]),
-   atomic_list_concat([Prefix,Unit,Suffix],'-',Token),
-   decomposition(Cat,Suffix,Lemma,Type,Pos,Ne), !,
-   CCG = ba(n:F/n:F,
-            ba(pp,
-               fa(n:Type,
-                  t(N,n:Type/n:Type,Prefix,Prefix,'CD',0,'O'),
-                  t(N,n:Type,Unit,Unit,Pos,0,Ne)),
-               t(N,pp\n:Type,'-','-','-',0,'O')),
-            t(N,(n:F/n:F)\pp,Suffix,Lemma,'JJ',0,'O')).
-
-
-/* =========================================================================
-   Lexical Decomposition
-========================================================================= */
-
-decomposition(n/n, based,     base, loc, 'NNP', 'I-LOC').
-decomposition(n/n, born,      bear, loc, 'NNP', 'I-LOC').
-decomposition(n/n, related, relate, nom, 'NN',  'O').
-decomposition(n/n, backed,    back, nom, 'NN',  'O').
-decomposition(n/n, owned,      own, nom, 'NN',  'O').
-decomposition(n/n, old,        old, num, 'NN',  'O').
-decomposition(n/n, long,      long, nom, 'NN',  'O').
-decomposition(n/n, tall,      tall, nom, 'NN',  'O').
-decomposition(n/n, high,      high, nom, 'NN',  'O').
-
-
-/* =========================================================================
-   Determine Feature on N
-========================================================================= */
-
-featureN('NNPS', T):- !, member(T,[nam,num,nom]).
-featureN('NNP',  T):- !, member(T,[nam,num,nom]).
-featureN('CD',   T):- !, member(T,[num,nam,nom]).
-featureN(_,      T):-    member(T,[nom,nam,num]).
-
-
-/* =========================================================================
-   Add feature on N (bugs in C&C parser)
-========================================================================= */
-
-addFeatureN(s, s:_):- !.             %%% bug in C&C parser
-
-addFeatureN(s\np, s:dcl\np):- !.     %%% bug in C&C parser
-
-addFeatureN(s/s:X, s:X/s:X).         %%% bug in C&C parser
-addFeatureN(s/s:X, s:_/s:X):- !.     %%% bug in C&C parser
-
-addFeatureN((((s:Y\np)\(s:Y\np))\((s\np)\(s\np)))/((s\np)\(s\np)),
-            (((s:Y\np)\(s:Y\np))\((s:X\np)\(s:X\np)))/((s:Z\np)\(s:Z\np))):- !.
-
-
-/* =========================================================================
-   Add feature on N
-========================================================================= */
-
-%addFeatureN(np:expl, np_exp).
-
-%addFeatureN(np:thr, np_thr).
-
-addFeatureN(np:_, np):- !.
-
-addFeatureN(n, n:F):- !, member(F,[nom,nam,num]).
-
-addFeatureN((n\n)/n, (n:X\n:X)/n:_):- !.
-
-addFeatureN((n/n)/(n/n), (n:X/n:X)/(n:X/n:X)):- !.
-
-addFeatureN((n/n)/(n/n), (n:X/n:X)/(n:X/n:X)):- !.
-
-addFeatureN(n/n:X, n:X/n:X):- !.
-
-addFeatureN(n/s:X, n:F/s:X):- !, member(F,[nom,nam,num]).
-
-addFeatureN(n/pp, n:F/pp):- !, member(F,[nom,nam,num]).
-
-addFeatureN(n/n, n:X/n:X):- !.
-
-addFeatureN(n\n, n:X\n:X):- !.
-
-addFeatureN(F1/A1,F2/A2):- !,
-   addFeatureN(F1,F2),
-   addFeatureN(A1,A2).
-
-addFeatureN(F1\A1,F2\A2):- !,
-   addFeatureN(F1,F2),
-   addFeatureN(A1,A2).
-
-addFeatureN(Cat,Cat).
-
-
-/* =========================================================================
-   Adding Info
-========================================================================= */
-
-words(W,N,Word,[word(N,Word)|W]).
-pos(W,N,Pos,[pos(N,Pos)|W]).
-ne(W,_,'O',W):- !. 
-ne(W,N,NE,[ne(N,NE)|W]). 
-
-
-/* =========================================================================
-   Top cat
-========================================================================= */
-
-topcat(fa(C,_,_),C).
-topcat(ba(C,_,_),C).
-topcat(fc(C,_,_),C).
-topcat(bc(C,_,_),C).
-topcat(fxc(C,_,_),C).
-topcat(bxc(C,_,_),C).
-topcat(fs(C,_,_),C).
-topcat(bs(C,_,_),C).
-topcat(fxs(C,_,_),C).
-topcat(bxs(C,_,_),C).
-topcat(gfc(C,_,_),C).
-topcat(gbc(C,_,_),C). 
-topcat(gfxc(C,_,_),C). 
-topcat(gbxc(C,_,_),C). 
-topcat(gfc(C,_,_,_),C).
-topcat(gbc(C,_,_,_),C). 
-topcat(gfxc(C,_,_,_),C). 
-topcat(gbxc(C,_,_,_),C). 
-topcat(tr(C,_),C).
-topcat(tc(C,_,_),C).
-topcat(lx(C,_,_),C).
-topcat(t(_,C,_,_,_,_,_),C).
-topcat(coord(C,_,_,_),C).
-topcat(conj(C,_,_,_),C).
 

@@ -1,6 +1,6 @@
 
 :- use_module(library(sgml)).
-:- use_module(library(lists),[member/2,append/3]).
+:- use_module(library(lists),[member/2,append/3,reverse/2]).
 
 test(F):- 
    load_xml_file(F,T), 
@@ -62,7 +62,7 @@ members(X,File,SuperFrames,XID):-
    findall(Name,(elements(X,['MEMBERS','MEMBER'],f(Member,_)),value(Member,name,Name)),Names),
    findall(Frame,(elements(X,['FRAMES','FRAME'],f(_,Frame))),SubFrames),
    append(SuperFrames,SubFrames,Frames),
-   frameMember(Frames,Names,X,XID,File),
+   frameMember(Frames,Names,XID,File),
    findall(Sub,(elements(X,['SUBCLASSES','VNSUBCLASS'],f(Y,Sub)),
                 value(Y,'ID',YID),
                 members(Sub,File,Frames,YID)),_).
@@ -72,15 +72,15 @@ members(X,File,SuperFrames,XID):-
    Process a member/frame pair
 ---------------------------------------------------------------------- */ 
 
-frameMember([],_,_,_,_):- !.
+frameMember([],_,_,_):- !.
 
-frameMember([F|L],Names,X,ID,File):-
-   pairMemberFrame(Names,F,X,ID,File),
-   frameMember(L,Names,F,ID,File).
+frameMember([F|L],Names,ID,File):-
+   pairMemberFrame(Names,F,ID,File),
+   frameMember(L,Names,ID,File).
 
-pairMemberFrame([],_,_,_,_).
+pairMemberFrame([],_,_,_).
 
-pairMemberFrame([Name|L],Frame,X,ID,File):-
+pairMemberFrame([Name|L],Frame,ID,File):-
    elements(Frame,['DESCRIPTION'],f(De,_)),   
    value(De,primary,Pr),
    elements(Frame,['SYNTAX'],f(_,Syntax)),  
@@ -91,7 +91,7 @@ pairMemberFrame([Name|L],Frame,X,ID,File):-
    atom_chars(ID,IDChars),
    formatID(IDChars,[_,_|FID]),
    format('~q,~q). %%% ~p (~p)~n',[SubCat,FID,ID,File]), !,
-   pairMemberFrame(L,Frame,X,ID,File).
+   pairMemberFrame(L,Frame,ID,File).
 
 
 /* ----------------------------------------------------------------------
@@ -120,24 +120,23 @@ formatNumber(Chars,Atom):-
    Printing the subcat frame
 ---------------------------------------------------------------------- */ 
 
-subcat([],Acc1,Acc3):- reverse(Acc1,Acc2), postproc(Acc2,Acc3).
+subcat([],Acc1,Acc2):- postproc(Acc1,[],Acc2).
 subcat([E|L],Acc1,Acc3):- cat(E,Acc1,Acc2), subcat(L,Acc2,Acc3).
 
-subcatpat([],Acc1,Acc3):- reverse(Acc1,Acc2), postproc(Acc2,Acc3).
+subcatpat([],Acc1,Acc2):- postproc(Acc1,[],Acc2).
 subcatpat([E|L],Acc1,Acc3):- catpat(E,Acc1,Acc2), subcatpat(L,Acc2,Acc3).
 
 
 /* ----------------------------------------------------------------------
-   Post Processing
+   Post Processing (reverse + rewriting)
 ---------------------------------------------------------------------- */ 
 
-postproc([],[]).
-postproc([pp,np|L1],[pp|L2]):- !, postproc(L1,L2).
-postproc([pp,np:V|L1],[pp:V|L2]):- !, postproc(L1,L2).
-postproc([pp,s|L1],[pp|L2]):- !, postproc(L1,L2).
-postproc([pp,s:V|L1],[pp:V|L2]):- !, postproc(L1,L2).
-postproc([X|L1],[X|L2]):- postproc(L1,L2).
-
+postproc([],L,L).
+postproc([np,pp|L1],Acc,L2):- !, postproc(L1,[pp|Acc],L2).
+postproc([np:V,pp|L1],Acc,L2):- !, postproc(L1,[pp:V|Acc],L2).
+postproc([s,pp|L1],Acc,L2):- !, postproc(L1,[s|Acc],L2).
+postproc([s:V,pp|L1],Acc,L2):- !, postproc(L1,[s:V|Acc],L2).
+postproc([X|L1],Acc,L2):- postproc(L1,[X|Acc],L2).
 
 /* ----------------------------------------------------------------------
    Syntactic Restrictions

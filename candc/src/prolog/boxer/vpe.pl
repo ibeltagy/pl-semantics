@@ -8,11 +8,17 @@
 :- use_module(library(lists),[member/2,append/3,select/3]).
 :- use_module(boxer(betaConversionDRT),[betaConvert/2]).
 :- use_module(semlib(options),[option/2]).
+:- use_module(semlib(errors),[warning/2]).
 
 
 /* =============================================================
    Main
 ============================================================= */
+
+resolveVPE(B,B):- option('--vpe',false), !.
+
+resolveVPE(B,B):- option('--vpe',true), !,
+   warning('VPE resolution not activated',[]).
 
 resolveVPE(In,Out):- detectVPE(In,Out,[]-_Stack), !.
 
@@ -37,48 +43,48 @@ detectVPE(alfa(T,B1,B2),alfa(T,U1,U2),St1-St3):- !,
    detectVPE(B1,U1,St1-St2), 
    detectVPE(B2,U2,St2-St3).
 
-detectVPE(drs(Dom,Conds1),Drs,St1-St2):-
-   select(Ind:pred(E,Sym,v,98),Conds1,Conds2),
+detectVPE(B:drs(Dom,Conds1),Drs,St1-St2):-
+   select(_:Ind:pred(E,Sym,v,98),Conds1,Conds2),
    constraints(Conds2,Sym,E),   
    %%% VPE detected, !,
-   resolveVPE(Dom,Conds2,Ind,Sym,E,St1,ResolvedDrs),
+   resolveVPE(B:drs(Dom,Conds2),Ind,Sym,E,St1,ResolvedDrs),
    detectVPE(ResolvedDrs,Drs,St1-St2).
 
-detectVPE(drs(Dom,Con1),drs(Dom,Con2),St1-St2):-
-   detectVPEc(Con1,Con2,[drs(Dom,Con1)|St1]-St2).
+detectVPE(B:drs(Dom,Con1),B:drs(Dom,Con2),St1-St2):-
+   detectVPEc(Con1,Con2,[B:drs(Dom,Con1)|St1]-St2).
 
 
 /* =============================================================
    VPE detection (DRS-conditions)
 ============================================================= */
 
-detectVPEc([I:not(B)|L1],[I:not(U)|L2],St1-St3):- !, 
+detectVPEc([B:I:not(B)|L1],[B:I:not(U)|L2],St1-St3):- !, 
    detectVPE(B,U,St1-St2),
    detectVPEc(L1,L2,St2-St3).
 
-detectVPEc([I:pos(B)|L1],[I:pos(U)|L2],St1-St3):- !, 
+detectVPEc([B:I:pos(B)|L1],[B:I:pos(U)|L2],St1-St3):- !, 
    detectVPE(B,U,St1-St2),
    detectVPEc(L1,L2,St2-St3).
 
-detectVPEc([I:nec(B)|L1],[I:nec(U)|L2],St1-St3):- !, 
+detectVPEc([B:I:nec(B)|L1],[B:I:nec(U)|L2],St1-St3):- !, 
    detectVPE(B,U,St1-St2),
    detectVPEc(L1,L2,St2-St3).
 
-detectVPEc([I:prop(X,B)|L1],[I:prop(X,U)|L2],St1-St3):- !, 
+detectVPEc([B:I:prop(X,B)|L1],[B:I:prop(X,U)|L2],St1-St3):- !, 
    detectVPE(B,U,St1-St2),
    detectVPEc(L1,L2,St2-St3).
 
-detectVPEc([I:imp(B1,B2)|L1],[I:imp(U1,U2)|L2],St1-St4):- !, 
+detectVPEc([B:I:imp(B1,B2)|L1],[B:I:imp(U1,U2)|L2],St1-St4):- !, 
    detectVPE(B1,U1,St1-St2), 
    detectVPE(B2,U2,St2-St3), 
    detectVPEc(L1,L2,St3-St4).
 
-detectVPEc([I:or(B1,B2)|L1],[I:or(U1,U2)|L2],St1-St4):- !, 
+detectVPEc([B:I:or(B1,B2)|L1],[B:I:or(U1,U2)|L2],St1-St4):- !, 
    detectVPE(B1,U1,St1-St2), 
    detectVPE(B2,U2,St2-St3), 
    detectVPEc(L1,L2,St3-St4).
 
-detectVPEc([I:whq(T,B1,V,B2)|L1],[I:whq(T,U1,V,U2)|L2],St1-St4):- !, 
+detectVPEc([B:I:whq(T,B1,V,B2)|L1],[B:I:whq(T,U1,V,U2)|L2],St1-St4):- !, 
    detectVPE(B1,U1,St1-St2), 
    detectVPE(B2,U2,St2-St3), 
    detectVPEc(L1,L2,St3-St4).
@@ -107,7 +113,7 @@ constraints(Conds,Sym,E):-
 ============================================================= */
 
 constraint1(Conds,_,E):-
-   member(_:rel(U,_,manner_rel,_),Conds), E==U, 
+   member(_:_:rel(U,_,manner_rel,_),Conds), E==U, 
    !, fail.
 
 constraint1(_,_,_).
@@ -118,7 +124,7 @@ constraint1(_,_,_).
 ============================================================= */
 
 constraint2(Conds,do,E):-
-    member(_:pred(U,Sym,a,_),Conds), E==U, 
+    member(_:_:pred(U,Sym,a,_),Conds), E==U, 
     member(Sym,[good,well,great,ok,poorly,terrific,right,wrong,
                 badly,better,bad,best,worse,worst]), 
     !, fail.
@@ -131,7 +137,7 @@ constraint2(_,_,_).
 ============================================================= */
 
 constraint3(Conds,do,E):-
-   member(_:pred(U,Sym,a,_),Conds), E==U, 
+   member(_:_:pred(U,Sym,a,_),Conds), E==U, 
    member(Sym,[anything,everything,something,nothing,that,what]), 
    !, fail.
 
@@ -143,7 +149,7 @@ constraint3(_,_,_).
 ============================================================= */
 
 constraint4(Conds,do,E):-
-   member(_:pred(U,Sym,a,_),Conds), E==U, 
+   member(_:_:pred(U,Sym,a,_),Conds), E==U, 
    member(Sym,[enough,more,less,little,much]),
    !, fail.
 
@@ -155,7 +161,7 @@ constraint4(_,_,_).
 ============================================================= */
 
 constraint5(Conds,do,E):-   
-   member(_:pred(U,Sym,a,_),Conds), E==U, 
+   member(_:_:pred(U,Sym,a,_),Conds), E==U, 
    member(Sym,[away]),
    !, fail.
 
@@ -166,7 +172,7 @@ constraint5(_,_,_).
 ============================================================= */
 
 constraint6(Conds,be,E):-   
-   member(_:rel(U,_,loc_rel,0),Conds), E==U, 
+   member(_:_:rel(U,_,loc_rel,0),Conds), E==U, 
    !, fail.
 
 constraint6(_,_,_).
@@ -191,7 +197,7 @@ parallelElements([],_,[],Par-Par,A-A):-
    member(Sub,[agent,patient,theme]), 
    member(Sub,Par).
 
-parallelElements([_:rel(U,X,Rel,_)|L1],E,L2,Par1-Par2,A1-A2):-
+parallelElements([_:_:rel(U,X,Rel,_)|L1],E,L2,Par1-Par2,A1-A2):-
    U==E,
    parallelElements(L1,E,L2,[Rel|Par1]-Par2,app(A1,X)-A2). 
 
@@ -203,36 +209,36 @@ parallelElements([C|L1],E,[C|L2],Par1-Par2,A1-A2):-
    VPE resolution (real)
 ============================================================= */
 
-resolveVPE(Dom,Conds1,Ind,_Sym,E,Stack,ResolvedDrs):-
+resolveVPE(B:drs(Dom,Conds1),Ind,_Sym,E,Stack,ResolvedDrs):-
    option('--x',false),
-   tempStack(drs(Dom,Conds1),Stack,TempStack),
+   tempStack(B:drs(Dom,Conds1),Stack,TempStack),
    parallelElements(Conds1,E,Conds2,[]-Par,app(Q,E)-App),
-   NewDrs = app(VP,lam(Q,merge(drs(Dom,Conds2),App))),
+   NewDrs = app(VP,lam(Q,merge(B:drs(Dom,Conds2),App))),
    member(AntDrs,TempStack), 
    sortDRS(AntDrs,SortedAntDrs),
    abstractDRS(SortedAntDrs,Ind,Par,VP,_), 
    betaConvert(NewDrs,ResolvedDrs), !.
 
-resolveVPE(Dom,Conds,Ind,Sym,E,_Stack,Drs):-
+resolveVPE(B:drs(Dom,Conds),Ind,Sym,E,_Stack,Drs):-
    option('--x',false),
-   Drs = drs(Dom,[Ind:pred(E,Sym,v,0)|Conds]).
+   Drs = B:drs(Dom,[B:Ind:pred(E,Sym,v,0)|Conds]).
 
 
 /* =============================================================
    VPE resolution (experimental)
 ============================================================= */
 
-resolveVPE(Dom,Conds1,Ind,Sym,E,Stack,Drs):-
+resolveVPE(B:drs(Dom,Conds1),Ind,Sym,E,Stack,Drs):-
    option('--x',true),
-   tempStack(drs(Dom,Conds1),Stack,TempStack),
+   tempStack(B:drs(Dom,Conds1),Stack,TempStack),
 %   write('Stack:'),nl,writeStack(TempStack,1),
    findall(Par,parallelElements(Conds1,E,_,[]-Par,_),Pars),
    nSolutions(Pars,TempStack,E,Sym,Ind,0,Conds1,Conds3), !,
-   Drs = drs(Dom,Conds3).
+   Drs = B:drs(Dom,Conds3).
 
-resolveVPE(Dom,Conds,Ind,Sym,E,_Stack,Drs):-
+resolveVPE(B:drs(Dom,Conds),Ind,Sym,E,_Stack,Drs):-
    option('--x',true),
-   Drs = drs(Dom,[Ind:pred(E,Sym,v,97)|Conds]).
+   Drs = B:drs(Dom,[B:Ind:pred(E,Sym,v,97)|Conds]).
 
 
 /* =============================================================
@@ -266,7 +272,7 @@ nSol([_|Stack],E,Sym,[Ind],Par,N1,N2,Conds1,Conds2):-
    Sort DRS
 ============================================================= */
 
-sortDRS(drs(Dom,Conds),drs(Dom,SortedConds)):-
+sortDRS(B:drs(Dom,Conds),B:drs(Dom,SortedConds)):-
    sort(Conds,SortedConds).
 
 
@@ -284,13 +290,13 @@ parConds([Par|L],Index,E,N,C1,[Index:pred(E,Par,par,N)|C2]):-
    Abstraction (DRSs)
 ============================================================= */
 
-abstractDRS(drs(Dom,Conds),Ind,Par,Abs,AntInd):-
+abstractDRS(B:drs(Dom,Conds),Ind,Par,Abs,AntInd):-
    member(AI:pred(E,_Sym,v,_),Conds),
    before(AI,Ind),             %%% excludes VP cataphora!
-   minimalDistance(AI,Ind,2),  %%% excludes Bill doesn't [want] to []
+   minimalDistance(AI,Ind,2),  %%% excludes Bill doesnt [want] to []
    checkParallelElements(Par,E,Conds,ParRef,Drs-Lam), !,
    conceptAbstraction(Conds,[],Ind,AI,Dom,E,ParRef,[]-AbsDom,[]-AbsCond,[]-AntInd),
-   Drs = drs(AbsDom,AbsCond),
+   Drs = B:drs(AbsDom,AbsCond),
    Abs = lam(F,app(F,lam(E,Lam))).
 
 
@@ -391,7 +397,7 @@ conceptAbstraction([I1:Cond|L],NotCopied,Ind,AI,Dom,E,Par,AD1-AD3,AC1-AC3,J1-J4)
 
 conceptAbstraction([I1:Cond|L],NC,Ind,AI,Dom,E,Par,AD1-AD2,AC1-AC2,J1-J3):- 
    Cond = prop(X,PDrs), X==E, 
-   PDrs = drs(_,PConds),
+   PDrs = _:drs(_,PConds),
    \+ member(Ind:_,PConds), !,
    newIndex(I1,I2,J1,J2),
    conceptAbstraction(L,NC,Ind,AI,Dom,E,Par,AD1-AD2,[I2:Cond|AC1]-AC2,J2-J3).
@@ -471,15 +477,4 @@ tempStack(DRS,[A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T|_],[DRS,A,B,C,D,E,F,G,H,I
 tempStack(DRS,Stack,[DRS|Stack]).
 
 
-/* =============================================================
-   Create temporary DRS with more than one solution
-============================================================= */
-
-underspecify(DRSs,Ind,drs(D,C)):- !, underspecify(DRSs,Ind,1,D,C).
-
-underspecify([DRS],Ind,Count,[Ind:X],[Ind:pred(X,vpe_reading,n,Count),Ind:prop(X,DRS)]):- !.
-
-underspecify([DRS|L],Ind,Count,[Ind:X|D],[Ind:pred(X,vpe_reading,n,Count),Ind:prop(X,DRS)|C]):-
-   NewCount is Count + 1,
-   underspecify(L,Ind,NewCount,D,C).
 

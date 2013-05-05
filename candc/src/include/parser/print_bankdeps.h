@@ -34,10 +34,10 @@ namespace NLP {
       virtual void header(const std::string &PREFACE);
       virtual void footer(void){}
 
-      virtual void parsed(const KBest ret[], ushort nparses, Sentence &sent, double BETA, ulong DICT_CUTOFF){
+      virtual void parsed(const KBest ret[], ushort nparses, Sentence &sent, double BETA, ulong DICT_CUTOFF, std::string meta){
         filled.clear();
         grs.clear();
-        StreamPrinter::parsed(ret, nparses, sent, BETA, DICT_CUTOFF);
+        StreamPrinter::parsed(ret, nparses, sent, BETA, DICT_CUTOFF, meta);
       }
 
     };

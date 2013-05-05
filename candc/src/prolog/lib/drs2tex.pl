@@ -148,6 +148,24 @@ cond2tex(rel(X,Y,Sym1,Sense),Stream,1):-
    write(Stream,Y),
    write(Stream,')').
 
+cond2tex(role(X,Y,Sym1,1),Stream,1):- 
+   sym2tex(Sym1,r,1,Sym2), !,
+   write(Stream,Sym2),
+   write(Stream,'('),
+   write(Stream,X),
+   write(Stream,','),
+   write(Stream,Y),
+   write(Stream,')').
+
+cond2tex(role(X,Y,Sym1,-1),Stream,1):- 
+   sym2tex(Sym1,r,1,Sym2), !,
+   write(Stream,Sym2),
+   write(Stream,'('),
+   write(Stream,Y),
+   write(Stream,','),
+   write(Stream,X),
+   write(Stream,')').
+
 
 /*========================================================================
    Tex non-logical sym2texs

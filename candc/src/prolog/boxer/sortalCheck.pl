@@ -110,6 +110,9 @@ sortalCheckConds([named(_,_,_,_)|C],Var,P1,P2):-
 sortalCheckConds([rel(_,_,_,_)|C],Var,P1,P2):-  
    sortalCheckConds(C,Var,P1,P2).
 
+sortalCheckConds([role(_,_,_,_)|C],Var,P1,P2):-  
+   sortalCheckConds(C,Var,P1,P2).
+
 sortalCheckConds([card(_,_,_)|C],Var,P1,P2):-  
    sortalCheckConds(C,Var,P1,P2).
 

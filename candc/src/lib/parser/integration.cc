@@ -115,7 +115,7 @@ Integration::~Integration(void){
 
 bool
 Integration::parse(Sentence &sent, Decoder &decoder, Printer &printer, 
-    KBest ret[], const bool USE_SUPER, const bool ALT_POS,
+    KBest ret[], const std::string meta, const bool USE_SUPER, const bool ALT_POS,
     const bool SUPER_AUTO_POS, const bool PARSER_AUTO_POS){
   double beta = 0.0;
   ulong dict_cutoff = 0;
@@ -162,18 +162,20 @@ Integration::parse(Sentence &sent, Decoder &decoder, Printer &printer,
       }
       if(sent.words.size() == 1){
         ++nsuccesses[trial];
-        printer.parsed(0, 0, sent, beta, dict_cutoff);
+        printer.parsed(0, 0, sent, beta, dict_cutoff, meta);
+	//printer.meta ("newId", 10);
         return true;
       }else if(parser.parse(beta, repair)){
         parser.calc_scores();
 
         if((nparses = parser.best(ret, decoder)) != 0){
           ++nsuccesses[trial];
-          printer.parsed(ret, nparses, sent, beta, dict_cutoff);
+          printer.parsed(ret, nparses, sent, beta, dict_cutoff, meta);
 
           Statistics stats;
           parser.calc_stats(stats);
           printer.stats(stats);
+	  //printer.meta ("newId", nparses);
 
           global_stats += stats;
 

@@ -159,7 +159,7 @@ option( tokkie, '--stdin',      0, _, dont       ).
 option( tokkie, '--warnings',   1, V, false      ):- member(V,[true,false]).
 option( tokkie, '--language',   1, V, en         ):- member(V,[en,it]).
 option( tokkie, '--quotes',     1, V, keep       ):- member(V,[keep,delete]).
-option( tokkie, '--mode',       1, V, poor       ):- member(V,[poor,rich]).
+option( tokkie, '--mode',       1, V, poor       ):- member(V,[poor,iob,rich]).
 option( tokkie, '--format',     1, V, txt        ):- member(V,[prolog,txt]).
 option( tokkie, '--input',     -1, _, user_input ).
 option( tokkie, '--output',    -1, _, user_output).
@@ -169,27 +169,29 @@ option( tokkie, '--output',    -1, _, user_output).
    Nutcracker Options         % option(Option,NumberArgs,Value,Default)
 ========================================================================*/
 
-option( nutcracker, '--help',       0, _, dont       ).
-option( nutcracker, '--version',    0, _, dont       ).
-option( nutcracker, '--force',      1, V, false      ):- member(V,[true,false]).
-option( nutcracker, '--modal',      1, V, false      ):- member(V,[true,false]).
-option( nutcracker, '--vpe',        1, V, false      ):- member(V,[true,false]).
-option( nutcracker, '--plural',     1, V, false      ):- member(V,[true,false]).
-option( nutcracker, '--wordnet',    1, V, true       ):- member(V,[true,false]).
-option( nutcracker, '--warnings',   1, V, false      ):- member(V,[true,false]).
-option( nutcracker, '--info',       1, V, false      ):- member(V,[true,false]).
-option( nutcracker, '--graph',      1, V, false      ):- member(V,[true,false]).
-option( nutcracker, '--bk',         1, V, true       ):- member(V,[true,false]).
-option( nutcracker, '--wsd',        1, V, false      ):- member(V,[true,false]).
-option( nutcracker, '--roles',      1, V, proto      ):- member(V,[proto,verbnet,framenet]).
-option( nutcracker, '--language',   1, V, en         ):- member(V,[en,it]).
-option( nutcracker, '--inference',  1, V, yes        ):- member(V,[yes,no,only]).
-option( nutcracker, '--tp',         1, V, bliksem    ):- member(V,[vampire,bliksem,otter]).
-option( nutcracker, '--mb',         1, V, mace       ):- member(V,[mace,paradox1,paradox2,paradox3]).
-option( nutcracker, '--mbbis',      1, V, none       ):- member(V,[none,mace]).
-option( nutcracker, '--domsize',   -2, _, 50         ).
-option( nutcracker, '--timelim',   -2, _, 30         ).
-option( nutcracker, '--dir',       -1, _, 'working/tmp'  ).
+option( nutcracker, '--help',          0, _, dont      ).
+option( nutcracker, '--version',       0, _, dont      ).
+option( nutcracker, '--force',         1, V, false     ):- member(V,[true,false]).
+option( nutcracker, '--modal',         1, V, false     ):- member(V,[true,false]).
+%option( nutcracker, '--vpe',           1, V, false     ):- member(V,[true,false]).
+option( nutcracker, '--plural',        1, V, false     ):- member(V,[true,false]).
+option( nutcracker, '--copula',        1, V, false     ):- member(V,[true,false]).
+option( nutcracker, '--wordnet',       1, V, true      ):- member(V,[true,false]).
+option( nutcracker, '--warnings',      1, V, false     ):- member(V,[true,false]).
+option( nutcracker, '--info',          1, V, false     ):- member(V,[true,false]).
+option( nutcracker, '--graph',         1, V, false     ):- member(V,[true,false]).
+option( nutcracker, '--contradiction', 1, V, false     ):- member(V,[true,false]). % use theorem prover to check for contradictions
+option( nutcracker, '--wsd',           1, V, false     ):- member(V,[true,false]).
+option( nutcracker, '--roles',         1, V, proto     ):- member(V,[proto,verbnet,framenet]).
+option( nutcracker, '--language',      1, V, en        ):- member(V,[en,it]).
+option( nutcracker, '--inference',     1, V, yes       ):- member(V,[yes,no,only]).
+option( nutcracker, '--tp',            1, V, bliksem   ):- member(V,[vampire,bliksem,otter]).
+option( nutcracker, '--mb',            1, V, mace      ):- member(V,[mace,paradox]).
+option( nutcracker, '--mbbis',         1, V, none      ):- member(V,[none,mace]).
+option( nutcracker, '--domsize',      -2, _, 50        ).
+option( nutcracker, '--timelim',      -2, _, 30        ).
+option( nutcracker, '--dir',          -1, _, 'working' ).
+option( nutcracker, '--axioms',       -1, _, 'none' ).
 
 
 /* =======================================================================
@@ -200,25 +202,25 @@ option( boxer, '--help',       0, _, dont       ).
 option( boxer, '--version',    0, _, dont       ).
 option( boxer, '--stdin',      0, _, dont       ).
 option( boxer, '--resolve',    1, V, false      ):- member(V,[true,false]).
-option( boxer, '--window',     1, V, '1'        ):- member(V,['1','2']).
+option( boxer, '--integrate',  1, V, false      ):- member(V,[true,false]).
 option( boxer, '--warnings',   1, V, false      ):- member(V,[true,false]).
 option( boxer, '--instantiate',1, V, false      ):- member(V,[true,false]).
 option( boxer, '--flat',       1, V, false      ):- member(V,[true,false]).
 option( boxer, '--ccg',        1, V, false      ):- member(V,[true,false]).
 option( boxer, '--elimeq',     1, V, false      ):- member(V,[true,false]).
 option( boxer, '--box',        1, V, false      ):- member(V,[true,false]).
-option( boxer, '--vpe',        1, V, false      ):- member(V,[true,false]).
+%option( boxer, '--vpe',        1, V, false      ):- member(V,[true,false]).
+option( boxer, '--nn',         1, V, false      ):- member(V,[true,false]).
 option( boxer, '--tense',      1, V, false      ):- member(V,[true,false]).
 option( boxer, '--modal',      1, V, false      ):- member(V,[true,false]).
 option( boxer, '--plural',     1, V, false      ):- member(V,[true,false]).
 option( boxer, '--x',          1, V, false      ):- member(V,[true,false]).
 option( boxer, '--copula',     1, V, true       ):- member(V,[true,false]).
-option( boxer, '--language',   1, V, en         ):- member(V,[en,it]).
 option( boxer, '--tokid',      1, V, local      ):- member(V,[local,global]).
 option( boxer, '--presup',     1, V, max        ):- member(V,[min,max]).
 option( boxer, '--theory',     1, V, drt        ):- member(V,[drt,sdrt]).
 option( boxer, '--roles',      1, V, proto      ):- member(V,[proto,verbnet,framenet]).
-option( boxer, '--format',     1, V, prolog     ):- member(V,[prolog,xml,html,latex,dot,no]).
-option( boxer, '--semantics',  1, V, drs        ):- member(V,[drs,fol,owl,tree,tuple,tacitus,der]).
+option( boxer, '--format',     1, V, prolog     ):- member(V,[prolog,xml,latex,dot,no]).
+option( boxer, '--semantics',  1, V, drs        ):- member(V,[drs,pdrs,fol,drg,tacitus,der]).
 option( boxer, '--input',     -1, _, user_input ).
 option( boxer, '--output',    -1, _, user_output).

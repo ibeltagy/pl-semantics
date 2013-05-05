@@ -1,669 +1,425 @@
 
-:- module(tuples,[tuples/4,write_tuples/2,
-                  drs2owl/2,write_rdf/2,dot_rdf/2,
-                  drs2rdf/2,
-                  trees/2,write_trees/2]).
+:- module(tuples,[tuples/4,write_tuples/2]).
 
 :- use_module(semlib(drs2tacitus),[label/4]).
 :- use_module(semlib(errors),[warning/2]).
-:- use_module(library(lists),[member/2,append/3,select/3]).
+:- use_module(semlib(options),[option/2]).
+:- use_module(knowledge(punctuation),[punctuation/2]).
+:- use_module(library(lists),[member/2,last/2,select/3]).
 
 
 /* =======================================================================
-   Main: OWL format
+   Dynamic predicates
 ======================================================================= */
 
-drs2owl(DRS,RDF):-
-   numbervars(DRS,100,_),
-   tree(DRS,Tree,[],Trees),
-   tree2rdf([x0:Tree|Trees],RDF).
+:- dynamic cond_ctr/1. cond_ctr(0).
 
 
 /* =======================================================================
-   Main: trees
+   Main: tuples (DRG)
 ======================================================================= */
 
-trees(DRS,[x0:Tree|Trees]):-
-   numbervars(DRS,1,_),
-   tree(DRS,Tree,[],Trees).
+tuples(Tags,DRS,N1,Sorted):- 
+   label(N1,k,K0,N2),
+   initcondcounter,
+   tuples(DRS,K0,[]-_,Tags,[]-Tuples,N2-_),
+   inverse(Tuples,Tuples1),
+   surface(Tags,Tuples1,Extended),
+   order(Extended,Extended,Ordered),
+   sort(Ordered,Sorted).
 
 
 /* =======================================================================
-   Convert DRSs into trees
+   Invert Tuples if needed (e.g. for relative clauses
 ======================================================================= */
 
-tree(merge(B1,B2),Tree,P1,P3):- !, 
-   tree(B1,T1,P1,P2), tree(B2,T2,P2,P3), 
-   combine_trees(merge,T1,T2,Tree).
+inverse(Tuples0,Tuples5):-
+   member(tuple( _, _:equality, ext, X,          _),Tuples0),
+   select(tuple(L1, C:Role:1,   ext, X,         I1),Tuples0,Tuples1),    T1=tuple(L1,C:Role:-1,int, X,        I1),
+   select(tuple(L2, C:Role:1,   int, Y,         I2),Tuples1,Tuples2),    T2=tuple(L2,C:Role:-1,ext, Y,        I2),
+   select(tuple(L3, K,          role, C:Role:1, I3),Tuples2,Tuples3), !, T3=tuple(L3,K,        role,C:Role:-1,I3),
+   Tuples4=[T1,T2,T3|Tuples3],
+   inverse(Tuples4,Tuples5).
 
-tree(smerge(B1,B2),Tree,P1,P3):- !, 
-   tree(B1,T1,P1,P2), tree(B2,T2,P2,P3),
-   combine_trees(smerge,T1,T2,Tree).
-
-tree(alfa(_,B1,B2),Tree,P1,P3):- !, 
-   tree(B1,T1,P1,P2), tree(B2,T2,P2,P3),
-   combine_trees(alfa,T1,T2,Tree).
-
-tree(drs(_,[C1]),T1,P1,P2):- !, 
-   tree(C1,T1,P1,P2).
-
-tree(drs(D,[C1,C2|L]),Tree,P1,P3):- !, 
-   tree(C1,T1,P1,P2),tree(drs(D,[C2|L]),T2,P2,P3),
-   combine_trees(and,T1,T2,Tree).
+inverse(Tuples,Tuples).
 
 
 /* =======================================================================
-   Convert DRS-conditions into trees
+   Order edges for each discourse referent
 ======================================================================= */
 
-tree(_:rel(A,B,Sym,_Sense),t(rel,[Sym,A,B]),P,P):- !.
-tree(_:eq(A,B),t(rel,[eq,A,B]),P,P):- !.
-tree(_:named(X,Sym,T,_),nil,P1,P2):- !, extend_tree(X,t(named,[Sym,T]),P1,P2).
-tree(_:pred(X,Sym,T,_),nil,P1,P2):- !, extend_tree(X,t(pred,[Sym,T]),P1,P2).
-tree(_:timex(X,T),nil,P1,P2):- !, extend_tree(X,t(pred,[timex,T]),P1,P2).
-tree(_:card(X,C,T),nil,P1,P2):- number(C), !, extend_tree(X,t(card,[C,T]),P1,P2).
-tree(_:card(X,C,eq),t(rel,[card,X,C]),P1,P2):- !, extend_tree(C,t(pred,[number,n]),P1,P2).
-tree(_:prop(X,B),t(prop,[X,T]),P1,P2):- !, tree(B,T,P1,P2).
-tree(_:not(B),t(not,[T]),P1,P2):- !, tree(B,T,P1,P2).
-tree(_:nec(B),t(nec,[T]),P1,P2):- !, tree(B,T,P1,P2).
-tree(_:pos(B),t(pos,[T]),P1,P2):- !, tree(B,T,P1,P2).
-tree(_:imp(B1,B2),t(imp,[T1,T2]),P1,P2):- !, tree(B1,T1,P1,P3), tree(B2,T2,P3,P2).
-tree(_:or(B1,B2),t(or,[T1,T2]),P1,P2):- !, tree(B1,T1,P1,P3), tree(B2,T2,P3,P2).
-tree(_:whq(_,B1,X,B2),t(whq,[T1,X,T2]),P1,P2):- !, tree(B1,T1,P1,P3), tree(B2,T2,P3,P2).
-tree(_:_,nil,P,P).
+order([],_,[]).
+
+order([T|L1],Refs,Ordered):-
+   T = tuple(_,_,_,X,_),
+   split(L1,X,WithX,WithoutX),       %%% split tuple wrt X
+   position([T|WithX],Refs,Pos),     %%% get positions for X
+   sort(Pos,Sorted),
+   localOrder(Sorted,1,L2,Ordered),  %%% normalise order starting with 1
+   order(WithoutX,Refs,L2).
 
 
 /* =======================================================================
-   Combine two trees
+   Determine local position (of relations)
 ======================================================================= */
 
-combine_trees(_,nil,T,T):- !.
-combine_trees(_,T,nil,T):- !.
-combine_trees(Lab,T1,T2,t(Lab,[T1,T2])).
+position([],_,[]).
+
+position([tuple([],N1,int,N2,W)|L1],Tuples,[tuple([P],N1,int,N2,W)|L2]):-
+   member(tuple(_,N1,ext,X,_),Tuples),
+   member(tuple([P|_],_,_,X,_),Tuples), !,
+   position(L1,Tuples,L2).
+
+position([tuple([],N1,int,N2,W)|L1],Tuples,[tuple([P],N1,int,N2,W)|L2]):-
+   member(tuple(_,N1,ext,B,_),Tuples),
+   member(tuple(_,B,referent,X,_),Tuples), 
+   member(tuple([P|_],_,_,X,_),Tuples), !,
+   position(L1,Tuples,L2).
+
+position([tuple([],R1,int,N2,W)|L1],Tuples,[tuple([P],R1,int,N2,W)|L2]):-
+   member(tuple(_,R1,ext,Y,_),Tuples),
+   member(tuple(_,R2,int,Y,_),Tuples),
+   member(tuple(_,R2,ext,Z,_),Tuples),
+   member(tuple([P|_],_,_,Z,_),Tuples), !,
+   position(L1,Tuples,L2).
+
+position([T|L1],Tuples,[T|L2]):-
+   position(L1,Tuples,L2).
 
 
 /* =======================================================================
-   Extend a tree
+   Determine local order
 ======================================================================= */
 
-extend_tree(Name,Tree,P1,P3):-
-   select(Name:Old,P1,P2), !,
-   P3 = [Name:t(and,[Old,Tree])|P2].
+localOrder([],_,L,L).
 
-extend_tree(X,Tree,P,[X:Tree|P]).
+localOrder([tuple(A,B,C,D,E)|L],N,L1,[tuple(A,0,B,C,D,E)|L2]):- 
+   A = [], !,
+   localOrder(L,N,L1,L2).
+
+localOrder([tuple(A,B,C,D,E)|L],N,L1,[tuple(A,N,B,C,D,E)|L2]):-
+   M is N + 1,
+   localOrder(L,M,L1,L2).
 
 
 /* =======================================================================
-   Output a tree
+   Split tuples into two sets based on third argument
 ======================================================================= */
 
-write_trees([],Stream):- nl(Stream).
+split([],_,[],[]).
 
-write_trees([X:Tree|L],Stream):- 
-   write_tree(X,1,Stream), 
-   write(Stream,' = '), nl(Stream),
-   write_tree(Tree,6,Stream), 
-   write(Stream,'.'), nl(Stream),
-   write_trees(L,Stream).
+split([T|L1],X,[T|L2],L3):-
+   T = tuple(_,_,_,X,_), !,
+   split(L1,X,L2,L3).
 
-write_tree(t(Label,Branches),Tab,Stream):- !,
-   tab(Stream,Tab), write(Stream,Label), 
-   write(Stream,'('), nl(Stream),
-   name(Label,Chars), length(Chars,Len),
-   NewTab is Tab + Len + 2,
-   write_branches(Branches,NewTab,Stream).
-
-write_tree(Var,Tab,Stream):-
-   functor(Var,'$VAR',1), !,
-   arg(1,Var,N), 
-   tab(Stream,Tab), 
-   write(Stream,x), 
-   write(Stream,N).
-
-write_tree(Tree,Tab,Stream):-
-   tab(Stream,Tab), 
-   write(Stream,Tree).
-
-write_branches([],_,_).
-
-write_branches([T],Tab,Stream):-
-   write_tree(T,Tab,Stream), 
-   write(Stream,' )').
-
-write_branches([T|Branches],Tab,Stream):-
-   write_tree(T,Tab,Stream), 
-   write(Stream,','), nl(Stream),
-   write_branches(Branches,Tab,Stream).
+split([T|L1],X,L2,[T|L3]):-
+   split(L1,X,L2,L3).
 
 
 /* =======================================================================
-   Translate a tree in RDF format
+   Add surface tuples (ideally should be eliminated)
 ======================================================================= */
 
-tree2rdf(T,rdf(Nodes,Edges,Out)):- 
-   tree2nodes(T,200,[]-Nodes1,[]-Edges1,[]-Out),
-   checkNodes(Nodes1,Edges1,Nodes2),
-   elimEquality(Edges1,Nodes2,Edges,Nodes).
+surface([],T,T).
 
-tree2nodes([],_,N-N,E-E,O-O).
+surface([Index:_|W],T1,T2):-                % if token is
+   member(tuple(I,_,_,_,_),T1),             % already part of a tuple
+   member(Index,I), !,                      % then 
+   surface(W,T1,T2).                        % take next token
 
-tree2nodes([I:Tree|L],I1,N1-[node(I,'#')|N3],E1-E3,O1-O3):-
-   tree2node(Tree,I,I1-I2,N1-N2,E1-E2,O1-O2),
-   tree2nodes(L,I2,N2-N3,E2-E3,O2-O3).
+surface([Index1:[tok:Word|Tags]|W],T1,[T|T2]):- 
+   member(pos:POS,Tags),
+   punctuation(POS,left),
+   member(tuple([Index2|_],_,_,X,_),T1),
+   Index1 is Index2 - 1,
+   member(tuple(_,K,referent,X,_),T1), !,
+   T = tuple([Index1],K,punctuation,X,[Word]),
+   surface(W,T1,T2).
+
+surface([Index1:[tok:Word|Tags]|W],T1,[T|T2]):- 
+   member(pos:POS,Tags),
+   punctuation(POS,right),
+   member(tuple(Indices,_,_,X,_),T1),
+   last(Indices,Index2),
+   Index1 is Index2 + 1,
+   member(tuple(_,K,referent,X,_),T1), !,
+   T = tuple([Index1],K,punctuation,X,[Word]),
+   surface(W,T1,T2).
+
+surface([Index:[tok:Word|_]|W],T1,[T|T2]):- 
+   I is div(Index,1000),
+   event(T1,Index,I,K,E,Distance), 
+   \+ (event(T1,Index,I,_,_,Smaller), Smaller < Distance), !,
+   T = tuple([Index],K,surface,E,[Word]),
+%  warning('surface tuple: ~p (~p)',[Word,Index]),
+   surface(W,T1,T2).
+
+surface([Index:[tok:Word|_]|W],T1,[T|T2]):- 
+   T = tuple([Index],k,error,x,[Word]),
+   warning('word not part of tuples: ~p',[Word]),
+   surface(W,T1,T2).
 
 
 /* =======================================================================
-   Check validity of nodes (remove dangline nodes)
+   Find an event tuple with distance to Index1 (slow!)
 ======================================================================= */
 
-checkNodes([],_,[]).
+event(Tuples,Index1,I,K,E,Distance):-
+   member(tuple(_,K,event,Event,_),Tuples),
+   member(tuple([Index2|_],Event,instance,E,_),Tuples),
+   I is div(Index2,1000),
+   Distance is abs(Index1-Index2).
 
-checkNodes([node(I,V)|L1],Edges,[node(I,V)|L2]):-
-   member(edge(_,_,I,_), Edges), !,
-   checkNodes(L1,Edges,L2).
-
-checkNodes([node(I,V)|L1],Edges,[node(I,V)|L2]):-
-   member(edge(_,_,_,I), Edges), !,
-   checkNodes(L1,Edges,L2).
-
-checkNodes([_|L1],Edges,L2):-
-   checkNodes(L1,Edges,L2).
-
-
-elimEquality(Edges1,Nodes1,Edges4,Nodes3):-
-   select(edge(_,eq,I1,I2),Edges1,Edges2),
-   select(node(I1,'#'),Nodes1,Nodes2),
-   member(node(I2,'#'),Nodes2), !,
-   subEdges(Edges2,[I1=I2],Edges3),
-   elimEquality(Edges3,Nodes2,Edges4,Nodes3).
-
-elimEquality(Edges1,Nodes1,Edges3,Nodes3):-
-   select(node(I1,Lab),Nodes1,Nodes2), \+ Lab = '#',
-   member(node(I2,Lab),Nodes2), !,
-   subEdges(Edges1,[I1=I2],Edges2),
-   elimEquality(Edges2,Nodes2,Edges3,Nodes3).
-
-elimEquality(Edges,Nodes,Edges,Nodes).
-
-
-
-subEdges([],_,[]).
-
-subEdges([edge(Id,Lab,I1,I2)|L1],I,[edge(Id,Lab,I3,I2)|L2]):-
-   member(I1=I3,I), !,
-   subEdges(L1,I,L2).
-
-subEdges([edge(Id,Lab,I1,I2)|L1],I,[edge(Id,Lab,I1,I3)|L2]):-
-   member(I2=I3,I), !,
-   subEdges(L1,I,L2).
-
-subEdges([edge(Id,Lab,I1,I2)|L1],I,[edge(Id,Lab,I1,I2)|L2]):-
-   subEdges(L1,I,L2).
+%event(Tuples,Index1,K,E,Distance):-
+%   member(tuple(_,K,event,Event,_),Tuples),
+%   member(tuple([Index2|_],Event,instance,E,_),Tuples),
+%   Distance is abs(Index1-Index2),
+%   Distance < 1000.
 
 
 /* =======================================================================
-   Translate a single node in RDF format
+   Counter for DRS-conditions
 ======================================================================= */
 
-tree2node(t(pred,[event,n]),_,I-I,N-N,E-E,O-O):- !.
+condcounter(CC):-
+   retract(cond_ctr(X)),
+   label(X,c,CC,N),
+   assert(cond_ctr(N)).
 
-tree2node(t(pred,[Pred,n]),I,I1-I3,N-[node(I2,Pred)|N],E-[edge(I3,isa,I,I2)|E],O-O):- !, I2 is I1 + 1, I3 is I2 + 1.
-
-tree2node(t(pred,[Pred,a]),I,I1-I3,N-[node(I2,Pred)|N],E-[edge(I3,att,I,I2)|E],O-O):- !, I2 is I1 + 1, I3 is I2 + 1.
-
-tree2node(t(pred,[Pred,v]),I,I0-I4,N-[node(I1,Pred),node(I2,event)|N],E-[edge(I3,isa,I,I1),edge(I4,isa,I1,I2)|E],O-O):- !, I1 is I0 + 1, I2 is I1 + 1, I3 is I2 + 1, I4 is I3 + 1.
-
-tree2node(t(card,[Pred,Num]),I,I0-I4,N-[node(I1,Num),node(I2,Pred)|N],E-[edge(I3,cardinality,I,I2),edge(I4,number,I2,I1)|E],O-O):- !, I1 is I0 + 1, I2 is I1 + 1, I3 is I2 + 1, I4 is I3 + 1.
-
-tree2node(t(named,[Name,NE]),I,I0-I4,N-[node(I1,Name),node(I2,Label)|N],E-[edge(I3,isa,I,I2),edge(I4,name,I,I1)|E],O-O):- !, I1 is I0 + 1, I2 is I1 + 1, I3 is I2 + 1, I4 is I3 + 1, ne2label(NE,Label).
-
-tree2node(t(rel,[Rel,A1,A2]),_,I1-I2,N-N,E-[edge(I2,Rel,A1,A2)|E],O-O):- !, I2 is I1 + 1.
-
-tree2node(t(not,[A]),I,I1-I2,N,E,O):- !, tree2node(A,I,I1-I2,N,E,O).
-
-tree2node(t(prop,[_,A]),I,I1-I2,N,E,O):- !, tree2node(A,I,I1-I2,N,E,O).
-
-tree2node(t(Op,[A1,A2]),I,I1-I3,N1-N3,E1-E3,O1-O3):- 
-   member(Op,[and,imp,or,smerge,merge,alfa]), !,
-   tree2node(A1,I,I1-I2,N1-N2,E1-E2,O1-O2),
-   tree2node(A2,I,I2-I3,N2-N3,E2-E3,O2-O3).
-
-tree2node(t(whq,[A1,X,A2]),I,I0-I4,N1-[node(I1,'#')|N3],E1-[edge(I2,answer,X,I1)|E3],O1-[I1|O3]):- !,
-   I1 is I0 + 1, I2 is I1 + 1,
-   tree2node(A1,I,I2-I3,N1-N2,E1-E2,O1-O2),
-   tree2node(A2,I,I3-I4,N2-N3,E2-E3,O2-O3).
-
-tree2node(nil,_,I-I,N-N,E-E,O-O).
+initcondcounter:-
+   retract(cond_ctr(_)),
+   assert(cond_ctr(0)).
 
 
 /* =======================================================================
-   Translating NE to label
+   Converting DRSs into graph tuples
+
+   tuples(+DRS,+CurrentDRSid,+Refs,+Words,?Tuples,?Counter)
+   
+   where: tuple(Index,Node1,Edge,Node2,Words)
+
 ======================================================================= */
 
-ne2label(loc,location).
-ne2label(per,person).
-ne2label(ttl,title).
-ne2label(nam,entity).
-ne2label(org,organisation).
-ne2label(quo,quotation).
+tuples(sdrs(D,R),K,R1-R3,W,T1-T3,N1-N3):- !, tuples(D,K,R1-R2,W,T1-T2,N1-N2), tuples(R,K,R2-R3,W,T2-T3,N2-N3).
+tuples(smerge(B1,B2),K,R1-R3,W,T1-T3,N1-N3):- !, tuples(B1,K,R1-R2,W,T1-T2,N1-N2), tuples(B2,K,R2-R3,W,T2-T3,N2-N3).
+tuples(merge(B1,B2),K,R1-R3,W,T1-T3,N1-N3):- !, tuples(B1,K,R1-R2,W,T1-T2,N1-N2), tuples(B2,K,R2-R3,W,T2-T3,N2-N3).
+tuples(alfa(_,B1,B2),K,R1-R3,W,T1-T3,N1-N3):- !, tuples(B1,K,R1-R2,W,T1-T2,N1-N2), tuples(B2,K,R2-R3,W,T2-T3,N2-N3).
 
+tuples(lab(K0,sdrs([sub(lab(L,B),Sub)|D],R)),K,R1-R3,W,T1-[T|T3],N1-N3):- !, 
+   T = tuple([],K0,dominates,L,[]),
+   tuples(sub(lab(L,B),Sub),K,R1-R2,W,T1-T2,N1-N2), 
+   tuples(lab(K0,sdrs(D,R)),K,R2-R3,W,T2-T3,N2-N3).
 
-/* =======================================================================
-   Output a tree in RDF format
-======================================================================= */
+tuples(lab(K0,sdrs([lab(L,B)|D],R)),K,R1-R3,W,T1-[T|T3],N1-N3):- !, 
+   T = tuple([],K0,dominates,L,[]),
+   tuples(lab(L,B),K,R1-R2,W,T1-T2,N1-N2), 
+   tuples(lab(K0,sdrs(D,R)),K,R2-R3,W,T2-T3,N2-N3).
 
-write_rdf(rdf(Nodes,Edges,Output),Stream):- 
-   write(Stream,'   <nodes>'),nl(Stream),
-   write_nodes(Nodes,Stream),
-   write(Stream,'   <edges>'),nl(Stream),
-   write_edges(Edges,Stream),
-   write(Stream,'   <output>'),nl(Stream),
-   write_output(Output,Stream).
+tuples(lab(K,B),_,R1-R2,W,T1-T2,N1-N2):- !, tuples(B,K,R1-R2,W,T1-T2,N1-N2).
+tuples(sub(B1,B2),K,R1-R3,W,T1-T3,N1-N3):- !, tuples(B1,K,R1-R2,W,T1-T2,N1-N2), tuples(B2,K,R2-R3,W,T2-T3,N2-N3).
+tuples(_:drs([],C),K,R1-R2,W,T1-T2,N1-N2):- !, tuples(C,K,R1-R2,W,T1-T2,N1-N2).
 
+tuples(B:drs([_:I:R|L],C),K,R1-R2,W,T1-[T|T2],N1-N2):- !,
+    word(I,W,Word), !,
+    T = tuple(I,K,referent,K:R,Word),
+    tuples(B:drs(L,C),K,[K:R|R1]-R2,W,T1-T2,N1-N2).
 
-/* =======================================================================
-   Write nodes in RDF
-======================================================================= */
+tuples([lab(A,B)|L],K,R1-R3,W,T1-T3,N1-N3):- !, tuples(lab(A,B),K,R1-R2,W,T1-T2,N1-N2),tuples(L,K,R2-R3,W,T2-T3,N2-N3).
 
-write_nodes([],Stream):-
-   write(Stream,'   </nodes>'),nl(Stream).
+tuples([sub(A,B)|L],K,R1-R3,W,T1-T3,N1-N3):- !, tuples(sub(A,B),K,R1-R2,W,T1-T2,N1-N2),tuples(L,K,R2-R3,W,T2-T3,N2-N3).
 
-write_nodes([node(Id,Val)|L],Stream):- 
-   write_node(Stream,Id,Val),
-   write_nodes(L,Stream).
+tuples([_:I:pred(X,Sym,n,Sense)|L],K,R1-R2,W,T1-[E1,E2|T2],N1-N2):-
+    word(I,W,Word), nonvar(X), member(Dom:X,R1), !,
+    condcounter(CC),
+    E1 = tuple([],K,          concept,  CC:Sym:Sense,[]),
+    E2 = tuple(I,CC:Sym:Sense,instance, Dom:X,Word),
+    tuples(L,K,R1-R2,W,T1-T2,N1-N2).
 
+tuples([_:I:pred(X,Sym,v,Sense)|L],K,R1-R2,W,T1-[E1,E2|T2],N1-N2):- 
+    word(I,W,Word), nonvar(X), member(Dom:X,R1), !,
+    condcounter(CC),
+    E1 = tuple([],K,          event,CC:Sym:Sense,[]),
+    E2 = tuple(I,CC:Sym:Sense,instance,    Dom:X,Word),
+    tuples(L,K,R1-R2,W,T1-T2,N1-N2).
 
-/* =======================================================================
-   Write edges in RDF
-======================================================================= */
+tuples([_:I:pred(X,_,s,1)|L],K,R1-R2,W,T1-[E|T2],N1-N2):- 
+    word(I,W,Word), nonvar(X), member(Dom:X,R1), !,
+    E = tuple(I,K,function,       Dom:X,Word),
+    tuples(L,K,R1-R2,W,T1-T2,N1-N2).
 
-write_edges([],Stream):- 
-   write(Stream,'   </edges>'), nl(Stream).
+tuples([_:I:pred(X,Sym,a,Sense)|L],K,R1-R2,W,T1-[E1,E2|T2],N1-N2):- 
+    word(I,W,Word), nonvar(X), member(Dom:X,R1), !,
+    condcounter(CC),
+    E1 = tuple([],K,          attribute,CC:Sym:Sense,[]),
+    E2 = tuple(I,CC:Sym:Sense,arg,       Dom:X,Word),
+    tuples(L,K,R1-R2,W,T1-T2,N1-N2).
 
-write_edges([edge(Id,Lab,N1,N2)|L],Stream):-
-   format(Stream,'      <edge_element>~n',[]),
-   format(Stream,'         <id>@~p</id>~n',[Id]),
-   format(Stream,'         <node_start>',[]),
-   write_id(N1,Stream),
-   format(Stream,'</node_start>~n',[N1]),
-   format(Stream,'         <node_end>',[]),
-   write_id(N2,Stream),
-   format(Stream,'</node_end>~n',[N2]),
-   format(Stream,'         <label>~p</label>~n',[Lab]),
-   format(Stream,'      </edge_element>~n',[]),
-   write_edges(L,Stream).
+tuples([_:I:named(X,Sym,Type,_)|L],K,R1-R2,W,T1-[E1,E2|T2],N1-N2):- 
+    word(I,W,Word), nonvar(X), member(Dom:X,R1), !,
+    condcounter(CC),
+    E1 = tuple([],K,         named,CC:Sym:Type,[]),
+    E2 = tuple(I,CC:Sym:Type,instance,  Dom:X,Word),
+    tuples(L,K,R1-R2,W,T1-T2,N1-N2).
 
-/* =======================================================================
-   Write output in RDF
-======================================================================= */
+tuples([B:_:timex(X,date(_,I2:Y,I3:M,I4:D))|L],K,R1-R2,W,T,N):- !,
+    tuples([B:I2:timex(X,year,Y),B:I3:timex(X,month,M),B:I4:timex(X,day,D)|L],K,R1-R2,W,T,N).
 
-write_output([],Stream):- 
-   write(Stream,'   </output>'), nl(Stream).
+tuples([_:I:timex(X,Type,Sym)|L],K,R1-R2,W,T1-[E1,E2|T2],N1-N2):- 
+    word(I,W,Word), nonvar(X), member(Dom:X,R1), !,
+    condcounter(CC),
+    E1 = tuple([],K,         Type,CC:Sym:Type,[]),
+    E2 = tuple(I,CC:Sym:Type,arg,  Dom:X,Word),
+    tuples(L,K,R1-R2,W,T1-T2,N1-N2).
 
-write_output([Node|L],Stream):-
-   format(Stream,'         <id>',[]),
-   write_id(Node,Stream),
-   format(Stream,'</id>~n',[Node]), 
-   write_output(L,Stream).
+tuples([_:I:eq(X,Y)|L],K,R1-R2,W,T1-[E1,E2,E3|T2],N1-N2):- 
+    word(I,W,Word), nonvar(X), nonvar(Y), member(D1:X,R1), member(D2:Y,R1), !,
+    condcounter(CC),
+    E1 = tuple(I, K,    relation,CC:equality,Word),
+    E2 = tuple([],CC:equality,int,D1:X,[]),
+    E3 = tuple([],CC:equality,ext,D2:Y,[]),
+    tuples(L,K,R1-R2,W,T1-T2,N1-N2).
 
+tuples([B:I:rel(X,Y,subset_of,Sense)|L],K,R,W,T,N):-
+   tuples([B:I:rel(Y,X,superset_of,Sense)|L],K,R,W,T,N).
 
-/* =======================================================================
-   Write a single node in RDF
-======================================================================= */
+tuples([_:I:rel(X,Y,Sym,Sense)|L],K,R1-R2,W,T1-[E1,E2,E3|T2],N1-N2):-
+    word(I,W,Word), nonvar(X), nonvar(Y), member(D1:X,R1), member(D2:Y,R1), !,
+    condcounter(CC),
+    E1 = tuple([],K,relation,CC:Sym:Sense,[]),
+    E2 = tuple([],CC:Sym:Sense,int,D1:X,[]),
+    E3 = tuple( I,CC:Sym:Sense,ext,D2:Y,Word),
+    tuples(L,K,R1-R2,W,T1-T2,N1-N2).
 
-write_node(Stream,Node,Label):-
-   format(Stream,'      <node_element>~n',[]),
-   format(Stream,'         <id>',[]),
-   write_id(Node,Stream),
-   format(Stream,'</id>~n',[]), 
-   format(Stream,'         <label>~p</label>~n',[Label]),
-   format(Stream,'         <operator>=</operator>~n',[]),
-   format(Stream,'      </node_element>~n',[]).
+tuples([_:I:role(X,Y,Sym,Dir)|L],K,R1-R2,W,T1-[E1,E2,E3|T2],N1-N2):-
+    word(I,W,Word), nonvar(X), nonvar(Y), member(D1:X,R1), member(D2:Y,R1), !,
+    condcounter(CC),
+    E1 = tuple([],K,role,CC:Sym:Dir,[]),
+    E2 = tuple([],CC:Sym:Dir,int,D1:X,[]),
+    E3 = tuple( I,CC:Sym:Dir,ext,D2:Y,Word),
+    tuples(L,K,R1-R2,W,T1-T2,N1-N2).
 
+tuples([I:rel(X,Y,Sym)|L],K,R1-R2,W,T1-[E|T2],N1-N2):-
+    word(I,W,Word), !, 
+    E = tuple(I,X,Sym,Y,Word),
+    tuples(L,K,R1-R2,W,T1-T2,N1-N2).
 
-/* =======================================================================
-   Write identifier in RDF
-======================================================================= */
+tuples([_:I:card(X,Y,Type)|L],K,R1-R2,W,T1-[E1,E2|T2],N1-N2):-
+    word(I,W,Word), nonvar(X), member(Dom:X,R1), !,
+    condcounter(CC),
+    E1 = tuple([],K,       cardinality,CC:Y:Type,[]),
+    E2 = tuple(I,CC:Y:Type,arg,         Dom:X,Word),
+    tuples(L,K,R1-R2,W,T1-T2,N1-N2).
 
-write_id(Var,Stream):-
-   functor(Var,'$VAR',1), !,
-   arg(1,Var,N), 
-   write(Stream,'#'), 
-   write(Stream,N).
+tuples([_:_:prop(X,B)|L],K,R1-R1,W,T1-[T|T3],N1-N3):-
+    nonvar(X), member(Dom:X,R1), !,
+    T = tuple([],K,subordinates:prop,Dom:X,[]),
+    tuples(B,Dom:X,R1-_,W,T1-T2,N1-N2),
+    tuples(L,K,R1-_,W,T2-T3,N2-N3).
 
-write_id(Var,Stream):-
-   write(Stream,'$'), 
-   write(Stream,Var).
-
-
-/* =======================================================================
-   Output RDF in DOT format
-======================================================================= */
-
-dot_rdf(rdf(Nodes,Edges,Output),Stream):- 
-   dot_nodes(Nodes,Output,Stream),
-   dot_edges(Edges,Stream),
-   write(Stream,'}'), nl(Stream),
-   nl(Stream).
-
-
-/* =======================================================================
-   Dot nodes in RDF
-======================================================================= */
-
-dot_nodes([],_,Stream):- nl(Stream).
-
-dot_nodes([node(Id,Val)|L],Output,Stream):- 
-   dot_node(Stream,Id,Val,Output),
-   dot_nodes(L,Output,Stream).
-
-
-/* =======================================================================
-   Dot edges in RDF
-======================================================================= */
-
-dot_edges([],Stream):- nl(Stream).
-
-dot_edges([edge(N1,Label,N2)|L],Stream):- !,
-   dot_edges([edge(_,Label,N1,N2)|L],Stream).
-
-dot_edges([edge(_Id,Label,N1,N2)|L],Stream):-
-   tab(Stream,5), 
-   dot_id(N1,Stream),
-   write(Stream,' -> '),
-   dot_id(N2,Stream),
-   format(Stream,' [label="~p"];~n',[Label]),
-   dot_edges(L,Stream).
-
-
-/* =======================================================================
-   Dot a single node in RDF
-======================================================================= */
-
-dot_node(Stream,Node,Label,Output):-
-   member(Node,Output), !,
-   tab(Stream,5), 
-   dot_id(Node,Stream),
-   format(Stream,' [label="~p", peripheries=2];~n',[Label]).
-
-dot_node(Stream,Node,Label,_):-
-   tab(Stream,5), 
-   dot_id(Node,Stream),
-   format(Stream,' [label="~p"];~n',[Label]).
-
-
-/* =======================================================================
-   Dot identifier in RDF
-======================================================================= */
-
-dot_id(Var,Stream):-
-   functor(Var,'$VAR',1), !,
-   arg(1,Var,N), 
-   write(Stream,N).
-
-dot_id(Var,Stream):-
-   write(Stream,Var).
-
-
-/* =======================================================================
-   Main: tuples
-======================================================================= */
-
-tuples(Words,DRS,N1,Tuples):- label(N1,k,K0,N2) ,tuples(DRS,K0,Words,[]-Tuples,N2-_).
-
-tuples(sdrs(D,R),K,W,T1-T3,N1-N3):- !, tuples(D,K,W,T1-T2,N1-N2), tuples(R,K,W,T2-T3,N2-N3).
-tuples(smerge(B1,B2),K,W,T1-T3,N1-N3):- !, tuples(B1,K,W,T1-T2,N1-N2), tuples(B2,K,W,T2-T3,N2-N3).
-tuples(merge(B1,B2),K,W,T1-T3,N1-N3):- !, tuples(B1,K,W,T1-T2,N1-N2), tuples(B2,K,W,T2-T3,N2-N3).
-tuples(alfa(_,B1,B2),K,W,T1-T3,N1-N3):- !, tuples(B1,K,W,T1-T2,N1-N2), tuples(B2,K,W,T2-T3,N2-N3).
-
-tuples(lab(K,B),_,W,T1-T2,N1-N2):- !, tuples(B,K,W,T1-T2,N1-N2).
-tuples(sub(B1,B2),K,W,T1-T3,N1-N3):- !, tuples(B1,K,W,T1-T2,N1-N2), tuples(B2,K,W,T2-T3,N2-N3).
-tuples(drs([],C),K,W,T1-T2,N1-N2):- !, tuples(C,K,W,T1-T2,N1-N2).
-
-tuples(drs([I:R|L],C),K,W,T1-[T|T2],N1-N2):- !,
-    word(I,W,Word,NI), !,
-    T = tuple(NI,s0,R,referent,K,0,Word),
-    tuples(drs(L,C),K,W,T1-T2,N1-N2).
-
-tuples([lab(A,B)|L],K,W,T1-T3,N1-N3):- !, tuples(lab(A,B),K,W,T1-T2,N1-N2),tuples(L,K,W,T2-T3,N2-N3).
-
-tuples([sub(A,B)|L],K,W,T1-T3,N1-N3):- !, tuples(sub(A,B),K,W,T1-T2,N1-N2),tuples(L,K,W,T2-T3,N2-N3).
-
-tuples([I:pred(X,Sym,n,Sense)|L],K,W,T1-[T|T2],N1-N2):-
-    word(I,W,Word,NI), !,
-    T = tuple(NI,K,X,concept,Sym,Sense,Word),
-    tuples(L,K,W,T1-T2,N1-N2).
-
-tuples([I:pred(X,Sym,v,Sense)|L],K,W,T1-[T|T2],N1-N2):- 
-    word(I,W,Word,NI), !,
-    T = tuple(NI,K,X,event,Sym,Sense,Word),
-    tuples(L,K,W,T1-T2,N1-N2).
-
-tuples([I:pred(X,Sym,a,Sense)|L],K,W,T1-[T|T2],N1-N2):- 
-    word(I,W,Word,NI), !,
-    T = tuple(NI,K,X,attribute,Sym,Sense,Word),
-    tuples(L,K,W,T1-T2,N1-N2).
-
-tuples([I:eq(X,Y)|L],K,W,T1-[T|T2],N1-N2):- 
-    word(I,W,Word,NI), !,
-    T = tuple(NI,K,X,equality,Y,1,Word),
-    tuples(L,K,W,T1-T2,N1-N2).
-
-tuples([I:named(X,Sym,Type,_)|L],K,W,T1-[T|T2],N1-N2):- 
-    word(I,W,Word,NI), !,
-    T = tuple(NI,K,X,named,Sym,Type,Word),
-    tuples(L,K,W,T1-T2,N1-N2).
-
-tuples([_:timex(X,date(_,I2:Y,I3:M,I4:D))|L],K,W,T,N):- !,
-    tuples([I2:year(X,Y),I3:month(X,M),I4:day(X,D)|L],K,W,T,N).
-
-tuples([I:year(X,Sym)|L],K,W,T1-[T|T2],N1-N2):- 
-    word(I,W,Word,NI), !, Sense = 1,
-    T = tuple(NI,K,X,year,Sym,Sense,Word),
-    tuples(L,K,W,T1-T2,N1-N2).
-
-tuples([I:month(X,Sym)|L],K,W,T1-[T|T2],N1-N2):- 
-    word(I,W,Word,NI), !, Sense = 1,
-    T = tuple(NI,K,X,month,Sym,Sense,Word),
-    tuples(L,K,W,T1-T2,N1-N2).
-
-tuples([I:day(X,Sym)|L],K,W,T1-[T|T2],N1-N2):- 
-    word(I,W,Word,NI), !, Sense = 1,
-    T = tuple(NI,K,X,day,Sym,Sense,Word),
-    tuples(L,K,W,T1-T2,N1-N2).
-
-tuples([I:rel(X,Y,Sym,Sense)|L],K,W,T1-[T|T2],N1-N2):-
-    word(I,W,Word,NI), !,
-    T = tuple(NI,K,X,Sym,Y,Sense,Word),
-    tuples(L,K,W,T1-T2,N1-N2).
-
-tuples([I:rel(X,Y,Sym)|L],K,W,T1-[T|T2],N1-N2):-
-    word(I,W,Word,NI), !, Sense = 1,
-    T = tuple(NI,K,X,Sym,Y,Sense,Word),
-    tuples(L,K,W,T1-T2,N1-N2).
-
-tuples([I:card(X,Y,Type)|L],K,W,T1-[T|T2],N1-N2):-
-    word(I,W,Word,NI), !, 
-    T = tuple(NI,K,X,card,Y,Type,Word),
-    tuples(L,K,W,T1-T2,N1-N2).
-
-tuples([I:prop(X,B)|L],K,W,T1-[T|T3],N1-N3):-
-    word(I,W,Word,NI), !,
-    T = tuple(NI,s0,K,subordinates,X,proposition,Word),
-    tuples(B,X,W,T1-T2,N1-N2),
-    tuples(L,K,W,T2-T3,N2-N3).
-
-tuples([I:not(B)|L],K1,W,T1-[T|T3],N1-N4):-
-    word(I,W,Word,NI), !,
-    T = tuple(NI,s0,K1,subordinates,K2,negation,Word),
+tuples([_:_:not(B)|L],K1,R1-R1,W,T1-[T|T3],N1-N4):- 
+    option('--x',false), !,
+    T = tuple([],K1,subordinates:neg,K2,[]),
     label(N1,k,K2,N2),
-    tuples(B,K2,W,T1-T2,N2-N3),
-    tuples(L,K1,W,T2-T3,N3-N4).
+    tuples(B,K2,R1-_,W,T1-T2,N2-N3),
+    tuples(L,K1,R1-_,W,T2-T3,N3-N4).
 
-tuples([I:pos(B)|L],K1,W,T1-[T|T3],N1-N4):-
-    word(I,W,Word,NI), !,
-    T = tuple(NI,s0,K1,subordinates,K2,possibility,Word),
+tuples([_:I:not(B)|L],K1,R1-R1,W,T1-[T|T3],N1-N4):- 
+    option('--x',true), !,
+    word(I,W,Word), 
+    T = tuple([],K1,subordinates:neg,K2,Word),
     label(N1,k,K2,N2),
-    tuples(B,K2,W,T1-T2,N2-N3),
-    tuples(L,K1,W,T2-T3,N3-N4).
+    tuples(B,K2,R1-_,W,T1-T2,N2-N3),
+    tuples(L,K1,R1-_,W,T2-T3,N3-N4).
 
-tuples([I:nec(B)|L],K1,W,T1-[T|T3],N1-N4):-
-    word(I,W,Word,NI), !,
-    T = tuple(NI,s0,K1,subordinates,K2,necessity,Word),
+tuples([_:_:pos(B)|L],K1,R1-R1,W,T1-[T|T3],N1-N4):- !,
+    T = tuple([],K1,subordinates:pos,K2,[]),
     label(N1,k,K2,N2),
-    tuples(B,K2,W,T1-T2,N2-N3),
-    tuples(L,K1,W,T2-T3,N3-N4).
+    tuples(B,K2,R1-_,W,T1-T2,N2-N3),
+    tuples(L,K1,R1-_,W,T2-T3,N3-N4).
 
-tuples([I:imp(B1,B2)|L],K1,W,T1-[Tu1,Tu2|T4],N1-N6):-
-    word(I,W,Word,NI), !,
-    Tu1 = tuple(NI,s0,K1,subordinates,K2,conditional,Word),
+tuples([_:_:nec(B)|L],K1,R1-R1,W,T1-[T|T3],N1-N4):- !,
+    T = tuple([],K1,subordinates:nec,K2,[]),
     label(N1,k,K2,N2),
-    tuples(B1,K2,W,T1-T2,N2-N3),
-    Tu2 = tuple(NI,s0,K2,subordinates,K3,implication,Word),
+    tuples(B,K2,R1-_,W,T1-T2,N2-N3),
+    tuples(L,K1,R1-_,W,T2-T3,N3-N4).
+
+tuples([_:_:imp(B1,B2)|L],K1,R1-R1,W,T1-[Tu1,Tu2|T4],N1-N6):- !,
+    Tu1 = tuple([],K1,subordinates:cond,K2,[]),
+    label(N1,k,K2,N2),
+    tuples(B1,K2,R1-R2,W,T1-T2,N2-N3),
+    Tu2 = tuple([],K2,subordinates:impl,K3,[]),
     label(N3,k,K3,N4),
-    tuples(B2,K3,W,T2-T3,N4-N5),
-    tuples(L,K1,W,T3-T4,N5-N6).
+    tuples(B2,K3,R2-_,W,T2-T3,N4-N5),
+    tuples(L,K1,R1-_,W,T3-T4,N5-N6).
 
-tuples([I:whq(_,B1,_,B2)|L],K1,W,T1-[Tu1,Tu2|T4],N1-N6):-
-    word(I,W,Word,NI), !,
-    Tu1 = tuple(NI,s0,K1,subordinates,K2,question,Word),
+tuples([_:_:whq(_,B1,_,B2)|L],K1,R1-R1,W,T1-[Tu1,Tu2|T4],N1-N6):- !,
+    Tu1 = tuple([],K1,subordinates:que,K2,[]),
     label(N1,k,K2,N2),
-    tuples(B1,K2,W,T1-T2,N2-N3),
-    Tu2 = tuple(NI,s0,K2,subordinates,K3,background,Word),
+    tuples(B1,K2,R1-R2,W,T1-T2,N2-N3),
+    Tu2 = tuple([],K2,subordinates:bgr,K3,[]),
     label(N3,k,K3,N4),
-    tuples(B2,K3,W,T2-T3,N4-N5),
-    tuples(L,K1,W,T3-T4,N5-N6).
+    tuples(B2,K3,R2-_,W,T2-T3,N4-N5),
+    tuples(L,K1,R1-_,W,T3-T4,N5-N6).
 
-tuples([I:or(B1,B2)|L],K1,W,T1-[Tu1,Tu2|T4],N1-N6):-
-    word(I,W,Word,NI), !,
-    Tu1 = tuple(NI,s0,K1,subordinates,K2,disjunction,Word),
+tuples([_:_:or(B1,B2)|L],K1,R1-_,W,T1-[Tu1,Tu2|T4],N1-N6):- !,
+    Tu1 = tuple([],K1,subordinates:dis,K2,[]),
     label(N1,k,K2,N2),
-    tuples(B1,K2,W,T1-T2,N2-N3),
-    Tu2 = tuple(NI,s0,K2,coordinates,K3,disjunction,Word),
+    tuples(B1,K2,R1-_,W,T1-T2,N2-N3),
+    Tu2 = tuple([],K2,coordinates:dis,K3,[]),
     label(N3,k,K3,N4),
-    tuples(B2,K3,W,T2-T3,N4-N5),
-    tuples(L,K1,W,T3-T4,N5-N6).
+    tuples(B2,K3,R1-_,W,T2-T3,N4-N5),
+    tuples(L,K1,R1-_,W,T3-T4,N5-N6).
 
-tuples([Err|L],K,W,T1-T2,N1-N2):- !, 
+tuples([Err|L],K,R,W,T,N):- !, 
      warning('unknown tuple: ~p',[Err]),
-     tuples(L,K,W,T1-T2,N1-N2).
+     tuples(L,K,R,W,T,N).
 
-tuples([],_,_,T-T,N-N).
+tuples([],_,R-R,_,T-T,N-N).
 
 
 /* =======================================================================
    Convert words in tuple format
 ======================================================================= */
 
-word([],_,[],0):- !.
-word([Index],W,[Word],Index):- member(word(Index,Word),W), !.
-word(Index,_,[],0):- warning('unknown index: ~p',[Index]).
+word(I1,_,I2):- option('--x',true), !, I1 = I2.
+
+word([],_,[]):- !.
+word([Index|Is],W,[Tok|Ws]):- member(Index:[tok:Tok|_],W), !, word(Is,W,Ws).
+word([_|Is],W,Ws):- word(Is,W,Ws).
 
 
 /* =======================================================================
    Output tuples to stream
 ======================================================================= */
 
-write_tuples(Tuples,Stream):-
-   sort(Tuples,Sorted),
-   writeTuples(Sorted,Stream).
+write_tuples([],_).
 
-writeTuples([],_).
+write_tuples([tuple(_Index,Order,Node1,Edge,Node2,Words)|L],Stream):- !,
+   write_node(Node1,Stream),
+   format(Stream,' ~w ',[Edge]),
+   write_node(Node2,Stream),
+   format(Stream,' ~w [ ',[Order]),
+   write_tokens(Words,Stream),
+   write_tuples(L,Stream).
 
-writeTuples([tuple(Order,Box,Ref,Edge,Node,Sense,Word)|L],Stream):- !,
-   format(Stream,'~w ~w ~w ~w ~w ~w ~w~n',[Box,Ref,Edge,Node,Sense,Order,Word]),
-   writeTuples(L,Stream).
-
-writeTuples([T|L],Stream):-
-   write(err:T),nl,
-   writeTuples(L,Stream).
-
+write_tuples([T|L],Stream):-
+   warning('unable to output tuple ~p',[T]),
+   write_tuples(L,Stream).
 
 
 /* =======================================================================
-   DRS in RDF format (work in progress, eventually replaces --flat option)
+   Output tokens to stream
 ======================================================================= */
 
-drs2rdf(DRS,rdf(Nodes,Sorted,[])):-
-   drs2rdf(DRS,_,[]-E),
-   setof(node(Var,'#'),Node^Rel^(member(edge(Var,Rel,Node),E),var(Var)),Nodes),
-   sort(E,Sorted),
-   numbervars(rdf(Nodes,Sorted),100,_).
-
-drs2rdf(smerge(B1,B2),K,E1-[edge(K,instance,'MergedDrs')|E4]):-
-   subClass('MergedDrs','Drs',E1-E2),
-   drs2rdf(B1,K1,[edge(K,fstArg,K1)|E2]-E3),
-   drs2rdf(B2,K2,[edge(K,scdArg,K2)|E3]-E4).
-
-drs2rdf(drs(Dom,Conds),K,E1-E9):-
-   subClass('Domain','FiniteSet',E1-E2),
-   subClass('Conditions','FiniteSet',E2-E3),
-   subClass('FiniteSet','Set',E3-E4),
-   subClass('Set','Thing',E4-E5),
-   subClass('BasicDrs','Drs',E5-E6),
-   subClass('Drs','Thing',E6-E7),
-   dom2rdf(Dom,D,[edge(K,hasDomain,D),edge(K,instance,'BasicDrs')|E7]-E8),
-   conds2rdf(Conds,C,[edge(K,hasConditions,C),edge(C,instance,'Conditions')|E8]-E9).
-   
-dom2rdf([],K,E-[edge(K,instance,'Domain')|E]).
-
-dom2rdf([_:R|Dom],K,E1-[edge(R,instance,'DiscourseReferent'),edge(R,setMember,K)|E3]):-
-   subClass('DiscourseReferent','Thing',E1-E2),
-   dom2rdf(Dom,K,E2-E3).
-
-conds2rdf([],_,E-E).
-
-conds2rdf([_:Cond|Conds],K,E1-[edge(C,setMember,K)|E4]):-
-   subClass('DrsCondition','Thing',E1-E2),
-   cond2rdf(Cond,C,E2-E3),
-   conds2rdf(Conds,K,E3-E4).
-
-cond2rdf(pred(X,Sym,Pos,Sense),C,E1-[T1,T2,T3,T4,T5|E8]):- !,
-   T1 = edge(C,instance,'Predicate'),
-   T2 = edge(C,hasSymbol,Sym),
-   T3 = edge(C,hasArg,X),
-   T4 = edge(C,hasPos,Pos),
-   T5 = edge(C,hasSense,Sense),
-   subClass(Sym,'Symbol',E1-E2),
-   subClass('Symbol','Thing',E2-E3),
-   subClass(Sense,'Integer',E3-E4),
-   subClass('Integer','Thing',E4-E5),
-   subClass(Pos,'PartOfSpeech',E5-E6),
-   subClass('PartOfSpeech','Thing',E6-E7),
-   subClass('Predicate','DrsCondition',E7-E8).
-
-cond2rdf(named(X,Sym,_,_),C,E1-[T1,T2,T3|E4]):- !,
-   T1 = edge(C,instance,'Named'),
-   T2 = edge(C,hasSymbol,Sym),
-   T3 = edge(C,hasArg,X),
-   subClass(Sym,'Name',E1-E2),
-   subClass('Name','Thing',E2-E3),
-   subClass('Named','DrsCondition',E3-E4).
-
-cond2rdf(rel(X,Y,Sym,Sense),C,E1-[T1,T2,T3,T4,T5|E6]):- !,
-   T1 = edge(C,instance,'Relation'),
-   T2 = edge(C,hasSymbol,Sym),
-   T3 = edge(C,hasIntArgument,X),
-   T4 = edge(C,hasExtArgument,Y),
-   T5 = edge(C,hasSense,Sense),
-   subClass(Sym,'Symbol',E1-E2),
-   subClass('Symbol','Thing',E2-E3),
-   subClass(Sense,'Integer',E3-E4),
-   subClass('Integer','Thing',E4-E5),
-   subClass('Relation','DrsCondition',E5-E6).
-
-cond2rdf(imp(B1,B2),C,E1-[edge(C,instance,'Implication')|E4]):- !,
-   subClass('Implication','DrsCondition',E1-E2),
-   drs2rdf(B1,K1,[edge(K1,isAntecedent,C)|E2]-E3),
-   drs2rdf(B2,K2,[edge(K2,isConsequent,C)|E3]-E4).
-
-cond2rdf(or(B1,B2),C,E1-[edge(C,instance,'Disjunction')|E4]):- !,
-   subClass('Disjunction','DrsCondition',E1-E2),
-   drs2rdf(B1,K1,[edge(K1,isFstDisjunct,C)|E2]-E3),
-   drs2rdf(B2,K2,[edge(K2,isSndDisjunct,C)|E3]-E4).
-
-cond2rdf(_,_,E-E).
+write_tokens([],Stream):- !, write(Stream,']'), nl(Stream).
+write_tokens([X|L],Stream):- format(Stream,'~w ',[X]), write_tokens(L,Stream).
 
 
-subClass(A,B,E-E):- member(edge(A,subClass,B),E), !.
-subClass(A,B,E-[edge(A,subClass,B)|E]).
+/* =======================================================================
+   Output nodes to stream
+======================================================================= */
+
+write_node(A:B,Stream):- !, format(Stream,'~w:',[A]), write_node(B,Stream).
+write_node(A,Stream):- format(Stream,'~w',[A]).
+
+

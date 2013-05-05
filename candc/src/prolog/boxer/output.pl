@@ -2,18 +2,17 @@
 :- module(output,[printHeader/4,
                   printFooter/1,
                   printSem/4,
+		  printDerList/2,
                   printBox/2]).
 
-:- use_module(boxer(xdrs2xml),[xfdrs2xml/2,xdrs2xml/2]).
-:- use_module(boxer(xdrs2html),[xfdrs2html/2,xdrs2html/2]).
-:- use_module(boxer(drs2fdrs),[drs2fdrs/2,instDrs/1,instDrs/2]).
+:- use_module(boxer(xdrs2xml),[xdrs2xml/2,der2xml/3]).
+:- use_module(boxer(drs2fdrs),[drs2fdrs/2,instDrs/1]).
 :- use_module(boxer(printDrs),[printDrs/3]).
-:- use_module(boxer(tuples),[drs2owl/2,write_rdf/2,dot_rdf/2,drs2rdf/2,
-                             tuples/4,write_tuples/2,trees/2,write_trees/2]).
+:- use_module(boxer(betaConversionDRT),[betaConvert/2]).
+:- use_module(boxer(tuples),[write_tuples/2]).
 
 :- use_module(semlib(drs2tex),[drs2tex/2]).
-:- use_module(semlib(drs2fol),[drs2fol/2]).
-:- use_module(semlib(drs2tacitus),[drs2tac/4,printTAC/2]).
+:- use_module(semlib(drs2tacitus),[printTAC/2]).
 :- use_module(semlib(options),[option/2]).
 :- use_module(semlib(errors),[warning/2]).
 
@@ -48,9 +47,9 @@ printHeader(Stream,_,Command,Options):-
    format(Stream,'%%% ~p ',[Command]),
    printOptions(Options,Stream),
    ( option('--semantics',drs), !,
-     format(Stream,'~n:- multifile     sem/5, id/2.',[]),
-     format(Stream,'~n:- discontiguous sem/5, id/2.',[]),
-     format(Stream,'~n:- dynamic       sem/5, id/2.~n',[])
+     format(Stream,'~n:- multifile     sem/3, id/2.',[]),
+     format(Stream,'~n:- discontiguous sem/3, id/2.',[]),
+     format(Stream,'~n:- dynamic       sem/3, id/2.~n',[])
    ; true ).
 
 /* ------------------------------------------------------------------------
@@ -97,31 +96,10 @@ printHeader(_,_,_,_):-
 ------------------------------------------------------------------------ */
 
 printHeader(Stream,Version,_,_):-
-   option('--format',xml), 
-   option('--flat',true), !,
-   format(Stream,'<?xml version="1.0" encoding="UTF-8"?>~n',[]),
-   format(Stream,'<!DOCTYPE xfdrs-output SYSTEM "src/data/boxer/xfdrs.dtd">~n',[]),
-   user:version(Version),
-   format(Stream,'<xfdrs-output version="~p">~n',[Version]).
-
-printHeader(Stream,Version,_,_):-
-   option('--format',xml), 
-   option('--flat',false), !,
+   option('--format',xml), !,
    format(Stream,'<?xml version="1.0" encoding="UTF-8"?>~n',[]),
    format(Stream,'<!DOCTYPE xdrs-output SYSTEM "src/data/boxer/xdrs.dtd">~n',[]),
    format(Stream,'<xdrs-output version="~p">~n',[Version]).
-
-/* ------------------------------------------------------------------------
-   Print header: --format html
------------------------------------------------------------------------- */
-
-printHeader(Stream,_Version,_,_):-
-   option('--format',html), !,
-   format(Stream,'<html>~n',[]),
-   format(Stream,' <head>~n',[]),
-   format(Stream,'  <link rel="stylesheet" type="text/css" media="screen" href="src/data/boxer/drs.css" />~n',[]),
-   format(Stream,' </head>~n',[]),
-   format(Stream,' <body>~n',[]).
 
 
 /* ------------------------------------------------------------------------
@@ -140,15 +118,8 @@ printHeader(_,_,_,_):-
 ------------------------------------------------------------------------ */
 
 printFooter(Stream):-
-   option('--format',html), 
-   format(Stream,' </body>~n',[]),
-   format(Stream,'</html>~n',[]).
-
-printFooter(Stream):-
    option('--format',xml), 
-   ( option('--flat',true), !,
-     format(Stream,'</xfdrs-output>~n',[])
-   ; format(Stream,'</xdrs-output>~n',[]) ).
+   format(Stream,'</xdrs-output>~n',[]).
 
 printFooter(Stream):-
    option('--format',latex), !,
@@ -161,136 +132,209 @@ printFooter(_).
    Print Utterance +  Semantic Representation
 ======================================================================== */
 
-printSem(Stream,_,_,XDRS):-
-   option('--format',no), !,
-   XDRS = xdrs(Words,_,_,DRS),
-   instantiateDrs(DRS),
-   printUtterance(Stream,Words).
+printSem(Stream,_Id,_Index,Ders):-
+   option('--semantics',der), !,             %%% derivation
+   printDerList(Stream,Ders).
+
+%printSem(Stream,_,_,XDRS):-
+%   option('--format',no), !,
+%   XDRS = xdrs(Tags,DRS),
+%   instantiateDrs(DRS),
+%   printUtterance(Stream,Tags).
 
 printSem(Stream,Id,Index,XDRS):-
-   XDRS = xdrs(Words,_,_,_),
-   printUtterance(Stream,Words),
-   %%% printBox(....),    %%% really belongs here, now in boxer.pl
+   XDRS = xdrs(Tags,_),
+   printUtterance(Stream,Tags),
    printXDRS(Stream,Id,Index,XDRS).
 
 
+/* =======================================================================
+   Print Derivations
+========================================================================*/
+
+printDerList(_,[]):- !.
+
+printDerList(Stream,[der(I,Der)|L]):- 
+   option('--format',xml), !,
+   der2xml(Der,I,Stream),
+   printDerList(Stream,L). 
+
+printDerList(Stream,[der(I,Der)|L]):- 
+   write(Stream,'der( '), write(Stream,I), write(Stream,', '),
+   printDer(Der,Stream,_),
+   write(Stream,' ).'), nl(Stream), !,
+   printDerList(Stream,L). 
+
+printDerList(Stream,[der(I,_)|L]):- 
+   warning('cannot print derivation ~p',[I]),
+   printDerList(Stream,L). 
+
+
+/*========================================================================
+   Print Derivation (bit of a hack right now!)
+========================================================================*/
+
+printDer(Comb,Stream,[Tok]):-
+   Comb = t(Cat,Tok,Sem,Att,_), !,
+   betaConvert(Sem,Red),
+   \+ \+ ( instDrs(Red), 
+           write_term(Stream,t(Red,Cat,Tok,Att),[numbervars(true),quoted(true)]) ).
+
+printDer(Comb,Stream,Tok):- 
+   Comb =.. [Rule,Cat,_,Sem,_,T],
+   member(Rule,[ftr,btr,tc]), !, 
+   write(Stream,Rule), 
+   write(Stream,'('),
+   write(Stream,Cat),
+   write(Stream,','),
+   betaConvert(Sem,Red),
+   \+ \+ ( instDrs(Red), 
+           write_term(Stream,Red,[numbervars(true),quoted(true)]) ),
+   write(Stream,','),
+   printDer(T,Stream,Tok),
+   write(Stream,')').
+
+printDer(Comb,Stream,Tok3):- 
+   Comb =.. [Rule,Cat,Sem,_,L,R], !,
+   write(Stream,Rule), 
+   write(Stream,'('),
+   write(Stream,Cat),
+   write(Stream,','),
+   betaConvert(Sem,Red),
+   \+  \+ ( instDrs(Red), 
+            write_term(Stream,Red,[numbervars(true),quoted(true)]) ),
+   write(Stream,','),
+   printDer(L,Stream,Tok1),
+   write(Stream,','),
+   printDer(R,Stream,Tok2), 
+   write(Stream,')'),
+   append(Tok1,Tok2,Tok3).
+
+printDer(Comb,Stream,Tok3):- 
+   Comb =.. [Rule,Cat,_,Sem,_,L,R], !,
+   write(Stream,Rule), 
+   write(Stream,'('),
+   write(Stream,Cat),
+   write(Stream,','),
+   betaConvert(Sem,Red),
+   \+  \+ ( instDrs(Red), 
+            write_term(Stream,Red,[numbervars(true),quoted(true)]) ),
+   write(Stream,','),
+   printDer(L,Stream,Tok1),
+   write(Stream,','),
+   printDer(R,Stream,Tok2), 
+   write(Stream,')'),
+   append(Tok1,Tok2,Tok3).
+
+printDer(Comb,_,[]):- 
+   warning('cannot print the derivation ~p',[Comb]).
+
+
 /* ========================================================================
-   Print XDRS
+   Print DRS
 ======================================================================== */
 
-printXDRS(Stream,Id,Index,XDRS):-
+printXDRS(Stream,_,_,XDRS):-
    option('--semantics',drs),
-   option('--format',prolog), !,
-   XDRS = xdrs(Words,POS,NE,DRS),
-   format(Stream,'id(~q,~p).~n',[Id,Index]),
-   format(Stream,'sem(~p,',[Index]),
-   printStuff(Words,Stream,','),
-   printStuff(POS,Stream,','),
-   printStuff(NE,Stream,','),
-   instantiateDrs(DRS),
-   flattenDrs(DRS,DRS0),
-   printStuff(DRS0,Stream,' ).'),
-   nl(Stream).
+   option('--format',no), !,
+   printBox(Stream,XDRS).
 
 printXDRS(Stream,Id,_Index,XDRS):-
    option('--semantics',drs),
    option('--format',xml), !,
    instantiateDrs(XDRS),  
-   ( option('--flat',true), !, 
-     format(Stream,'<xfdrs xml:id="~p">~n',[Id]),
-     flattenDrs(XDRS,XFDRS),
-     xfdrs2xml(XFDRS,Stream),
-     format(Stream,'</xfdrs>~n',[])
-   ; format(Stream,'<xdrs xml:id="~p">~n',[Id]),
-     xdrs2xml(XDRS,Stream),
-     format(Stream,'</xdrs>~n',[]) ).
-
-printXDRS(Stream,_Id,_Index,XDRS):-
-   option('--semantics',drs),
-   option('--format',html), !,
-   instantiateDrs(XDRS),  
-   xdrs2html(XDRS,Stream).
+   format(Stream,'<xdrs xml:id="~p">~n',[Id]),
+   xdrs2xml(XDRS,Stream),
+   format(Stream,'</xdrs>~n',[]).
 
 printXDRS(Stream,_Id,_Index,XDRS):-
    option('--semantics',drs), 
    option('--format',latex), !,  
-   XDRS = xdrs(_Words,_POS,_NE,DRS),
+   XDRS = xdrs(_Tags,DRS),
    instantiateDrs(DRS),
    drs2tex(DRS,Stream),
    nl(Stream), nl(Stream).
 
-printXDRS(Stream,_Id,_Index,XDRS):-
-   option('--semantics',owl), !,
-   XDRS = xdrs(Words,_POS,_NE,DRS),
+printXDRS(Stream,Id,Index,XDRS):-
+   option('--semantics',drs),
+   XDRS = xdrs(Tags,DRS),
+   format(Stream,'id(~q,~p).~n',[Id,Index]),
+   format(Stream,'sem(~p,',[Index]),
+   printStuff(Tags,Stream,','),
+   nl(Stream),
    instantiateDrs(DRS),
-   drs2owl(DRS,RDF),
-   printRDF(Stream,Words,RDF).
+   printStuff(DRS,Stream,').'),
+   printBox(Stream,DRS),
+   nl(Stream).
+
+
+/* ========================================================================
+   Print PDRS
+======================================================================== */
+
+printXDRS(Stream,_,_,XDRS):-
+   option('--semantics',pdrs),
+   option('--format',no), !,
+   printBox(Stream,XDRS).
+
+printXDRS(Stream,Id,_Index,XDRS):-
+   option('--semantics',pdrs),
+   option('--format',xml), !,
+   instantiateDrs(XDRS),  
+   format(Stream,'<xdrs xml:id="~p">~n',[Id]),
+   xdrs2xml(XDRS,Stream), 
+   printBox(Stream,XDRS),
+   format(Stream,'</xdrs>~n',[]).
+
+printXDRS(Stream,Id,Index,XDRS):-
+   option('--semantics',pdrs),
+   XDRS = xdrs(Tags,DRS),
+   format(Stream,'id(~q,~p).~n',[Id,Index]),
+   format(Stream,'sem(~p,',[Index]),
+   printStuff(Tags,Stream,','),
+   instantiateDrs(DRS),
+   flattenDrs(DRS,DRS0),
+   printStuff(DRS0,Stream,').'),
+   printBox(Stream,XDRS),
+   nl(Stream).
+
+
+/* ========================================================================
+   Print DRG
+======================================================================== */
 
 printXDRS(Stream,_Id,_Index,XDRS):-
-   option('--semantics',tuple), !,   
-   XDRS = xdrs(Words,_POS,_NE,DRS),
-   instDrs(DRS,N),
-   tuples(Words,DRS,N,Tuples),
+   option('--semantics',drg), !,   
+   XDRS = xdrs(_,Tuples),
    write_tuples(Tuples,Stream),
    nl(Stream).
 
-printXDRS(Stream,_Id,_Index,XDRS):-
-   option('--semantics',tree), !,   
-   XDRS = xdrs(_Words,_POS,_NE,DRS),
-   trees(DRS,Trees),
-   write_trees(Trees,Stream),
-   nl(Stream).
 
-printXDRS(Stream,_Id,_Index,XDRS):-
+/* ========================================================================
+   Print FOL
+======================================================================== */
+
+printXDRS(Stream,Id,Index,XDRS):-
    option('--semantics',fol), !,
-   XDRS = xdrs(_Words,_POS,_NE,DRS),
-   drs2fol(DRS,FOL),
-   write(Stream,'fol('), write(Stream,FOL), 
+   format(Stream,'id(~q,~p).~n',[Id,Index]),
+   XDRS = xdrs(_Tags,FOL),
+   numbervars(FOL,0,_),
+   format(Stream,'fol(~p,',[Index]), 
+   write_term(Stream,FOL,[numbervars(true),quoted(true)]),
    write(Stream,').'), nl(Stream).
+
+
+/* ========================================================================
+   Print TACITUS
+======================================================================== */
 
 printXDRS(Stream,Id,Index,XDRS):-
    option('--semantics',tacitus), !,
    format(Stream,'id(~q,~p).~n',[Id,Index]),
-   XDRS = xdrs(_Words,POS,_NE,DRS),
-   instDrs(DRS,N),
-   drs2tac(DRS,POS,N,TAC),
+   XDRS = xdrs(Tags,TAC),
+   printTags(Tags,Stream,''),
    printTAC(TAC,Stream).
 
-printXDRS(_,_,_,_):-
-   option('--format',Format), 
-   option('--semantics',Semantics), 
-   option('--flat',RDF), 
-   warning('unable to output XDRS for --semantics ~p --format ~p --flat ~p',[Semantics,Format,RDF]).
-
-
-/*========================================================================
-   Print RDF
-========================================================================*/
-
-printRDF(Stream,Words,RDF):-
-   option('--format',dot), !,   
-   write(Stream,'digraph rdf {'), nl(Stream), nl(Stream),
-   write(Stream,'     100000 [label=" '), 
-   printWords(Words,Stream), write(Stream,'" shape=box];'), 
-   nl(Stream), nl(Stream),
-   dot_rdf(RDF,Stream).
-
-printRDF(Stream,_Words,RDF):-
-   option('--format',xml), !,
-   write_rdf(RDF,Stream),
-   nl(Stream).
-
-printRDF(Stream,Words,rdf(Nodes,Edges,_)):-
-   option('--format',prolog), !,
-   write(Stream,'rdf('),
-   printStuff(Words,Stream,','),
-   printStuff(Nodes,Stream,','),
-   printStuff(Edges,Stream,').'),
-   nl(Stream).
-
-printRDF(_,_,_):-
-   option('--format',Format),
-   warning('--format ~p not supported for printing RDF',[Format]).
 
 /*========================================================================
    Print Box
@@ -306,7 +350,8 @@ printBox(Stream,XDRS):-
 
 printBox(Stream,XDRS):-
    option('--box',true), !,
-   leftMargin(Margin),
+   nl(Stream),
+   leftMargin(Margin), 
    printDrs(Stream,XDRS,Margin).
 
 printBox(_,_).
@@ -351,12 +396,6 @@ printUtterance(Stream,Words):-
    format(Stream,'--> ~n~n',[]).
 
 printUtterance(Stream,Words):-
-   option('--format',html), !,
-   format(Stream,'<p>',[]),
-   printWords(Words,Stream),
-   format(Stream,'</p>~n',[]).
-
-printUtterance(Stream,Words):-
    option('--format',no), !,
    printWords(Words,Stream),
    nl(Stream).
@@ -368,16 +407,18 @@ printUtterance(Stream,Words):-
 
 printWords([],_):- !.
 
-printWords([word(_,Word)|L],Stream):-
-   option('--format',xml), 
-   atom(Word),
-   atom_chars(Word,Chars), 
-   append(_,['-','-'|_],Chars), !,
+printWords([_ID:[tok:'--'|_]|L],Stream):- 
+   option('--format',xml), !,
+   format(Stream,'- ',[]),
    printWords(L,Stream).
 
-printWords([word(_,Word)|L],Stream):- !,
-   format(Stream,'~w ',[Word]),
+printWords([_ID:[tok:Tok|_]|L],Stream):- !,
+   format(Stream,'~w ',[Tok]),
    printWords(L,Stream).
+
+printWords([_Unknown|L],Stream):- !,
+   printWords(L,Stream).
+
 
 
 /*========================================================================
@@ -403,7 +444,7 @@ printFlat([X|L],Stream):-
    Instantiate DRS 
 ========================================================================*/
 
-instantiateDrs(xdrs(_,_,_,DRS)):-
+instantiateDrs(xdrs(_,DRS)):-
    option('--instantiate',true), !,
    instDrs(DRS).
 
@@ -419,7 +460,7 @@ instantiateDrs(DRS):-
    Flatten DRS 
 ========================================================================*/
 
-flattenDrs(xdrs(A,B,C,DRS),xdrs(A,B,C,FDRS)):-
+flattenDrs(xdrs(Tags,DRS),xdrs(Tags,FDRS)):-
    option('--flat',true), !,
    drs2fdrs(DRS,FDRS).
 
@@ -442,7 +483,23 @@ printStuff(Stuff,Stream,Closing):-
    format(Stream,'~p',[Closing]).
 
 printStuff(Stuff,Stream,Closing):-
-   format(Stream,'~n    ',[]),
    write_term(Stream,Stuff,[numbervars(true),quoted(true)]),
    format(Stream,'~p',[Closing]).
+
+
+/*========================================================================
+   Print Tags
+========================================================================*/
+
+printTags([],Stream,Ending):- 
+   write(Stream,Ending). 
+
+printTags([ID:[T|Ags]|L],Stream,_):- !,
+   write(Stream,ID), write(Stream,' '), 
+   printTags([T|Ags],Stream,'\n'),
+   printTags(L,Stream,'').
+
+printTags([_:V|L],Stream,Ending):- !,
+   write(Stream,V), write(Stream,' '), 
+   printTags(L,Stream,Ending).
 

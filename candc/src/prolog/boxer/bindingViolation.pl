@@ -42,8 +42,8 @@ roleViolation(theme,patient).
 
 bindingViolationConds(Conds):- 
    roleViolation(Role1,Role2),
-   member(_:rel(E1,X1,Role1,_),Conds),
-   member(_:rel(E2,X2,Role2,_),Conds),
+   member(_:role(E1,X1,Role1,1),Conds),
+   member(_:role(E2,X2,Role2,1),Conds),
    E1==E2, X1==X2, !.
 
 bindingViolationConds(Conds):- 
@@ -76,4 +76,5 @@ bindingViolationCond(whq(_,B,_,_)):- bindingViolationDrs(B), !.
 bindingViolationCond(whq(_,_,_,B)):- !, bindingViolationDrs(B).
 
 bindingViolationCond(rel(X,Y,_,_)):- !, X==Y.
+bindingViolationCond(role(X,Y,_,_)):- !, X==Y.
 

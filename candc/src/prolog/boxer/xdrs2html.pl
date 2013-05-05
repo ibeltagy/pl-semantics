@@ -15,29 +15,14 @@ drs2html(DRS,Stream):-
    drs2html(DRS,Stream,3).
 
 xdrs2html(XDRS,Stream):-
-   XDRS=xdrs(_Words,_POStags,_NEtags,DRS),
-%   write(Stream,' <words>'), nl(Stream),
-%   words2html(Words,Stream),
-%   write(Stream,' </words>'), nl(Stream),
-%   write(Stream,' <postags>'), nl(Stream),
-%   tags2html(POStags,Stream),
-%   write(Stream,' </postags>'), nl(Stream),
-%   write(Stream,' <netags>'), nl(Stream),
-%   tags2html(NEtags,Stream),
-%   write(Stream,' </netags>'), nl(Stream),
+   XDRS=xdrs(_Tags,DRS),
    drs2html(DRS,Stream).
 
 xfdrs2html(XDRS,Stream):-
-   XDRS=xdrs(Words,POStags,NEtags,Cons),
-   write(Stream,' <words>'), nl(Stream),
-   words2html(Words,Stream),
-   write(Stream,' </words>'), nl(Stream),
-   write(Stream,' <postags>'), nl(Stream),
-   tags2html(POStags,Stream),
-   write(Stream,' </postags>'), nl(Stream),
-   write(Stream,' <netags>'), nl(Stream),
-   tags2html(NEtags,Stream),
-   write(Stream,' </netags>'), nl(Stream),
+   XDRS=xdrs(Tags,Cons),
+   write(Stream,' <tags>'), nl(Stream),
+   tags2html(Tags,Stream),
+   write(Stream,' </tags>'), nl(Stream),
    write(Stream,' <cons>'), nl(Stream),
    cons2html(Cons,Stream),
    write(Stream,' </cons>'), nl(Stream).
@@ -200,6 +185,20 @@ conds2html([_Index:rel(Arg1,Arg2,X,_Sense)|L],Stream,Tab):- !,
 %   index2html(Index,Stream,Tab),
    conds2html(L,Stream,Tab).
 
+conds2html([_Index:role(Arg1,Arg2,X,1)|L],Stream,Tab):- !,
+   tab(Stream,Tab),   
+   symbol(X,Y),
+   format(Stream,'~w(~p,~p)<br>~n',[Y,Arg1,Arg2]),
+%   index2html(Index,Stream,Tab),
+   conds2html(L,Stream,Tab).
+
+conds2html([_Index:role(Arg1,Arg2,X,-1)|L],Stream,Tab):- !,
+   tab(Stream,Tab),   
+   symbol(X,Y),
+   format(Stream,'~w(~p,~p)<br>~n',[Y,Arg2,Arg1]),
+%   index2html(Index,Stream,Tab),
+   conds2html(L,Stream,Tab).
+
 conds2html([_Index:named(Arg,X,Type,_)|L],Stream,Tab):- !,
    tab(Stream,Tab),   
    symbol(X,Y),
@@ -322,6 +321,20 @@ cons2html([Label:Index:pred(Arg,X,Type,Sense)|Cons],Stream):- !,
 cons2html([Label:Index:rel(Arg1,Arg2,X,Sense)|Cons],Stream):- !,
    symbol(X,Y),
    format(Stream,'  <rel label="~p" arg1="~p" arg2="~p" symbol="~w" sense="~p">~n',[Label,Arg1,Arg2,Y,Sense]),
+   index2html(Index,Stream,2),
+   format(Stream,'  </rel>~n',[]), 
+   cons2html(Cons,Stream).
+
+cons2html([Label:Index:role(Arg1,Arg2,X,1)|Cons],Stream):- !,
+   symbol(X,Y),
+   format(Stream,'  <rel label="~p" arg1="~p" arg2="~p" symbol="~w" sense="~p">~n',[Label,Arg1,Arg2,Y,1]),
+   index2html(Index,Stream,2),
+   format(Stream,'  </rel>~n',[]), 
+   cons2html(Cons,Stream).
+
+cons2html([Label:Index:role(Arg2,Arg2,1,-1)|Cons],Stream):- !,
+   symbol(X,Y),
+   format(Stream,'  <rel label="~p" arg1="~p" arg2="~p" symbol="~w" sense="~p">~n',[Label,Arg1,Arg2,Y,1]),
    index2html(Index,Stream,2),
    format(Stream,'  </rel>~n',[]), 
    cons2html(Cons,Stream).

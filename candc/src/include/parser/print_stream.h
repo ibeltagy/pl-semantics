@@ -51,7 +51,7 @@ namespace NLP {
 
       virtual ~StreamPrinter(void){ /* do nothing */ }
 
-      virtual void parsed(const KBest ret[], ushort nparses, Sentence &sent, double BETA, ulong DICT_CUTOFF){
+      virtual void parsed(const KBest ret[], ushort nparses, Sentence &sent, double BETA, ulong DICT_CUTOFF, std::string metaLabel){
         set(true, true, "parsed", BETA, DICT_CUTOFF);
 
         if(nparses){
@@ -59,10 +59,13 @@ namespace NLP {
           log.stream << nsentences << " coverage " << coverage() << '%' << std::endl;
           log.stream << nsentences << " nparses " << nparses << std::endl;
           for(ushort i = 0; i < nparses; ++i){
-            out.stream << "score = " << ret[i].score << '\n';
+            // out.stream << "%  score = " << ret[i].score << ", id(" << metaLabel << ")" <<'\n';
             sent.cats.clear();
             derivation(ret[i], sent, i);
             lexical(sent);
+	    std::ostringstream sstr;
+            sstr << metaLabel << "-'" << ret[i].score<<"'";
+	    meta(sstr.str(), nsentences*100 + i);
           }
         }else{
           sent.cats.clear();
@@ -70,12 +73,17 @@ namespace NLP {
             log.stream << nsentences << " parsed unary " << std::endl;
             unary(sent);
             lexical(sent);
+	    meta(metaLabel, nsentences*100);
           }else{
             log.stream << nsentences << " ignored unary " << std::endl;
           }
         }
 
         out.stream << '\n';
+      }
+
+      virtual void meta(std::string meta, ushort nparses){
+	out.stream << "id(" << meta << ", [" << nparses << "]).\n\n";
       }
 
       virtual void stats(const Statistics &stats){

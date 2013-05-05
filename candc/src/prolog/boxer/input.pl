@@ -26,7 +26,7 @@ openInput:-
    option('--input',user_input), 
    option('--stdin',do), !,
    prompt(_,''),
-   catch(load_files([],[autoload(true),encoding(utf8),stream(user_input)]),_,fail),
+   catch(load_files('',[autoload(true),encoding(utf8),stream(user_input)]),_,fail),
    checkInputType.
 
 openInput:-
@@ -79,7 +79,9 @@ checkInputType:-
    assert(input:inputtype(drs)).
 
 checkInputType:-
-   error('unknown type of input file',[]).
+   warning('input file contains no data',[]),
+   retractall(input:inputtype(_)),
+   assert(input:inputtype(unknown)).
   
 
 /*------------------------------------------------------------------------
@@ -91,35 +93,18 @@ identifyIDs(List):-
    \+ List=[], !.
 
 identifyIDs(List):-
-   ccg(_,_),
-   option('--window','2'), 
-   findall(X,ccg(X,_),Sems),
-   slidingWindow(Sems,List), !.
-
-identifyIDs(List):-
+   option('--integrate',false), 
    ccg(_,_),
    setof(id(Id,[Id]),X^ccg(Id,X),List), !.
 
+identifyIDs([id(1,List)]):-
+   option('--integrate',true), 
+   ccg(_,_),
+   setof(Id,X^ccg(Id,X),List), !.
+
 identifyIDs([]):-
    \+ id(_,_), \+ ccg(_,_), !,
-   error('input file contains no ccg/2 terms',[]), 
-   fail.
-
-identifyIDs([]):-
-   error('processing input file',[]), 
-   fail.
-
-
-/*------------------------------------------------------------------------
-   Generate IDs using a sliding window
-------------------------------------------------------------------------*/
-
-slidingWindow([A],[id(A,[A])]):- !.
-
-slidingWindow([A,B],[id(A,[A,B])]):- !.
-
-slidingWindow([A,B|L1],[id(A,[A,B])|L2]):- !,
-   slidingWindow([B|L1],L2).
+   warning('input file contains no ccg/2 terms',[]).
 
 
 /*------------------------------------------------------------------------

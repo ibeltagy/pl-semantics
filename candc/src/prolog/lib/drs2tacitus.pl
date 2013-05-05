@@ -9,8 +9,8 @@
    Main Predicate
 ======================================================================== */
 
-drs2tac(DRS,POS,N,TAC):- 
-   drs2tac(DRS,POS,[],TAC0,N-_,_),
+drs2tac(DRS,Tags,N,TAC):- 
+   drs2tac(DRS,Tags,[],TAC0,N-_,_),
    replace(TAC0,TAC).
 
 
@@ -67,11 +67,8 @@ drs2tac(smerge(B1,B2),P,T1,T2,N,H):- !,
 drs2tac(alfa(_,B1,B2),P,T1,T2,N,H):- !, 
    drs2tac(merge(B1,B2),P,T1,T2,N,H).
 
-drs2tac(drs([],Conds),P,T1,T2,N,Head):- !, 
-   conds2tac(Conds,P,T1,T2,N,Head).
-
-drs2tac(drs([_:_Ref|Referents],Conds),P,T1,T2,N,H):- !,
-   drs2tac(drs(Referents,Conds),P,T1,T2,N,H).
+drs2tac(drs(_,Conds),P,T1,T2,N,H):- !, 
+   conds2tac(Conds,P,T1,T2,N,H).
 
 drs2tac(merge(B1,B2),P,T1,T3,N1-N3,H2):- !, 
    drs2tac(B1,P,T1,T2,N1-N2,_), 
@@ -93,13 +90,18 @@ drs2tac(sub(B1,B2),P,T1,T3,N1-N3,H):-
 
 
 /* ========================================================================
-   Translate DRS-Conditions into TACITUS formulas 
+   Translate DRS-Conditions into TACITUS formulas (wrapper)
 ======================================================================== */
 
 conds2tac(Conds,P,T1,T2,N,Head):- 
    roles(Conds,Roles,NewConds),   
    conds2tac(NewConds,P,Roles,T1,T2,N,[],Head).
-   
+ 
+
+/* ========================================================================
+   Translate DRS-Conditions into TACITUS formulas 
+======================================================================== */
+  
 conds2tac([],_,_,T1,T2,N-N,Heads,Head):- !,
    adjustMods(Heads,T1,T2),
    pickHead(Heads,Head).
@@ -117,7 +119,9 @@ pickHead(Heads,Event):-
    member(event:[I]:Event,Heads),
    \+ (member(event:[J]:_,Heads), J < I), !.
 
-pickHead([_:_:Head|_],Head).
+pickHead([_:_:Head|_],Head):- !.
+
+pickHead(_,_).
 
 
 /* ========================================================================
@@ -141,58 +145,53 @@ adjustMods(_,T,T).
 ======================================================================== */
 
 roles([],[],[]).
-roles([_:R|L1],[R|Roles],L2):- role(R), !, roles(L1,Roles,L2).
+roles([_:R|L1],[R|Roles],L2):- R = role(_,_,_,_), !, roles(L1,Roles,L2).
 roles([Cond|L1],Roles,[Cond|L2]):- roles(L1,Roles,L2).
-
-role(rel(_,_,agent,_)).
-role(rel(_,_,recipient,_)).
-role(rel(_,_,patient,_)).
-role(rel(_,_,theme,_)).
 
 
 /* ========================================================================
    Translate a DRS-Condition into TACITUS formulas 
 ======================================================================== */
 
-cond2tac(I:nec(Drs),P,_,T1,[nec(E1,E2)|T2],N1-N3,complex:I:E1):- !,
+cond2tac(I:nec(Drs),P,_,T1,[I:nec(E1,E2)|T2],N1-N3,complex:I:E1):- !,
    label(N1,e,E1,N2), 
    drs2tac(Drs,P,T1,T2,N2-N3,E2).
 
-cond2tac(I:pos(Drs),P,_,T1,[pos(E1,E2)|T2],N1-N3,complex:I:E1):- !,
+cond2tac(I:pos(Drs),P,_,T1,[I:pos(E1,E2)|T2],N1-N3,complex:I:E1):- !,
    label(N1,e,E1,N2), 
    drs2tac(Drs,P,T1,T2,N2-N3,E2).
 
-cond2tac(I:not(Drs),P,_,T1,[not(E1,E2)|T2],N1-N3,complex:I:E1):- !,
+cond2tac(I:not(Drs),P,_,T1,[I:not(E1,E2)|T2],N1-N3,complex:I:E1):- !,
    label(N1,e,E1,N2), 
    drs2tac(Drs,P,T1,T2,N2-N3,E2).
 
 cond2tac(I:prop(E,Drs),P,_,T1,[replace(E,H)|T2],N,complex:I:E):- !,
    drs2tac(Drs,P,T1,T2,N,H).
 
-cond2tac(I:or(Drs1,Drs2),P,_,T1,[or(E,H1,H2)|T3],N1-N4,complex:I:E):- !,
+cond2tac(I:or(Drs1,Drs2),P,_,T1,[I:or(E,H1,H2)|T3],N1-N4,complex:I:E):- !,
    label(N1,e,E,N2),
    drs2tac(Drs1,P,T1,T2,N2-N3,H1),
    drs2tac(Drs2,P,T2,T3,N3-N4,H2).
 
-cond2tac(I:imp(Drs1,Drs2),P,_,T1,[imp(E,H1,H2)|T3],N1-N4,complex:I:E):- !,
+cond2tac(I:imp(Drs1,Drs2),P,_,T1,[I:imp(E,H1,H2)|T3],N1-N4,complex:I:E):- !,
    label(N1,e,E,N2),
    drs2tac(Drs1,P,T1,T2,N2-N3,H1),
    drs2tac(Drs2,P,T2,T3,N3-N4,H2).
 
-cond2tac(I:whq(Drs1,Drs2),P,_,T1,[whq(E,H1,H2)|T3],N1-N4,complex:I:E):- !,
+cond2tac(I:whq(Drs1,Drs2),P,_,T1,[I:whq(E,H1,H2)|T3],N1-N4,complex:I:E):- !,
    label(N1,e,E,N2),
    drs2tac(Drs1,P,T1,T2,N2-N3,H1),
    drs2tac(Drs2,P,T2,T3,N3-N4,H2).
 
-cond2tac(I:whq(_,Drs1,_,Drs2),P,_,T1,[whq(E,H1,H2)|T3],N1-N4,complex:I:E):- !,
+cond2tac(I:whq(_,Drs1,_,Drs2),P,_,T1,[I:whq(E,H1,H2)|T3],N1-N4,complex:I:E):- !,
    label(N1,e,E,N2),
    drs2tac(Drs1,P,T1,T2,N2-N3,H1),
    drs2tac(Drs2,P,T2,T3,N3-N4,H2).
 
-cond2tac(I:card(X,C,_),_,_,T,[card(E,X,C)|T],N1-N2,card:I:E):- !,
+cond2tac(I:card(X,C,_),_,_,T,[I:card(E,X,C)|T],N1-N2,card:I:E):- !,
    label(N1,e,E,N2).      
 
-cond2tac(I:named(X,S1,Type,_),L,_,T,[F1,F2|T],N1-N3,named:I:E1):- !,
+cond2tac(I:named(X,S1,Type,_),L,_,T,[I:F1,I:F2|T],N1-N3,named:I:E1):- !,
    label(N1,e,E1,N2),      
    label(N2,e,E2,N3),      
    pos(I,L,Pos),
@@ -200,39 +199,39 @@ cond2tac(I:named(X,S1,Type,_),L,_,T,[F1,F2|T],N1-N3,named:I:E1):- !,
    F1 =.. [S2,E1,X],
    F2 =.. [Type,E2,X].
 
-cond2tac(I:timex(X,D1),_,_,T,[F|T],N1-N2,timex:I:E):-
+cond2tac(I:timex(X,D1),_,_,T,[I:F|T],N1-N2,timex:I:E):-
    timex(D1,D2),
    label(N1,e,E,N2),      
    F =.. [D2,E,X], !.
 
-cond2tac(I:eq(X,Y),_,_,T,[equal(E,X,Y)|T],N1-N2,equal:I:E):- !,
+cond2tac(I:eq(X,Y),_,_,T,[I:equal(E,X,Y)|T],N1-N2,equal:I:E):- !,
    label(N1,e,E,N2).      
 
-cond2tac(I:pred(X,S1,a,_),L,_,T,[F|T],N1-N2,mod:I:E):- !,
+cond2tac(I:pred(X,S1,a,_),L,_,T,[I:F|T],N1-N2,mod:I:E):- !,
    pos(I,L,Pos),
    label(N1,e,E,N2),      
    atom_concat(S1,Pos,S2),
    F =.. [S2,E,X].
 
-cond2tac(I:pred(X,S1,n,_),L,_,T,[F|T],N1-N2,noun:I:E):- !,
+cond2tac(I:pred(X,S1,n,_),L,_,T,[I:F|T],N1-N2,noun:I:E):- !,
    pos(I,L,Pos),
    label(N1,e,E,N2),      
    atom_concat(S1,Pos,S2),
    F =.. [S2,E,X].
 
-cond2tac(I:pred(E,S1,v,_),L,Roles,T,[F|T],N,event:I:E):- !, 
+cond2tac(I:pred(E,S1,v,_),L,Roles,T,[I:F|T],N,event:I:E):- !, 
    pos(I,L,Pos),
    atom_concat(S1,Pos,S2),
    F =.. [S2,E,_,_,_],
    addRoles(Roles,E,F,N).
 
-cond2tac(I:rel(X,Y,P1,_),L,_,T,[F|T],N1-N2,rel:I:E):- !,
+cond2tac(I:rel(X,Y,P1,_),L,_,T,[I:F|T],N1-N2,rel:I:E):- !,
    pos(I,L,Pos),
    label(N1,e,E,N2),      
    atom_concat(P1,Pos,P2),
    F=..[P2,E,X,Y].
 
-cond2tac(I:rel(X,Y,P1),L,_,T,[F|T],N1-N2,rel:I:E):- !,
+cond2tac(I:rel(X,Y,P1),L,_,T,[I:F|T],N1-N2,rel:I:E):- !,
    pos(I,L,Pos),
    label(N1,e,E,N2),      
    atom_concat(P1,Pos,P2),
@@ -252,19 +251,22 @@ addRoles([],_,F,N1-N4):- !,
    label(N2,u,A2,N3),   
    label(N3,u,A3,N4).
 
-addRoles([rel(E,X,agent,_)|L],E,F,N):-
+addRoles([role(X,E,R,-1)|L],E,F,N):- !,
+   addRoles([role(E,X,R,1)|L],E,F,N).
+
+addRoles([role(E,X,agent,1)|L],E,F,N):-
    F =.. [_,E,X,_,_], !,
    addRoles(L,E,F,N).
 
-addRoles([rel(E,X,patient,_)|L],E,F,N):-
+addRoles([role(E,X,patient,1)|L],E,F,N):-
    F =.. [_,E,_,X,_], !,
    addRoles(L,E,F,N).
 
-addRoles([rel(E,X,theme,_)|L],E,F,N):-
+addRoles([role(E,X,theme,1)|L],E,F,N):-
    F =.. [_,E,_,X,_], !,
    addRoles(L,E,F,N).
 
-addRoles([rel(E,X,recipient,_)|L],E,F,N):-
+addRoles([role(E,X,recipient,1)|L],E,F,N):-
    F =.. [_,E,_,_,X], !,
    addRoles(L,E,F,N).
 
@@ -335,9 +337,10 @@ second(A,C):- day(A,C).
    Determine POS
 ======================================================================== */
 
-pos(Is,L,POS):-
+pos(Is,T,POS):-
    member(I,Is),
-   member(pos(I,Tag),L),
+   member(I:Tags,T),
+   member(pos:Tag,Tags),
    mappos(Tag,POS), !.
 
 pos(_,_,'').

@@ -1,3 +1,4 @@
+
 :- module(printDrs,[printDrs/1,printDrs/2,printDrs/3]).
 
 :- use_module(library(lists),[append/3]).
@@ -7,6 +8,7 @@
 ======================================================================== */
 
 :- dynamic counter/1. counter(0).
+
 
 /* ========================================================================
    Main Predicate
@@ -19,14 +21,15 @@ printDrs(Stream,B):-
    LeftMargin = '%%% ',
    printDrs(Stream,B,LeftMargin).
 
-printDrs(Stream,xdrs(_,_,_,B),LeftMargin):- !, 
+printDrs(Stream,xdrs(_,B),LeftMargin):- !, 
    printDrs(Stream,B,LeftMargin).
 
 printDrs(Stream,Drs,LeftMargin):- 
    retract(counter(_)), 
    assert(counter(1)),
    \+ \+ (formatDrs(Drs,Lines,_), 
-          printDrsLines(Lines,Stream,LeftMargin)).
+          printDrsLines(Lines,Stream,LeftMargin)),
+   nl(Stream).
 
 
 /* ========================================================================
@@ -77,6 +80,8 @@ formatDrs(sdrs(Cons,Rel),Lines,Width):- !,
    formatLine(95,Length,[32]-Top),
    formatLine(32,Length,[124]-Middle),
    append([[32|Top]|DrsLines1],[[124|Middle]|ConLines1],Lines).
+
+formatDrs(_:drs(D,C),Codes,Width):- !, formatDrs(drs(D,C),Codes,Width).
 
 formatDrs(drs(Dom,Cond),[[32|Top],Refs3,[124|Line]|CondLines2],Width):- !,
    formatConds(Cond,[]-CondLines1,0-CondLength),
@@ -141,11 +146,15 @@ complexDrs(app(Drs1,Drs2),'@',Drs1,Drs2):- !.
 formatRefs([],[]):- !.
 
 formatRefs([X],Code):- !, 
-   ( nonvar(X), X=_:Ref; var(X), X=Ref ),
+   ( nonvar(X), X=_:_:Ref, !
+   ; nonvar(X), X=_:Ref, !
+   ; var(X), X=Ref ),
    makeConstant(Ref,Code).
 
 formatRefs([X,Ref2|Rest],Out):- 
-   ( nonvar(X), X=_:Ref1; var(X), X=Ref1 ),
+   ( nonvar(X), X=_:_:Ref1, !
+   ; nonvar(X), X=_:Ref1, !
+   ; var(X), X=Ref1 ),
    makeConstant(Ref1,Code),
    append(Code,[32|Codes],Out), 
    formatRefs([Ref2|Rest],Codes).
@@ -212,6 +221,9 @@ formatLine(Code,N,In-[Code|Out]):-
 
 formatConds([],L-L,N-N):- !.
 
+formatConds([_:_:X|Rest],L,N):- !,
+   formatConds([X|Rest],L,N).
+
 formatConds([_:X|Rest],L,N):- !,
    formatConds([X|Rest],L,N).
 
@@ -254,7 +266,7 @@ formatCond(Basic,L-[Line|L],N1-N2):-
    N2 is max(Length,N1).
 
 formatCond(Cond,L1-L2,N0-N3):- 
-   member(Cond:[O1,O2],[not(Drs):[95,95],
+   member(Cond:[O1,O2],[not(Drs):[32,172],
                         pos(Drs):[60,62],
                         nec(Drs):[91,93]]), !,
    OpWidth = 4,
@@ -325,13 +337,16 @@ complexCond(or(Drs1,Drs2),     'V'  ,Drs1,Drs2).
 
 
 /*========================================================================
-     Formatting Temporal Relations
+     Formatting Constant Relations
 ========================================================================*/
 
-tempRel(temp_before,   60):- !.          %%% <
-tempRel(temp_included, 91):- !.          %%% [ 
-tempRel(temp_abut,    124):- !.          %%% |
-tempRel(temp_overlap,  79):- !.          %%% O
+specialRel(temp_before,   60):- !.          %%% <
+specialRel(temp_included, 91):- !.          %%% [ 
+specialRel(temp_includes, 93):- !.          %%% ]
+specialRel(temp_abut,    124):- !.          %%% |
+specialRel(temp_overlap,  79):- !.          %%% O
+specialRel(member_of,    101):- !.          %%% e
+specialRel(subset_of,     67):- !.          %%% C
 
 
 /*========================================================================
@@ -344,8 +359,14 @@ formatBasic(pred(Arg,Functor,_,_),Line):- !,
    append(F,[40|A],T),
    append(T,[41],Line).
    
+formatBasic(role(Arg1,Arg2,Rel,1),Line):- !,
+   formatBasic(rel(Arg1,Arg2,Rel,0),Line).
+
+formatBasic(role(Arg1,Arg2,Rel,-1),Line):- !,
+   formatBasic(rel(Arg2,Arg1,Rel,0),Line).
+
 formatBasic(rel(Arg1,Arg2,Rel,1),Line):-
-   tempRel(Rel,Sym), !, 
+   specialRel(Rel,Sym), !, 
    makeConstant(Arg1,A1),
    makeConstant(Arg2,A2),
    append(A1,[32,Sym,32|A2],Line).

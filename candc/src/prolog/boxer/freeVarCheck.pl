@@ -104,6 +104,9 @@ freeVarCheckCond(pred(Arg,_,_,_),L):- !,
 freeVarCheckCond(rel(Arg1,Arg2,_,_),L):- !,
    checkTerm(Arg1,L), checkTerm(Arg2,L).
 
+freeVarCheckCond(role(Arg1,Arg2,_,_),L):- !,
+   checkTerm(Arg1,L), checkTerm(Arg2,L).
+
 freeVarCheckCond(rel(Arg1,Arg2,_),L):- !,
    checkTerm(Arg1,L), checkTerm(Arg2,L).
 

@@ -59,8 +59,10 @@ namespace NLP {
       virtual void header(const std::string &){}
       virtual void footer(void){}
 
+      virtual void meta(std::string meta, ushort nparses){}
+
       virtual void parsed(const KBest ret[], ushort nparses, Sentence &sent,
-                          double BETA, ulong DICT_CUTOFF){
+                          double BETA, ulong DICT_CUTOFF, std::string meta){
         set(true, true, "parsed", BETA, DICT_CUTOFF);
 
         if(nparses){

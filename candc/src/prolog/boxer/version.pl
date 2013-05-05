@@ -1,2 +1,2 @@
 :- module(version,[version/1]).
-version('boxer v2398M (unix build on 11 April 2013, 05:34:59)').
+version('boxer v1.00 (unix build on 4 May 2013, 23:11:36)').

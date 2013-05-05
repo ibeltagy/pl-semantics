@@ -53,8 +53,10 @@ title(en, "Mt").           % Mount
 coord(en, "v").            % versus
 coord(en, "vs").           % versus
 coord(en, "no").           % number
+coord(en, "No").           % number
 coord(en, "Cie").          % ??
 coord(en, "a.k.a").        % also known as
+coord(en, "e.g").          % exempli gratia (for example)
 
 
 /* ----------------------------------------------------------------------------------

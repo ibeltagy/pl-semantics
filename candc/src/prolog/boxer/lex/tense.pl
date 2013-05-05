@@ -1,23 +1,26 @@
 
 :- module(tense,
-          [ tense/4,   % +Mood, +PoS, +Index, -Sem
-            aspect/5   % +ArgMood, +PoS, +Mood, +Index, -Sem
+          [ tense/4,   % +Mood, +Index, +Att--Att, -Sem
+            aspect/5   % +ArgMood, +Mood, +Index, +Att--Att, -Sem
           ]).
 
 :- use_module(semlib(options),[option/2]).
 :- use_module(library(lists),[member/2]).
+:- use_module(boxer(categories),[att/3]).
 
 
 /* =========================================================================
    Tense
 ========================================================================= */
 
-tense(dcl,PoS,Index,Sem):- option('--tense',true), tense(PoS,Index,Sem).
-tense(inv,PoS,Index,Sem):- option('--tense',true), tense(PoS,Index,Sem).
-tense(wq, PoS,Index,Sem):- option('--tense',true), tense(PoS,Index,Sem).
-tense(q,  PoS,Index,Sem):- option('--tense',true), tense(PoS,Index,Sem).
+tense(Mood,Index,Att-Att,Sem):-
+   option('--tense',true), 
+   member(Mood,[dcl,inv,wq,q]),
+   att(Att,pos,PoS), 
+   tense(PoS,Index,Sem), !.
 
-tense(_,_,_,lam(S,lam(M,app(S,M)))).
+tense(_,_,Att-Att,Sem):-
+   Sem = lam(S,lam(M,app(S,M))).
 
 
 /* -------------------------------------------------------------------------
@@ -25,27 +28,24 @@ tense(_,_,_,lam(S,lam(M,app(S,M)))).
 ------------------------------------------------------------------------- */
 
 tense('VBD',Index,Sem):- 
-    Sem = lam(S,lam(F,alfa(dei,drs([[]:N],
-                                    [[]:pred(N,now,a,1)]),
-                              app(S,lam(E,merge(drs([Index:T],
-                                                    [Index:rel(E,T,temp_included,1),
-                                                     Index:rel(T,N,temp_before,1)]),
-                                                app(F,E))))))).
+   Sem = lam(S,lam(F,app(S,lam(E,merge(B2:drs([B1:[]:N,B2:Index:T],
+                                              [B1:[]:pred(N,now,a,1),
+                                               B2:[]:rel(E,T,temp_included,1),
+                                               B2:[]:rel(T,N,temp_before,1)]),
+                                       app(F,E)))))).
 
 
 /* -------------------------------------------------------------------------
    Present Tense
 ------------------------------------------------------------------------- */
 
-tense('VBZ',Index,Sem):- tense('VBP',Index,Sem).
-
-tense('VBP',Index,Sem):- 
-    Sem = lam(S,lam(F,alfa(dei,drs([[]:N],
-                                   [[]:pred(N,now,a,1)]),
-                               app(S,lam(E,merge(drs([Index:T],
-                                                     [Index:rel(E,T,temp_included,1),
-                                                      Index:eq(T,N)]),
-                                                 app(F,E))))))).
+tense(Cat,Index,Sem):- 
+   member(Cat,['VBP','VBZ']), !,
+   Sem = lam(S,lam(F,app(S,lam(E,merge(B2:drs([B1:[]:N,B2:Index:T],
+                                              [B1:[]:pred(N,now,a,1),
+                                               B2:[]:rel(E,T,temp_included,1),
+                                               B2:[]:eq(T,N)]),
+                                       app(F,E)))))).
 
 
 /* -------------------------------------------------------------------------
@@ -53,13 +53,11 @@ tense('VBP',Index,Sem):-
 ------------------------------------------------------------------------- */
 
 tense('MD',Index,Sem):- 
-    Sem = lam(S,lam(F,app(S,
-                          lam(E,alfa(dei,drs([[]:N],
-                                             [[]:pred(N,now,a,1)]),
-                                         merge(drs([Index:T],
-                                                   [Index:rel(E,T,temp_included,1),
-                                                    Index:rel(N,T,temp_before,1)]),
-                                               app(F,E))))))).
+   Sem = lam(S,lam(F,app(S,lam(E,merge(B2:drs([B1:[]:N,B2:Index:T],
+                                              [B1:[]:pred(N,now,a,1),
+                                               B2:[]:rel(E,T,temp_included,1),
+                                               B2:[]:rel(N,T,temp_before,1)]),
+                                       app(F,E)))))).
 
 
 /* =========================================================================
@@ -69,72 +67,91 @@ tense('MD',Index,Sem):-
 /* -------------------------------------------------------------------------
    Present Perfect
 ------------------------------------------------------------------------- */
-
-aspect(pt,PoS,_,Index,Sem):-
-    option('--tense',true),
-    member(PoS,['VBZ','VBP']), 
-    Sem = lam(S,lam(F,app(S,
-                          lam(E,alfa(dei,drs([[]:N],
-                                             [[]:pred(N,now,a,1)]),
-                                         merge(drs([Index:T,Index:St],
-                                                   [Index:eq(T,N),
-                                                    Index:rel(T,St,temp_included,1),
-                                                    Index:rel(E,St,temp_abut,1)]),
-                                               app(F,St))))))).
+ 
+aspect(pt,_,Index,Att-Att,Sem):-
+   option('--tense',true),
+   att(Att,pos,PoS),
+   member(PoS,['VBZ','VBP']), !,
+   Sem = lam(S,lam(F,app(S,lam(E,merge(B2:drs([B1:[]:N,B2:Index:T,B2:[]:St],
+                                              [B1:[]:pred(N,now,a,1),
+                                               B2:[]:eq(T,N),
+                                               B2:[]:rel(St,T,temp_includes,1),
+                                               B2:[]:rel(E,St,temp_abut,1)]),
+                                       app(F,St)))))).
 
 
 /* -------------------------------------------------------------------------
    Past Perfect
 ------------------------------------------------------------------------- */
 
-aspect(pt,'VBD',_,Index,Sem):-
-    option('--tense',true),
-    Sem = lam(S,lam(F,app(S,
-                          lam(E,alfa(dei,drs([[]:N],
-                                             [[]:pred(N,now,a,1)]),
-                                         merge(drs([Index:T,Index:St],
-                                                   [Index:rel(T,N,temp_before,1),
-                                                    Index:rel(St,T,temp_overlap,1),
-                                                    Index:rel(E,St,temp_abut,1)]),
-                                               app(F,St))))))).
+aspect(pt,_,Index,Att-Att,Sem):-
+   option('--tense',true),
+   att(Att,pos,'VBD'),
+   Sem = lam(S,lam(F,app(S,lam(E,merge(B2:drs([B1:[]:N,B2:Index:T,B2:[]:St],
+                                              [B1:[]:pred(N,now,a,1),
+                                               B2:[]:rel(T,N,temp_before,1),
+                                               B2:[]:rel(St,T,temp_includes,1),
+                                               B2:[]:rel(E,St,temp_abut,1)]),
+                                       app(F,St)))))).
+
+
+/* -------------------------------------------------------------------------
+   Perfect Passive
+------------------------------------------------------------------------- */
+
+aspect(pss,pt,Index,Att-Att,Sem):-
+   option('--tense',true), !,
+   Sem = lam(S,lam(F,app(S,lam(E,merge(B2:drs([B2:Index:T,B2:[]:St],
+                                              [B2:[]:rel(St,T,temp_includes,1),
+                                               B2:[]:rel(E,St,temp_overlap,1)]),
+                                       app(F,St)))))).
+
+/* -------------------------------------------------------------------------
+   Perfect Progressive 
+------------------------------------------------------------------------- */
+
+aspect(ng,pt,Index,Att-Att,Sem):-
+   option('--tense',true), !,
+   Sem = lam(S,lam(F,app(S,lam(E,merge(B2:drs([B2:Index:T,B2:[]:St],
+                                              [B2:[]:rel(St,T,temp_includes,1),
+                                               B2:[]:rel(E,St,temp_overlap,1)]),
+                                       app(F,St)))))).
 
 
 /* -------------------------------------------------------------------------
    Present Progressive
 ------------------------------------------------------------------------- */
 
-aspect(ng,PoS,_,Index,Sem):-
-    option('--tense',true),
-    member(PoS,['VBZ','VBP']), 
-    Sem = lam(S,lam(F,app(S,
-                          lam(E,alfa(dei,drs([[]:N],
-                                             [[]:pred(N,now,a,1)]),
-                                         merge(drs([Index:T,Index:St],
-                                                   [Index:eq(T,N),
-                                                    Index:rel(St,T,temp_overlap,1),
-                                                    Index:rel(St,E,temp_abut,1)]),
-                                               app(F,St))))))).
+aspect(ng,_,Index,Att-Att,Sem):-
+   option('--tense',true), 
+   att(Att,pos,PoS),
+   member(PoS,['VBZ','VBP']), !,
+   Sem = lam(S,lam(F,app(S,lam(E,merge(B2:drs([B1:[]:N,B2:Index:T,B2:[]:St],
+                                              [B1:[]:pred(N,now,a,1),
+                                               B2:[]:eq(T,N),
+                                               B2:[]:rel(St,T,temp_includes,1),
+                                               B2:[]:rel(E,St,temp_overlap,1)]),
+                                       app(F,St)))))).
 
 
 /* -------------------------------------------------------------------------
    Past Progressive
 ------------------------------------------------------------------------- */
 
-aspect(ng,'VBD',_,Index,Sem):-
-    option('--tense',true), 
-    Sem = lam(S,lam(F,app(S,
-                          lam(E,alfa(dei,drs([[]:N],
-                                             [[]:pred(N,now,a,1)]),
-                                         merge(drs([Index:T,Index:St],
-                                                   [Index:rel(T,N,temp_before,1),
-                                                    Index:rel(St,T,temp_overlap,1),
-                                                    Index:rel(St,E,temp_abut,1)]),
-                                               app(F,St))))))).
+aspect(ng,_,Index,Att-Att,Sem):-
+   att(Att,pos,'VBD'),
+   option('--tense',true), !,
+   Sem = lam(S,lam(F,app(S,lam(E,merge(B2:drs([B1:[]:N,B2:Index:T,B2:[]:St],
+                                              [B1:[]:pred(N,now,a,1),
+                                               B2:[]:rel(T,N,temp_before,1),
+                                               B2:[]:rel(St,T,temp_included,1),
+                                               B2:[]:rel(E,St,temp_overlap,1)]),
+                                       app(F,St)))))).
 
 
 /* -------------------------------------------------------------------------
    Other cases
 ------------------------------------------------------------------------- */
 
-aspect(_,PoS,Mood,Index,Sem):-
-   tense(Mood,PoS,Index,Sem).
+aspect(_,Mood,Index,Att,Sem):-
+   tense(Mood,Index,Att,Sem).

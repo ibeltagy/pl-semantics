@@ -40,9 +40,9 @@ ccg2lines(n(X),Len,Lines):- !,
 ccg2lines(lf(Cat,_,_,Tok),Len,[Line1,Line2,Line3]):- !,
    ccg2lines(tok(Cat,Tok),Len,[Line1,Line2,Line3]).
 
-ccg2lines(t(_,Cat,Tok,_,_,_,_),Len,[Line1,Line2,Line3]):- !,
+ccg2lines(t(Cat,Tok,_,_,_),Len,[Line1,Line2,Line3]):- !,
    ccg2lines(tok(Cat,Tok),Len,[Line1,Line2,Line3]).
- 
+
 ccg2lines(tok(Cat,Tok),Len,[Line1,Line2,Line3]):- !,
    cat2atom(Cat,CatAtom),
    atom_length(CatAtom,CatLen),
@@ -53,8 +53,9 @@ ccg2lines(tok(Cat,Tok),Len,[Line1,Line2,Line3]):- !,
    cat(Tok,Len,Line3).
 
 ccg2lines(Rule,Max,[Line1,Line2|L3]):-
-   ( Rule = tc(N,_,Tree), RuleName = '*'
-   ; Rule = tr(N,Tree), RuleName = 'T' ), !,
+   ( Rule = tc(N,_,_,_,Tree), RuleName = '*'
+   ; Rule = ftr(N,_,_,_,Tree), RuleName = '>T'
+   ; Rule = btr(N,_,_,_,Tree), RuleName = '<T' ), !,
    cat2atom(N,Atom),
    atom_length(Atom,CatLen),
    ccg2lines(Tree,TreeLen,L2),
@@ -74,7 +75,7 @@ ccg2lines(Rule,Max,[Line1,Line2|L5]):-
    rule(Name,Max,Line2).
 
 ccg2lines(Rule,Max,[Line1,Line2|L7]):-
-   Rule = coord(N,Left,Middle,Right), !,
+   Rule = coord(N,_,_,Left,Middle,Right), !,
    RuleName = coord,
    cat2atom(N,Atom),
    atom_length(Atom,CatLen),
@@ -181,8 +182,9 @@ fill2(X,[X|L],N):-
    Convert a CCG cat to an atom
 ---------------------------------------------------------------------- */
 
-cat2atom(Cat,Atom):- 
-   cat2atom(Cat,Atom,top).
+cat2atom(Cat,Atom):- cat2atom(Cat,Atom,top).
+
+cat2atom(conj:_,Atom,Level):- !, cat2atom(conj,Atom,Level).
 
 cat2atom(X:F,Cat,_):- 
    atom(X), atom(F), !,
@@ -224,26 +226,22 @@ cat2atom(X\Y,Atom,notop):-
    Binary Rule Name
 ---------------------------------------------------------------------- */
 
-binRuleName(ba(N,Left,Right),N,Left,Right,'<').
-binRuleName(fa(N,Left,Right),N,Left,Right,'>').
-binRuleName(fc(N,Left,Right),N,Left,Right,'>B').
-binRuleName(bc(N,Left,Right),N,Left,Right,'<B').
-binRuleName(fs(N,Left,Right),N,Left,Right,'>S').
-binRuleName(bs(N,Left,Right),N,Left,Right,'<S').
-binRuleName(fxc(N,Left,Right),N,Left,Right,'>Bx').
-binRuleName(bxc(N,Left,Right),N,Left,Right,'<Bx').
-binRuleName(fxs(N,Left,Right),N,Left,Right,'>Sx').
-binRuleName(bxs(N,Left,Right),N,Left,Right,'<Sx').
-binRuleName(gfc(N,_,Left,Right),N,Left,Right,gfc).
-binRuleName(gfc(N,Left,Right),N,Left,Right,gfc).
-binRuleName(gbc(N,_,Left,Right),N,Left,Right,gbc).
-binRuleName(gbc(N,Left,Right),N,Left,Right,gbc).
-binRuleName(gfxc(N,_,Left,Right),N,Left,Right,gfxc).
-binRuleName(gfxc(N,Left,Right),N,Left,Right,gfxc).
-binRuleName(gbxc(N,_,Left,Right),N,Left,Right,gbxc).
-binRuleName(gbxc(N,Left,Right),N,Left,Right,gbxc).
-binRuleName(lp(N,Left,Right),N,Left,Right,lp).
-binRuleName(rp(N,Left,Right),N,Left,Right,rp).
-binRuleName(ltc(N,Left,Right),N,Left,Right,ltc).
-binRuleName(rtc(N,Left,Right),N,Left,Right,rtc).
-binRuleName(conj(N,_,Left,Right),N,Left,Right,conj).
+binRuleName(ba(N,_,_,Left,Right),N,Left,Right,'<').
+binRuleName(fa(N,_,_,Left,Right),N,Left,Right,'>').
+binRuleName(fc(N,_,_,Left,Right),N,Left,Right,'>B').
+binRuleName(bc(N,_,_,Left,Right),N,Left,Right,'<B').
+binRuleName(fs(N,_,_,Left,Right),N,Left,Right,'>S').
+binRuleName(bs(N,_,_,Left,Right),N,Left,Right,'<S').
+binRuleName(fxc(N,_,_,Left,Right),N,Left,Right,'>Bx').
+binRuleName(bxc(N,_,_,Left,Right),N,Left,Right,'<Bx').
+binRuleName(fxs(N,_,_,Left,Right),N,Left,Right,'>Sx').
+binRuleName(bxs(N,_,_,Left,Right),N,Left,Right,'<Sx').
+binRuleName(gfc(N,_,_,_,Left,Right),N,Left,Right,gfc).
+binRuleName(gbc(N,_,_,_,Left,Right),N,Left,Right,gbc).
+binRuleName(gfxc(N,_,_,_,Left,Right),N,Left,Right,gfxc).
+binRuleName(gbxc(N,_,_,_,Left,Right),N,Left,Right,gbxc).
+%binRuleName(lp(N,Left,Right),N,Left,Right,lp).
+%binRuleName(rp(N,Left,Right),N,Left,Right,rp).
+%binRuleName(ltc(N,Left,Right),N,Left,Right,ltc).
+%binRuleName(rtc(N,Left,Right),N,Left,Right,rtc).
+binRuleName(conj(N,_,_,_,Left,Right),N,Left,Right,conj).

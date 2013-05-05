@@ -98,6 +98,7 @@ addTypesCond(named(X,A,B,C),L,named(Y,A,B,C)):- !, addTypeVar(X,L,Y).
 addTypesCond(timex(X,A),L,timex(Y,A)):- !, addTypeVar(X,L,Y).
 addTypesCond(eq(X,Y),L,eq(X1,Y1)):- !, addTypeVar(X,L,X1), addTypeVar(Y,L,Y1).
 addTypesCond(rel(X,Y,A,B),L,rel(X1,Y1,A,B)):- !, addTypeVar(X,L,X1), addTypeVar(Y,L,Y1).
+addTypesCond(role(X,Y,A,B),L,role(X1,Y1,A,B)):- !, addTypeVar(X,L,X1), addTypeVar(Y,L,Y1).
 addTypesCond(pred(X,A,B,C),L,pred(Y,A,B,C)):- !, addTypeVar(X,L,Y).
 
 addTypeVar(X,L,t(T,X)):- member(X:T,L), !.
@@ -263,6 +264,10 @@ cond2tex(rel(X,Y,temp_abut,_),Stream,1):- !,
 
 cond2tex(rel(X,Y,temp_overlap,_),Stream,1):- !,
    drs2tex(X,Stream), write(Stream,' $\\bigcirc$ '), drs2tex(Y,Stream).
+
+cond2tex(role(X,Y,Sym,1),Stream,1):- !, cond2tex(rel(X,Y,Sym,1),Stream,1).
+
+cond2tex(role(X,Y,Sym,-1),Stream,1):- !, cond2tex(rel(Y,X,Sym,1),Stream,1).
 
 cond2tex(rel(X,Y,Sym,_Sense),Stream,1):- !,
    printTok(Sym,Stream),
@@ -809,6 +814,7 @@ similar(timex(_,_),     timex(_,_)).
 similar(eq(_,_),        eq(_,_)).
 similar(pred(_,_,T,_),  pred(_,_,T,_)).
 similar(rel(_,_,_,_),   rel(_,_,_,_)).
+similar(role(_,_,_,_),  role(_,_,_,_)).
 similar(named(_,_,_,_), named(_,_,_,_)).
 
 

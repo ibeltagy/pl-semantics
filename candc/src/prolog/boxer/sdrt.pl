@@ -51,7 +51,7 @@ subDRS(sdrs([lab(K1,B1)],R),Rel,B2,SDRS):- !,
    SDRS = sdrs([sub(lab(K1,B1),lab(K2,B2))],[[]:rel(K1,K2,Rel)|R]).
 
 subDRS(DRS,Rel,B2,SDRS):-
-   member(DRS,[drs(_,_),alfa(_,_,_)]), !,
+   member(DRS,[_:drs(_,_),alfa(_,_,_),merge(_,_),smerge(_,_)]), !,
    SDRS = sdrs([sub(lab(K1,DRS),lab(K2,B2))],[[]:rel(K1,K2,Rel)]).
 
 subDRS(sdrs([X|L1],R1),Rel,New,sdrs([X|L2],R2)):-
@@ -69,7 +69,7 @@ cooDRS(sdrs([lab(K1,B1)],R),Rel,B2,SDRS):- !,
    SDRS = sdrs([lab(K1,B1),lab(K2,B2)],[[]:rel(K1,K2,Rel)|R]).
 
 cooDRS(DRS,Rel,B2,SDRS):- 
-   member(DRS,[drs(_,_),alfa(_,_,_)]), !,
+   member(DRS,[_:drs(_,_),alfa(_,_,_),merge(_,_),smerge(_,_)]), !,
    SDRS = sdrs([lab(K1,DRS),lab(K2,B2)],[[]:rel(K1,K2,Rel)]).
 
 cooDRS(sdrs([X|L1],R1),Rel,New,sdrs([X|L2],R2)):-
