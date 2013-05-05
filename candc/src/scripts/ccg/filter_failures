@@ -1,0 +1,378 @@
+#!/usr/bin/env python
+
+import sys
+import os
+
+RAW_SUFFIX = "raw"
+DEPS_SUFFIX = "ccgbank_deps"
+POS_SUFFIX = "pos"
+STAGGED_SUFFIX = "stagged"
+NEW_SUFFIX = "nofail"
+
+FAILURES = set(int(i) for i in """
+29
+36
+56
+86
+92
+100
+103
+115
+125
+131
+134
+152
+158
+167
+169
+176
+184
+185
+190
+200
+212
+222
+225
+226
+231
+244
+251
+274
+279
+302
+315
+320
+323
+327
+329
+331
+340
+342
+344
+362
+366
+373
+381
+383
+405
+407
+417
+418
+434
+435
+439
+445
+450
+452
+455
+457
+460
+464
+465
+479
+514
+515
+516
+517
+529
+536
+537
+545
+550
+559
+560
+561
+562
+569
+570
+574
+586
+591
+595
+596
+599
+601
+605
+606
+609
+610
+619
+653
+656
+662
+664
+667
+681
+685
+686
+691
+707
+708
+712
+715
+717
+725
+726
+736
+740
+754
+758
+766
+774
+785
+788
+789
+801
+807
+808
+810
+818
+820
+832
+833
+834
+836
+837
+839
+840
+843
+844
+845
+859
+860
+861
+865
+867
+879
+894
+895
+899
+913
+916
+918
+919
+930
+933
+937
+941
+947
+949
+968
+973
+977
+978
+985
+1011
+1016
+1025
+1037
+1047
+1049
+1052
+1058
+1061
+1068
+1070
+1071
+1094
+1106
+1109
+1113
+1135
+1174
+1177
+1178
+1179
+1196
+1203
+1206
+1214
+1238
+1240
+1244
+1245
+1247
+1260
+1271
+1272
+1273
+1286
+1290
+1291
+1292
+1314
+1319
+1346
+1349
+1354
+1356
+1377
+1387
+1392
+1405
+1414
+1433
+1434
+1435
+1445
+1465
+1468
+1473
+1476
+1477
+1488
+1491
+1497
+1523
+1540
+1555
+1558
+1559
+1566
+1586
+1589
+1601
+1602
+1605
+1620
+1622
+1624
+1625
+1630
+1632
+1633
+1635
+1639
+1643
+1645
+1650
+1656
+1664
+1666
+1667
+1669
+1675
+1681
+1684
+1689
+1694
+1697
+1704
+1710
+1721
+1724
+1728
+1742
+1746
+1749
+1754
+1756
+1760
+1781
+1791
+1793
+1794
+1800
+1804
+1808
+1812
+1824
+1826
+1832
+1837
+1838
+1839
+1840
+1843
+1844
+1845
+1848
+1853
+1863
+1864
+1870
+1882
+1893
+1907
+1913
+""".split())
+
+def die(msg):
+  print >> sys.stderr, msg
+  sys.exit(1)
+
+def read_preface(file):
+  preface = "# this file was generated using the following commands(s):\n"
+  line = file.readline()
+  while line != "\n":
+    if line.startswith("# this file"):
+      line = file.readline()
+      continue
+    preface += line.replace('# ', '#   ')
+    line = file.readline()
+  preface += '\n'
+  return preface
+
+def read_fails():
+  fails = set()
+  for line in sys.stdin:
+    fails.add(int(line))
+  return fails
+
+def next_single(file):
+  line = file.readline()
+  return line
+
+def next_deps(deps_file):
+  lines = []
+  while True:
+    line = deps_file.readline()
+    lines.append(line)
+    if not line.strip():
+      break
+  return lines
+
+def main(gold_dir, prefix, cached=False):
+  if cached:
+    fails = FAILURES
+  else:
+    fails = read_fails()
+  gold_raw = open(os.path.join(gold_dir, "{0}.{1}".format(prefix, RAW_SUFFIX)), "rU")
+  gold_pos = open(os.path.join(gold_dir, "{0}.{1}".format(prefix, POS_SUFFIX)), "rU")
+  gold_stagged = open(os.path.join(gold_dir, "{0}.{1}".format(prefix, STAGGED_SUFFIX)), "rU")
+  gold_deps = open(os.path.join(gold_dir, "{0}.{1}".format(prefix, DEPS_SUFFIX)), "rU")
+
+  test_raw = open(os.path.join(gold_dir, "{0}.{1}.{2}".format(prefix, NEW_SUFFIX, RAW_SUFFIX)), "w")
+  test_raw.write(read_preface(gold_raw))
+  test_pos = open(os.path.join(gold_dir, "{0}.{1}.{2}".format(prefix, NEW_SUFFIX, POS_SUFFIX)), "w")
+  test_pos.write(read_preface(gold_pos))
+  test_stagged = open(os.path.join(gold_dir, "{0}.{1}.{2}".format(prefix, NEW_SUFFIX, STAGGED_SUFFIX)), "w")
+  test_stagged.write(read_preface(gold_stagged))
+  test_deps = open(os.path.join(gold_dir, "{0}.{1}.{2}".format(prefix, NEW_SUFFIX, DEPS_SUFFIX)), "w")
+  test_deps.write(read_preface(gold_deps))
+
+  i = 1
+  while True:
+    raw, pos, stagged, deps = next_single(gold_raw), next_single(gold_pos), next_single(gold_stagged), next_deps(gold_deps)
+    if not raw and not pos and not stagged and (not deps or len(deps) == 1 and not deps[0]):
+      break
+    if i in fails:
+      print >> sys.stderr, "removing sentence {0}".format(i)
+    else:
+      test_raw.write(raw)
+      test_pos.write(pos)
+      test_stagged.write(stagged)
+      test_deps.writelines(deps)
+    i += 1
+
+if __name__ == "__main__":
+  if len(sys.argv) not in (3,4):
+    die("""usage: create_nofail_data [-c] gold_dir prefix
+where:
+  -c uses the existing set (otherwise pass in fail sentence indices via stdin)
+  gold_dir is the location of the gold files
+  prefix is the prefix to use (e.g. wsj00)""")
+  if sys.argv[1] == "-c":
+    main(sys.argv[2], sys.argv[3], cached=True)
+  else:
+    main(*sys.argv[1:])

@@ -1,0 +1,45 @@
+#!/bin/bash
+
+source src/scripts/ccg/cl07_common
+
+SUPER=$WORK/pos_as_super_sigma_0.811
+
+TABLE=$OUT/table4_pos_as_super
+
+mkdir -p $TABLE
+
+cat /dev/null > $TABLE/log
+cat /dev/null > $TABLE/results
+
+function run(){
+  SEC=$1;
+  BETA=$2;
+  K=$3;
+  OTHER=$4;
+
+  GOUT=$TABLE/$SEC.gold.$BETA.$K
+  AOUT=$TABLE/$SEC.auto.$BETA.$K
+
+  echo "super tagging WSJ $SEC with pos_as_supertagger beta=$BETA k=$K" | tee -a $TABLE/log
+  $BIN/mpos --model $SUPER --input $GOLD/wsj$SEC.raw --output $GOUT \
+    --beta $BETA --dict_cutoff $K $OTHER 2>> $TABLE/log
+
+  echo "evaluating super tagged WSJ $DATA set" | tee -a $TABLE/log
+  $SCRIPTS/evalmulti_pos_as_super $GOLD/wsj$SEC.stagged $SUPER $GOUT > $GOUT.eval
+
+}
+
+# this first one is needed for numbers quoted in the text
+
+run 00 0.140 20
+run 00 0.075 20
+run 00 0.030 20
+run 00 0.020 20
+run 00 0.008 150
+
+for i in 0.140.20 0.075.20 0.030.20 0.020.20 0.008.150; do
+  NCATS=`grep '^ncats per word' $TABLE/00.gold.$i.eval | sed 's/ncats per word =//'`
+  GACCW=`grep '^ccg /w' $TABLE/00.gold.$i.eval | sed 's|ccg /w = ||; s/%.*//'`
+  GACCS=`grep '^ccg /s' $TABLE/00.gold.$i.eval | sed 's|ccg /s = ||; s/%.*//'`
+  echo $i $NCATS $GACCW $GACCS | tee -a $TABLE/results
+done
