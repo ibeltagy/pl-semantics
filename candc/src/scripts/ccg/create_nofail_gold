@@ -1,0 +1,25 @@
+#!/bin/bash
+
+if [ ! $# == 1 ]; then
+  (
+    echo "extract_failures: incorrect number of command line arguments"
+    echo "usage: create_data <work>"
+    echo "where: <work> is where the data should be stored and the cl07 directory may be found"
+  ) > /dev/stderr;
+    exit 1;
+fi
+
+WORK=$1
+CL07=$WORK/cl07
+GOLD=$WORK/gold
+SCRIPTS=src/scripts/ccg
+
+#cat $CL07/table7/*model_derivs_rev.log \
+  #$CL07/table7/*model_hybrid.log \
+  #$CL07/table7_gold/*model_derivs_rev.log \
+  #$CL07/table7_oracle_super/*model_derivs_rev.log \
+  #$CL07/table7_oracle_kbest/*model_derivs_rev.log \
+  #$CL07/table7_oracle_kbest/*model_hybrid.log | \
+  #awk '/(failed|exception) / { failed[$1]++ } END { for (i in failed) print i; }' | sort -n | \
+  #python $SCRIPTS/filter_failures $GOLD wsj00
+python $SCRIPTS/filter_failures -c $GOLD wsj00

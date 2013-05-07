@@ -1,0 +1,90 @@
+#!/bin/bash
+
+SET=$1
+RTE=working/rte/${SET}
+
+if [ "${SET}" = "" ]; then
+    echo "Usage: _evalRTE <RTESET>"
+    echo "Example: _evalRTE rte3d"
+    exit 1
+elif [ -d ${RTE} ]; then 
+    echo "Checking directory: ${RTE}"
+else
+    echo "Not a directory: ${RTE}"
+    echo "Usage: _evalRTE <RTESET>"
+    echo "Example: _evalRTE rte3d"
+    exit 1
+fi
+
+for i in `ls ${RTE}/ | sort -n`; do
+    if [ -f ${RTE}/$i/prediction.txt ]; then 
+	echo "$i `cat ${RTE}/$i/prediction.txt` `cat ${RTE}/$i/gold.txt`"
+    fi
+done | cut -d" " -f2- | sort | uniq -c | sort -n | sort -k2
+
+for i in `ls ${RTE}/ | sort -n`; do
+    if [ -f ${RTE}/$i/prediction.txt ]; then 
+	echo "$i `cat ${RTE}/$i/prediction.txt` `cat ${RTE}/$i/gold.txt`"
+    fi
+done | cut -d" " -f2- > working/rte.results
+
+count()
+{
+    cat working/rte.results | grep "$1" | wc -l
+}
+
+
+printacc()
+{
+   echo "======== ACCURACY ========="   
+   echo -n "Accuracy $1 ($2/$3): 0."
+   echo "$(((1000*$2)/($2+$3)))"
+
+}
+
+accuracy()
+{
+    REPROOF=`count "proof) ent"`
+    WEPROOF=`count "proof) inf"`
+    printacc "proof" $REPROOF $WEPROOF
+
+    REMODEL=`count "entailed (model novelty) ent"`
+    RIMODEL=`count "informative (model novelty) inf"`
+    RMODEL=$(($REMODEL+$RIMODEL))
+    WEMODEL=`count "entailed (model novelty) inf"`
+    WIMODEL=`count "informative (model novelty) ent"`
+    WMODEL=$(($WEMODEL+$WIMODEL))
+    printacc "models" $RMODEL $WMODEL
+
+    REWORDNET=`count "entailed (wordnet novelty) ent"`
+    RIWORDNET=`count "informative (wordnet novelty) inf"`
+    RWORDNET=$(($REWORDNET+$RIWORDNET))
+    WIWORDNET=`count "informative (wordnet novelty) ent"`
+    WEWORDNET=`count "entailed (wordnet novelty) inf"`
+    WWORDNET=$(($WIWORDNET+$WEWORDNET))
+    printacc "wordnet" $RWORDNET $WWORDNET
+
+    REOVERLAP=`count "entailed (word overlap) ent"`
+    RIOVERLAP=`count "informative (word overlap) inf"`
+    ROVERLAP=$(($REOVERLAP+$RIOVERLAP))
+    WIOVERLAP=`count "informative (word overlap) ent"`
+    WEOVERLAP=`count "entailed (word overlap) inf"`
+    WOVERLAP=$(($WIOVERLAP+$WEOVERLAP))
+    printacc "overlap" $ROVERLAP $WOVERLAP
+
+    RIGHT=$(($RMODEL+$RWORDNET+$REPROOF+$ROVERLAP))
+    WRONG=$(($WMODEL+$WWORDNET+$WEPROOF+$WOVERLAP))
+    printacc "OVERALL" $RIGHT $WRONG
+
+}
+
+
+cleanup()
+{
+    rm -f working/rte.results
+}
+
+accuracy
+cleanup
+
+exit 0

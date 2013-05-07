@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+
+import os
+import sys
+
+CLOSED_CLASSES = set([
+  'CC',
+  'DT',
+  'EX',
+  'IN',
+  'MD'
+  'PDT',
+  'POS',
+  'PRP',
+  'PRP$',
+  'RP',
+  'TO',
+  'WDT',
+  'WP',
+  'WP$',
+  ';',
+  ',',
+  ':',
+  ',',
+  'RRB',
+  'LRB',
+  ])
+
+if __name__ == "__main__":
+
+  if len(sys.argv) != 2:
+    print >>sys.stderr, "Usage: %s <work>" % sys.argv[0]
+    sys.exit()
+
+  in_preface = True
+  preface = ""
+  allowed = set()
+  WORK = sys.argv[1]
+  POSDICT = os.path.join(WORK, "super", "posdict")
+
+  for line in open(POSDICT):
+    if in_preface:
+      preface += line
+      if not line.strip():
+        in_preface = False
+      continue
+    line = line.strip()
+    if line and not line.startswith("#"):
+      pos, tag, freq = line.split()
+      if pos not in CLOSED_CLASSES and int(freq) >= 10:
+        allowed.add(tag)
+
+  print preface,
+  for tag in sorted(allowed):
+    print tag

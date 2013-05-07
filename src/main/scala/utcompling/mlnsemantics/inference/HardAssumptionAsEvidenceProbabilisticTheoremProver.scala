@@ -66,6 +66,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
   
   private def renameVars(input: FolExpression): FolExpression = {
     input match {
+    case FolParseExpression(exps) => FolParseExpression( exps.map (e=> ( renameVars(e._1), e._2)) ) ;
    	case FolExistsExpression(variable, term) => FolExistsExpression (variable, renameVars(term)) ;
    	case FolAllExpression(variable, term) => FolAllExpression (variable, renameVars(term)) ;
    	case FolNegatedExpression(term) => FolNegatedExpression(renameVars(term))

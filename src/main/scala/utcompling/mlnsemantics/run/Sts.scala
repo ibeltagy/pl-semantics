@@ -91,6 +91,7 @@ import dhg.depparse._
  * -irLvl 0 1 (2)             //infernec rules: 0)no infernece rules, 2)word-wise infernec rules, 3)words and phrases infenrec rules
  * -logic dep (box)           //get logical form from Boxer or Dependency parse
  * -kbest 3                    //number of parses. Default: 1
+ * -task sts					//sts, or rte. Default: sts
  */
 
 
@@ -255,11 +256,14 @@ object Sts {
           
           val ttp =
             new TextualTheoremProver( //1
-              logicFormSource,
-              new MergeSameVarPredProbabilisticTheoremProver(
+              logicFormSource,                   //TODO 1: probably, I need to add a step to rename 
+              									//either variables, or predicates or both.  
+              									//THe rest of the code depends on what I am doing here
+             new DoMultipleParsesTheoremProver( //rename variables and predicates+remove extra parses if any.
+              new MergeSameVarPredProbabilisticTheoremProver( //TODO 2: do not merge vars of different parses
                 //new FindEventsProbabilisticTheoremProver(
 	              new GetPredicatesDeclarationsProbabilisticTheoremProver(
-		              new InferenceRuleInjectingProbabilisticTheoremProver( //2
+		              new InferenceRuleInjectingProbabilisticTheoremProver( //2 //TODO 3: all pairs ?? 
 		                wordnet,
 		                words => BowVectorSpace(vsFileMod, x => words(x) && allLemmas(x)),
 		                new SameLemmaHardClauseRuleWeighter(
@@ -273,11 +277,11 @@ object Sts {
 		                            new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(
 		                              new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))))).fol
 		                  },
-		                	new PositiveEqEliminatingProbabilisticTheoremProver(
-		                          new FromEntToEqvProbabilisticTheoremProver(   
+		                	new PositiveEqEliminatingProbabilisticTheoremProver(//TODO 4: list of parses
+		                          new FromEntToEqvProbabilisticTheoremProver( //TODO 5: ANDing goals is wrong  
 		                    		  new ExistentialEliminatingProbabilisticTheoremProver(
-		                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver(
-		                    						  AlchemyTheoremProver.findBinary())))))))))
+		                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver(//TODO 6: how to generate evidences ?
+		                    						  AlchemyTheoremProver.findBinary())))))))))) //TODO 7: how to generate MLN ?
 
           val p = ttp.prove(sepTokens(txt), sepTokens(hyp))
           println("%s  [actual: %s, gold: %s]".format(p, probOfEnt2simScore(p.get), goldSim))

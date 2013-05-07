@@ -6,6 +6,7 @@ import utcompling.scalalogic.fol.expression.FolExpression
 import scala.collection.mutable.ListBuffer
 import utcompling.scalalogic.util.StringUtils
 import utcompling.scalalogic.fol.expression.FolVariableExpression
+import utcompling.scalalogic.fol.expression.FolParseExpression
 
 
 case class DrtParseExpression(exps: List[(DrtExpression, Double)])
@@ -14,15 +15,17 @@ case class DrtParseExpression(exps: List[(DrtExpression, Double)])
     override def visit[S](function: DrtExpression => S, combinator: List[S] => S) =
         combinator(this.exps.map(  p=> function(p._1) ))
 
-    override def visitStructured[S](function: DrtExpression => S, combinator: List[Any] => S) =
-        combinator(List( this.exps.map(  p=>(function(p._1), p._2)   ) ))
+    //override def visitStructured[S](function: DrtExpression => S, combinator: List[Any] => S) =
+      //combinator(this.exps.map(  p=> function(p._1) ))
+        //combinator(List( this.exps.map(  p=>(function(p._1), p._2)   ) ))
 
     override def fol(): FolExpression = {
-      return this.exps.map(_._1.fol).reduceLeft(_ & _)
+      return FolParseExpression(this.exps.map(e=>(e._1.fol, e._2)))
+      
     }
 
     override def _folModal(world: Variable): FolExpression = {
-      return this.exps.map(_._1._folModal(world)).reduceLeft(_ & _)
+      return FolParseExpression(this.exps.map(e=>(e._1._folModal(world), e._2))) 
     }
     
     override def getRefs(recursive: Boolean = false) = 

@@ -27,6 +27,7 @@ class ExistentialEliminatingProbabilisticTheoremProver(
 
     def go(e: FolExpression): FolExpression = {
       e match {
+        case FolParseExpression(exps) => FolParseExpression( exps.map(e=> (go(e._1) , e._2) ) )
         case FolExistsExpression(v, term) =>
           val newV = v.name//.toUpperCase
           val typ = v.name.substring(0, 2) match { 

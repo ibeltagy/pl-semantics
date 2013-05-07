@@ -1,0 +1,83 @@
+#!/bin/bash
+
+source src/scripts/ccg/cl07_common
+
+TABLE=$OUT/table7_tagdict_insert
+
+mkdir -p $TABLE
+
+cat /dev/null > $TABLE/log
+cat /dev/null > $TABLE/results
+
+echo "POS tagging development set" | tee -a $TABLE/log
+
+$BIN/pos --model $POS --input $GOLD/wsj00.stagged --ifmt "%w|%0|%1 \n" --ofmt "%w|%p|%1 \n" --output $TABLE/wsj00.stagged 2>> $TABLE/log
+$BIN/pos --model $POS --input $GOLD/wsj00.nofail.stagged --ifmt "%w|%0|%1 \n" --ofmt "%w|%p|%1 \n" --output $TABLE/wsj00.nofail.stagged 2>> $TABLE/log
+
+echo
+
+function run(){
+  MODEL=$1
+  DECODER=$2
+  SUFFIX=$3
+  OTHER=$4
+
+  WSJ00=wsj00
+  GOLD_PREFIX=00.g.$MODEL
+  AUTO_PREFIX=00.a.$MODEL
+  if [[ $SUFFIX != "" ]]; then
+    WSJ00=wsj00.$SUFFIX
+    GOLD_PREFIX=00.g.$SUFFIX.$MODEL
+    AUTO_PREFIX=00.a.$SUFFIX.$MODEL
+  fi
+
+  echo "parsing development set with $MODEL on gold POS" | tee -a $TABLE/log
+
+  $BIN/parser --parser $WORK/$MODEL --super $SUPER --input $GOLD/$WSJ00.stagged \
+    --prefix $TABLE/$GOLD_PREFIX --decoder $DECODER --printer deps \
+    --force_words false --parser-maxsupercats $MAXCATS \
+    --betas $BETA --dict_cutoffs $CUTOFF --ifmt "%w|%p|%q \n" \
+    --super-forward_beam_ratio $FWDBEAM \
+    $OTHER
+
+  echo "evaluating development set" | tee -a $TABLE/log
+
+  $SCRIPTS/evaluate $GOLD/$WSJ00.stagged $GOLD/$WSJ00.ccgbank_deps $TABLE/$GOLD_PREFIX.out \
+    > $TABLE/$GOLD_PREFIX.eval 2> $TABLE/$GOLD_PREFIX.eval.log
+
+  echo "parsing development set with $MODEL on auto POS" | tee -a $TABLE/log
+
+  $BIN/parser --parser $WORK/$MODEL --super $SUPER --input $TABLE/$WSJ00.stagged \
+    --prefix $TABLE/$AUTO_PREFIX --decoder $DECODER --printer deps \
+    --force_words false  --parser-maxsupercats $MAXCATS \
+    --betas $BETA --dict_cutoffs $CUTOFF --ifmt "%w|%p|%q \n" \
+    --super-forward_beam_ratio $FWDBEAM \
+    $OTHER
+
+  echo "evaluating development set" | tee -a $TABLE/log
+
+  $SCRIPTS/evaluate $GOLD/$WSJ00.stagged $GOLD/$WSJ00.ccgbank_deps $TABLE/$AUTO_PREFIX.out \
+    > $TABLE/$AUTO_PREFIX.eval 2> $TABLE/$AUTO_PREFIX.eval.log
+
+  LP=`grep '^lp:' $TABLE/$GOLD_PREFIX.eval | sed 's/^lp: *//; s/%.*//'`
+  LR=`grep '^lr:' $TABLE/$GOLD_PREFIX.eval | sed 's/^lr: *//; s/%.*//'`
+  LF=`grep '^lf:' $TABLE/$GOLD_PREFIX.eval | sed 's/^lf: *//; s/%.*//'`
+
+  ALF=`grep '^lf:' $TABLE/$AUTO_PREFIX.eval | sed 's/^lf: *//; s/%.*//'`
+  LSENT=`grep '^lsent:' $TABLE/$GOLD_PREFIX.eval | sed 's/^lsent: *//; s/%.*//'`
+
+  UP=`grep '^up:' $TABLE/$GOLD_PREFIX.eval | sed 's/^up: *//; s/%.*//'`
+  UR=`grep '^ur:' $TABLE/$GOLD_PREFIX.eval | sed 's/^ur: *//; s/%.*//'`
+  UF=`grep '^uf:' $TABLE/$GOLD_PREFIX.eval | sed 's/^uf: *//; s/%.*//'`
+
+  CATS=`grep '^cats:' $TABLE/$GOLD_PREFIX.eval | sed 's/^cats: *//; s/%.*//'`
+
+  COVER=`grep '^cover:' $TABLE/$GOLD_PREFIX.eval | sed 's/^cover: *//; s/%.*//'`
+
+  echo "$MODEL $LP $LR $LF $ALF $LSENT $UP $UR $UF $CATS $COVER suffix=$SUFFIX" | tee -a $TABLE/results
+}
+
+run $DERIVS_REV derivs "" ""
+run $HYBRID deps "" ""
+run $DERIVS_REV derivs nofail ""
+run $HYBRID deps nofail ""
