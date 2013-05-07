@@ -13,3 +13,4 @@ scala-logic/.project
 scala-logic/.cache
 tmp/
 resources/sts
+candc/bin/
