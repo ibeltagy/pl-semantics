@@ -1,5 +1,9 @@
 #!/bin/bash
 
+export CANDCHOME=candc/bin
+export ALCHEMYHOME=/u/beltagy/workspace/deft/alchemy-2/bin
+export WORDNETHOME=resources/wordnet
+
 
 #export CANDCHOME="/u/beltagy/workspace/deft/candcLatest/bin"
 #export ALCHEMYHOME="/u/beltagy/workspace/deft/alchemy-2/bin"
