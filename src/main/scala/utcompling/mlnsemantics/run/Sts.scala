@@ -88,7 +88,7 @@ import dhg.depparse._
  * -varBind true, (false)     //with or without variable binding 
  * -timeout 0  				  //Timeout integerInMilliseconds  
  * -peInf true (false)          //include or execlude patient and agent infernece rules when irLvl = 2
- * -irLvl 0 1 (2)             //infernec rules: 0)no infernece rules, 2)word-wise infernec rules, 3)words and phrases infenrec rules
+ * -irLvl 0 1 (2)             //infernec rules: 0)no infernece rules, 1)word-wise infernec rules, 2)words and phrases infenrec rules
  * -logic dep (box)           //get logical form from Boxer or Dependency parse
  * -kbest 3                    //number of parses. Default: 1
  * -task sts					//sts, or rte. Default: sts
