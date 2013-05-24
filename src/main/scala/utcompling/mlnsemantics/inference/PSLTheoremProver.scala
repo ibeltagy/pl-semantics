@@ -119,15 +119,15 @@ class PSLTheoremProver(
       evidence,
       goal)
       
-    val evidenceFile = makeEvidenceFile(evidence)
-    val resultFile = FileUtils.mktemp(suffix = ".res")
+    //val evidenceFile = makeEvidenceFile(evidence)
+    //val resultFile = FileUtils.mktemp(suffix = ".res")
 
-    val args = List( "-q", "entailment_h,entailment_t")
+    //val args = List( "-q", "entailment_h,entailment_t")
 
     try 
     {
-    	Process("mvn", Seq("compile", "-f", "psl/pom.xml")) ! (ProcessLogger(System.err.println(_), System.err.println(_)))
-    	Process("mvn", Seq("exec:java", "-Dexec.mainClass=psl.App", "-f", "psl/pom.xml")) ! (ProcessLogger(System.err.println(_), System.err.println(_)))
+    	//Process("mvn", Seq("compile", "-f", "psl/pom.xml")) ! (ProcessLogger(System.err.println(_), System.err.println(_)))
+    	//Process("mvn", Seq("exec:java", "-Dexec.mainClass=psl.App", "-f", "psl/pom.xml")) ! (ProcessLogger(System.err.println(_), System.err.println(_)))
     	return Some(-1.0);
     	//callAlchemy(mlnFile, evidenceFile, resultFile, args) match {
 	    //  case Some(t) => Some(t.toDouble)
@@ -155,7 +155,8 @@ class PSLTheoremProver(
     evidence: List[FolExpression],
     goal: FolExpression) = {
     
-    val pslFile = new java.io.PrintWriter(new File("psl/src/main/java/psl/App.groovy"))
+    PSLTheoremProver.pairIndx = PSLTheoremProver.pairIndx + 1;
+    val pslFile = new java.io.PrintWriter(new File("psl/src/main/java/psl/%s.groovy".format(PSLTheoremProver.pairIndx)))
     try { 
 
       //=================Headers      
@@ -170,7 +171,7 @@ class PSLTheoremProver(
 			"import edu.umd.cs.psl.ui.functions.textsimilarity.*;\n" +
 			"println \"Hellooooooooooooo\"\n" +
 			"PSLModel m = new PSLModel(this);\n" +
-			"m.add function: \"sim\" , name1: Text, name2: Text, implementation: new Sim()\n" +
+			"m.add function: \"sim\" , name1: Text, name2: Text, implementation: new Sim%s()\n".format(PSLTheoremProver.pairIndx) +
 			"m.add predicate: \"all\", arg1: Entity\n");
 
        //=================Predicate declarations    	
@@ -233,9 +234,14 @@ class PSLTheoremProver(
 		              
 		              rhsAnds.foreach(rhsAnd => {
 		            	  val rhsVar = findAllVars(rhsAnd)
+		            	  val missingVars = (rhsVar &~ lhsVars).toSet;
+		            	  var extendedLhsString = lhsString;
+		            	  missingVars.foreach(v => {
+		            	     extendedLhsString = "(%s & all(%s))".format(extendedLhsString, v.name.toUpperCase())
+		            	  })
 		            	  val rhsString = convert(rhsAnd)
 		            	  pslFile.writeLine("m.add rule: (%s & sim(\"%s\", \"%s\")) >> %s, constraint: true"
-		            	      .format(lhsString, lhsSimString, rhsSimString, rhsString))
+		            	      .format(extendedLhsString, lhsSimString, rhsSimString, rhsString))
 		              })	                  
 	                }
 	                case _ => throw new RuntimeException("unsupported infernece rule format"); 
@@ -253,7 +259,7 @@ class PSLTheoremProver(
        
        //=================Similarity function
         pslFile.writeLine(
-		"class Sim implements AttributeSimilarityFunction {\n" +
+		"class Sim%s implements AttributeSimilarityFunction {\n".format(PSLTheoremProver.pairIndx) +
 				"private HashMap sim;\n" +
 				"@Override\n" +
 				"public double similarity(String a, String b) {\n" +
@@ -262,26 +268,46 @@ class PSLTheoremProver(
 					"if (score == null)\n" +
 						"throw new Exception(\"score for \" + q + \" not found\")\n" +
 					"else return score.value; }	\n" +
-				"Sim (){\n" +
-        			"sim = new HashMap<String, Double>();\n")
+				"Sim%s (){\n".format(PSLTheoremProver.pairIndx) +
+        			"sim = new HashMap<String, Double>();\n" +
+        			"BufferedReader fr =  new BufferedReader(new FileReader(\"sim/%s.txt\"))\n".format(PSLTheoremProver.pairIndx) +
+        			"String l;\n" +
+        			"while((l = fr.readLine()) != null){\n" +
+        				"String[] splits = l.split(\",\");\n" +
+        				"sim.put(splits[0], splits[1].toDouble());\n" +
+        				"}}}")
       
-       similarityTable.foreach(simEntry =>{
-    	   pslFile.writeLine("sim.put(\"%s\", %s)".format(simEntry._1, simEntry._2))
+         val simFile = new java.io.PrintWriter(new File("psl/sim/%s.txt".format(PSLTheoremProver.pairIndx)))
+         similarityTable.foreach(simEntry =>{
+    	   simFile.writeLine("%s,%s".format(simEntry._1, simEntry._2))
+    	 simFile.close();
+    	   
        })
-       pslFile.writeLine("}}");
 
        //=================Evidences
-        pslFile.writeLine(
-		"class Sim implements AttributeSimilarityFunction {\n" +
+        pslFile.write(
+			"println m;\n" +
+			"DataStore data = new RelationalDataStore(m)\n" +
+			"data.setup db : DatabaseDriver.H2\n" +
+			"def ")
 		
-	   //evidence.foreach {
-	    //    case e @ FolAtom(pred, args @ _*) => f.write(convert(e) + "\n")
-	     //   case e => throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
-	    //}
+	     evidence.foreach {
+	        case e @ FolAtom(pred, args @ _*) => 
+	          		pslFile.writeLine(
+	          		    "insert = data.getInserter(%s)\n".format(pred.name) +
+	          			"insert.insert(%s)".format(args.map(a => {
+	          					a.name.substring(2).toInt+1000*min(a.name.charAt(0).toLower - 103, 2)
+	          			}).mkString(", ")));
+	        case e => throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
+	    }
        //=================Query
-       
-       pslFile.close();
-    	
+		pslFile.writeLine(
+		    "ConfigManager cm = ConfigManager.getManager();\n" +
+		    "ConfigBundle exampleBundle = cm.getBundle(\"example\");\n" +
+		    "def result = m.mapInference(data.getDatabase(), exampleBundle);\n" +
+		    "result.printAtoms(entailment_h, false)")
+    
+	   pslFile.close();
     }
     "hi";
     	/*
