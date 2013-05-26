@@ -156,11 +156,12 @@ class PSLTheoremProver(
     goal: FolExpression) = {
     
     PSLTheoremProver.pairIndx = PSLTheoremProver.pairIndx + 1;
-    val pslFile = new java.io.PrintWriter(new File("psl/src/main/java/psl/%s.groovy".format(PSLTheoremProver.pairIndx)))
+    val pslFile = new java.io.PrintWriter(new File("psl/run/%s.psl".format(PSLTheoremProver.pairIndx)))
     try { 
 
+        				
       //=================Headers      
-    	pslFile.write(
+    	/*pslFile.write(
 			"package psl;\n" +
 			"import edu.umd.cs.psl.groovy.*;\n" +
 			"import edu.umd.cs.psl.database.RDBMS.DatabaseDriver;\n" +
@@ -169,25 +170,56 @@ class PSLTheoremProver(
 			"import edu.umd.cs.psl.config.*;\n" +
 			"import edu.umd.cs.psl.model.predicate.type.*;\n" +
 			"import edu.umd.cs.psl.ui.functions.textsimilarity.*;\n" +
-			"println \"Hellooooooooooooo\"\n" +
-			"PSLModel m = new PSLModel(this);\n" +
-			"m.add function: \"sim\" , name1: Text, name2: Text, implementation: new Sim%s()\n".format(PSLTheoremProver.pairIndx) +
-			"m.add predicate: \"all\", arg1: Entity\n");
+			"println \"Hellooooooooooooo\";\n" );
+		*/
 
-       //=================Predicate declarations    	
+    	//=================Similarity function
+        /*pslFile.writeLine(
+		"class Sim%s implements AttributeSimilarityFunction {\n".format(PSLTheoremProver.pairIndx) +
+				"private HashMap sim;\n" +
+				"@Override\n" +
+				"public double similarity(String a, String b) {\n" +
+					"Double score = sim.get(a);\n" +
+					"if (score == null)\n" +
+						"throw new Exception(\"score for \" + a + \" not found\");\n" +
+					"else return score.value; }	\n" +
+				"Sim%s (){\n".format(PSLTheoremProver.pairIndx) +
+        			"sim = new HashMap<String, Double>();\n" +
+        			"BufferedReader fr =  new BufferedReader(new FileReader(\"sim/%s.txt\"));\n".format(PSLTheoremProver.pairIndx) +
+        			"String l;\n" +
+        			"while((l = fr.readLine()) != null){\n" +
+        				"String[] splits = l.split(\",\");\n" +
+        				"sim.put(splits[0], splits[1].toDouble());\n" +
+        				"}}}")
+        */
+
+        //=================begining of rules
+        //pslFile.write(
+		//	"PSLModel m = new PSLModel(this);\n" +
+		//	"m.add function: \"sim\" , name1: Text, name2: Text, implementation: new Sim%s();\n".format(PSLTheoremProver.pairIndx) +
+		//	"m.add predicate: \"all\", arg1: Entity;\n");
+
+       //=================Predicate declarations
+      pslFile.writeLine("predicate,all,1")
 		declarationNames.foreach {
 			case (pred, varTypes) => {
-				pslFile.writeLine("m.add predicate: \"%s\", %s open: true".format(pred, varTypes.indices.map("arg" + _+": Entity, ").mkString(""))) 
+				//pslFile.writeLine("m.add predicate: \"%s\", %s open: true;".format(pred, varTypes.indices.map("arg" + _+": Entity, ").mkString("")))
+			  pslFile.writeLine("predicate,%s,%s".format(pred, varTypes.length))
 			}
     	}
        //=================Priors
 		declarationNames.foreach {
 			 //different priors for ent and other predicates
 		    //m.add Prior.Simple, on : ent, weight: 0.01
-			case ("entailment_h", varTypes) => pslFile.write("m.add Prior.Simple, on: %s, weight: 0.01\n".format("entailment_h"))
-			case ("entailment_t", varTypes) => pslFile.write("m.add Prior.Simple, on: %s, weight: 0.01\n".format("entailment_t"))
-			case ("entailment", varTypes) => pslFile.write("m.add Prior.Simple, on: %s, weight: 0.01\n".format("entailment"))
-			case (pred, varTypes) => pslFile.write("m.add Prior.Simple, on: %s, weight: 0.1\n".format(pred))
+
+		  //case ("entailment_h", varTypes) => pslFile.write("m.add Prior.Simple, on: %s, weight: 0.01;\n".format("entailment_h"))
+		  //case ("entailment_t", varTypes) => pslFile.write("m.add Prior.Simple, on: %s, weight: 0.01;\n".format("entailment_t"))
+		  //case ("entailment", varTypes) => pslFile.write("m.add Prior.Simple, on: %s, weight: 0.01;\n".format("entailment"))
+		  //case (pred, varTypes) => pslFile.write("m.add Prior.Simple, on: %s, weight: 0.1;\n".format(pred))
+		    case ("entailment_h", varTypes) => pslFile.writeLine("prior,%s,0.01".format("entailment_h"))
+			case ("entailment_t", varTypes) => pslFile.writeLine("prior,%s,0.01".format("entailment_t"))
+			case ("entailment", varTypes) => pslFile.writeLine("prior,%s,0.01".format("entailment"))
+			case (pred, varTypes) => pslFile.writeLine("prior,%s,0.1".format(pred))
 		}
 		
        //=================Inference rules		
@@ -197,6 +229,7 @@ class PSLTheoremProver(
 		}
 		
 		var similarityTable: List[(String, Double)] = List(); 
+		var lastSimilarityID:Integer = 0;
 		assumptions
         .flatMap {
           case e @ SoftWeightedExpression(folEx, weight) =>
@@ -230,18 +263,22 @@ class PSLTheoremProver(
 		              	case _ =>None
 		              }.mkString("&")
 		              
-		              similarityTable ::= (lhsSimString+"#"+rhsSimString, usedWeight) ;
+		              //similarityTable ::= (lhsSimString+"#"+rhsSimString, usedWeight) ;
+		              lastSimilarityID = lastSimilarityID+1;
+		              similarityTable ::= (lastSimilarityID.toString(), usedWeight) ;
 		              
 		              rhsAnds.foreach(rhsAnd => {
 		            	  val rhsVar = findAllVars(rhsAnd)
 		            	  val missingVars = (rhsVar &~ lhsVars).toSet;
 		            	  var extendedLhsString = lhsString;
 		            	  missingVars.foreach(v => {
-		            	     extendedLhsString = "(%s & all(%s))".format(extendedLhsString, v.name.toUpperCase())
+		            	     //extendedLhsString = "(%s & all(%s))".format(extendedLhsString, v.name.toUpperCase())
+		            	    extendedLhsString = "%s&all(%s)".format(extendedLhsString, v.name.toUpperCase())
 		            	  })
 		            	  val rhsString = convert(rhsAnd)
-		            	  pslFile.writeLine("m.add rule: (%s & sim(\"%s\", \"%s\")) >> %s, constraint: true"
-		            	      .format(extendedLhsString, lhsSimString, rhsSimString, rhsString))
+		            	  //pslFile.writeLine("m.add rule: (%s & sim(\"%s\", \"%s\")) >> %s, constraint: true;"
+		            	  pslFile.writeLine("rule,%s&sim(\"%s\",\"%s\")>>%s"
+		            	      .format(extendedLhsString, lastSimilarityID.toString(), "", rhsString))
 		              })	                  
 	                }
 	                case _ => throw new RuntimeException("unsupported infernece rule format"); 
@@ -253,59 +290,46 @@ class PSLTheoremProver(
         
        //=================Goal
        task match {
-      	case "rte" => pslFile.writeLine("m.add rule: %s, constraint: true".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
-      	case "sts" => pslFile.writeLine("m.add rule: %s, constraint: true".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
+      	//case "rte" => pslFile.writeLine("m.add rule: %s, constraint: true;".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
+         case "rte" => pslFile.writeLine("rule,%s".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
+      	//case "sts" => pslFile.writeLine("m.add rule: %s, constraint: true;".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
+         case "sts" => pslFile.writeLine("rule,%s".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
        }
        
-       //=================Similarity function
-        pslFile.writeLine(
-		"class Sim%s implements AttributeSimilarityFunction {\n".format(PSLTheoremProver.pairIndx) +
-				"private HashMap sim;\n" +
-				"@Override\n" +
-				"public double similarity(String a, String b) {\n" +
-					"String q = a + \"#\" + b;\n" +
-					"Double score = sim.get(q);\n" +
-					"if (score == null)\n" +
-						"throw new Exception(\"score for \" + q + \" not found\")\n" +
-					"else return score.value; }	\n" +
-				"Sim%s (){\n".format(PSLTheoremProver.pairIndx) +
-        			"sim = new HashMap<String, Double>();\n" +
-        			"BufferedReader fr =  new BufferedReader(new FileReader(\"sim/%s.txt\"))\n".format(PSLTheoremProver.pairIndx) +
-        			"String l;\n" +
-        			"while((l = fr.readLine()) != null){\n" +
-        				"String[] splits = l.split(\",\");\n" +
-        				"sim.put(splits[0], splits[1].toDouble());\n" +
-        				"}}}")
-      
-         val simFile = new java.io.PrintWriter(new File("psl/sim/%s.txt".format(PSLTheoremProver.pairIndx)))
+
+       //=================Similarity File      
+         val simFile = new java.io.PrintWriter(new File("psl/run/%s.sim".format(PSLTheoremProver.pairIndx)))
          similarityTable.foreach(simEntry =>{
-    	   simFile.writeLine("%s,%s".format(simEntry._1, simEntry._2))
-    	 simFile.close();
+    	   simFile.write("%s,%s\n".format(simEntry._1, simEntry._2))
+    	})
+    	simFile.close();
     	   
-       })
+       
 
        //=================Evidences
-        pslFile.write(
-			"println m;\n" +
-			"DataStore data = new RelationalDataStore(m)\n" +
-			"data.setup db : DatabaseDriver.H2\n" +
-			"def ")
+       //pslFile.write(
+	   //	"DataStore data = new RelationalDataStore(m);\n" +
+	   //	"data.setup db : DatabaseDriver.H2;\n");
 		
 	     evidence.foreach {
 	        case e @ FolAtom(pred, args @ _*) => 
 	          		pslFile.writeLine(
-	          		    "insert = data.getInserter(%s)\n".format(pred.name) +
-	          			"insert.insert(%s)".format(args.map(a => {
+	          		    //"data.getInserter(%s).insert(%s);".format(pred.name, args.map(a => {
+	          		    "data,%s,%s".format(pred.name, args.map(a => {
 	          					a.name.substring(2).toInt+1000*min(a.name.charAt(0).toLower - 103, 2)
-	          			}).mkString(", ")));
+	          			}).mkString(","))
+	          			);
 	        case e => throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
 	    }
        //=================Query
 		pslFile.writeLine(
-		    "ConfigManager cm = ConfigManager.getManager();\n" +
-		    "ConfigBundle exampleBundle = cm.getBundle(\"example\");\n" +
-		    "def result = m.mapInference(data.getDatabase(), exampleBundle);\n" +
-		    "result.printAtoms(entailment_h, false)")
+		    //"ConfigManager cm = ConfigManager.getManager();\n" +
+		    //"ConfigBundle exampleBundle = cm.getBundle(\"example\");\n" +
+		    //"def result = m.mapInference(data.getDatabase(), exampleBundle);\n" +
+
+		    //"def result = m.mapInference(data.getDatabase());\n" +
+		    //"result.printAtoms(entailment_h, false);")
+		    "query,entailment_h")
     
 	   pslFile.close();
     }
@@ -576,9 +600,11 @@ class PSLTheoremProver(
       case FolExistsExpression(variable, term) => "exist " + variable.name + " (" + _convert(term, bound + variable) + ")"
       case FolAllExpression(variable, term) => "(forall " + variable.name + " (" + _convert(term, bound + variable) + "))"
       case FolNegatedExpression(term) => "!(" + _convert(term, bound) + ")"
-      case FolAndExpression(first, second) => "(" + _convert(first, bound) + " & " + _convert(second, bound) + ")"
+      //case FolAndExpression(first, second) => "(" + _convert(first, bound) + " & " + _convert(second, bound) + ")"
+      case FolAndExpression(first, second) => _convert(first, bound) + "&" + _convert(second, bound) 
       case FolOrExpression(first, second) => "(" + _convert(first, bound) + " v " + _convert(second, bound) + ")"
-      case FolIfExpression(first, second) => "(" + _convert(first, bound) + " >> " + _convert(second, bound) + ")"
+      //case FolIfExpression(first, second) => "(" + _convert(first, bound) + " >> " + _convert(second, bound) + ")"
+      case FolIfExpression(first, second) =>  _convert(first, bound) + ">>" + _convert(second, bound) 
       case FolIffExpression(first, second) => "(" + _convert(first, bound) + " <=> " + _convert(second, bound) + ")"
       case FolEqualityExpression(first, second) =>
         	"(" + _convert(first, bound) + " = " + _convert(second, bound) + ")";	
