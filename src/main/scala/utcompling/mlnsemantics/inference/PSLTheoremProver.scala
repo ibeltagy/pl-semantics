@@ -141,12 +141,16 @@ class PSLTheoremProver(
     	//Process("mvn", Seq("exec:java", "-Dexec.mainClass=psl.TextInterface", "-f", "psl/pom.xml")) ! (ProcessLogger(System.err.println(_), System.err.println(_)))
     	//println (PSLTheoremProver.cp);
         var entailmentLine = ""
-        Process("java", Seq("-cp", PSLTheoremProver.cp, "psl.TextInterface", Sts.pairIndex.toString())) ! (ProcessLogger(l=>{
+        val exitcode = Process("java", Seq("-cp", PSLTheoremProver.cp, "psl.TextInterface", Sts.pairIndex.toString())) ! (ProcessLogger(l=>{
 	          System.out.println(l)
 	          if (l.startsWith("entailment"))
 	        	  	entailmentLine = l;
           }, System.err.println(_)))
-        
+        println ("exitcode = " + exitcode)
+        if (exitcode != 0){
+        	println("ERROR: PSL inference fails.")
+        	return Some(-1);
+        }
         if (entailmentLine == "")
         	return Some(0);
         else 
@@ -631,7 +635,14 @@ class PSLTheoremProver(
       }
          
       //case FolAndExpression(first, second) => "(" + _convert(first, bound) + " & " + _convert(second, bound) + ")"
-      case FolAndExpression(first, second) => _convert(first, bound) + "&" + _convert(second, bound) 
+      case FolAndExpression(first, second) => {
+        if (first.isInstanceOf[FolEqualityExpression] )
+    	  _convert(second, bound) 
+    	else if (second.isInstanceOf[FolEqualityExpression] )
+    	  _convert(first, bound)
+    	else
+    	  _convert(first, bound) + "&" + _convert(second, bound)
+      } 
       case FolOrExpression(first, second) => "(" + _convert(first, bound) + " v " + _convert(second, bound) + ")"
       //case FolIfExpression(first, second) => "(" + _convert(first, bound) + " >> " + _convert(second, bound) + ")"
       case FolIfExpression(first, second) =>  _convert(first, bound) + ">>" + _convert(second, bound) 

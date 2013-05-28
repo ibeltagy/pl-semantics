@@ -113,7 +113,9 @@ while(( l = fr.readLine()) != null){
 		println m
 		splits = l.split(",");
 		pred = predicates.get(splits[1])
-		def result = m.mapInference(data.getDatabase());
+		ConfigManager cm = ConfigManager.getManager();
+		ConfigBundle exampleBundle = cm.getBundle("example");
+		def result = m.mapInference(data.getDatabase(), exampleBundle)
 		result.printAtoms(pred, false);
 	}	
 }
