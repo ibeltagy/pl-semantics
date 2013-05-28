@@ -92,6 +92,8 @@ import dhg.depparse._
  * -logic dep (box)           //get logical form from Boxer or Dependency parse
  * -kbest 3                    //number of parses. Default: 1
  * -task sts					//sts, or rte. Default: sts
+ * -softLogic (mln) psl			//use PSL or MLN. Default: MLN
+ * -keepUniv false (true)		//keep univ quantifiers, or replace them with Exist. Default: true (keep them)
  */
 
 
@@ -104,7 +106,7 @@ object Sts {
    * [HANDELED: noImp] 86: many FORALLS. It takes forever
    * [HANDELED: noImp] 113: one long FORALLS. It takes forever
    * [HANDELED: noImp] 250: one long FORALLS. It takes forever
-   * [HANDELED: noImp] 361: one long FORALLS. It takes forever
+   * [HANDELED: noImp] 361: one long FORALLS. `It takes forever
    * [HANDELED:return 0.5] 459: Parsing failed
    * [HANDELED: cancel POS/NEG] 706: fails because of POS/NEG
    * [HANDELED:return 0.5] 941: Parsing failed
@@ -131,6 +133,8 @@ object Sts {
   val SomeRe = """Some\((.*)\)""".r
 
   val wordnet = new WordnetImpl()
+  
+  var pairIndex = 0;
 
   def main(args: Array[String]) {
     val (newArgs, optPairs) =
@@ -240,6 +244,7 @@ object Sts {
       def depParser = DepParser.load();
       val results =
         for (((((txt, hyp), boxPair), goldSim), i) <- (pairs zipSafe boxPairs zipSafe goldSims).zipWithIndex if includedPairs(i + 1)) yield {
+          Sts.pairIndex = i+1;
           println("=============\n  Pair %s\n=============".format(i + 1))
           println(txt)
           println(hyp)
@@ -252,6 +257,11 @@ object Sts {
           val logicFormSource: DiscourseInterpreter[BoxerExpression] = opts.get("-logic") match {
             case Some("dep") => new DependencyParsedBoxerDiscourseInterpreter(depParser);
             case _ => new PreparsedBoxerDiscourseInterpreter(boxPair, new PassthroughBoxerExpressionInterpreter());
+          }
+          
+          val softLogicTool: ProbabilisticTheoremProver[FolExpression] = opts.get("-softLogic") match {
+            case Some("psl") => new PSLTheoremProver()
+            case _ => AlchemyTheoremProver.findBinary();
           }
           
           val ttp =
@@ -281,7 +291,7 @@ object Sts {
 		                          new FromEntToEqvProbabilisticTheoremProver( //TODO 5: ANDing goals is wrong  
 		                    		  new ExistentialEliminatingProbabilisticTheoremProver(
 		                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver(//TODO 6: how to generate evidences ?
-		                    						  AlchemyTheoremProver.findBinary())))))))))) //TODO 7: how to generate MLN ?
+		                    						  softLogicTool)))))))))) //TODO 7: how to generate MLN ?
 
           val p = ttp.prove(sepTokens(txt), sepTokens(hyp))
           println("%s  [actual: %s, gold: %s]".format(p, probOfEnt2simScore(p.get), goldSim))

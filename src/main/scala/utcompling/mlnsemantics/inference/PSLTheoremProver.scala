@@ -20,13 +20,24 @@ import scala.sys.process.ProcessLogger
 import java.io.File
 
 class PSLTheoremProver(
-  override val binary: String,
-  prior: Double = -3,
-  var entWeight: Double = 1,
-  logBase: Double = E)
-  extends SubprocessCallable(binary)
-  with ProbabilisticTheoremProver[FolExpression] {
+  //override val binary: String,
+  //prior: Double = -3,
+  //var entWeight: Double = 1,
+  //logBase: Double = E
+  )
+  
+  extends ProbabilisticTheoremProver[FolExpression] {
 
+  if (PSLTheoremProver.cp == "")
+  {
+    var out = new StringBuilder
+	Process("cat", Seq("psl/cp.txt")) ! (ProcessLogger(out.append(_), System.err.println(_)))
+	PSLTheoremProver.cp = out.toString()
+  }
+  
+  val prior: Double = -3;
+  var entWeight: Double = 1;
+  
   type WeightedFolEx = WeightedExpression[FolExpression]
 
   private val LOG = LogFactory.getLog(classOf[PSLTheoremProver])
@@ -127,8 +138,19 @@ class PSLTheoremProver(
     try 
     {
     	//Process("mvn", Seq("compile", "-f", "psl/pom.xml")) ! (ProcessLogger(System.err.println(_), System.err.println(_)))
-    	//Process("mvn", Seq("exec:java", "-Dexec.mainClass=psl.App", "-f", "psl/pom.xml")) ! (ProcessLogger(System.err.println(_), System.err.println(_)))
-    	return Some(-1.0);
+    	//Process("mvn", Seq("exec:java", "-Dexec.mainClass=psl.TextInterface", "-f", "psl/pom.xml")) ! (ProcessLogger(System.err.println(_), System.err.println(_)))
+    	//println (PSLTheoremProver.cp);
+        var entailmentLine = ""
+        Process("java", Seq("-cp", PSLTheoremProver.cp, "psl.TextInterface", Sts.pairIndex.toString())) ! (ProcessLogger(l=>{
+	          System.out.println(l)
+	          if (l.startsWith("entailment"))
+	        	  	entailmentLine = l;
+          }, System.err.println(_)))
+        
+        if (entailmentLine == "")
+        	return Some(0);
+        else 
+        	return Some(entailmentLine.substring(18, entailmentLine.length()-1).toDouble);
     	//callAlchemy(mlnFile, evidenceFile, resultFile, args) match {
 	    //  case Some(t) => Some(t.toDouble)
 	    //  case _ => throw new RuntimeException("no valid output in the result file");
@@ -137,12 +159,13 @@ class PSLTheoremProver(
     {
     	case e: Exception =>{
     	  System.err.println (e);
-    	  if (varBind.get) //try again 
-    	  {
-			 println("backoff to dependency parse")
-    	    return this.prove(constants, declarations, evidence, assumptions, goal);
-    	  }
-    	  else return Some(-1.0);
+    	  //if (varBind.get) //try again 
+    	  //{
+			// println("backoff to dependency parse")
+    	   // return this.prove(constants, declarations, evidence, assumptions, goal);
+    	  //}
+    	  //else
+    	  return Some(-1.0);
     	}   				 
     }
     
@@ -155,8 +178,7 @@ class PSLTheoremProver(
     evidence: List[FolExpression],
     goal: FolExpression) = {
     
-    PSLTheoremProver.pairIndx = PSLTheoremProver.pairIndx + 1;
-    val pslFile = new java.io.PrintWriter(new File("psl/run/%s.psl".format(PSLTheoremProver.pairIndx)))
+    val pslFile = new java.io.PrintWriter(new File("psl/run/%s.psl".format(Sts.pairIndex)))
     try { 
 
         				
@@ -298,7 +320,7 @@ class PSLTheoremProver(
        
 
        //=================Similarity File      
-         val simFile = new java.io.PrintWriter(new File("psl/run/%s.sim".format(PSLTheoremProver.pairIndx)))
+         val simFile = new java.io.PrintWriter(new File("psl/run/%s.sim".format(Sts.pairIndex)))
          similarityTable.foreach(simEntry =>{
     	   simFile.write("%s,%s\n".format(simEntry._1, simEntry._2))
     	})
@@ -441,7 +463,7 @@ class PSLTheoremProver(
     tempFile
   }
 
-  private def callAlchemy(mln: String, evidence: String, result: String, args: List[String] = List()): Option[String] = {
+  /*private def callAlchemy(mln: String, evidence: String, result: String, args: List[String] = List()): Option[String] = {
     if (LOG.isDebugEnabled) {
       LOG.debug("mln file:\n" + readLines(mln).mkString("\n").trim)
       LOG.debug("evidence file:\n" + readLines(evidence).mkString("\n").trim)
@@ -493,6 +515,7 @@ class PSLTheoremProver(
       case _ => throw new RuntimeException("Failed with exitcode=%s.\n%s\n%s".format(exitcode, stdout, stderr))
     }
   }
+  */
   
   private def removeOuterUnivs(input: FolExpression): FolExpression = 
   {
@@ -599,15 +622,22 @@ class PSLTheoremProver(
     input match {
       case FolExistsExpression(variable, term) => "exist " + variable.name + " (" + _convert(term, bound + variable) + ")"
       case FolAllExpression(variable, term) => "(forall " + variable.name + " (" + _convert(term, bound + variable) + "))"
-      case FolNegatedExpression(term) => "!(" + _convert(term, bound) + ")"
+      case FolNegatedExpression(term) => {
+       //"!(" + _convert(term, bound) + ")"
+	     term match {
+	   	   case FolEqualityExpression(first, second) => "#NonSymmetric(%s,%s)".format(_convert(first, bound), _convert(second, bound))
+	   	   case _ => ""
+	   	 } 
+      }
+         
       //case FolAndExpression(first, second) => "(" + _convert(first, bound) + " & " + _convert(second, bound) + ")"
       case FolAndExpression(first, second) => _convert(first, bound) + "&" + _convert(second, bound) 
       case FolOrExpression(first, second) => "(" + _convert(first, bound) + " v " + _convert(second, bound) + ")"
       //case FolIfExpression(first, second) => "(" + _convert(first, bound) + " >> " + _convert(second, bound) + ")"
       case FolIfExpression(first, second) =>  _convert(first, bound) + ">>" + _convert(second, bound) 
       case FolIffExpression(first, second) => "(" + _convert(first, bound) + " <=> " + _convert(second, bound) + ")"
-      case FolEqualityExpression(first, second) =>
-        	"(" + _convert(first, bound) + " = " + _convert(second, bound) + ")";	
+      case FolEqualityExpression(first, second) => ""
+        	//"(" + _convert(first, bound) + " = " + _convert(second, bound) + ")";	
         	//both variables of the same type
 	        /* This part is not needed anymore because we do not have separate types for Events and Indvs anymore. 
 	        * if (first.asInstanceOf[FolVariableExpression].variable.name.charAt(1) == 
@@ -628,14 +658,11 @@ class PSLTheoremProver(
 
 object PSLTheoremProver {
 
-  private var pairIndx = 0;
-
-  def findBinary(binDir: Option[String] = None, envar: Option[String] = Some("PSLHOME"), verbose: Boolean = false) =
-  {
-    //new PSLTheoremProver(FileUtils.findBinary("infer", binDir, envar, verbose))
-    new PSLTheoremProver("")
-  }
-
+  private var cp = "";
+  
+  
+  
+  
   def main(args: Array[String]) {
 
     Process("mvn", Seq("compile", "-f", "psl/pom.xml")) ! (ProcessLogger(System.err.println(_), System.err.println(_)))
@@ -649,3 +676,5 @@ object PSLTheoremProver {
     }
   }
 }
+
+

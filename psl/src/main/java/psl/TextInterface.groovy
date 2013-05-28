@@ -14,11 +14,10 @@ import edu.umd.cs.psl.model.atom.TemplateAtom;
 import edu.umd.cs.psl.model.formula.Negation;
 import edu.umd.cs.psl.model.function.AttributeSimilarityFunction;
 import edu.umd.cs.psl.config.*;
+import edu.umd.cs.psl.model.predicate.SpecialPredicates;
 import edu.umd.cs.psl.model.predicate.type.*;
 import edu.umd.cs.psl.ui.ModelUI.PredicateInfo;
 import edu.umd.cs.psl.ui.functions.textsimilarity.*;
-
-
 
 class Sim implements AttributeSimilarityFunction {
 	private HashMap sim;
@@ -29,9 +28,9 @@ class Sim implements AttributeSimilarityFunction {
 			throw new Exception("score for " + a + " not found");
 		else return score.value;
 	}
-	Sim (String fileIndx){
+	Sim (String simFilePath){
 		sim = new HashMap<String, Double>();
-		BufferedReader fr =  new BufferedReader(new FileReader("run/"+fileIndx+".sim"));
+		BufferedReader fr =  new BufferedReader(new FileReader(simFilePath));
 		String l;
 		while((l = fr.readLine()) != null){
 			String[] splits = l.split(",");
@@ -39,21 +38,33 @@ class Sim implements AttributeSimilarityFunction {
 		}
 	}
 }
-fileIndx = this.args[0] 
+
+simFilePath = "run/1.sim";
+pslFilePath = "run/1.psl";
+fileIndx = "test"
+if (this.args.length != 0)
+{
+	fileIndx = this.args[0]
+	simFilePath = "psl/run/"+this.args[0]+".sim";
+	pslFilePath = "psl/run/"+this.args[0]+".psl";
+}
+	 
 println "### Pair " + fileIndx;
+println "Time: " + new Date()
 m = new PSLModel(this);
 predicates = new HashMap<String,PredicateInfo>();
 
 arg = new LinkedHashMap();
 arg.put("name1", ArgumentTypes.Text)
 arg.put("name2", ArgumentTypes.Text)
-arg.put("implementation", new Sim(fileIndx))
+arg.put("implementation", new Sim(simFilePath))
 simFun = m.addFunction("sim", arg)
 
 boolean evdStarted = false;
 DataStore data;
-BufferedReader fr =  new BufferedReader(new FileReader("run/"+fileIndx+".psl"));
+BufferedReader fr =  new BufferedReader(new FileReader(pslFilePath));
 while(( l = fr.readLine()) != null){
+	println l;
 	if (l.startsWith("predicate,")) //"predicate,predicateName,argsCount"
 	{
 		splits = l.split(",");
@@ -74,6 +85,7 @@ while(( l = fr.readLine()) != null){
 
 	}else if (l.startsWith("rule,"))
 	{
+//		m.add rule: (TX4 ^ TX2) >> entailment_h(), constraint: true
 		splits = l.split(",", 2);
 		arg = new LinkedHashMap();
 		arg.put("constraint", true)
@@ -125,22 +137,22 @@ def parseAtom(String s)
 	s = s.substring(0, s.length()-1);
 	atomSplits = s.split("\\(");
 	predicateName = atomSplits[0];
-	if (atomSplits.length > 1)
-		termsSplits =  atomSplits[1].split(",");
+	if (atomSplits.length > 1) 
+		termsSplits =  atomSplits[1].split(","); //predicateName(Var1, ..., VarN)
 	else
-		termsSplits = new String[0]
+		termsSplits = new String[0] //predicateName()
 	
 	boolean negated = false;
-	if (predicateName.startsWith("~"))
-	{
+	if (predicateName.startsWith("~")) //~predicateName(Var1, ...., VarN)   
+	{								  //~predicateName()
 		negated = true;
 		predicateName = predicateName.substring(1);
 	}
 		
 	if (predicateName.equals("sim"))
-		pred = simFun
+		pred = simFun				//read predicate from similarityFUnction
 	else 
-		pred = predicates.get(predicateName)
+		pred = predicates.get(predicateName) //read predicate from list of predicates
 	
 	Term[] terms = new Term[termsSplits.length];
 	for (int i=0;i<terms.length;i++) {
@@ -150,8 +162,12 @@ def parseAtom(String s)
 			terms[i]=new GenericVariable(termsSplits[i], m).toAtomVariable();
 		}		
 	}
-	formula = new FormulaContainer(new TemplateAtom(pred,terms));
-	if (negated) 
+	if (predicateName == "#NonSymmetric") //!(Var1=Var2)
+		formula = new FormulaContainer(new TemplateAtom(SpecialPredicates.NonSymmetric,terms[0], terms[1]));
+	else
+		formula = new FormulaContainer(new TemplateAtom(pred,terms));
+	
+	if (negated) //if negated, then it is not an equality constraint  
 		return new FormulaContainer(new Negation(formula.getFormula()));
 	else return formula;  
 }

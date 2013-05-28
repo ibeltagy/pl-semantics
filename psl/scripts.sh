@@ -7,3 +7,7 @@ mvn compile
 mvn dependency:build-classpath -Dmdep.outputFile=cp.txt
 
 java -cp ./target/classes:`cat cp.txt` psl.App 
+
+mvn exec:java -Dexec.mainClass=psl.TextInterface
+
+ -kbest 1 -task sts -peInf true -noDup false -softLogic psl

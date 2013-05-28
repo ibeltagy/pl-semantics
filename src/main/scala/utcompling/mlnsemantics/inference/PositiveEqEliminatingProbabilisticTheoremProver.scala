@@ -8,11 +8,16 @@ import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.CollectionUtil._
 import support.HardWeightedExpression
 import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
+import utcompling.mlnsemantics.run.Sts
 
 class PositiveEqEliminatingProbabilisticTheoremProver(
   delegate: ProbabilisticTheoremProver[FolExpression])
   extends ProbabilisticTheoremProver[FolExpression] {
 
+  val keepUniv = Sts.opts.get("-keepUniv") match {
+    case Some("false") => false;
+    case _ => true;
+  }
   /**
    * Assuming: 
    * --negated equality expressions are like !eq(x1,x2) and it is never 
@@ -116,11 +121,15 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
     case FolParseExpression(exps) => FolParseExpression( exps.map(e=> (removeEq(e._1, eq) , e._2) ) )
     case FolExistsExpression(variable, term) => FolExistsExpression (removeEq(variable, eq), removeEq(term, eq));
 
-   	//This is very important: Changing all IMP to AND because alchamy is very slow on processing IMP
-   	case FolAllExpression(variable, term) => FolAllExpression(removeEq(variable, eq), removeEq(term, eq));
-   	case FolIfExpression(first, second) => FolIfExpression(removeEq(first, eq), removeEq(second, eq))
-   	//case FolAllExpression(variable, term) => removeEq(term, eq);
-   	//case FolIfExpression(first, second) => FolAndExpression(removeEq(first, eq), removeEq(second, eq))
+   	case FolAllExpression(variable, term) => keepUniv match {
+   	  case true => FolAllExpression(removeEq(variable, eq), removeEq(term, eq)); 
+   	  case false => removeEq(term, eq);
+   	}
+
+   	case FolIfExpression(first, second) => keepUniv match {
+   	  case true => FolIfExpression(removeEq(first, eq), removeEq(second, eq)) 
+   	  case false => FolAndExpression(removeEq(first, eq), removeEq(second, eq))
+   	}
    	
    	case FolNegatedExpression(term) => FolNegatedExpression(removeEq(term, eq))
    	case FolAndExpression(first, second) => FolAndExpression(removeEq(first, eq), removeEq(second, eq))
