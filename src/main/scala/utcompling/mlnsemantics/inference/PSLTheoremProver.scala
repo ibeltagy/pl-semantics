@@ -281,17 +281,17 @@ class PSLTheoremProver(
 		              val lhsSimString = lhsAnds.flatMap {
 		              	case FolAtom(pred, args @ _*) if (args.length == 1)=> List(pred.name)
 		              	case _ =>None
-		              }.mkString("&")
+		              }.mkString("-")
 		              
 		              val rhsAnds = getAnds(rhs)
 		              val rhsSimString = rhsAnds.flatMap {
 		              	case FolAtom(pred, args @ _*) if (args.length == 1)=> List(pred.name)
 		              	case _ =>None
-		              }.mkString("&")
+		              }.mkString("-")
 		              
-		              //similarityTable ::= (lhsSimString+"#"+rhsSimString, usedWeight) ;
-		              lastSimilarityID = lastSimilarityID+1;
-		              similarityTable ::= (lastSimilarityID.toString(), usedWeight) ;
+		              similarityTable ::= (lhsSimString+"#"+rhsSimString, usedWeight) ;
+		              //lastSimilarityID = lastSimilarityID+1;
+		              //similarityTable ::= (lastSimilarityID.toString(), usedWeight) ;
 		              
 		              rhsAnds.foreach(rhsAnd => {
 		            	  val rhsVar = findAllVars(rhsAnd)
@@ -304,7 +304,8 @@ class PSLTheoremProver(
 		            	  val rhsString = convert(rhsAnd)
 		            	  //pslFile.writeLine("m.add rule: (%s & sim(\"%s\", \"%s\")) >> %s, constraint: true;"
 		            	  pslFile.writeLine("rule,%s&sim(\"%s\",\"%s\")>>%s"
-		            	      .format(extendedLhsString, lastSimilarityID.toString(), "", rhsString))
+		            	      //.format(extendedLhsString, lastSimilarityID.toString(), "", rhsString))
+		            	      .format(extendedLhsString, lhsSimString, rhsSimString, rhsString))
 		              })	                  
 	                }
 	                case _ => throw new RuntimeException("unsupported infernece rule format"); 

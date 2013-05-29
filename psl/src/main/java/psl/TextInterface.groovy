@@ -23,7 +23,7 @@ class Sim implements AttributeSimilarityFunction {
 	private HashMap sim;
 	@Override
 	public double similarity(String a, String b) {
-		Double score = sim.get(a);
+		Double score = sim.get(a+"#"+b);
 		if (score == null)
 			throw new Exception("score for " + a + " not found");
 		else return score.value;
@@ -97,6 +97,7 @@ while(( l = fr.readLine()) != null){
 	{
 		if (!evdStarted)
 		{
+			m.add rule: (r_patient_dt(TX0,TX1)&r_agent_dt(TX0,TX2)&ride_v_dt(TX0)&bicycle_n_dt(TX1)&man_n_dt(TX2)&r_patient_dh(HX0,HX1)&r_agent_dh(HX0,HX2)&ride_v_dh(HX0)&bike_n_dh(HX1)&man_n_dh(HX2))>>entailment_h(), constraint: true
 			data = new RelationalDataStore(m);
 			data.setup db : DatabaseDriver.H2;
 			evdStarted = true;			
