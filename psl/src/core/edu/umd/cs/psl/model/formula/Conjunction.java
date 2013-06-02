@@ -20,6 +20,12 @@ import java.util.Vector;
 
 public class Conjunction extends AbstractBranchFormula {
 
+	public enum ConjunctionTypes {
+		min, avg, and
+	}
+	
+	public ConjunctionTypes type = ConjunctionTypes.and;
+	
 	public Conjunction(Formula f1, Formula f2) {
 		this(new Formula[]{f1,f2});
 	}
@@ -91,7 +97,9 @@ public class Conjunction extends AbstractBranchFormula {
 			else
 				conj.add(f);
 		}
-		return new Conjunction((Formula[]) conj.toArray(new Formula[conj.size()]));
+		Conjunction flattenConj = new Conjunction((Formula[]) conj.toArray(new Formula[conj.size()]));
+		flattenConj.type = this.type;
+		return flattenConj;
 	}
 
 	@Override

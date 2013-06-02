@@ -85,13 +85,17 @@ abstract public class AbstractGroundRule implements GroundKernel {
 		Atom a;
 		double constant = 0.0;
 		FunctionSum sum = new FunctionSum();
+		int noFormulas = formula.getNoFormulas();
 		
-		for (int i = 0; i < formula.getNoFormulas(); i++) {
+		for (int i = 0; i < noFormulas; i++) {
 			f = formula.get(i);
 			if (f instanceof Atom) {
 				a = (Atom) f;
 				assert a.getNumberOfValues() == 1;
-				sum.add(new FunctionSummand(multiplier, a.getVariable()));
+				if (noFormulas <= 5)
+					sum.add(new FunctionSummand(multiplier, a.getVariable()));
+				else 
+					sum.add(new FunctionSummand(multiplier/(noFormulas-1), a.getVariable()));
 				constant++;
 			}
 			else if (f instanceof Negation) {
@@ -103,7 +107,8 @@ abstract public class AbstractGroundRule implements GroundKernel {
 				throw new IllegalStateException();
 		}
 		
-		sum.add(new FunctionSummand(multiplier, new ConstantNumber(1.0 - constant)));
+		if (noFormulas <= 5)
+			sum.add(new FunctionSummand(multiplier, new ConstantNumber(1.0 - constant)));
 		
 		return sum;
 	}

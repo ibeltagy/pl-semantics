@@ -294,7 +294,8 @@ object Sts {
 		                    						  softLogicTool)))))))))) //TODO 7: how to generate MLN ?
 
           val p = ttp.prove(sepTokens(txt), sepTokens(hyp))
-          println("%s  [actual: %s, gold: %s]".format(p, probOfEnt2simScore(p.get), goldSim))
+          //println("%s  [actual: %.2f, gold: %s]".format(p, probOfEnt2simScore(p.get), goldSim))
+          println("Some(%.2f) [actual: %.2f, gold: %s]".format(p.get, probOfEnt2simScore(p.get), goldSim))
           i -> (probOfEnt2simScore(p.get), goldSim)
         }
 

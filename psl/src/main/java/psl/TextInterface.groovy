@@ -23,33 +23,17 @@ class Sim implements AttributeSimilarityFunction {
 	private HashMap sim;
 	@Override
 	public double similarity(String a, String b) {
-		Double score = sim.get(a+"#"+b);
-		if (score == null)
-			throw new Exception("score for " + a + " not found");
-		else return score.value;
-	}
-	Sim (String simFilePath){
-		sim = new HashMap<String, Double>();
-		BufferedReader fr =  new BufferedReader(new FileReader(simFilePath));
-		String l;
-		while((l = fr.readLine()) != null){
-			String[] splits = l.split(",");
-			sim.put(splits[0], splits[1].toDouble());
-		}
+		return Double.parseDouble(a)
 	}
 }
 
-simFilePath = "run/1.sim";
-pslFilePath = "run/1.psl";
-fileIndx = "test"
+String pslFilePath = "run/test.psl";
 if (this.args.length != 0)
 {
-	fileIndx = this.args[0]
-	simFilePath = "psl/run/"+this.args[0]+".sim";
-	pslFilePath = "psl/run/"+this.args[0]+".psl";
+	pslFilePath = this.args[0];
 }
 	 
-println "### Pair " + fileIndx;
+println "### Pair " + pslFilePath.substring(pslFilePath.lastIndexOf('/')+1, pslFilePath.lastIndexOf('.'))
 println "Time: " + new Date()
 m = new PSLModel(this);
 predicates = new HashMap<String,PredicateInfo>();
@@ -57,7 +41,7 @@ predicates = new HashMap<String,PredicateInfo>();
 arg = new LinkedHashMap();
 arg.put("name1", ArgumentTypes.Text)
 arg.put("name2", ArgumentTypes.Text)
-arg.put("implementation", new Sim(simFilePath))
+arg.put("implementation", new Sim())
 simFun = m.addFunction("sim", arg)
 
 boolean evdStarted = false;
@@ -97,7 +81,8 @@ while(( l = fr.readLine()) != null){
 	{
 		if (!evdStarted)
 		{
-			m.add rule: (r_patient_dt(TX0,TX1)&r_agent_dt(TX0,TX2)&ride_v_dt(TX0)&bicycle_n_dt(TX1)&man_n_dt(TX2)&r_patient_dh(HX0,HX1)&r_agent_dh(HX0,HX2)&ride_v_dh(HX0)&bike_n_dh(HX1)&man_n_dh(HX2))>>entailment_h(), constraint: true
+			//m.add rule: (r_patient_dt(TX0,TX1)&r_agent_dt(TX0,TX2)&ride_v_dt(TX0)&bicycle_n_dt(TX1)&man_n_dt(TX2)&r_patient_dh(HX0,HX1)&r_agent_dh(HX0,HX2)&ride_v_dh(HX0)&bike_n_dh(HX1)&man_n_dh(HX2))>>entailment_h(), weight: 1
+			//m.add rule: (r_agent_dt(TX0,TX2)&sing_v_dt(TX0)&r_of_dt(TX2,TX1)&people_n_dt(TX1)&group_n_dt(TX2)&r_agent_dh(HX0,HX1)&sing_v_dh(HX0)&people_n_dh(HX1))>>entailment_h(),  weight: 1
 			data = new RelationalDataStore(m);
 			data.setup db : DatabaseDriver.H2;
 			evdStarted = true;			
@@ -105,31 +90,54 @@ while(( l = fr.readLine()) != null){
 		splits = l.split(",");
 		pred = predicates.get(splits[1])
 		if (splits.length == 3) //one arg
+			//data.getInserter(pred).insertValue(0.4, Integer.parseInt(splits[2]));
 			data.getInserter(pred).insert(Integer.parseInt(splits[2]));
 		else //two args
 			data.getInserter(pred).insert(Integer.parseInt(splits[2]), Integer.parseInt(splits[3]));
 	}
-	else if (l.startsWith("query,"))
+	else if (l.startsWith("query."))
 	{
 		println m
-		splits = l.split(",");
-		pred = predicates.get(splits[1])
+		//splits = l.split(",");
+		//pred = predicates.get(splits[1])
 		ConfigManager cm = ConfigManager.getManager();
 		ConfigBundle exampleBundle = cm.getBundle("example");
 		def result = m.mapInference(data.getDatabase(), exampleBundle)
-		result.printAtoms(pred, false);
+		result.printAtoms(entailment_h, false);
+		result.printAtoms(entailment_t, false);
+		result.printAtoms(entailment, false);
+/*		result.printAtoms(r_agent_dt, false);
+		result.printAtoms(sing_v_dt, false);
+		result.printAtoms(r_of_dt, false);
+		result.printAtoms(people_n_dt, false);
+		result.printAtoms(group_n_dt, false);
+		result.printAtoms(r_agent_dh, false);
+		result.printAtoms(sing_v_dh, false);
+		result.printAtoms(people_n_dh, false);
+		result.printAtoms(all, false);
+		*/
 	}	
 }
 def parseFormula(String s)
 {
-	splitsBodyHead = s.split(">>");
+	splitsAndingModeRule = s.split(",", 2) //avg,rule
+											//and,rule
+											//min,rule
+	splitsBodyHead = splitsAndingModeRule[1].split(">>");
 	body = splitsBodyHead[0];
 	head = splitsBodyHead[1];
 	splitsBody = body.split("&");
 	FormulaContainer f = (parseAtom(splitsBody[0]))
 	for (i = 1;i<splitsBody.length;i++)
 	{
-		f = f.and(parseAtom(splitsBody[i]))
+		switch (splitsAndingModeRule[0])
+		{
+			case "avg": f = f.mod(parseAtom(splitsBody[i]))	; break;
+			case "and": f = f.and(parseAtom(splitsBody[i])); break;
+			case "min": throw new Exception ("MIN is not supported yet"); break;
+			default: throw new Exception ("Unrecognized combiner: " + splitsAndingModeRule[0]);
+		}
+		
 	}
 	f = f.rightShift(parseAtom(head));
 	return f;

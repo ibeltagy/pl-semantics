@@ -46,7 +46,7 @@ class PSLTheoremProver(
   private var entailmentConsequent_h:FolExpression = FolVariableExpression(Variable("entailment_h")); 
   private var entailmentConsequent_t:FolExpression = FolVariableExpression(Variable("entailment_t"));
   private val entailedConst = ("ent" -> Set("ent_h", "ent_t"))
-  private var entailmentConsequent:FolExpression = FolAtom(Variable("entailment_h"), Variable(""));
+  private var entailmentConsequent:FolExpression = FolAtom(Variable("entailment"), Variable(""));
   
   private var varBind: Option[Boolean] = None;
   private var task = "sts";
@@ -114,10 +114,11 @@ class PSLTheoremProver(
     typeParam_t = typeParam_t.reverse;
     val entailedDec_h = FolVariableExpression(Variable("entailment_h")) -> typeParam_h;
     val entailedDec_t = FolVariableExpression(Variable("entailment_t")) -> typeParam_t;
+    val entailedDec = FolVariableExpression(Variable("entailment")) -> List();
  
     
     val declarationNames =
-      (declarations + entailedDec_h + entailedDec_t).mapKeys {
+      (declarations + entailedDec_h + entailedDec_t + entailedDec).mapKeys {
         case FolAtom(Variable(pred), _*) => pred
         case FolVariableExpression(Variable(pred)) => pred
       }
@@ -141,9 +142,9 @@ class PSLTheoremProver(
     	//Process("mvn", Seq("exec:java", "-Dexec.mainClass=psl.TextInterface", "-f", "psl/pom.xml")) ! (ProcessLogger(System.err.println(_), System.err.println(_)))
     	//println (PSLTheoremProver.cp);
         var entailmentLine = ""
-        val exitcode = Process("java", Seq("-cp", PSLTheoremProver.cp, "psl.TextInterface", Sts.pairIndex.toString())) ! (ProcessLogger(l=>{
+        val exitcode = Process("java", Seq("-cp", PSLTheoremProver.cp, "psl.TextInterface", mlnFile)) ! (ProcessLogger(l=>{
 	          System.out.println(l)
-	          if (l.startsWith("entailment"))
+	          if (l.startsWith("entailment()"))
 	        	  	entailmentLine = l;
           }, System.err.println(_)))
         println ("exitcode = " + exitcode)
@@ -153,8 +154,8 @@ class PSLTheoremProver(
         }
         if (entailmentLine == "")
         	return Some(0);
-        else 
-        	return Some(entailmentLine.substring(18, entailmentLine.length()-1).toDouble);
+        else
+        	return Some(entailmentLine.substring(16, entailmentLine.length()-1).toDouble);
     	//callAlchemy(mlnFile, evidenceFile, resultFile, args) match {
 	    //  case Some(t) => Some(t.toDouble)
 	    //  case _ => throw new RuntimeException("no valid output in the result file");
@@ -182,7 +183,8 @@ class PSLTheoremProver(
     evidence: List[FolExpression],
     goal: FolExpression) = {
     
-    val pslFile = new java.io.PrintWriter(new File("psl/run/%s.psl".format(Sts.pairIndex)))
+    val pslFilePath = "psl/run/%s.psl".format(Sts.pairIndex);
+    val pslFile = new java.io.PrintWriter(new File(pslFilePath))
     try { 
 
         				
@@ -254,8 +256,8 @@ class PSLTheoremProver(
 			case _ => 0.0;
 		}
 		
-		var similarityTable: List[(String, Double)] = List(); 
-		var lastSimilarityID:Integer = 0;
+		//var similarityTable: List[(String, Double)] = List(); 
+		//var lastSimilarityID:Integer = 0;
 		assumptions
         .flatMap {
           case e @ SoftWeightedExpression(folEx, weight) =>
@@ -289,7 +291,7 @@ class PSLTheoremProver(
 		              	case _ =>None
 		              }.mkString("-")
 		              
-		              similarityTable ::= (lhsSimString+"#"+rhsSimString, usedWeight) ;
+		              //similarityTable ::= (lhsSimString+"#"+rhsSimString, usedWeight) ;
 		              //lastSimilarityID = lastSimilarityID+1;
 		              //similarityTable ::= (lastSimilarityID.toString(), usedWeight) ;
 		              
@@ -303,9 +305,10 @@ class PSLTheoremProver(
 		            	  })
 		            	  val rhsString = convert(rhsAnd)
 		            	  //pslFile.writeLine("m.add rule: (%s & sim(\"%s\", \"%s\")) >> %s, constraint: true;"
-		            	  pslFile.writeLine("rule,%s&sim(\"%s\",\"%s\")>>%s"
+		            	  pslFile.writeLine("rule,and,%s&sim(\"%s\",\"%s\")>>%s"
 		            	      //.format(extendedLhsString, lastSimilarityID.toString(), "", rhsString))
-		            	      .format(extendedLhsString, lhsSimString, rhsSimString, rhsString))
+		            	      //.format(extendedLhsString, lhsSimString, rhsSimString, rhsString))
+		            	      .format(extendedLhsString, "%.3f".format(usedWeight), "", rhsString))
 		              })	                  
 	                }
 	                case _ => throw new RuntimeException("unsupported infernece rule format"); 
@@ -318,36 +321,56 @@ class PSLTheoremProver(
        //=================Goal
        task match {
       	//case "rte" => pslFile.writeLine("m.add rule: %s, constraint: true;".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
-         case "rte" => pslFile.writeLine("rule,%s".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
+         case "rte" =>pslFile.writeLine("rule,min,%s".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
       	//case "sts" => pslFile.writeLine("m.add rule: %s, constraint: true;".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
-         case "sts" => pslFile.writeLine("rule,%s".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
+         case "sts" => {
+           def writeTwoGoals(input: FolExpression):Unit = {
+			input match {
+		      case FolExistsExpression(variable, term) => writeTwoGoals(term)
+		      case FolAndExpression(first, second) => {
+		         pslFile.writeLine("rule,avg,%s".format(convert(universalifyGoalFormula(first -> entailmentConsequent_h)))) //normal anding
+            	 pslFile.writeLine("rule,avg,%s".format(convert(universalifyGoalFormula(second -> entailmentConsequent_t)))) //normal anding
+            	 pslFile.writeLine("rule,and,entailment_h()&entailment_t()>>entailment()");
+		      }
+		      case _ => {
+		        pslFile.writeLine("rule,avg,%s".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
+            	 throw new RuntimeException("in STS, goal should be (Sent1)&(Sent2)")
+		        }
+		      }
+           }
+         writeTwoGoals(goal);
+         }
        }
-       
 
        //=================Similarity File      
-         val simFile = new java.io.PrintWriter(new File("psl/run/%s.sim".format(Sts.pairIndex)))
+        /* val simFile = new java.io.PrintWriter(new File("psl/run/%s.sim".format(Sts.pairIndex)))
          similarityTable.foreach(simEntry =>{
     	   simFile.write("%s,%s\n".format(simEntry._1, simEntry._2))
     	})
     	simFile.close();
-    	   
+    	  */ 
        
 
        //=================Evidences
        //pslFile.write(
 	   //	"DataStore data = new RelationalDataStore(m);\n" +
 	   //	"data.setup db : DatabaseDriver.H2;\n");
-		
+		 var allConst:Set[Int] = Set();
 	     evidence.foreach {
 	        case e @ FolAtom(pred, args @ _*) => 
 	          		pslFile.writeLine(
 	          		    //"data.getInserter(%s).insert(%s);".format(pred.name, args.map(a => {
 	          		    "data,%s,%s".format(pred.name, args.map(a => {
-	          					a.name.substring(2).toInt+1000*min(a.name.charAt(0).toLower - 103, 2)
+	          					val const = a.name.substring(2).toInt+1000*min(a.name.charAt(0).toLower - 103, 2);
+	          					allConst += const;
+	          					const;
 	          			}).mkString(","))
 	          			);
 	        case e => throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
 	    }
+	     
+	    //Generate evidences for predicate "all"
+	     allConst.foreach (const=>pslFile.writeLine("data,all,%s".format(const)))
        //=================Query
 		pslFile.writeLine(
 		    //"ConfigManager cm = ConfigManager.getManager();\n" +
@@ -356,11 +379,12 @@ class PSLTheoremProver(
 
 		    //"def result = m.mapInference(data.getDatabase());\n" +
 		    //"result.printAtoms(entailment_h, false);")
-		    "query,entailment_h")
+		    //"query,entailment_h")
+		    "query.")
     
 	   pslFile.close();
     }
-    "hi";
+    pslFilePath;
     	/*
 
 

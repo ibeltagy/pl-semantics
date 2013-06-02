@@ -107,4 +107,8 @@ public class Variable extends Entity {
 		cone = null;
 		cons = null;
 	}
+	
+	public String toString() {
+        return "Var_" + id;
+    }
 }

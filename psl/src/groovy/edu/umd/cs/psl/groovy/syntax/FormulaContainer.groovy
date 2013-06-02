@@ -17,6 +17,7 @@
 package edu.umd.cs.psl.groovy.syntax;
 
 import edu.umd.cs.psl.model.formula.*;
+import edu.umd.cs.psl.model.formula.Conjunction.ConjunctionTypes;
 import edu.umd.cs.psl.model.atom.Atom;
 
 class FormulaContainer {
@@ -43,6 +44,13 @@ class FormulaContainer {
 	def and(f2) {
 		checkFormula(f2);
 		return new FormulaContainer(new Conjunction(formula,f2.formula));
+	}
+	
+	def mod(f2) { //for average
+		checkFormula(f2);
+		Conjunction conj = new Conjunction(formula,f2.formula);
+		conj.type = ConjunctionTypes.avg;
+		return new FormulaContainer(conj);
 	}
 	
 	def rightShift(FormulaContainer f2) {

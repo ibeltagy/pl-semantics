@@ -10,4 +10,6 @@ java -cp ./target/classes:`cat cp.txt` psl.App
 
 mvn exec:java -Dexec.mainClass=psl.TextInterface
 
- -kbest 1 -task sts -peInf true -noDup false -softLogic psl
+
+bin/mlnsem run-vid 1-102 -kbest 1 -task sts -peInf true -noDup false -softLogic psl -keepUniv false >tmp/psl3
+

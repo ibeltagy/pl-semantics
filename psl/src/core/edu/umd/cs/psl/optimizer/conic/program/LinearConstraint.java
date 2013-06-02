@@ -107,4 +107,8 @@ public class LinearConstraint extends Entity {
 		program.notify(ConicProgramEvent.ConDeleted, this);
 		vars = null;
 	}
+	
+	public String toString() {
+        return "" + constrainedValue + "=" + vars.toString() ;
+    }
 }
