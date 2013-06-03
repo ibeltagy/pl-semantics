@@ -372,9 +372,9 @@ class PSLTheoremProver(
 	          		    "data,%s,%s".format(pred.name, args.map(a => {
 	          					val const = a.name.substring(2).toInt+1000*min(a.name.charAt(0).toLower - 103, 2);
 	          					if (a.name.charAt(0) == 'h')
-	          						allConst_h += const;
+	          						allConst_t += const; //yes, add it to allConst_t not allConst_h. This is not a typo 
 	          					else if (a.name.charAt(0) == 't' )
-	          						allConst_t += const;
+	          						allConst_h += const;
 	          					else throw new RuntimeException("Unknown constant type %s".format(a.name));
 	          					const;
 	          			}).mkString(","))
