@@ -108,7 +108,10 @@ abstract public class AbstractGroundRule implements GroundKernel {
 				case min: 
 					throw new RuntimeException("not supported combiner MIN");
 				default: 
-					throw new RuntimeException("conjunction combiner is not set");
+					if (noFormulas == 2) //If number of formulas = 2, then no combiner in needed at all
+						sum.add(new FunctionSummand(multiplier, a.getVariable()));
+					else
+						throw new RuntimeException("conjunction combiner is not set");
 				}
 
 			}
@@ -134,8 +137,11 @@ abstract public class AbstractGroundRule implements GroundKernel {
 						break;
 					case min: 
 						throw new RuntimeException("not supported combiner MIN");
-					default: 
-						throw new RuntimeException("conjunction combiner is not set");
+					default:
+						if (noFormulas == 2) //If number of formulas = 2, then no combiner in needed at all
+							sum.add(new FunctionSummand(-1*multiplier, a.getVariable()));
+						else
+							throw new RuntimeException("conjunction combiner is not set");
 					}
 				}
 			}
@@ -154,7 +160,10 @@ abstract public class AbstractGroundRule implements GroundKernel {
 		case min: 
 			throw new RuntimeException("not supported combiner MIN");
 		default: 
-			throw new RuntimeException("conjunction combiner is not set");
+			if (noFormulas == 2) //If number of formulas = 2, then no combiner in needed at all
+				;//do nothing
+			else
+				throw new RuntimeException("conjunction combiner is not set");
 		}
 		
 		if (!headFound)

@@ -91,6 +91,7 @@ public class Conjunction extends AbstractBranchFormula {
 	public Conjunction flatten() {
 		Vector<Formula> conj = new Vector<Formula>(getNoFormulas());
 		int headPos = this.headPos;
+		boolean thisConjunctionHeadFound = false;
 		for (Formula f : formulas) {
 			if (f instanceof Conjunction) {
 				Formula[] newFormulas = ((Conjunction) f).flatten().formulas;
@@ -107,7 +108,11 @@ public class Conjunction extends AbstractBranchFormula {
 					conj.add(newF);
 			}
 			else{
-				headPos += conj.size();
+				if(!thisConjunctionHeadFound)
+				{
+					headPos += conj.size();
+					thisConjunctionHeadFound = true;
+				}
 				conj.add(f);
 			}
 				
