@@ -27,9 +27,16 @@ import edu.umd.cs.psl.model.atom.Atom;
  * Note, the order in which formulas appear in an AbstractBranchFormula is important!
  *
  */
-abstract class AbstractBranchFormula implements Formula {
+public abstract class AbstractBranchFormula implements Formula {
 
 	protected final Formula[] formulas;
+	
+	public enum ConjunctionTypes{
+		and, min, avg, notSet;
+	}
+	public int headPos = -1;
+	
+	public ConjunctionTypes conjType = ConjunctionTypes.notSet;
 	
 	public AbstractBranchFormula(Formula... f) {
 		if (f.length<2) throw new IllegalArgumentException("Must provide at least two formulas!");

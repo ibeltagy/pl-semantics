@@ -61,7 +61,14 @@ public class FormulaGrounder extends FormulaTraverser {
 	public Formula ground(Formula f) {
 		reset();
 		FormulaTraverser.traverse(f, this);
-		return pop();
+		Formula popped = pop();
+
+		if (f instanceof AbstractBranchFormula)
+		{
+			((AbstractBranchFormula)popped).conjType = ((AbstractBranchFormula)f).conjType;
+			((AbstractBranchFormula)popped).headPos = ((AbstractBranchFormula)f).headPos;
+		}
+		return popped;
 	}
 
 	public boolean hasNext() {
@@ -96,7 +103,7 @@ public class FormulaGrounder extends FormulaTraverser {
 	public void afterConjunction(int noFormulas) {
 		Formula[] f = new Formula[noFormulas];
 		for (int i = 0; i < noFormulas; i++)
-			f[i] = pop();
+			f[noFormulas - i - 1] = pop();
 		push(new Conjunction(f));
 	}
 
@@ -104,7 +111,7 @@ public class FormulaGrounder extends FormulaTraverser {
 	public void afterDisjunction(int noFormulas) {
 		Formula[] f = new Formula[noFormulas];
 		for (int i = 0; i < noFormulas; i++)
-			f[i] = pop();
+			f[noFormulas - i - 1] = pop();
 		push(new Disjunction(f));
 	}
 
@@ -147,6 +154,7 @@ public class FormulaGrounder extends FormulaTraverser {
 				args[i] = (GroundTerm) atomArgs[i];
 			}
 		}
+
 		push(atommanger.getAtom(atom.getPredicate(), args));
 	}
 

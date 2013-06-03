@@ -42,7 +42,13 @@ public class Conjunction extends AbstractBranchFormula {
 		}
 		
 		if (disjunctions.size() == 0)
-			return new Conjunction(components);
+		{
+			Conjunction conjunction = new Conjunction(components);
+			conjunction.conjType = this.conjType;
+			conjunction.headPos = this.headPos;
+			return conjunction;
+		}
+			
 		
 		/* Distributes the conjunction operator over disjunctions */
 		Formula[] dnfComponents = new Formula[size];
@@ -77,21 +83,39 @@ public class Conjunction extends AbstractBranchFormula {
 			dnfComponents[i] = new Conjunction(conjunctionComponents).dnf();
 		}
 		
-		return new Disjunction(dnfComponents);
+		Disjunction disjunction = new Disjunction(dnfComponents);
+		disjunction.conjType = this.conjType;
+		return disjunction;
 	}
 	
 	public Conjunction flatten() {
 		Vector<Formula> conj = new Vector<Formula>(getNoFormulas());
+		int headPos = this.headPos;
 		for (Formula f : formulas) {
 			if (f instanceof Conjunction) {
 				Formula[] newFormulas = ((Conjunction) f).flatten().formulas;
+				int conjHeadPos = ((Conjunction) f).headPos;
+				if ( conjHeadPos != -1)
+				{
+					if (headPos != -1)
+						throw new RuntimeException("More than one head found");
+					headPos = conjHeadPos + conj.size();
+				}
+				if (headPos != -1)
+					headPos --;
 				for (Formula newF : newFormulas)
 					conj.add(newF);
 			}
-			else
+			else{
+				headPos += conj.size();
 				conj.add(f);
+			}
+				
 		}
-		return new Conjunction((Formula[]) conj.toArray(new Formula[conj.size()]));
+		Conjunction conjunction = new Conjunction((Formula[]) conj.toArray(new Formula[conj.size()]));
+		conjunction.conjType = this.conjType;
+		conjunction.headPos = headPos;
+		return conjunction;
 	}
 
 	@Override

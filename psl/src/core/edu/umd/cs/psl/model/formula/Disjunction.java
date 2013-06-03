@@ -31,7 +31,10 @@ public class Disjunction extends AbstractBranchFormula {
 		Formula[] components = new Formula[getNoFormulas()];
 		for (int i = 0; i < components.length; i++)
 			components[i] = get(i).dnf();
-		return new Disjunction(components);
+		Disjunction disjunction = new Disjunction(components);
+		disjunction.conjType = this.conjType;
+		disjunction.headPos = this.headPos;
+		return disjunction;
 	}
 
 	@Override

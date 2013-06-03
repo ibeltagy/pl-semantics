@@ -53,7 +53,11 @@ public class Rule implements Formula {
 	
 	@Override
 	public Formula dnf() {
-		return new Disjunction(new Negation(body), head).dnf();
+		Disjunction disjunction = new Disjunction(new Negation(body), head);
+		if(body instanceof AbstractBranchFormula)
+			disjunction.conjType = ((AbstractBranchFormula)body).conjType;
+		disjunction.headPos = 1;
+		return disjunction.dnf();
 	}
 	
 	@Override

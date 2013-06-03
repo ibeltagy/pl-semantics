@@ -58,13 +58,19 @@ public class Negation implements Formula {
 			Formula[] components = new Formula[((Conjunction) body).getNoFormulas()];
 			for (int i = 0; i < components.length; i++)
 				components[i] = new Negation(((Conjunction) body).get(i));
-			return new Disjunction(components).dnf();
+			Disjunction disjunction = new Disjunction(components);
+			disjunction.conjType = ((Conjunction) body).conjType;
+			disjunction.headPos = ((Conjunction) body).headPos;
+			return disjunction.dnf();
 		}
 		else if (body instanceof Disjunction) {
 			Formula[] components = new Formula[((Disjunction) body).getNoFormulas()];
 			for (int i = 0; i < components.length; i++)
 				components[i] = new Negation(((Disjunction) body).get(i));
-			return new Conjunction(components).dnf();
+			Conjunction conjunction = new Conjunction(components);
+			conjunction.conjType = ((Disjunction) body).conjType;
+			conjunction.headPos = ((Disjunction) body).headPos;
+			return conjunction.dnf();
 		}
 		else if (body instanceof Rule)
 			return new Negation(body.dnf()).dnf();

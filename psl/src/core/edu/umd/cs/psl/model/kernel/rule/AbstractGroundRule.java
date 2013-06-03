@@ -26,6 +26,7 @@ import edu.umd.cs.psl.model.formula.Conjunction;
 import edu.umd.cs.psl.model.formula.Formula;
 import edu.umd.cs.psl.model.formula.Negation;
 import edu.umd.cs.psl.model.formula.Tnorm;
+import edu.umd.cs.psl.model.formula.AbstractBranchFormula.ConjunctionTypes;
 import edu.umd.cs.psl.model.formula.traversal.FormulaEvaluator;
 import edu.umd.cs.psl.model.kernel.BindingMode;
 import edu.umd.cs.psl.model.kernel.GroundKernel;
@@ -86,30 +87,78 @@ abstract public class AbstractGroundRule implements GroundKernel {
 		double constant = 0.0;
 		FunctionSum sum = new FunctionSum();
 		int noFormulas = formula.getNoFormulas();
+		boolean headFound = false;
+		
 		
 		for (int i = 0; i < noFormulas; i++) {
 			f = formula.get(i);
+		
 			if (f instanceof Atom) {
 				a = (Atom) f;
 				assert a.getNumberOfValues() == 1;
-				if (noFormulas <= 5)
+				switch (formula.conjType)
+				{
+				case and:
 					sum.add(new FunctionSummand(multiplier, a.getVariable()));
-				else 
+					constant++;					
+					break;
+				case avg: 
 					sum.add(new FunctionSummand(multiplier/(noFormulas-1), a.getVariable()));
-				constant++;
+					break;
+				case min: 
+					throw new RuntimeException("not supported combiner MIN");
+				default: 
+					throw new RuntimeException("conjunction combiner is not set");
+				}
+
 			}
 			else if (f instanceof Negation) {
 				a = (Atom) ((Negation) f).getFormula();
 				assert a.getNumberOfValues() == 1;
-				sum.add(new FunctionSummand(-1*multiplier, a.getVariable()));
+				
+				if (i == formula.headPos ) //always use Strong AND for the head
+				{
+					sum.add(new FunctionSummand(-1*multiplier, a.getVariable()));
+					headFound = true;
+				}
+				else //for the body, use ConjunctionTypes
+				{
+					switch (formula.conjType)
+					{
+					case and:
+						sum.add(new FunctionSummand(-1*multiplier, a.getVariable()));
+						break;
+					case avg: 
+						sum.add(new FunctionSummand(-1*multiplier/(noFormulas-1), a.getVariable()));
+						constant++;
+						break;
+					case min: 
+						throw new RuntimeException("not supported combiner MIN");
+					default: 
+						throw new RuntimeException("conjunction combiner is not set");
+					}
+				}
 			}
 			else
 				throw new IllegalStateException();
 		}
 		
-		if (noFormulas <= 5)
+		switch (formula.conjType)
+		{
+		case and:
 			sum.add(new FunctionSummand(multiplier, new ConstantNumber(1.0 - constant)));
+			break;
+		case avg: 
+			sum.add(new FunctionSummand(multiplier/(noFormulas-1), new ConstantNumber(constant)));
+			break;
+		case min: 
+			throw new RuntimeException("not supported combiner MIN");
+		default: 
+			throw new RuntimeException("conjunction combiner is not set");
+		}
 		
+		if (!headFound)
+			throw new RuntimeException("NO head found");
 		return sum;
 	}
 	
