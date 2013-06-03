@@ -228,8 +228,10 @@ class PSLTheoremProver(
 		//	"m.add predicate: \"all\", arg1: Entity;\n");
 
        //=================Predicate declarations
-      pslFile.writeLine("predicate,all,1")
-		declarationNames.foreach {
+    	pslFile.writeLine("predicate,all_h,1")
+      	pslFile.writeLine("predicate,all_t,1")
+      	pslFile.writeLine("predicate,all,1")
+      	declarationNames.foreach {
 			case (pred, varTypes) => {
 				//pslFile.writeLine("m.add predicate: \"%s\", %s open: true;".format(pred, varTypes.indices.map("arg" + _+": Entity, ").mkString("")))
 			  pslFile.writeLine("predicate,%s,%s".format(pred, varTypes.length))
@@ -299,9 +301,15 @@ class PSLTheoremProver(
 		            	  val rhsVar = findAllVars(rhsAnd)
 		            	  val missingVars = (rhsVar &~ lhsVars).toSet;
 		            	  var extendedLhsString = lhsString;
+		            	  val allString = rhsAnd match {
+		            	    case FolAtom(pred, args @ _*) if pred.name.endsWith("_dh") => "all_h" 
+		            	    case FolAtom(pred, args @ _*) if pred.name.endsWith("_dt") => "all_t"
+		            	    case _ => throw new RuntimeException("unsuppoeted expression: %s".format(rhsAnd));
+		            	  }
+		            	  
 		            	  missingVars.foreach(v => {
 		            	     //extendedLhsString = "(%s & all(%s))".format(extendedLhsString, v.name.toUpperCase())
-		            	    extendedLhsString = "%s&all(%s)".format(extendedLhsString, v.name.toUpperCase())
+		            	    extendedLhsString = "%s&%s(%s)".format(extendedLhsString, allString, v.name.toUpperCase())
 		            	  })
 		            	  val rhsString = convert(rhsAnd)
 		            	  //pslFile.writeLine("m.add rule: (%s & sim(\"%s\", \"%s\")) >> %s, constraint: true;"
@@ -355,14 +363,19 @@ class PSLTheoremProver(
        //pslFile.write(
 	   //	"DataStore data = new RelationalDataStore(m);\n" +
 	   //	"data.setup db : DatabaseDriver.H2;\n");
-		 var allConst:Set[Int] = Set();
+		 var allConst_h:Set[Int] = Set();
+		 var allConst_t:Set[Int] = Set();
 	     evidence.foreach {
 	        case e @ FolAtom(pred, args @ _*) => 
 	          		pslFile.writeLine(
 	          		    //"data.getInserter(%s).insert(%s);".format(pred.name, args.map(a => {
 	          		    "data,%s,%s".format(pred.name, args.map(a => {
 	          					val const = a.name.substring(2).toInt+1000*min(a.name.charAt(0).toLower - 103, 2);
-	          					allConst += const;
+	          					if (a.name.charAt(0) == 'h')
+	          						allConst_h += const;
+	          					else if (a.name.charAt(0) == 't' )
+	          						allConst_t += const;
+	          					else throw new RuntimeException("Unknown constant type %s".format(a.name));
 	          					const;
 	          			}).mkString(","))
 	          			);
@@ -370,7 +383,8 @@ class PSLTheoremProver(
 	    }
 	     
 	    //Generate evidences for predicate "all"
-	     allConst.foreach (const=>pslFile.writeLine("data,all,%s".format(const)))
+	     allConst_h.foreach (const=>pslFile.writeLine("data,all_h,%s".format(const)))
+	     allConst_t.foreach (const=>pslFile.writeLine("data,all_t,%s".format(const)))
        //=================Query
 		pslFile.writeLine(
 		    //"ConfigManager cm = ConfigManager.getManager();\n" +
