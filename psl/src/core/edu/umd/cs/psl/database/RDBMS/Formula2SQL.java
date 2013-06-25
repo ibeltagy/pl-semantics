@@ -104,12 +104,18 @@ public class Formula2SQL extends FormulaTraverser {
 			if (!projection.contains(var))
 				continue;
 			UnionQuery uq = new UnionQuery(Type.UNION);
+			SelectQuery qdummy = new SelectQuery();
+			qdummy.addAliasedColumn(new CustomSql("-2147483648"), "id");
+			qdummy.addCustomFromTable("dual");
+			uq.addQueries(qdummy);
+			String nonNullColumn = "";
 			for (Tuple3<String, String, String> column : queryColumnsByVar.get(var))
 			{
 				SelectQuery cq = new SelectQuery();
 				cq.addAliasedColumn(new CustomSql(column.get1() + "." + column.get2()), "id");
 				cq.addCustomFromTable(column.get0() + " " + column.get1());
 				uq.addQueries(cq);
+				nonNullColumn = column.get1() + "." + column.get2() + ", " + nonNullColumn;
 			}
 			if(isFirst)
 			{
@@ -118,7 +124,8 @@ public class Formula2SQL extends FormulaTraverser {
 			}
 			else
 				query.addCustomJoin(JoinType.INNER, "", "("+uq.validate().toString()+")tbl"+var.getName(), new CustomCondition("true"));
-			query.addCustomColumns(new CustomSql("tbl"+var.getName()+".id as " + var.getName()));
+			query.addAliasedColumn(new CustomSql("tbl"+var.getName()+".id"), var.getName());
+			query.addAliasedColumn(new CustomSql("COALESCE("+nonNullColumn+"-2147483648)"), var.getName() +"nonNull");
 		}
 		
 		Set<RDBMSPredicateHandle> allPreds  = queryColumnsByPred.keySet();
@@ -129,7 +136,7 @@ public class Formula2SQL extends FormulaTraverser {
 			Tuple3<Term, String, String> firstColumn = allColumns.iterator().next();
 			Condition totalCond  = new InCondition(new CustomSql(firstColumn.get1()+"."+pred.partitionColumn()),database.getReadIDs());
 			if (!pred.isClosed()) {
-				totalCond = new ComboCondition (Op.AND, new BinaryCondition(BinaryCondition.Op.LESS_THAN, 
+				totalCond = new ComboCondition (Op.AND, totalCond, new BinaryCondition(BinaryCondition.Op.LESS_THAN, 
 																new CustomSql(firstColumn.get1()+"."+pred.pslColumn()),
 																PSLValue.getNonDefaultUpperBound()));
 			}
@@ -142,6 +149,8 @@ public class Formula2SQL extends FormulaTraverser {
 				 
 				if (arg instanceof Variable) {
 					Variable var = (Variable)arg;
+
+					query.addCustomColumns(new CustomSql(column.get1()+"."+column.get2()));					
 					
 					if (partialGrounding.hasVariable(var)) {
 						arg = partialGrounding.getVariable(var);
@@ -384,6 +393,7 @@ public class Formula2SQL extends FormulaTraverser {
 		//return outerQ.validate().toString();
 		//SelectQuery newQ  = new CustomSql("SELECT DISTINCT t1.arg0 AS X,t4.arg0 AS Y,tblX.id,tblY.id FROM a t1, b t2, c t3, d t4, e t5, f t6, g t7 INNER JOIN (SELECT t3.arg0 AS id FROM c t3 UNION SELECT t1.arg0 AS id FROM a t1 UNION SELECT t7.arg0 AS id FROM g t7 UNION SELECT t2.arg0 AS id FROM b t2)tblX ON (true) INNER JOIN (SELECT t6.arg0 AS id FROM f t6 UNION SELECT t5.arg0 AS id FROM e t5 UNION SELECT t4.arg0 AS id FROM d t4 UNION SELECT t7.arg1 AS id FROM g t7)tblY ON (true) WHERE ((t1.part IN (1,1000) ) AND (t1.psl < 50) AND (t2.arg0 = t1.arg0) AND (t2.part IN (1,1000) ) AND (t2.psl < 50) AND (t3.arg0 = t1.arg0) AND (t3.part IN (1,1000) ) AND (t3.psl < 50) AND (t4.part IN (1,1000) ) AND (t4.psl < 50) AND (t5.arg0 = t4.arg0) AND (t5.part IN (1,1000) ) AND (t5.psl < 50) AND (t6.arg0 = t4.arg0) AND (t6.part IN (1,1000) ) AND (t6.psl < 50) AND (t7.arg0 = t1.arg0) AND (t7.arg1 = t4.arg0) AND (t7.part IN (1,1000) ) AND (t7.psl < 50))");
 		
+				
 		return query.validate().toString();
 	}
 	
