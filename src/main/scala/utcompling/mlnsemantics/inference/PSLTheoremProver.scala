@@ -668,6 +668,7 @@ class PSLTheoremProver(
       case FolNegatedExpression(term) => {
        //"!(" + _convert(term, bound) + ")"
 	     term match {
+	       //TODO: check if it is NonSymmetric or Unequal ??
 	   	   case FolEqualityExpression(first, second) => "#NonSymmetric(%s,%s)".format(_convert(first, bound), _convert(second, bound))
 	   	   case _ => ""
 	   	 } 

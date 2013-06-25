@@ -176,6 +176,8 @@ def parseAtom(String s)
 	}
 	if (predicateName == "#NonSymmetric") //!(Var1=Var2)
 		formula = new FormulaContainer(new TemplateAtom(SpecialPredicates.NonSymmetric,terms[0], terms[1]));
+	else if (predicateName == "#Unequal")
+		formula = new FormulaContainer(new TemplateAtom(SpecialPredicates.Unequal,terms[0], terms[1]));
 	else
 		formula = new FormulaContainer(new TemplateAtom(pred,terms));
 	

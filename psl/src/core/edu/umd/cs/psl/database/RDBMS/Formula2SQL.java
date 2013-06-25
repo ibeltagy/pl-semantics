@@ -18,11 +18,21 @@ package edu.umd.cs.psl.database.RDBMS;
 
 import java.util.*;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.healthmarketscience.common.util.Tuple3;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
+import com.healthmarketscience.sqlbuilder.ComboCondition;
+import com.healthmarketscience.sqlbuilder.ComboCondition.Op;
+import com.healthmarketscience.sqlbuilder.Condition;
+import com.healthmarketscience.sqlbuilder.CustomCondition;
 import com.healthmarketscience.sqlbuilder.CustomSql;
 import com.healthmarketscience.sqlbuilder.FunctionCall;
 import com.healthmarketscience.sqlbuilder.InCondition;
 import com.healthmarketscience.sqlbuilder.SelectQuery;
+import com.healthmarketscience.sqlbuilder.SelectQuery.JoinType;
+import com.healthmarketscience.sqlbuilder.SetOperationQuery.Type;
+import com.healthmarketscience.sqlbuilder.UnionQuery;
 
 import edu.umd.cs.psl.database.PSLValue;
 import edu.umd.cs.psl.model.argument.Attribute;
@@ -47,11 +57,15 @@ public class Formula2SQL extends FormulaTraverser {
 	private final RDBMSDatabase database;
 	
 	private final Map<Variable,String> joins;
+	private final Multimap<Variable,Tuple3<String, String, String>> queryColumnsByVar;
+	private final Multimap<RDBMSPredicateHandle,Tuple3<Term, String, String>> queryColumnsByPred;
+									//tableName, tableAliase, columnName
+ 
 	
 	private final List<Atom> functionalAtoms;
 
-	private final SelectQuery query;
-	
+	private SelectQuery query;
+
 	private int tableCounter;
 	
 	
@@ -59,6 +73,8 @@ public class Formula2SQL extends FormulaTraverser {
 		partialGrounding = pg;
 		projection = proj;
 		joins = new HashMap<Variable,String>();
+		queryColumnsByPred = HashMultimap.create();
+		queryColumnsByVar = HashMultimap.create();
 		database = db;
 		query = new SelectQuery();
 		query.setIsDistinct(true);
@@ -74,6 +90,103 @@ public class Formula2SQL extends FormulaTraverser {
 	@Override
 	public void afterConjunction(int noFormulas) {
 		//Supported
+		query = new SelectQuery();
+		query.setIsDistinct(true);
+		if(projection.isEmpty()) 
+			query.addAllColumns();
+		//newQuery.addCondition(query.getWhereClause());
+		
+		boolean isFirst = true;
+		//build unions, a union for each variable.
+		Set<Variable> allVars  = queryColumnsByVar.keySet();
+		for (Variable var: allVars)
+		{
+			if (!projection.contains(var))
+				continue;
+			UnionQuery uq = new UnionQuery(Type.UNION);
+			for (Tuple3<String, String, String> column : queryColumnsByVar.get(var))
+			{
+				SelectQuery cq = new SelectQuery();
+				cq.addAliasedColumn(new CustomSql(column.get1() + "." + column.get2()), "id");
+				cq.addCustomFromTable(column.get0() + " " + column.get1());
+				uq.addQueries(cq);
+			}
+			if(isFirst)
+			{
+				query.addCustomFromTable("("+uq.validate().toString()+")tbl"+var.getName());
+				isFirst = false;
+			}
+			else
+				query.addCustomJoin(JoinType.INNER, "", "("+uq.validate().toString()+")tbl"+var.getName(), new CustomCondition("true"));
+			query.addCustomColumns(new CustomSql("tbl"+var.getName()+".id as " + var.getName()));
+		}
+		
+		Set<RDBMSPredicateHandle> allPreds  = queryColumnsByPred.keySet();
+		for (RDBMSPredicateHandle pred: allPreds)
+		{
+			//var, alias, col
+			Collection<Tuple3<Term, String, String>> allColumns = queryColumnsByPred.get(pred);
+			Tuple3<Term, String, String> firstColumn = allColumns.iterator().next();
+			Condition totalCond  = new InCondition(new CustomSql(firstColumn.get1()+"."+pred.partitionColumn()),database.getReadIDs());
+			if (!pred.isClosed()) {
+				totalCond = new ComboCondition (Op.AND, new BinaryCondition(BinaryCondition.Op.LESS_THAN, 
+																new CustomSql(firstColumn.get1()+"."+pred.pslColumn()),
+																PSLValue.getNonDefaultUpperBound()));
+			}
+			assert allColumns.size() != 0;
+			for (Tuple3<Term, String, String> column : allColumns)
+			{
+				Term arg = column.get0();
+				if (arg == null)
+					continue;
+				 
+				if (arg instanceof Variable) {
+					Variable var = (Variable)arg;
+					
+					if (partialGrounding.hasVariable(var)) {
+						arg = partialGrounding.getVariable(var);
+					} else {
+						Condition cond = new BinaryCondition(BinaryCondition.Op.EQUAL_TO, 
+								new CustomSql(column.get1()+"."+column.get2()),
+								new CustomSql("tbl"+var.getName()+".id"));
+		
+						if (totalCond instanceof ComboCondition)
+							((ComboCondition)totalCond).addCondition(cond);
+						else totalCond = new ComboCondition(Op.AND, totalCond, cond);
+					}
+				}
+				
+				if (arg instanceof Attribute) {
+					Condition cond = new BinaryCondition(BinaryCondition.Op.EQUAL_TO, 
+							new CustomSql(column.get1()+"."+column.get2()),
+							((Attribute)arg).getAttribute());
+	
+					if (totalCond instanceof ComboCondition)
+						((ComboCondition)totalCond).addCondition(cond);
+					else totalCond = new ComboCondition(Op.AND, totalCond, cond);
+				} else if (arg instanceof Entity) { //Entity
+					Entity e = (Entity)arg;
+					Condition cond = new BinaryCondition(BinaryCondition.Op.EQUAL_TO, 
+							new CustomSql(column.get1()+"."+column.get2()),
+							e.getID().getDBID());
+	
+					if (totalCond instanceof ComboCondition)
+						((ComboCondition)totalCond).addCondition(cond);
+					else totalCond = new ComboCondition(Op.AND, totalCond, cond);
+
+				} else assert arg instanceof Variable;
+			}
+			
+			if(isFirst)
+			{
+				query.addCustomFromTable(pred.tableName() +" "+ firstColumn.get1());
+				isFirst = false;
+			}
+			else
+				query.addCustomJoin(JoinType.LEFT_OUTER, "", pred.tableName() +" "+ firstColumn.get1(), totalCond);
+		}
+		return;
+		
 	}
 
 	@Override
@@ -150,16 +263,30 @@ public class Formula2SQL extends FormulaTraverser {
 			String tableDot = tableName+".";
 			query.addCustomFromTable(ph.tableName()+" "+tableName);
 			Term[] arguments = atom.getArguments();
+			boolean tableAdded = false;
 			for (int i=0;i<ph.argumentColumns().length;i++) {
 				Term arg = arguments[i];
 	
+				queryColumnsByPred.put(ph, new Tuple3<Term, String, String>
+								(arg, tableName, ph.argumentColumns()[i]));
+				tableAdded = true;
+
+			
 				if (arg instanceof Variable) {
 					Variable var = (Variable)arg;
+					queryColumnsByVar.put(var, new Tuple3<String, String, String>
+											(ph.tableName(), tableName, ph.argumentColumns()[i]));
+
+					
 					if (partialGrounding.hasVariable(var)) {
 						//assert !projection.contains(var);
 						arg = partialGrounding.getVariable(var);
 					} else {
 						if (joins.containsKey(var)) {
+							String to = joins.get(var);
+							String [] toSplits = to.split("\\.");
+							if (toSplits.length != 2)
+								throw new RuntimeException("Unexpected tableName.columName " + joins.get(var));
 							query.addCondition(BinaryCondition.equalTo(new CustomSql(tableDot+ph.argumentColumns()[i]),  new CustomSql(joins.get(var)) ));
 						} else {
 							if (projection.contains(var)) {
@@ -167,6 +294,7 @@ public class Formula2SQL extends FormulaTraverser {
 							}
 							joins.put(var, tableDot+ph.argumentColumns()[i]);
 						}
+						
 					}
 				}
 				
@@ -177,6 +305,10 @@ public class Formula2SQL extends FormulaTraverser {
 					query.addCondition(BinaryCondition.equalTo(new CustomSql(tableDot+ph.argumentColumns()[i]),  e.getID().getDBID() ));
 				} else assert arg instanceof Variable;
 			}
+			if(!tableAdded)
+				queryColumnsByPred.put(ph, new Tuple3<Term, String, String>
+					(null, tableName, null));				
+			
 			query.addCondition(new InCondition(new CustomSql(tableDot+ph.partitionColumn()),database.getReadIDs()));
 			if (!ph.isClosed()) {
 				query.addCondition(BinaryCondition.lessThan(new CustomSql(tableDot+ph.pslColumn()), 
@@ -190,6 +322,68 @@ public class Formula2SQL extends FormulaTraverser {
 	public String getSQL(Formula f) {
 		FormulaTraverser.traverse(f, this);
 		for (Atom atom : functionalAtoms) visitFunctionalAtom(atom);
+		
+		SelectQuery q1 = new SelectQuery();
+		//q1.addAliasedColumn(new CustomSql("t1.arg0"), "X1");
+		q1.addAliasedColumn(new CustomSql("b.arg0"), "X2");
+		q1.addAliasedColumn(new CustomSql("c.arg0"), "X3");
+		//q.addCustomJoin(JoinType.INNER, "b t2", "a t1", BinaryCondition.equalTo(new CustomSql("t2.arg0"),  new CustomSql("t1.arg0") ));
+		q1.addCustomFromTable("b");
+		q1.addCustomJoin(JoinType.INNER, "", "c", new CustomCondition("true"));
+		//q1.addCustomJoin(JoinType.LEFT_OUTER, "", "c t3", BinaryCondition.equalTo(new CustomSql("t2.arg0"),  new CustomSql("t3.arg0") ));
+		
+		
+		SelectQuery q2 = new SelectQuery();
+		q2.addAliasedColumn(new CustomSql("t2.arg0"), "X2");
+		q2.addAliasedColumn(new CustomSql("t3.arg0"), "X3");
+		q2.addCustomFromTable("b t2");
+		q2.addCustomJoin(JoinType.RIGHT_OUTER, "", "c t3", BinaryCondition.equalTo(new CustomSql("t2.arg0"),  new CustomSql("t3.arg0") ));
+		
+		//q.addCustomJoin("Inner join b t2 on t1.arg0 = t2.arg0");
+		//q.addCustomFromTable("a t1");
+		
+		UnionQuery uq = new UnionQuery(Type.UNION, q1, q2);
+		//System.out.println(uq.validate().toString());
+		
+		CustomSql cq = new  CustomSql("select a.ida, b.idb, c.idc from ( select ida as id from a union  select idb as id from b union  select idc as id from c )tbl left outer join a on tbl.id = a.ida left outer join b on tbl.id = b.idb left outer join c on tbl.id = c.idc");
+		
+		SelectQuery qa = new SelectQuery();
+		qa.addAliasedColumn(new CustomSql("t1.arg0"), "X");
+		qa.addCustomFromTable("a t1");
+		
+		SelectQuery qb = new SelectQuery();
+		qb.addAliasedColumn(new CustomSql("t2.arg0"), "X");
+		qb.addCustomFromTable("b t2");
+		
+		SelectQuery qc = new SelectQuery();
+		qc.addAliasedColumn(new CustomSql("t3.arg0"), "X");
+		qc.addCustomFromTable("c t3");
+		
+		UnionQuery innerQ = new UnionQuery(Type.UNION, qa, qb, qc);
+		
+		SelectQuery outerQ = new SelectQuery();
+		//outerQ.addAliasedColumn(new CustomSql("t1.arg0"), "X1");
+		//outerQ.addAliasedColumn(new CustomSql("t2.arg0"), "X2");
+		//outerQ.addAliasedColumn(new CustomSql("t3.arg0"), "X3");
+		//outerQ.addCustomColumns(new CustomSql("COALESCE(-2147483648, t2.arg0, t3.arg0)"));
+		outerQ.addAllColumns();
+		
+		//outerQ.addCustomFromTable("("+innerQ.validate().toString()+")tblY");
+		
+		//outerQ.addCustomFromTable("("+innerQ.validate().toString()+")tblX");
+		//outerQ.addCustomFromTable("a t1");
+		outerQ.addCustomJoin(JoinType.INNER, "", "b t2", new CustomCondition("true"));
+		outerQ.addCustomJoin(JoinType.INNER, "", "("+innerQ.validate().toString()+")tblX", new CustomCondition("true"));
+		outerQ.addCustomJoin(JoinType.INNER, "", "("+innerQ.validate().toString()+")tblY", new CustomCondition("true"));
+		outerQ.addCustomJoin(JoinType.INNER, "", "("+innerQ.validate().toString()+")tblZ", new CustomCondition("true"));
+		//outerQ.addCustomJoin(JoinType.LEFT_OUTER, "", "a t1", BinaryCondition.equalTo(new CustomSql("t1.arg0"),  new CustomSql("tblX.X") ));
+		//
+		//outerQ.addCustomJoin(JoinType.LEFT_OUTER, "", "b t2", BinaryCondition.equalTo(new CustomSql("t2.arg0"),  new CustomSql("tblX.X") ));
+		//outerQ.addCustomJoin(JoinType.LEFT_OUTER, "", "c t3", BinaryCondition.equalTo(new CustomSql("t3.arg0"),  new CustomSql("tblX.X") ));
+		System.out.println(outerQ.validate().toString());
+		//return outerQ.validate().toString();
+		//SelectQuery newQ  = new CustomSql("SELECT DISTINCT t1.arg0 AS X,t4.arg0 AS Y,tblX.id,tblY.id FROM a t1, b t2, c t3, d t4, e t5, f t6, g t7 INNER JOIN (SELECT t3.arg0 AS id FROM c t3 UNION SELECT t1.arg0 AS id FROM a t1 UNION SELECT t7.arg0 AS id FROM g t7 UNION SELECT t2.arg0 AS id FROM b t2)tblX ON (true) INNER JOIN (SELECT t6.arg0 AS id FROM f t6 UNION SELECT t5.arg0 AS id FROM e t5 UNION SELECT t4.arg0 AS id FROM d t4 UNION SELECT t7.arg1 AS id FROM g t7)tblY ON (true) WHERE ((t1.part IN (1,1000) ) AND (t1.psl < 50) AND (t2.arg0 = t1.arg0) AND (t2.part IN (1,1000) ) AND (t2.psl < 50) AND (t3.arg0 = t1.arg0) AND (t3.part IN (1,1000) ) AND (t3.psl < 50) AND (t4.part IN (1,1000) ) AND (t4.psl < 50) AND (t5.arg0 = t4.arg0) AND (t5.part IN (1,1000) ) AND (t5.psl < 50) AND (t6.arg0 = t4.arg0) AND (t6.part IN (1,1000) ) AND (t6.psl < 50) AND (t7.arg0 = t1.arg0) AND (t7.arg1 = t4.arg0) AND (t7.part IN (1,1000) ) AND (t7.psl < 50))");
+		
 		return query.validate().toString();
 	}
 	
