@@ -58,7 +58,7 @@ public class Formula2SQL extends FormulaTraverser {
 	
 	private final Map<Variable,String> joins;
 	private final Multimap<Variable,Tuple3<String, String, String>> queryColumnsByVar;
-	private final Multimap<RDBMSPredicateHandle,Tuple3<Term, String, String>> queryColumnsByPred;
+	private final Multimap<String,Tuple3<Term, RDBMSPredicateHandle, String>> queryColumnsByPred;
 									//tableName, tableAliase, columnName
  
 	
@@ -90,11 +90,12 @@ public class Formula2SQL extends FormulaTraverser {
 	@Override
 	public void afterConjunction(int noFormulas) {
 		//Supported
+		//if (noFormulas != -658823242)
+		//	return;
 		query = new SelectQuery();
 		query.setIsDistinct(true);
 		if(projection.isEmpty()) 
 			query.addAllColumns();
-		//newQuery.addCondition(query.getWhereClause());
 		
 		boolean isFirst = true;
 		//build unions, a union for each variable.
@@ -107,7 +108,7 @@ public class Formula2SQL extends FormulaTraverser {
 			SelectQuery qdummy = new SelectQuery();
 			qdummy.addAliasedColumn(new CustomSql("-2147483648"), "id");
 			qdummy.addCustomFromTable("dual");
-			uq.addQueries(qdummy);
+			//uq.addQueries(qdummy);
 			String nonNullColumn = "";
 			for (Tuple3<String, String, String> column : queryColumnsByVar.get(var))
 			{
@@ -124,24 +125,27 @@ public class Formula2SQL extends FormulaTraverser {
 			}
 			else
 				query.addCustomJoin(JoinType.INNER, "", "("+uq.validate().toString()+")tbl"+var.getName(), new CustomCondition("true"));
-			query.addAliasedColumn(new CustomSql("tbl"+var.getName()+".id"), var.getName());
-			query.addAliasedColumn(new CustomSql("COALESCE("+nonNullColumn+"-2147483648)"), var.getName() +"nonNull");
+
+			//Line below can be used for debugging
+			//query.addAliasedColumn(new CustomSql("tbl"+var.getName()+".id"), var.getName());
+			query.addAliasedColumn(new CustomSql("COALESCE("+nonNullColumn+"-2147483648)"), var.getName());
 		}
 		
-		Set<RDBMSPredicateHandle> allPreds  = queryColumnsByPred.keySet();
-		for (RDBMSPredicateHandle pred: allPreds)
+		Set<String> allTableAliases  = queryColumnsByPred.keySet();
+		for (String tableAlias: allTableAliases)
 		{
-			//var, alias, col
-			Collection<Tuple3<Term, String, String>> allColumns = queryColumnsByPred.get(pred);
-			Tuple3<Term, String, String> firstColumn = allColumns.iterator().next();
-			Condition totalCond  = new InCondition(new CustomSql(firstColumn.get1()+"."+pred.partitionColumn()),database.getReadIDs());
+			//alias: var, predicate, col
+			Collection<Tuple3<Term, RDBMSPredicateHandle, String>> allColumns = queryColumnsByPred.get(tableAlias);
+			Tuple3<Term, RDBMSPredicateHandle, String> firstColumn = allColumns.iterator().next();
+			RDBMSPredicateHandle pred = firstColumn.get1();
+			Condition totalCond  = new InCondition(new CustomSql(tableAlias+"."+pred.partitionColumn()),database.getReadIDs());
 			if (!pred.isClosed()) {
 				totalCond = new ComboCondition (Op.AND, totalCond, new BinaryCondition(BinaryCondition.Op.LESS_THAN, 
-																new CustomSql(firstColumn.get1()+"."+pred.pslColumn()),
+																new CustomSql(tableAlias+"."+pred.pslColumn()),
 																PSLValue.getNonDefaultUpperBound()));
 			}
 			assert allColumns.size() != 0;
-			for (Tuple3<Term, String, String> column : allColumns)
+			for (Tuple3<Term, RDBMSPredicateHandle, String> column : allColumns)
 			{
 				Term arg = column.get0();
 				if (arg == null)
@@ -149,14 +153,15 @@ public class Formula2SQL extends FormulaTraverser {
 				 
 				if (arg instanceof Variable) {
 					Variable var = (Variable)arg;
-
-					query.addCustomColumns(new CustomSql(column.get1()+"."+column.get2()));					
+					
+					//Line below can be used for debugging
+					//query.addCustomColumns(new CustomSql(tableAlias+"."+column.get2()));					
 					
 					if (partialGrounding.hasVariable(var)) {
 						arg = partialGrounding.getVariable(var);
 					} else {
 						Condition cond = new BinaryCondition(BinaryCondition.Op.EQUAL_TO, 
-								new CustomSql(column.get1()+"."+column.get2()),
+								new CustomSql(tableAlias+"."+column.get2()),
 								new CustomSql("tbl"+var.getName()+".id"));
 		
 						if (totalCond instanceof ComboCondition)
@@ -167,7 +172,7 @@ public class Formula2SQL extends FormulaTraverser {
 				
 				if (arg instanceof Attribute) {
 					Condition cond = new BinaryCondition(BinaryCondition.Op.EQUAL_TO, 
-							new CustomSql(column.get1()+"."+column.get2()),
+							new CustomSql(tableAlias+"."+column.get2()),
 							((Attribute)arg).getAttribute());
 	
 					if (totalCond instanceof ComboCondition)
@@ -176,7 +181,7 @@ public class Formula2SQL extends FormulaTraverser {
 				} else if (arg instanceof Entity) { //Entity
 					Entity e = (Entity)arg;
 					Condition cond = new BinaryCondition(BinaryCondition.Op.EQUAL_TO, 
-							new CustomSql(column.get1()+"."+column.get2()),
+							new CustomSql(tableAlias+"."+column.get2()),
 							e.getID().getDBID());
 	
 					if (totalCond instanceof ComboCondition)
@@ -188,11 +193,11 @@ public class Formula2SQL extends FormulaTraverser {
 			
 			if(isFirst)
 			{
-				query.addCustomFromTable(pred.tableName() +" "+ firstColumn.get1());
+				query.addCustomFromTable(pred.tableName() +" "+ tableAlias);
 				isFirst = false;
 			}
 			else
-				query.addCustomJoin(JoinType.LEFT_OUTER, "", pred.tableName() +" "+ firstColumn.get1(), totalCond);
+				query.addCustomJoin(JoinType.LEFT_OUTER, "", pred.tableName() +" "+ tableAlias, totalCond);
 		}
 		return;
 		
@@ -276,8 +281,8 @@ public class Formula2SQL extends FormulaTraverser {
 			for (int i=0;i<ph.argumentColumns().length;i++) {
 				Term arg = arguments[i];
 	
-				queryColumnsByPred.put(ph, new Tuple3<Term, String, String>
-								(arg, tableName, ph.argumentColumns()[i]));
+				queryColumnsByPred.put(tableName, new Tuple3<Term, RDBMSPredicateHandle, String>
+								(arg, ph, ph.argumentColumns()[i]));
 				tableAdded = true;
 
 			
@@ -315,8 +320,8 @@ public class Formula2SQL extends FormulaTraverser {
 				} else assert arg instanceof Variable;
 			}
 			if(!tableAdded)
-				queryColumnsByPred.put(ph, new Tuple3<Term, String, String>
-					(null, tableName, null));				
+				queryColumnsByPred.put(tableName, new Tuple3<Term, RDBMSPredicateHandle, String>
+					(null, ph, null));				
 			
 			query.addCondition(new InCondition(new CustomSql(tableDot+ph.partitionColumn()),database.getReadIDs()));
 			if (!ph.isClosed()) {
@@ -389,7 +394,7 @@ public class Formula2SQL extends FormulaTraverser {
 		//
 		//outerQ.addCustomJoin(JoinType.LEFT_OUTER, "", "b t2", BinaryCondition.equalTo(new CustomSql("t2.arg0"),  new CustomSql("tblX.X") ));
 		//outerQ.addCustomJoin(JoinType.LEFT_OUTER, "", "c t3", BinaryCondition.equalTo(new CustomSql("t3.arg0"),  new CustomSql("tblX.X") ));
-		System.out.println(outerQ.validate().toString());
+		//System.out.println(outerQ.validate().toString());
 		//return outerQ.validate().toString();
 		//SelectQuery newQ  = new CustomSql("SELECT DISTINCT t1.arg0 AS X,t4.arg0 AS Y,tblX.id,tblY.id FROM a t1, b t2, c t3, d t4, e t5, f t6, g t7 INNER JOIN (SELECT t3.arg0 AS id FROM c t3 UNION SELECT t1.arg0 AS id FROM a t1 UNION SELECT t7.arg0 AS id FROM g t7 UNION SELECT t2.arg0 AS id FROM b t2)tblX ON (true) INNER JOIN (SELECT t6.arg0 AS id FROM f t6 UNION SELECT t5.arg0 AS id FROM e t5 UNION SELECT t4.arg0 AS id FROM d t4 UNION SELECT t7.arg1 AS id FROM g t7)tblY ON (true) WHERE ((t1.part IN (1,1000) ) AND (t1.psl < 50) AND (t2.arg0 = t1.arg0) AND (t2.part IN (1,1000) ) AND (t2.psl < 50) AND (t3.arg0 = t1.arg0) AND (t3.part IN (1,1000) ) AND (t3.psl < 50) AND (t4.part IN (1,1000) ) AND (t4.psl < 50) AND (t5.arg0 = t4.arg0) AND (t5.part IN (1,1000) ) AND (t5.psl < 50) AND (t6.arg0 = t4.arg0) AND (t6.part IN (1,1000) ) AND (t6.psl < 50) AND (t7.arg0 = t1.arg0) AND (t7.arg1 = t4.arg0) AND (t7.part IN (1,1000) ) AND (t7.psl < 50))");
 		
