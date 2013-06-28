@@ -138,24 +138,23 @@ class PSLTheoremProver(
 
     try 
     {
+
+    	val timeout = Sts.opts.get("-timeout") match {
+			case Some(t) => Some(t.toLong);
+			case  _=> None;
+		}
+    	//113,244,339,345,421,436
+    	//InnerJoin, OuterJoin, OuterJoinWithDummy;
+    	var resultScore = callPSL(mlnFile, "InnerJoin", timeout);
+    	if (resultScore == 0 )
+    	  resultScore = callPSL(mlnFile, "OuterJoin", timeout);
+    	//if (resultScore == 0 )
+    	// resultScore = callPSL(mlnFile, "OuterJoinWithDummy", timeout);    	
+    	  
+    	return Some(resultScore);
     	//Process("mvn", Seq("compile", "-f", "psl/pom.xml")) ! (ProcessLogger(System.err.println(_), System.err.println(_)))
     	//Process("mvn", Seq("exec:java", "-Dexec.mainClass=psl.TextInterface", "-f", "psl/pom.xml")) ! (ProcessLogger(System.err.println(_), System.err.println(_)))
     	//println (PSLTheoremProver.cp);
-        var entailmentLine = ""
-        val exitcode = Process("java", Seq("-cp", PSLTheoremProver.cp, "psl.TextInterface", mlnFile)) ! (ProcessLogger(l=>{
-	          System.out.println(l)
-	          if (l.startsWith("entailment()"))
-	        	  	entailmentLine = l;
-          }, System.err.println(_)))
-        println ("exitcode = " + exitcode)
-        if (exitcode != 0){
-        	println("ERROR: PSL inference fails.")
-        	return Some(-1);
-        }
-        if (entailmentLine == "")
-        	return Some(0);
-        else
-        	return Some(entailmentLine.substring(16, entailmentLine.length()-1).toDouble);
     	//callAlchemy(mlnFile, evidenceFile, resultFile, args) match {
 	    //  case Some(t) => Some(t.toDouble)
 	    //  case _ => throw new RuntimeException("no valid output in the result file");
@@ -170,10 +169,43 @@ class PSLTheoremProver(
     	   // return this.prove(constants, declarations, evidence, assumptions, goal);
     	  //}
     	  //else
-    	  return Some(-1.0);
+    	  return Some(-2.0);
     	}   				 
     }
     
+  }
+  
+  //mode: InnerJoin, OuterJoin, OuterJoinWithDummy
+  private def callPSL (mlnFile: String, mode: String, timeout: Option[Long] = None):Double = { 
+    var entailmentLine = ""
+    
+    val proc = Process("java", Seq("-cp", PSLTheoremProver.cp, "psl.TextInterface", mlnFile, mode )).run(
+    ProcessLogger(l=>{
+          System.out.println(l)
+          if (l.startsWith("entailment()"))
+        	  	entailmentLine = l;
+      }, System.err.println(_)))
+    
+    var exitcode = 1;
+	timeout match {
+	  case Some(time) => {
+	    val t = new Thread { override def run() { exitcode = proc.exitValue() } }
+	    t.start()
+	    t.join(time)
+	    proc.destroy();
+	  }
+	  case _ => exitcode = proc.exitValue()
+	}
+
+    println ("exitcode = " + exitcode)
+    if (exitcode != 0){
+    	println("ERROR: PSL inference fails.")
+    	return -1;
+    }
+    if (entailmentLine == "")
+    	return 0;
+    else
+    	return entailmentLine.substring(16, entailmentLine.length()-1).toDouble;    
   }
 
   private def makeMlnFile(
@@ -338,7 +370,7 @@ class PSLTheoremProver(
 		      case FolAndExpression(first, second) => {
 		         pslFile.writeLine("rule,avg,%s".format(convert(universalifyGoalFormula(first -> entailmentConsequent_h)))) //normal anding
             	 pslFile.writeLine("rule,avg,%s".format(convert(universalifyGoalFormula(second -> entailmentConsequent_t)))) //normal anding
-            	 pslFile.writeLine("rule,and,entailment_h()&entailment_t()>>entailment()");
+            	 pslFile.writeLine("rule,avg,entailment_h()&entailment_t()>>entailment()");
 		      }
 		      case _ => {
 		        pslFile.writeLine("rule,avg,%s".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
@@ -383,8 +415,8 @@ class PSLTheoremProver(
 	    }
 	     
 	    //Generate evidences for predicate "all"
-	     allConst_h.foreach (const=>pslFile.writeLine("data,all_h,%s".format(const)))
-	     allConst_t.foreach (const=>pslFile.writeLine("data,all_t,%s".format(const)))
+	     //allConst_h.foreach (const=>pslFile.writeLine("data,all_h,%s".format(const)))
+	     //allConst_t.foreach (const=>pslFile.writeLine("data,all_t,%s".format(const)))
        //=================Query
 		pslFile.writeLine(
 		    //"ConfigManager cm = ConfigManager.getManager();\n" +

@@ -18,6 +18,8 @@ package edu.umd.cs.psl.database.RDBMS;
 
 import java.util.*;
 
+import psl.TextInterface;
+
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.healthmarketscience.common.util.Tuple3;
@@ -50,6 +52,13 @@ import edu.umd.cs.psl.model.predicate.SpecialPredicates;
 
 public class Formula2SQL extends FormulaTraverser {
 
+	public enum QueryJoinMode
+	{
+		InnerJoin, OuterJoin, OuterJoinWithDummy;
+	}
+	
+	public static QueryJoinMode queryJoinMode = QueryJoinMode.OuterJoin;
+	
 	private static final String tablePrefix = "t";
 	
 	private final List<Variable> projection;
@@ -90,14 +99,27 @@ public class Formula2SQL extends FormulaTraverser {
 	@Override
 	public void afterConjunction(int noFormulas) {
 		//Supported
-		//if (noFormulas != -658823242)
-		//	return;
+
+		if (queryJoinMode == QueryJoinMode.InnerJoin)
+			return;
+		
 		query = new SelectQuery();
 		query.setIsDistinct(true);
-		if(projection.isEmpty()) 
-			query.addAllColumns();
 		
 		boolean isFirst = true;
+		
+		if(projection.isEmpty()) 
+			query.addAllColumns();
+		else
+		{
+			SelectQuery qdummy = new SelectQuery();
+			qdummy.addAliasedColumn(new CustomSql("-2147483648"), "id");
+			qdummy.addCustomFromTable("dual");
+			query.addCustomFromTable("("+qdummy.validate().toString()+")tblDummy");
+			isFirst = false;
+		}
+		
+		String whereClauseLimitNullsCount = "";
 		//build unions, a union for each variable.
 		Set<Variable> allVars  = queryColumnsByVar.keySet();
 		for (Variable var: allVars)
@@ -105,10 +127,6 @@ public class Formula2SQL extends FormulaTraverser {
 			if (!projection.contains(var))
 				continue;
 			UnionQuery uq = new UnionQuery(Type.UNION);
-			SelectQuery qdummy = new SelectQuery();
-			qdummy.addAliasedColumn(new CustomSql("-2147483648"), "id");
-			qdummy.addCustomFromTable("dual");
-			//uq.addQueries(qdummy);
 			String nonNullColumn = "";
 			for (Tuple3<String, String, String> column : queryColumnsByVar.get(var))
 			{
@@ -117,6 +135,11 @@ public class Formula2SQL extends FormulaTraverser {
 				cq.addCustomFromTable(column.get0() + " " + column.get1());
 				uq.addQueries(cq);
 				nonNullColumn = column.get1() + "." + column.get2() + ", " + nonNullColumn;
+				if(whereClauseLimitNullsCount.equals(""))
+					whereClauseLimitNullsCount = "("  + column.get1() + "." + column.get2() + " is null)";  
+				else
+					whereClauseLimitNullsCount = whereClauseLimitNullsCount + " + ("  + column.get1() + "." + column.get2() + " is null)";
+						
 			}
 			if(isFirst)
 			{
@@ -124,12 +147,13 @@ public class Formula2SQL extends FormulaTraverser {
 				isFirst = false;
 			}
 			else
-				query.addCustomJoin(JoinType.INNER, "", "("+uq.validate().toString()+")tbl"+var.getName(), new CustomCondition("true"));
+				query.addCustomJoin(JoinType.LEFT_OUTER, "", "("+uq.validate().toString()+")tbl"+var.getName(), new CustomCondition("true"));
 
 			//Line below can be used for debugging
 			//query.addAliasedColumn(new CustomSql("tbl"+var.getName()+".id"), var.getName());
 			query.addAliasedColumn(new CustomSql("COALESCE("+nonNullColumn+"-2147483648)"), var.getName());
 		}
+		//query.addCondition(new BinaryCondition(BinaryCondition.Op.LESS_THAN, new CustomSql(whereClauseLimitNullsCount), 2));
 		
 		Set<String> allTableAliases  = queryColumnsByPred.keySet();
 		for (String tableAlias: allTableAliases)

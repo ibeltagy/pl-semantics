@@ -6,6 +6,8 @@ import edu.umd.cs.psl.groovy.*;
 import edu.umd.cs.psl.groovy.syntax.FormulaContainer;
 import edu.umd.cs.psl.groovy.syntax.GenericVariable;
 import edu.umd.cs.psl.database.RDBMS.DatabaseDriver;
+import edu.umd.cs.psl.database.RDBMS.Formula2SQL;
+import edu.umd.cs.psl.database.RDBMS.Formula2SQL.QueryJoinMode;
 import edu.umd.cs.psl.model.DistanceNorm;
 import edu.umd.cs.psl.model.argument.Term;
 import edu.umd.cs.psl.model.argument.TextAttribute;
@@ -13,6 +15,7 @@ import edu.umd.cs.psl.model.argument.type.ArgumentTypes;
 import edu.umd.cs.psl.model.atom.TemplateAtom;
 import edu.umd.cs.psl.model.formula.Negation;
 import edu.umd.cs.psl.model.function.AttributeSimilarityFunction;
+import edu.umd.cs.psl.application.GroundingMode;
 import edu.umd.cs.psl.config.*;
 import edu.umd.cs.psl.model.predicate.SpecialPredicates;
 import edu.umd.cs.psl.model.predicate.type.*;
@@ -20,7 +23,6 @@ import edu.umd.cs.psl.ui.ModelUI.PredicateInfo;
 import edu.umd.cs.psl.ui.functions.textsimilarity.*;
 
 class Sim implements AttributeSimilarityFunction {
-	private HashMap sim;
 	@Override
 	public double similarity(String a, String b) {
 		return Double.parseDouble(a)
@@ -31,10 +33,20 @@ String pslFilePath = "run/test.psl";
 if (this.args.length != 0)
 {
 	pslFilePath = this.args[0];
+	if (this.args.length >= 2)
+	{
+		switch (this.args[1])
+		{
+			case "InnerJoin":  Formula2SQL.queryJoinMode = QueryJoinMode.InnerJoin; break;
+			case "OuterJoin":  Formula2SQL.queryJoinMode = QueryJoinMode.OuterJoin; break;
+			case "OuterJoinWithDummy":  Formula2SQL.queryJoinMode = QueryJoinMode.OuterJoinWithDummy; break;
+		} 
+	}
 }
-	 
+
 println "### Pair " + pslFilePath.substring(pslFilePath.lastIndexOf('/')+1, pslFilePath.lastIndexOf('.'))
 println "Time: " + new Date()
+println "Mode: " + Formula2SQL.queryJoinMode;
 m = new PSLModel(this);
 predicates = new HashMap<String,PredicateInfo>();
 
@@ -98,7 +110,7 @@ while(( l = fr.readLine()) != null){
 	}
 	else if (l.startsWith("query."))
 	{
-		println m
+		//println m
 		//splits = l.split(",");
 		//pred = predicates.get(splits[1])
 		ConfigManager cm = ConfigManager.getManager();
