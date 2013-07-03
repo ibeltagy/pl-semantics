@@ -22,6 +22,7 @@ import psl.TextInterface;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.healthmarketscience.common.util.Tuple2;
 import com.healthmarketscience.common.util.Tuple3;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.ComboCondition;
@@ -44,6 +45,7 @@ import edu.umd.cs.psl.model.argument.Variable;
 import edu.umd.cs.psl.model.atom.Atom;
 import edu.umd.cs.psl.model.atom.VariableAssignment;
 import edu.umd.cs.psl.model.formula.*;
+import edu.umd.cs.psl.model.formula.AbstractBranchFormula.ConjunctionTypes;
 import edu.umd.cs.psl.model.formula.traversal.FormulaTraverser;
 import edu.umd.cs.psl.model.predicate.StandardPredicate;
 import edu.umd.cs.psl.model.predicate.FunctionalPredicate;
@@ -77,6 +79,9 @@ public class Formula2SQL extends FormulaTraverser {
 
 	private int tableCounter;
 	
+	private int predCount = 0;
+	private int allowedNulls = 0;
+	
 	
 	public Formula2SQL(VariableAssignment pg, List<Variable> proj, RDBMSDatabase db) {
 		partialGrounding = pg;
@@ -100,7 +105,19 @@ public class Formula2SQL extends FormulaTraverser {
 	public void afterConjunction(int noFormulas) {
 		//Supported
 
+		if (conjType == ConjunctionTypes.notSet)
+			throw new RuntimeException("error");
+		else if (conjType == ConjunctionTypes.and)
+			return;
+		else if (conjType == ConjunctionTypes.min)
+			return;
+		
 		if (queryJoinMode == QueryJoinMode.InnerJoin)
+			return;
+		
+		predCount = noFormulas;
+		
+		if (allowedNulls <= 0)
 			return;
 		
 		query = new SelectQuery();
@@ -136,9 +153,9 @@ public class Formula2SQL extends FormulaTraverser {
 				uq.addQueries(cq);
 				nonNullColumn = column.get1() + "." + column.get2() + ", " + nonNullColumn;
 				if(whereClauseLimitNullsCount.equals(""))
-					whereClauseLimitNullsCount = "("  + column.get1() + "." + column.get2() + " is null)";  
+					whereClauseLimitNullsCount = "NVL2("  + column.get1() + "." + column.get2() + ", 0, 1)";  
 				else
-					whereClauseLimitNullsCount = whereClauseLimitNullsCount + " + ("  + column.get1() + "." + column.get2() + " is null)";
+					whereClauseLimitNullsCount = whereClauseLimitNullsCount + " + NVL2("  + column.get1() + "." + column.get2() + ", 0, 1)";
 						
 			}
 			if(isFirst)
@@ -153,7 +170,8 @@ public class Formula2SQL extends FormulaTraverser {
 			//query.addAliasedColumn(new CustomSql("tbl"+var.getName()+".id"), var.getName());
 			query.addAliasedColumn(new CustomSql("COALESCE("+nonNullColumn+"-2147483648)"), var.getName());
 		}
-		//query.addCondition(new BinaryCondition(BinaryCondition.Op.LESS_THAN, new CustomSql(whereClauseLimitNullsCount), 2));
+		if (!whereClauseLimitNullsCount.equals(""))
+			query.addCondition(new BinaryCondition(BinaryCondition.Op.LESS_THAN_OR_EQUAL_TO, new CustomSql(whereClauseLimitNullsCount), allowedNulls));
 		
 		Set<String> allTableAliases  = queryColumnsByPred.keySet();
 		for (String tableAlias: allTableAliases)
@@ -357,17 +375,27 @@ public class Formula2SQL extends FormulaTraverser {
 	}
 	
 	
-	public String getSQL(Formula f) {
+	public Tuple2<String, Integer> getSQL(Formula f, int allowedNulls) {
+		this.allowedNulls = allowedNulls;	
 		FormulaTraverser.traverse(f, this);
 		for (Atom atom : functionalAtoms) visitFunctionalAtom(atom);
 		
 		SelectQuery q1 = new SelectQuery();
-		//q1.addAliasedColumn(new CustomSql("t1.arg0"), "X1");
-		q1.addAliasedColumn(new CustomSql("b.arg0"), "X2");
-		q1.addAliasedColumn(new CustomSql("c.arg0"), "X3");
-		//q.addCustomJoin(JoinType.INNER, "b t2", "a t1", BinaryCondition.equalTo(new CustomSql("t2.arg0"),  new CustomSql("t1.arg0") ));
-		q1.addCustomFromTable("b");
-		q1.addCustomJoin(JoinType.INNER, "", "c", new CustomCondition("true"));
+		q1.addAliasedColumn(new CustomSql("woman_n_dh.arg0"), "X2");
+		q1.addAliasedColumn(new CustomSql("man_n_dh.arg0"), "X3");
+		q1.addAliasedColumn(new CustomSql("NVL2(man_n_dh.arg0, 1, 0)"), "X4");
+		q1.addAliasedColumn(new CustomSql("NVL2(woman_n_dh.arg0, 1, 0)"), "X5");
+		q1.addAliasedColumn(new CustomSql("(man_n_dh.arg0 is null)"), "X6");
+		q1.addAliasedColumn(new CustomSql("(woman_n_dh.arg0 is null)"), "X7");
+		//q1.addAliasedColumn(new CustomSql("(cast((woman_n_dh.arg0 is null) as TINYINT)  + cast((woman_n_dh.arg0 is null) as TINYINT))"), "X8");
+		q1.addAliasedColumn(new CustomSql("cast((woman_n_dh.arg0 is null) as TINYINT)"), "X8");
+		q1.addAliasedColumn(new CustomSql("cast((man_n_dh.arg0 is null) as TINYINT)"), "X9");
+		q1.addCustomFromTable("woman_n_dh");
+		q1.addCustomJoin(JoinType.LEFT_OUTER, "", "man_n_dh", 
+				BinaryCondition.equalTo(new CustomSql("woman_n_dh.arg0"),  new CustomSql("man_n_dh.arg0") ));
+		//q1.addCondition(new BinaryCondition(BinaryCondition.Op.LESS_THAN, 
+		//		new CustomSql("(NVL(man_n_dh.arg0, 1, 0)) + (NVL(woman_n_dh.arg0, 1, 0))"), 20));
+
 		//q1.addCustomJoin(JoinType.LEFT_OUTER, "", "c t3", BinaryCondition.equalTo(new CustomSql("t2.arg0"),  new CustomSql("t3.arg0") ));
 		
 		
@@ -423,7 +451,8 @@ public class Formula2SQL extends FormulaTraverser {
 		//SelectQuery newQ  = new CustomSql("SELECT DISTINCT t1.arg0 AS X,t4.arg0 AS Y,tblX.id,tblY.id FROM a t1, b t2, c t3, d t4, e t5, f t6, g t7 INNER JOIN (SELECT t3.arg0 AS id FROM c t3 UNION SELECT t1.arg0 AS id FROM a t1 UNION SELECT t7.arg0 AS id FROM g t7 UNION SELECT t2.arg0 AS id FROM b t2)tblX ON (true) INNER JOIN (SELECT t6.arg0 AS id FROM f t6 UNION SELECT t5.arg0 AS id FROM e t5 UNION SELECT t4.arg0 AS id FROM d t4 UNION SELECT t7.arg1 AS id FROM g t7)tblY ON (true) WHERE ((t1.part IN (1,1000) ) AND (t1.psl < 50) AND (t2.arg0 = t1.arg0) AND (t2.part IN (1,1000) ) AND (t2.psl < 50) AND (t3.arg0 = t1.arg0) AND (t3.part IN (1,1000) ) AND (t3.psl < 50) AND (t4.part IN (1,1000) ) AND (t4.psl < 50) AND (t5.arg0 = t4.arg0) AND (t5.part IN (1,1000) ) AND (t5.psl < 50) AND (t6.arg0 = t4.arg0) AND (t6.part IN (1,1000) ) AND (t6.psl < 50) AND (t7.arg0 = t1.arg0) AND (t7.arg1 = t4.arg0) AND (t7.part IN (1,1000) ) AND (t7.psl < 50))");
 		
 				
-		return query.validate().toString();
+		//return q1.validate().toString();
+		return new Tuple2<String, Integer> (query.validate().toString(), predCount);
 	}
 	
 		

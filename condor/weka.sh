@@ -1,6 +1,6 @@
-mlnFilename=out-dep-varbind/res
-gtFilename=results/vid-gt
-baseFilename=results/vid-wordgram
+mlnFilename=msrvid-act
+gtFilename=msrvid-gt
+baseFilename=msrvid-wordgram
 pairsimFilename=results/vid-pairsim
 
 #mlnFilename=exp-res-sum-par
@@ -68,7 +68,8 @@ do
 	echo "@data" >> tmp-test.arff
 	paste -d , tmp-act $gtFilename | tail -n 750  >> tmp-test.arff
 
-	mln=$(java -Xmx1024m -cp ../../weka/weka.jar weka.classifiers.meta.AdditiveRegression -i -t tmp-train.arff -T tmp-test.arff  -S 0.95 -I 10 -W weka.classifiers.rules.M5Rules -- | grep Correlation | awk '{print $3}' | tr '\n' ' ')
+	mln=$(java -Xmx1024m -cp ../../weka/weka.jar weka.classifiers.meta.AdditiveRegression -i -t tmp-train.arff -T tmp-test.arff  -S 0.95 -I 10 -W weka.classifiers.rules.M5Rules -- )
+	#mln=$(java -Xmx1024m -cp ../../weka/weka.jar weka.classifiers.meta.AdditiveRegression -i -t tmp-train.arff -T tmp-test.arff  -S 0.95 -I 10 -W weka.classifiers.rules.M5Rules -- | grep Correlation | awk '{print $3}' | tr '\n' ' ')
 	#mln=$(java -Xmx1024m -cp ../../weka/weka.jar weka.classifiers.functions.LinearRegression -i -t tmp-train.arff -T tmp-test.arff | grep Correlation | awk '{print $3}' | tr '\n' ' ')
 	echo -n "$mln "
 	

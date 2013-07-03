@@ -143,11 +143,14 @@ class PSLTheoremProver(
 			case Some(t) => Some(t.toLong);
 			case  _=> None;
 		}
-    	//113,244,339,345,421,436
+    	//113,244,339,345,421,436  (zeros)
+    	//347,352,406,498,509    (memory)
     	//InnerJoin, OuterJoin, OuterJoinWithDummy;
-    	var resultScore = callPSL(mlnFile, "InnerJoin", timeout);
-    	if (resultScore == 0 )
-    	  resultScore = callPSL(mlnFile, "OuterJoin", timeout);
+    	//var resultScore = callPSL(mlnFile, "InnerJoin", timeout);
+    	var resultScore = callPSL(mlnFile, "OuterJoin", timeout);
+    	
+    	//if (resultScore == 0 )
+    	//	resultScore = callPSL(mlnFile, "OuterJoin", timeout);
     	//if (resultScore == 0 )
     	// resultScore = callPSL(mlnFile, "OuterJoinWithDummy", timeout);    	
     	  
@@ -178,8 +181,11 @@ class PSLTheoremProver(
   //mode: InnerJoin, OuterJoin, OuterJoinWithDummy
   private def callPSL (mlnFile: String, mode: String, timeout: Option[Long] = None):Double = { 
     var entailmentLine = ""
-    
-    val proc = Process("java", Seq("-cp", PSLTheoremProver.cp, "psl.TextInterface", mlnFile, mode )).run(
+    val timeoutVal = timeout match {
+      case Some(time) => time.toString();
+      case _ =>"0";
+    };
+    val proc = Process("java", Seq("-cp", PSLTheoremProver.cp, "psl.TextInterface", mlnFile, mode, timeoutVal)).run(
     ProcessLogger(l=>{
           System.out.println(l)
           if (l.startsWith("entailment()"))
@@ -370,7 +376,7 @@ class PSLTheoremProver(
 		      case FolAndExpression(first, second) => {
 		         pslFile.writeLine("rule,avg,%s".format(convert(universalifyGoalFormula(first -> entailmentConsequent_h)))) //normal anding
             	 pslFile.writeLine("rule,avg,%s".format(convert(universalifyGoalFormula(second -> entailmentConsequent_t)))) //normal anding
-            	 pslFile.writeLine("rule,avg,entailment_h()&entailment_t()>>entailment()");
+            	 pslFile.writeLine("rule,and,entailment_h()&entailment_t()>>entailment()");
 		      }
 		      case _ => {
 		        pslFile.writeLine("rule,avg,%s".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding

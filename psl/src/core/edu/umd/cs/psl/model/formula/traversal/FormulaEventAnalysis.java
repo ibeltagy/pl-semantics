@@ -89,7 +89,11 @@ public class FormulaEventAnalysis {
 		}
 		else {
 			//if (oneOf.isEmpty()) {
-				queries.add(new Conjunction((Formula[]) necessary.toArray(new Formula[necessary.size()])));
+			{
+				Conjunction conj = new Conjunction((Formula[]) necessary.toArray(new Formula[necessary.size()]));
+				conj.conjType = c.conjType;
+				queries.add(conj);
+			}
 			//}
 			//else {
 			//	for (Formula formula : oneOf) {

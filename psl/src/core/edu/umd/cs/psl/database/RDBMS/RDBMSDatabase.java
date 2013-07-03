@@ -38,6 +38,7 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.SetMultimap;
+import com.healthmarketscience.common.util.Tuple2;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.CustomSql;
 import com.healthmarketscience.sqlbuilder.InCondition;
@@ -54,6 +55,7 @@ import edu.umd.cs.psl.database.ResultAtom;
 import edu.umd.cs.psl.database.ResultList;
 import edu.umd.cs.psl.database.ResultListValues;
 import edu.umd.cs.psl.database.UniqueID;
+import edu.umd.cs.psl.groovy.PSLModel;
 import edu.umd.cs.psl.model.ConfidenceValues;
 import edu.umd.cs.psl.model.argument.ArgumentFactory;
 import edu.umd.cs.psl.model.argument.Attribute;
@@ -577,54 +579,75 @@ public class RDBMSDatabase implements Database {
 			projectTo.removeAll(partialGrounding.getVariables());
 		}
 		
-		Formula2SQL sqler = new Formula2SQL(partialGrounding, projectTo,this);
-		String query = sqler.getSQL(f);
-		log.trace(query);
-		RDBMSResultList results = new RDBMSResultList(projectTo.size());
-		for (int i=0;i<projectTo.size();i++) results.setVariable(projectTo.get(i), i);
 		
-		try {
-			Statement stmt = db.createStatement();
+		RDBMSResultList results;
+		Statement stmt ;
+	    ResultSet rs ;
+	    ResultSetMetaData rsmd ;
+	    int predCount = 0;
+	    int allowedNulls = -1;
+	    do
+	    {
 			try {
-			    ResultSet rs = stmt.executeQuery(query);
-			    ResultSetMetaData rsmd = rs.getMetaData();
-			    try {
-			    	while (rs.next()) {
-			    		GroundTerm[] res = new GroundTerm[projectTo.size()];
-			    		for (int i=0;i<projectTo.size();i++) {
-			    			Variable var = projectTo.get(i);
-			    			if (partialGrounding.hasVariable(var)) {
-			    				res[i]=partialGrounding.getVariable(var);
-			    			} else {
-				    			ArgumentType type = varTypes.getType(var);
-				    			if (type==ArgumentTypes.Number) {
-				    				res[i] = argFactory.getAttribute(rs.getDouble(var.getName()));
-				    			} else if (type==ArgumentTypes.Text) {
-				    				res[i] = argFactory.getAttribute(rs.getString(var.getName()));
-				    			} else if (type.isEntity()) {
-				    				int col = rs.findColumn(var.getName());
-				    				if (rsmd.getColumnType(col)==java.sql.Types.VARCHAR) {
-				    					res[i] = argFactory.getEntity(new RDBMSUniqueStringID(rs.getString(var.getName())), type);
-				    				} else {
-				    					assert rsmd.getColumnType(col)==java.sql.Types.INTEGER;
-				    					res[i] = argFactory.getEntity(new RDBMSUniqueIntID(rs.getInt(var.getName())), type );
-				    				}
-				    			} else throw new IllegalArgumentException("Unsupported type encountered: " + type);
-			    			}
-			    		}
-			    		results.addResult(res);
-			    	}
-			    } finally {
-			        rs.close();
-			    }
-			} finally {
-			    stmt.close();
+				results = new RDBMSResultList(projectTo.size());
+				for (int i=0;i<projectTo.size();i++) results.setVariable(projectTo.get(i), i);
+				Formula2SQL sqler = new Formula2SQL(partialGrounding, projectTo,this);
+				allowedNulls ++;
+				Tuple2<String, Integer> query_predicatesCount = sqler.getSQL(f, allowedNulls);
+				String query = query_predicatesCount.get0();
+				predCount = query_predicatesCount.get1().intValue();
+				log.trace(query);
+				
+				stmt = db.createStatement();
+				if(PSLModel.timeout != 0)
+				{
+					int timeout  = (int) ((PSLModel.timeout - System.currentTimeMillis() + PSLModel.startTime)/1000 - 1);
+					log.trace("Timeout: " + timeout);
+					stmt.setQueryTimeout(timeout);	
+				}
+								
+				try {
+				    rs = stmt.executeQuery(query);
+				    rsmd = rs.getMetaData();
+				    try {
+				    	while (rs.next()) {
+				    		GroundTerm[] res = new GroundTerm[projectTo.size()];
+				    		for (int i=0;i<projectTo.size();i++) {
+				    			Variable var = projectTo.get(i);
+				    			if (partialGrounding.hasVariable(var)) {
+				    				res[i]=partialGrounding.getVariable(var);
+				    			} else {
+					    			ArgumentType type = varTypes.getType(var);
+					    			if (type==ArgumentTypes.Number) {
+					    				res[i] = argFactory.getAttribute(rs.getDouble(var.getName()));
+					    			} else if (type==ArgumentTypes.Text) {
+					    				res[i] = argFactory.getAttribute(rs.getString(var.getName()));
+					    			} else if (type.isEntity()) {
+					    				int col = rs.findColumn(var.getName());
+					    				if (rsmd.getColumnType(col)==java.sql.Types.VARCHAR) {
+					    					res[i] = argFactory.getEntity(new RDBMSUniqueStringID(rs.getString(var.getName())), type);
+					    				} else {
+					    					assert rsmd.getColumnType(col)==java.sql.Types.INTEGER;
+					    					res[i] = argFactory.getEntity(new RDBMSUniqueIntID(rs.getInt(var.getName())), type );
+					    				}
+					    			} else throw new IllegalArgumentException("Unsupported type encountered: " + type);
+				    			}
+				    		}
+				    		results.addResult(res);
+				    	}
+				    } finally {
+				        rs.close();
+				    }
+				} finally {
+				    stmt.close();
+				}
+			} catch(SQLException e) {
+				log.error("SQL error: {}",e.getMessage());
+				throw new AssertionError(e);
 			}
-		} catch(SQLException e) {
-			log.error("SQL error: {}",e.getMessage());
-			throw new AssertionError(e);
-		}
-		log.trace("Number of results: {}",results.size());
+	    }while (results.size() == 0 & predCount>allowedNulls);
+		log.trace("Number of results: {}",results.size() + " at allowedNulls = " + allowedNulls);
+		
 		return results;
 	}
 

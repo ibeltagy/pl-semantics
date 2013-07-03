@@ -18,6 +18,7 @@ package edu.umd.cs.psl.model.formula.traversal;
 
 import edu.umd.cs.psl.model.atom.Atom;
 import edu.umd.cs.psl.model.formula.*;
+import edu.umd.cs.psl.model.formula.AbstractBranchFormula.ConjunctionTypes;
 /**
  * Implements the traversal of a formula, but performs no actions during traversal
  * Derived classes can extend this class to implement desired outcomes from traversal
@@ -25,7 +26,7 @@ import edu.umd.cs.psl.model.formula.*;
  */
 public abstract class FormulaTraverser implements FormulaTraversal {
 
-	
+	protected static ConjunctionTypes conjType = ConjunctionTypes.notSet;
 	
 	public static<V extends FormulaTraversal> V traverse(Formula f, V traverser) {
 		recursiveTraverse(f,traverser);		
@@ -36,10 +37,12 @@ public abstract class FormulaTraverser implements FormulaTraversal {
 		if (f instanceof Conjunction) {
 			if (!traverser.beforeConjunction()) return;
 			Conjunction c = (Conjunction)f;
+			conjType = c.conjType;
 			for (int i=0;i<c.getNoFormulas();i++) {
 				recursiveTraverse(c.get(i),traverser);
 			}
 			traverser.afterConjunction(c.getNoFormulas());
+			conjType = ConjunctionTypes.notSet;
 		} else if (f instanceof Disjunction) {
 			if (!traverser.beforeDisjunction()) return;
 			Disjunction d = (Disjunction)f;

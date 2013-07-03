@@ -26,6 +26,7 @@ import edu.umd.cs.psl.config.WeightLearningConfiguration;
 import edu.umd.cs.psl.model.predicate.Predicate;
 import edu.umd.cs.psl.database.PredicateDBType;
 import java.util.HashSet;
+import java.sql.Time;
 import java.util.HashSet;
 import java.util.Arrays;
 import edu.umd.cs.psl.groovy.util.*;
@@ -61,6 +62,11 @@ class PSLModel extends ModelUI {
 	private static final String setComparisonKey = 'setcomparison';
 
 	private static final String auxPredicateSeparator = '__';
+	
+	public static final long startTime = System.currentTimeMillis();
+	public static long timeout = 0;
+	
+	
 	
 	
 	def setComparisons = [:];

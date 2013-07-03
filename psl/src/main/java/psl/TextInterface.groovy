@@ -42,11 +42,16 @@ if (this.args.length != 0)
 			case "OuterJoinWithDummy":  Formula2SQL.queryJoinMode = QueryJoinMode.OuterJoinWithDummy; break;
 		} 
 	}
+	if(this.args.length >= 3)
+		PSLModel.timeout = this.args[2].toLong();
 }
 
 println "### Pair " + pslFilePath.substring(pslFilePath.lastIndexOf('/')+1, pslFilePath.lastIndexOf('.'))
 println "Time: " + new Date()
 println "Mode: " + Formula2SQL.queryJoinMode;
+println "Timeout: " + PSLModel.timeout;
+println "Arglist: " + this.args.length;
+println "Arglist: " + this.args.toString();
 m = new PSLModel(this);
 predicates = new HashMap<String,PredicateInfo>();
 
