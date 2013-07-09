@@ -274,13 +274,13 @@ class PSLTheoremProver(
 		//	"m.add predicate: \"all\", arg1: Entity;\n");
 
        //=================Predicate declarations
-    	pslFile.writeLine("predicate,all_h,1")
-      	pslFile.writeLine("predicate,all_t,1")
-      	pslFile.writeLine("predicate,all,1")
+      	pslFile.write("predicate,all_h,1\n")
+      	pslFile.write("predicate,all_t,1\n")
+      	pslFile.write("predicate,all,1\n")
       	declarationNames.foreach {
 			case (pred, varTypes) => {
-				//pslFile.writeLine("m.add predicate: \"%s\", %s open: true;".format(pred, varTypes.indices.map("arg" + _+": Entity, ").mkString("")))
-			  pslFile.writeLine("predicate,%s,%s".format(pred, varTypes.length))
+				//pslFile.write("m.add predicate: \"%s\", %s open: true;\n".format(pred, varTypes.indices.map("arg" + _+": Entity, ").mkString("")))
+			  pslFile.write("predicate,%s,%s\n".format(pred, varTypes.length))
 			}
     	}
        //=================Priors
@@ -292,10 +292,10 @@ class PSLTheoremProver(
 		  //case ("entailment_t", varTypes) => pslFile.write("m.add Prior.Simple, on: %s, weight: 0.01;\n".format("entailment_t"))
 		  //case ("entailment", varTypes) => pslFile.write("m.add Prior.Simple, on: %s, weight: 0.01;\n".format("entailment"))
 		  //case (pred, varTypes) => pslFile.write("m.add Prior.Simple, on: %s, weight: 0.1;\n".format(pred))
-		    case ("entailment_h", varTypes) => pslFile.writeLine("prior,%s,0.01".format("entailment_h"))
-			case ("entailment_t", varTypes) => pslFile.writeLine("prior,%s,0.01".format("entailment_t"))
-			case ("entailment", varTypes) => pslFile.writeLine("prior,%s,0.01".format("entailment"))
-			case (pred, varTypes) => pslFile.writeLine("prior,%s,0.1".format(pred))
+		    case ("entailment_h", varTypes) => pslFile.write("prior,%s,0.01\n".format("entailment_h"))
+			case ("entailment_t", varTypes) => pslFile.write("prior,%s,0.01\n".format("entailment_t"))
+			case ("entailment", varTypes) => pslFile.write("prior,%s,0.01\n".format("entailment"))
+			case (pred, varTypes) => pslFile.write("prior,%s,0.1\n".format(pred))
 		}
 		
        //=================Inference rules		
@@ -359,7 +359,7 @@ class PSLTheoremProver(
 		            	  })
 		            	  val rhsString = convert(rhsAnd)
 		            	  //pslFile.writeLine("m.add rule: (%s & sim(\"%s\", \"%s\")) >> %s, constraint: true;"
-		            	  pslFile.writeLine("rule,and,%s&sim(\"%s\",\"%s\")>>%s"
+		            	  pslFile.write("rule,and,%s&sim(\"%s\",\"%s\")>>%s\n"
 		            	      //.format(extendedLhsString, lastSimilarityID.toString(), "", rhsString))
 		            	      //.format(extendedLhsString, lhsSimString, rhsSimString, rhsString))
 		            	      .format(extendedLhsString, "%.3f".format(usedWeight), "", rhsString))
@@ -374,20 +374,20 @@ class PSLTheoremProver(
         
        //=================Goal
        task match {
-      	//case "rte" => pslFile.writeLine("m.add rule: %s, constraint: true;".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
-         case "rte" =>pslFile.writeLine("rule,min,%s".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
-      	//case "sts" => pslFile.writeLine("m.add rule: %s, constraint: true;".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
+      	//case "rte" => pslFile.write("m.add rule: %s, constraint: true;\n".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
+         case "rte" =>pslFile.write("rule,min,%s\n".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
+      	//case "sts" => pslFile.write("m.add rule: %s, constraint: true;\n".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
          case "sts" => {
            def writeTwoGoals(input: FolExpression):Unit = {
 			input match {
 		      case FolExistsExpression(variable, term) => writeTwoGoals(term)
 		      case FolAndExpression(first, second) => {
-		         pslFile.writeLine("rule,avg,%s".format(convert(universalifyGoalFormula(first -> entailmentConsequent_h)))) //normal anding
-            	 pslFile.writeLine("rule,avg,%s".format(convert(universalifyGoalFormula(second -> entailmentConsequent_t)))) //normal anding
-            	 pslFile.writeLine("rule,and,entailment_h()&entailment_t()>>entailment()");
+		         pslFile.write("rule,avg,%s\n".format(convert(universalifyGoalFormula(first -> entailmentConsequent_h)))) //normal anding
+            	 pslFile.write("rule,avg,%s\n".format(convert(universalifyGoalFormula(second -> entailmentConsequent_t)))) //normal anding
+            	 pslFile.write("rule,and,entailment_h()&entailment_t()>>entailment()\n");
 		      }
 		      case _ => {
-		        pslFile.writeLine("rule,avg,%s".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
+		        pslFile.write("rule,avg,%s\n".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
             	 throw new RuntimeException("in STS, goal should be (Sent1)&(Sent2)")
 		        }
 		      }
@@ -413,9 +413,9 @@ class PSLTheoremProver(
 		 var allConst_t:Set[Int] = Set();
 	     evidence.foreach {
 	        case e @ FolAtom(pred, args @ _*) => 
-	          		pslFile.writeLine(
+	          		pslFile.write(
 	          		    //"data.getInserter(%s).insert(%s);".format(pred.name, args.map(a => {
-	          		    "data,%s,%s".format(pred.name, args.map(a => {
+	          		    "data,%s,%s\n".format(pred.name, args.map(a => {
 	          					val const = a.name.substring(2).toInt+1000*min(a.name.charAt(0).toLower - 103, 2);
 	          					if (a.name.charAt(0) == 'h')
 	          						allConst_t += const; //yes, add it to allConst_t not allConst_h. This is not a typo 
@@ -429,10 +429,10 @@ class PSLTheoremProver(
 	    }
 	     
 	    //Generate evidences for predicate "all"
-	     //allConst_h.foreach (const=>pslFile.writeLine("data,all_h,%s".format(const)))
-	     //allConst_t.foreach (const=>pslFile.writeLine("data,all_t,%s".format(const)))
+	     //allConst_h.foreach (const=>pslFile.write("data,all_h,%s\n".format(const)))
+	     //allConst_t.foreach (const=>pslFile.write("data,all_t,%s\n".format(const)))
        //=================Query
-		pslFile.writeLine(
+		pslFile.write(
 		    //"ConfigManager cm = ConfigManager.getManager();\n" +
 		    //"ConfigBundle exampleBundle = cm.getBundle(\"example\");\n" +
 		    //"def result = m.mapInference(data.getDatabase(), exampleBundle);\n" +
@@ -440,7 +440,7 @@ class PSLTheoremProver(
 		    //"def result = m.mapInference(data.getDatabase());\n" +
 		    //"result.printAtoms(entailment_h, false);")
 		    //"query,entailment_h")
-		    "query.")
+		    "query.\n")
     
 	   pslFile.close();
     }
@@ -767,7 +767,7 @@ object PSLTheoremProver {
     
     val pw = new java.io.PrintWriter(new File("psl/src/main/java/psl/App.groovy"))
     try {
-      pw.writeLine("testing")
+      pw.write("testing\n")
     } finally {
       pw.close()
     }
