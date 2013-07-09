@@ -27,6 +27,8 @@ import de.mathnbits.config.Configuration;
 
 public class PSLConfiguration extends Configuration {
 
+	public static final long startTime = System.currentTimeMillis();
+	public static long timeout = 0;
 	
 	public PSLConfiguration(String rootDir, String configFile, String baseFile) {
 		super(rootDir+File.separator+configFile,(baseFile==null?null:rootDir+File.separator+baseFile));

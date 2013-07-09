@@ -55,7 +55,6 @@ import edu.umd.cs.psl.database.ResultAtom;
 import edu.umd.cs.psl.database.ResultList;
 import edu.umd.cs.psl.database.ResultListValues;
 import edu.umd.cs.psl.database.UniqueID;
-import edu.umd.cs.psl.groovy.PSLModel;
 import edu.umd.cs.psl.model.ConfidenceValues;
 import edu.umd.cs.psl.model.argument.ArgumentFactory;
 import edu.umd.cs.psl.model.argument.Attribute;
@@ -72,6 +71,7 @@ import edu.umd.cs.psl.model.atom.VariableAssignment;
 import edu.umd.cs.psl.model.formula.Formula;
 import edu.umd.cs.psl.model.function.ExternalFunction;
 import edu.umd.cs.psl.model.predicate.Predicate;
+import edu.umd.cs.psl.util.config.PSLConfiguration;
 
 public class RDBMSDatabase implements Database {
 	
@@ -599,9 +599,9 @@ public class RDBMSDatabase implements Database {
 				log.trace(query);
 				
 				stmt = db.createStatement();
-				if(PSLModel.timeout != 0)
+				if(PSLConfiguration.timeout != 0)
 				{
-					int timeout  = (int) ((PSLModel.timeout - System.currentTimeMillis() + PSLModel.startTime)/1000 - 1);
+					int timeout  = (int) ((PSLConfiguration.timeout - System.currentTimeMillis() + PSLConfiguration.startTime)/1000 - 1);
 					log.trace("Timeout: " + timeout);
 					stmt.setQueryTimeout(timeout);	
 				}

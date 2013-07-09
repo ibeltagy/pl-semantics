@@ -28,12 +28,12 @@ class PSLTheoremProver(
   
   extends ProbabilisticTheoremProver[FolExpression] {
 
-  if (PSLTheoremProver.cp == "")
+  /*if (PSLTheoremProver.cp == "")
   {
     var out = new StringBuilder
 	Process("cat", Seq("psl/cp.txt")) ! (ProcessLogger(out.append(_), System.err.println(_)))
 	PSLTheoremProver.cp = out.toString()
-  }
+  }*/
   
   val prior: Double = -3;
   var entWeight: Double = 1;
@@ -185,10 +185,11 @@ class PSLTheoremProver(
       case Some(time) => time.toString();
       case _ =>"0";
     };
-    val proc = Process("java", Seq("-cp", PSLTheoremProver.cp, "psl.TextInterface", mlnFile, mode, timeoutVal)).run(
+    //val proc = Process("java", Seq("-cp", PSLTheoremProver.cp, "psl.TextInterface", mlnFile, mode, timeoutVal)).run(
+    val proc = Process("ant", Seq("-buildfile", "psl/build.xml", "run", "-Darg0="+mlnFile, "-Darg1="+mode, "-Darg2="+timeoutVal)).run(
     ProcessLogger(l=>{
           System.out.println(l)
-          if (l.startsWith("entailment()"))
+          if (l.startsWith("     [java] entailment() V="))
         	  	entailmentLine = l;
       }, System.err.println(_)))
     
@@ -211,7 +212,13 @@ class PSLTheoremProver(
     if (entailmentLine == "")
     	return 0;
     else
-    	return entailmentLine.substring(16, entailmentLine.length()-1).toDouble;    
+    {
+      val lineSplits = entailmentLine.split("\\[");
+      val scoreWithBracket = lineSplits(lineSplits.length-1);
+      return scoreWithBracket.substring(0, scoreWithBracket.length()-1).toDouble;
+      //return entailmentLine.substring(16, entailmentLine.length()-1).toDouble;      
+    }
+    
   }
 
   private def makeMlnFile(
@@ -221,7 +228,8 @@ class PSLTheoremProver(
     evidence: List[FolExpression],
     goal: FolExpression) = {
     
-    val pslFilePath = "psl/run/%s.psl".format(Sts.pairIndex);
+    //val pslFilePath = "psl/run/%s.psl".format(Sts.pairIndex); 
+    val pslFilePath = System.getProperty("user.dir")+"/psl/run/%s.psl".format(Sts.pairIndex);
     val pslFile = new java.io.PrintWriter(new File(pslFilePath))
     try { 
 

@@ -40,7 +40,6 @@ import edu.umd.cs.psl.model.predicate.*;
 import edu.umd.cs.psl.model.kernel.rule.AbstractRuleKernel;
 import edu.umd.cs.psl.model.kernel.rule.CompatibilityRuleKernel
 import edu.umd.cs.psl.model.kernel.rule.ConstraintRuleKernel;
-import edu.umd.cs.psl.model.kernel.softrule.*;
 import edu.umd.cs.psl.model.kernel.priorweight.*;
 import edu.umd.cs.psl.model.kernel.predicateconstraint.*;
 import edu.umd.cs.psl.model.kernel.setdefinition.*;
@@ -62,10 +61,6 @@ class PSLModel extends ModelUI {
 	private static final String setComparisonKey = 'setcomparison';
 
 	private static final String auxPredicateSeparator = '__';
-	
-	public static final long startTime = System.currentTimeMillis();
-	public static long timeout = 0;
-	
 	
 	
 	

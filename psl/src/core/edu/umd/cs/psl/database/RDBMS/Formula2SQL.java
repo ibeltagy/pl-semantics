@@ -18,8 +18,6 @@ package edu.umd.cs.psl.database.RDBMS;
 
 import java.util.*;
 
-import psl.TextInterface;
-
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.healthmarketscience.common.util.Tuple2;

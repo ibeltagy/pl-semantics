@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- WARNING: Eclipse auto-generated file.
+              Any modifications will be overwritten.
+              To include a user specific buildfile here, simply create one in the same
+              directory with the processing instruction <?eclipse.ant.import?>
+              as the first entry and export the buildfile again. --><project basedir="." default="build" name="psl">
+    <property environment="env"/>
+    <property name="M2_REPO" value="/home/beltagy/.m2/repository"/>
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.6"/>
+    <property name="source" value="1.6"/>
+    <path id="Groovy DSL Support.libraryclasspath">
+        <pathelement location="/home/beltagy/.groovy/greclipse/global_dsld_support"/>
+        <pathelement location="/usr/eclipse/plugins/org.codehaus.groovy_2.0.6.xx-RELEASE-20121219-0800-e37/plugin_dsld_support/"/>
+    </path>
+    <path id="psl.classpath">
+        <pathelement location="target/classes"/>
+    	<pathelement location="groovy-all-2.1.5.jar"/>
+    	<pathelement location="${M2_REPO}/net/sourceforge/collections/collections-generic/4.01/collections-generic-4.01.jar"/>
+        <pathelement location="${M2_REPO}/com/healthmarketscience/common/common-util/1.0.2/common-util-1.0.2.jar"/>
+        <pathelement location="${M2_REPO}/commons-beanutils/commons-beanutils/1.7.0/commons-beanutils-1.7.0.jar"/>
+        <pathelement location="${M2_REPO}/commons-beanutils/commons-beanutils-core/1.8.0/commons-beanutils-core-1.8.0.jar"/>
+        <pathelement location="${M2_REPO}/commons-collections/commons-collections/3.2.1/commons-collections-3.2.1.jar"/>
+        <pathelement location="${M2_REPO}/commons-configuration/commons-configuration/1.6/commons-configuration-1.6.jar"/>
+        <pathelement location="${M2_REPO}/commons-digester/commons-digester/1.8/commons-digester-1.8.jar"/>
+        <pathelement location="${M2_REPO}/commons-lang/commons-lang/2.6/commons-lang-2.6.jar"/>
+        <pathelement location="${M2_REPO}/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1.jar"/>
+        <pathelement location="${M2_REPO}/edu/emory/mathcs/csparsej/1.0/csparsej-1.0.jar"/>
+        <pathelement location="${M2_REPO}/org/codehaus/groovy/groovy-eclipse-batch/1.8.0-03/groovy-eclipse-batch-1.8.0-03.jar"/>
+        <pathelement location="${M2_REPO}/com/google/guava/guava/r09/guava-r09.jar"/>
+        <pathelement location="${M2_REPO}/edu/emory/mathcs/jplasma/1.2/jplasma-1.2.jar"/>
+        <pathelement location="${M2_REPO}/junit/junit/4.0/junit-4.0.jar"/>
+        <pathelement location="${M2_REPO}/log4j/log4j/1.2.16/log4j-1.2.16.jar"/>
+        <pathelement location="${M2_REPO}/de/mathnbits/mathnbitsSTL/1.0/mathnbitsSTL-1.0.jar"/>
+        <pathelement location="${M2_REPO}/com/mosek/mosek/6.0/mosek-6.0.jar"/>
+        <pathelement location="${M2_REPO}/mysql/mysql-connector-java/5.0.5/mysql-connector-java-5.0.5.jar"/>
+        <pathelement location="${M2_REPO}/edu/emory/mathcs/parallelcolt/0.9.4/parallelcolt-0.9.4.jar"/>
+        <pathelement location="${M2_REPO}/edu/umd/cs/psl-addon-mosek/1.0.3/psl-addon-mosek-1.0.3.jar"/>
+        <pathelement location="${M2_REPO}/org/slf4j/slf4j-api/1.5.8/slf4j-api-1.5.8.jar"/>
+        <pathelement location="${M2_REPO}/org/slf4j/slf4j-log4j12/1.5.8/slf4j-log4j12-1.5.8.jar"/>
+        <pathelement location="${M2_REPO}/com/healthmarketscience/sqlbuilder/sqlbuilder/2.0.6/sqlbuilder-2.0.6.jar"/>
+        <pathelement location="${M2_REPO}/org/ujmp/ujmp-complete/0.2.4/ujmp-complete-0.2.4.jar"/>    	
+        <pathelement location="h2-1.3.172.jar"/>
+    </path>
+  	<taskdef name="groovyc" classname="org.codehaus.groovy.ant.Groovyc"> 
+  	     <classpath refid="psl.classpath"/> 
+  	</taskdef>              	
+    <target name="init">
+        <mkdir dir="target/classes"/>
+        <copy includeemptydirs="false" todir="target/classes">
+            <fileset dir="src/main/resources">
+                <exclude name="**/*.java"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="clean">
+        <delete dir="target/classes"/>
+    </target>
+    <target depends="clean" name="cleanall"/>
+    <target depends="build-subprojects,build-project" name="build"/>
+    <target name="build-subprojects"/>
+    <target depends="init" name="build-project">
+        <echo message="${ant.project.name}: ${ant.file}"/>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="target/classes" source="${source}" target="${target}">
+            <src path="src/main/resources"/>
+            <exclude name="**/*.java"/>
+            <classpath refid="psl.classpath"/>
+        </javac>
+        <javac debug="true" debuglevel="${debuglevel}" destdir="target/classes" source="${source}" target="${target}">
+            <src path="src/core"/>
+            <classpath refid="psl.classpath"/>
+        </javac>
+    	<javac debug="true" debuglevel="${debuglevel}" destdir="target/classes" source="${source}" target="${target}">
+            <src path="src/groovy"/>
+    		<include name="**/*.java"/>
+            <classpath refid="psl.classpath"/>
+        </javac>
+    	<groovyc destdir="target/classes" listfiles="true" verbose="true" fork="true">
+    		<src path="src/groovy"/>
+    		<src path="src/main/java"/>
+			<classpath refid="psl.classpath"/>
+    	</groovyc>
+
+    </target>
+    <target description="Build all projects which reference this project. Useful to propagate changes." name="build-refprojects"/>
+    <target description="copy Eclipse compiler jars to ant lib directory" name="init-eclipse-compiler">
+        <copy todir="${ant.library.dir}">
+            <fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
+        </copy>
+        <unzip dest="${ant.library.dir}">
+            <patternset includes="jdtCompilerAdapter.jar"/>
+            <fileset dir="${ECLIPSE_HOME}/plugins" includes="org.eclipse.jdt.core_*.jar"/>
+        </unzip>
+    </target>
+    <target description="compile project with Eclipse compiler" name="build-eclipse-compiler">
+        <property name="build.compiler" value="org.eclipse.jdt.core.JDTCompilerAdapter"/>
+        <antcall target="build"/>
+    </target>
+    <target name="run">
+        <java classname="psl.TextInterface" failonerror="true" fork="yes">
+            <classpath refid="psl.classpath"/>
+            <arg value="${arg0}"/>
+            <arg value="${arg1}"/>
+        	<arg value="${arg2}"/>
+        </java>
+    </target>
+</project>

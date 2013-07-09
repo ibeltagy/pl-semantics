@@ -21,6 +21,7 @@ import edu.umd.cs.psl.model.predicate.SpecialPredicates;
 import edu.umd.cs.psl.model.predicate.type.*;
 import edu.umd.cs.psl.ui.ModelUI.PredicateInfo;
 import edu.umd.cs.psl.ui.functions.textsimilarity.*;
+import edu.umd.cs.psl.util.config.PSLConfiguration;
 
 class Sim implements AttributeSimilarityFunction {
 	@Override
@@ -28,12 +29,15 @@ class Sim implements AttributeSimilarityFunction {
 		return Double.parseDouble(a)
 	}
 }
+println this.args[0]
+println this.args[1]
+println this.args[2]
 
 String pslFilePath = "run/test.psl";
-if (this.args.length != 0)
+if (this.args.length != 0 && this.args[0].endsWith(".psl") )
 {
 	pslFilePath = this.args[0];
-	if (this.args.length >= 2)
+	if (this.args.length >= 2 )
 	{
 		switch (this.args[1])
 		{
@@ -42,14 +46,20 @@ if (this.args.length != 0)
 			case "OuterJoinWithDummy":  Formula2SQL.queryJoinMode = QueryJoinMode.OuterJoinWithDummy; break;
 		} 
 	}
-	if(this.args.length >= 3)
-		PSLModel.timeout = this.args[2].toLong();
+	if(this.args.length >= 3 ) {
+	
+		try{
+			PSLConfiguration.timeout = this.args[2].toLong();
+		}catch(Exception e){
+			
+		}
+	}
 }
 
 println "### Pair " + pslFilePath.substring(pslFilePath.lastIndexOf('/')+1, pslFilePath.lastIndexOf('.'))
 println "Time: " + new Date()
 println "Mode: " + Formula2SQL.queryJoinMode;
-println "Timeout: " + PSLModel.timeout;
+println "Timeout: " + PSLConfiguration.timeout;
 println "Arglist: " + this.args.length;
 println "Arglist: " + this.args.toString();
 m = new PSLModel(this);
