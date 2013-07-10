@@ -647,6 +647,7 @@ public class RDBMSDatabase implements Database {
 			}
 	    }while (results.size() == 0 & predCount>allowedNulls);
 		log.trace("Number of results: {}",results.size() + " at allowedNulls = " + allowedNulls);
+		//log.trace(results.toString());
 		
 		return results;
 	}

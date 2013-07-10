@@ -371,6 +371,28 @@ class PSLTheoremProver(
 	          case HardWeightedExpression(folExp) => throw new RuntimeException("only simple inference rules are accepted");
          }
        }
+       
+       var breakVariableBindingCounter = 0;
+	   def breakVariableBinding(e: FolExpression): FolExpression = {
+	      e match {
+	        case FolParseExpression(exps) => FolParseExpression( exps.map(e=> (breakVariableBinding(e._1) , e._2) ) )
+	        case FolVariableExpression(v) => {
+	          breakVariableBindingCounter = breakVariableBindingCounter + 1;
+	          FolVariableExpression(Variable(v.name+"b"+breakVariableBindingCounter)) 
+	        }
+	        case FolApplicationExpression(fun, arg) => {
+	          fun match {
+	            case FolVariableExpression(v) => FolApplicationExpression(fun, arg)
+	            //case FolApplicationExpression(fun1, arg2) => FolApplicationExpression(FolApplicationExpression(fun1, breakVariableBinding(arg2)), breakVariableBinding(arg)) 
+	            case FolApplicationExpression(fun1, arg2) => FolAndExpression(
+	                FolApplicationExpression(FolApplicationExpression(fun1, arg2), breakVariableBinding(arg)), 
+	                FolApplicationExpression(FolApplicationExpression(fun1, breakVariableBinding(arg2)), arg))
+	          }
+	        }
+	        case _ =>
+	          e.visitStructured(breakVariableBinding, e.construct)
+	      }
+	   }
         
        //=================Goal
        task match {
@@ -382,8 +404,8 @@ class PSLTheoremProver(
 			input match {
 		      case FolExistsExpression(variable, term) => writeTwoGoals(term)
 		      case FolAndExpression(first, second) => {
-		         pslFile.write("rule,avg,%s\n".format(convert(universalifyGoalFormula(first -> entailmentConsequent_h)))) //normal anding
-            	 pslFile.write("rule,avg,%s\n".format(convert(universalifyGoalFormula(second -> entailmentConsequent_t)))) //normal anding
+		         pslFile.write("rule,avg,%s\n".format(convert(universalifyGoalFormula(breakVariableBinding(first) -> entailmentConsequent_h)))) //normal anding
+            	 pslFile.write("rule,avg,%s\n".format(convert(universalifyGoalFormula(breakVariableBinding(second) -> entailmentConsequent_t)))) //normal anding
             	 pslFile.write("rule,and,entailment_h()&entailment_t()>>entailment()\n");
 		      }
 		      case _ => {
@@ -748,6 +770,9 @@ class PSLTheoremProver(
       case FolAtom(pred, args @ _*) => pred.name.replace("'", "") + "(" + args.map(v => v.name.toUpperCase()).mkString(",") + ")"
       case FolVariableExpression(v) => v.name.toUpperCase()//if (bound(v)) v.name.toLowerCase() else quote(v.name)
     }
+  
+
+
 
   private def quote(s: String) = '"' + s + '"'
 
@@ -756,10 +781,7 @@ class PSLTheoremProver(
 object PSLTheoremProver {
 
   private var cp = "";
-  
-  
-  
-  
+
   def main(args: Array[String]) {
 
     Process("mvn", Seq("compile", "-f", "psl/pom.xml")) ! (ProcessLogger(System.err.println(_), System.err.println(_)))
