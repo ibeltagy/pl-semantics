@@ -374,6 +374,7 @@ class PSLTheoremProver(
        
        var breakVariableBindingCounter = 0;
 	   def breakVariableBinding(e: FolExpression): FolExpression = {
+	     return e;
 	      e match {
 	        case FolParseExpression(exps) => FolParseExpression( exps.map(e=> (breakVariableBinding(e._1) , e._2) ) )
 	        case FolVariableExpression(v) => {

@@ -150,11 +150,13 @@ public class Formula2SQL extends FormulaTraverser {
 				cq.addCustomFromTable(column.get0() + " " + column.get1());
 				uq.addQueries(cq);
 				nonNullColumn = column.get1() + "." + column.get2() + ", " + nonNullColumn;
+				/*
 				if(whereClauseLimitNullsCount.equals(""))
 					whereClauseLimitNullsCount = "NVL2("  + column.get1() + "." + column.get2() + ", 0, 1)";  
 				else
 					whereClauseLimitNullsCount = whereClauseLimitNullsCount + " + NVL2("  + column.get1() + "." + column.get2() + ", 0, 1)";
-						
+				*/
+							
 			}
 			if(isFirst)
 			{
@@ -168,8 +170,10 @@ public class Formula2SQL extends FormulaTraverser {
 			//query.addAliasedColumn(new CustomSql("tbl"+var.getName()+".id"), var.getName());
 			query.addAliasedColumn(new CustomSql("COALESCE("+nonNullColumn+"-2147483648)"), var.getName());
 		}
+		/*
 		if (!whereClauseLimitNullsCount.equals(""))
 			query.addCondition(new BinaryCondition(BinaryCondition.Op.LESS_THAN_OR_EQUAL_TO, new CustomSql(whereClauseLimitNullsCount), allowedNulls));
+		*/
 		
 		Set<String> allTableAliases  = queryColumnsByPred.keySet();
 		for (String tableAlias: allTableAliases)
@@ -184,7 +188,10 @@ public class Formula2SQL extends FormulaTraverser {
 																new CustomSql(tableAlias+"."+pred.pslColumn()),
 																PSLValue.getNonDefaultUpperBound()));
 			}
+			
 			assert allColumns.size() != 0;
+			
+			boolean isFirstPredColumn = true;
 			for (Tuple3<Term, RDBMSPredicateHandle, String> column : allColumns)
 			{
 				Term arg = column.get0();
@@ -207,6 +214,16 @@ public class Formula2SQL extends FormulaTraverser {
 						if (totalCond instanceof ComboCondition)
 							((ComboCondition)totalCond).addCondition(cond);
 						else totalCond = new ComboCondition(Op.AND, totalCond, cond);
+						
+						if(isFirstPredColumn)
+						{
+							if(whereClauseLimitNullsCount.equals(""))
+								whereClauseLimitNullsCount = "NVL2("  + tableAlias + "." + column.get2() + ", 0, 1)";  
+							else
+								whereClauseLimitNullsCount = whereClauseLimitNullsCount + " + NVL2("  + tableAlias + "." + column.get2() + ", 0, 1)";
+							isFirstPredColumn = false;
+						}
+						
 					}
 				}
 				
@@ -239,6 +256,9 @@ public class Formula2SQL extends FormulaTraverser {
 			else
 				query.addCustomJoin(JoinType.LEFT_OUTER, "", pred.tableName() +" "+ tableAlias, totalCond);
 		}
+		if (!whereClauseLimitNullsCount.equals(""))
+			query.addCondition(new BinaryCondition(BinaryCondition.Op.LESS_THAN_OR_EQUAL_TO, new CustomSql(whereClauseLimitNullsCount), allowedNulls));
+
 		return;
 		
 	}

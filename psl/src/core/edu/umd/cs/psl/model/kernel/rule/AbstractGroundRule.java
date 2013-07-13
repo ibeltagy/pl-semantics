@@ -89,6 +89,20 @@ abstract public class AbstractGroundRule implements GroundKernel {
 		int noFormulas = formula.getNoFormulas();
 		boolean headFound = false;
 		
+		int noSingleVarPred = 0;
+		for (int i = 0; i < noFormulas; i++) {
+			f = formula.get(i);
+		
+			if (f instanceof Atom) {
+				a = (Atom) f;
+				if (a.getArity() == 1)
+					noSingleVarPred ++;
+			}else if (f instanceof Negation) {
+				a = (Atom) ((Negation) f).getFormula();
+				if (a.getArity() == 1)
+					noSingleVarPred ++;
+			}
+		}
 		
 		for (int i = 0; i < noFormulas; i++) {
 			f = formula.get(i);
@@ -103,7 +117,11 @@ abstract public class AbstractGroundRule implements GroundKernel {
 					constant++;					
 					break;
 				case avg: 
-					sum.add(new FunctionSummand(multiplier/(noFormulas-1), a.getVariable()));
+					//sum.add(new FunctionSummand(multiplier/(noFormulas-1), a.getVariable()));
+					if (a.getArity() == 1)
+						sum.add(new FunctionSummand(multiplier/noSingleVarPred, a.getVariable()));
+					//else
+					//	sum.add(new FunctionSummand(0.001, a.getVariable()));
 					break;
 				case min: 
 					throw new RuntimeException("not supported combiner MIN");
@@ -132,7 +150,11 @@ abstract public class AbstractGroundRule implements GroundKernel {
 						sum.add(new FunctionSummand(-1*multiplier, a.getVariable()));
 						break;
 					case avg: 
-						sum.add(new FunctionSummand(-1*multiplier/(noFormulas-1), a.getVariable()));
+						//sum.add(new FunctionSummand(-1*multiplier/(noFormulas-1), a.getVariable()));
+						if (a.getArity() == 1)
+							sum.add(new FunctionSummand(-1*multiplier/noSingleVarPred, a.getVariable()));
+						//else
+						//	sum.add(new FunctionSummand(-0.001, a.getVariable()));						
 						constant++;
 						break;
 					case min: 
