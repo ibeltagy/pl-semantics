@@ -75,8 +75,8 @@ class CncLemmatizeCorpusMapper extends Mapper[Object, Text, IntWritable, Text] {
     val candcOut = candc.batchParse(tokenized, candcArgs, None, Some("boxer"))
     val outputs = splitOutput(candcOut)
     val lemmatized = lemmatize(outputs)
-//    val wordsAndLemmas = tokenized.indices.map(lemmatized.get)
-	val wordsAndLemmas = lemmatized.keys.toSeq.sorted.map(lemmatized.get)
+    val wordsAndLemmas = tokenized.indices.map(idx => lemmatized.get(100 * idx + 99))
+//	val wordsAndLemmas = lemmatized.keys.toSeq.sorted.map(lemmatized.get)
     wordsAndLemmas
   }
 
