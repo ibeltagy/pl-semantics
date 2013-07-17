@@ -67,10 +67,10 @@ public class Formula2SQL extends FormulaTraverser {
 	
 	private final Map<Variable,String> joins;
 	private final Multimap<Variable,Tuple3<String, String, String>> queryColumnsByVar;
-	private final Multimap<String,Tuple3<Term, RDBMSPredicateHandle, String>> queryColumnsByPred;
-									//tableName, tableAliase, columnName
+	private final Multimap<String,Tuple2<Term, String>> queryColumnsByPred;
+	//									VariableName, tableAliase, columnName
+	private final Map<String, RDBMSPredicateHandle> tableAliasToPredicate;
  
-	
 	private final List<Atom> functionalAtoms;
 
 	private SelectQuery query;
@@ -87,6 +87,7 @@ public class Formula2SQL extends FormulaTraverser {
 		joins = new HashMap<Variable,String>();
 		queryColumnsByPred = HashMultimap.create();
 		queryColumnsByVar = HashMultimap.create();
+		tableAliasToPredicate = new HashMap<String, RDBMSPredicateHandle>();
 		database = db;
 		query = new SelectQuery();
 		query.setIsDistinct(true);
@@ -97,6 +98,82 @@ public class Formula2SQL extends FormulaTraverser {
 	
 	public List<Atom> getFunctionalAtoms() {
 		return functionalAtoms;
+	}
+	
+	private List<String> getSortTableAliases()
+	{
+		Vector<String> predList = new Vector<String>(tableAliasToPredicate.keySet());
+		Set<String> selectedVarList = new HashSet<String>(); 
+		for (int i = 0; i < predList.size() - 1; i++)
+		{
+			int minReqIdx = i;
+			int minReqVal = 0;
+			int minVarCnt = 0;
+			Collection<Tuple2<Term, String>> varNameColNameList = queryColumnsByPred.get(predList.get(i));
+			for (Tuple2<Term, String> varNameColName : varNameColNameList)
+			{
+				if (varNameColName.get0() instanceof Variable)
+				{
+					Variable var = (Variable)varNameColName.get0();
+										
+					if (!partialGrounding.hasVariable(var)) {
+						minVarCnt ++;
+						if(!selectedVarList.contains(var.getName()))//var not in selectedVarList
+							minReqVal++;
+					}
+				}
+			}
+
+			for (int j = i+1; j < predList.size(); j++)
+			{
+				int req = 0;
+				
+				varNameColNameList = queryColumnsByPred.get(predList.get(j));
+				int varCnt = 0;
+				for (Tuple2<Term, String> varNameColName : varNameColNameList)
+				{
+					if (varNameColName.get0() instanceof Variable)
+					{
+						Variable var = (Variable)varNameColName.get0();
+											
+						if (!partialGrounding.hasVariable(var)) {
+							varCnt++;
+							if(!selectedVarList.contains(var.getName()))//var not in selectedVarList
+								req++;
+						}
+					}
+				}	
+				
+				if (req < minReqVal || (req == minReqVal && varCnt < minVarCnt ))
+				{
+					minReqVal = req;
+					minVarCnt = varCnt;
+					minReqIdx = j;
+				}
+			}
+			String tmp = predList.get(i);
+			predList.set(i, predList.get(minReqIdx));
+			predList.set(minReqIdx, tmp);
+			
+			varNameColNameList = queryColumnsByPred.get(predList.get(i));
+			for (Tuple2<Term, String> varNameColName : varNameColNameList)
+			{
+				if (varNameColName.get0() instanceof Variable)
+				{
+					Variable var = (Variable)varNameColName.get0();
+										
+					if (!partialGrounding.hasVariable(var)) {
+						selectedVarList.add(var.getName());
+					}
+				}
+			}
+			
+		}
+		for (String pred:predList)
+		{
+			System.out.println(tableAliasToPredicate.get(pred).tableName() + " " + queryColumnsByPred.get(pred).toString() );
+		}
+		return predList;
 	}
 	
 	@Override
@@ -175,13 +252,34 @@ public class Formula2SQL extends FormulaTraverser {
 			query.addCondition(new BinaryCondition(BinaryCondition.Op.LESS_THAN_OR_EQUAL_TO, new CustomSql(whereClauseLimitNullsCount), allowedNulls));
 		*/
 		
+		List<String> sortedTableAliasList = getSortTableAliases();
+		Set<Variable> addedVars = new HashSet<Variable>();
+		for (String tableAlias:sortedTableAliasList)
+		{
+			Collection<Tuple2<Term, String>> tableVars = queryColumnsByPred.get(tableAlias);
+			for (Tuple2<Term, String> tableVar:tableVars)
+			{
+				if (tableVar.get0() instanceof Variable) 
+				{
+					Variable var = (Variable)tableVar.get0();
+					if (addedVars.contains(var));
+						//nothing
+					else
+					{
+						System.out.println("add Variable:" + var.getName());
+						addedVars.add(var);
+					}
+				}
+			}
+			System.out.println("processTable: " + tableAliasToPredicate.get(tableAlias).tableName() + " " + queryColumnsByPred.get(tableAlias).toString() );
+		}
 		Set<String> allTableAliases  = queryColumnsByPred.keySet();
 		for (String tableAlias: allTableAliases)
 		{
 			//alias: var, predicate, col
-			Collection<Tuple3<Term, RDBMSPredicateHandle, String>> allColumns = queryColumnsByPred.get(tableAlias);
-			Tuple3<Term, RDBMSPredicateHandle, String> firstColumn = allColumns.iterator().next();
-			RDBMSPredicateHandle pred = firstColumn.get1();
+			Collection<Tuple2<Term, String>> allColumns = queryColumnsByPred.get(tableAlias);
+			//Tuple3<Term, RDBMSPredicateHandle, String> firstColumn = allColumns.iterator().next();
+			RDBMSPredicateHandle pred = tableAliasToPredicate.get(tableAlias);
 			Condition totalCond  = new InCondition(new CustomSql(tableAlias+"."+pred.partitionColumn()),database.getReadIDs());
 			if (!pred.isClosed()) {
 				totalCond = new ComboCondition (Op.AND, totalCond, new BinaryCondition(BinaryCondition.Op.LESS_THAN, 
@@ -192,7 +290,7 @@ public class Formula2SQL extends FormulaTraverser {
 			assert allColumns.size() != 0;
 			
 			boolean isFirstPredColumn = true;
-			for (Tuple3<Term, RDBMSPredicateHandle, String> column : allColumns)
+			for (Tuple2<Term, String> column : allColumns)
 			{
 				Term arg = column.get0();
 				if (arg == null)
@@ -208,7 +306,7 @@ public class Formula2SQL extends FormulaTraverser {
 						arg = partialGrounding.getVariable(var);
 					} else {
 						Condition cond = new BinaryCondition(BinaryCondition.Op.EQUAL_TO, 
-								new CustomSql(tableAlias+"."+column.get2()),
+								new CustomSql(tableAlias+"."+column.get1()),
 								new CustomSql("tbl"+var.getName()+".id"));
 		
 						if (totalCond instanceof ComboCondition)
@@ -218,9 +316,9 @@ public class Formula2SQL extends FormulaTraverser {
 						if(isFirstPredColumn)
 						{
 							if(whereClauseLimitNullsCount.equals(""))
-								whereClauseLimitNullsCount = "NVL2("  + tableAlias + "." + column.get2() + ", 0, 1)";  
+								whereClauseLimitNullsCount = "NVL2("  + tableAlias + "." + column.get1() + ", 0, 1)";  
 							else
-								whereClauseLimitNullsCount = whereClauseLimitNullsCount + " + NVL2("  + tableAlias + "." + column.get2() + ", 0, 1)";
+								whereClauseLimitNullsCount = whereClauseLimitNullsCount + " + NVL2("  + tableAlias + "." + column.get1() + ", 0, 1)";
 							isFirstPredColumn = false;
 						}
 						
@@ -229,7 +327,7 @@ public class Formula2SQL extends FormulaTraverser {
 				
 				if (arg instanceof Attribute) {
 					Condition cond = new BinaryCondition(BinaryCondition.Op.EQUAL_TO, 
-							new CustomSql(tableAlias+"."+column.get2()),
+							new CustomSql(tableAlias+"."+column.get1()),
 							((Attribute)arg).getAttribute());
 	
 					if (totalCond instanceof ComboCondition)
@@ -238,7 +336,7 @@ public class Formula2SQL extends FormulaTraverser {
 				} else if (arg instanceof Entity) { //Entity
 					Entity e = (Entity)arg;
 					Condition cond = new BinaryCondition(BinaryCondition.Op.EQUAL_TO, 
-							new CustomSql(tableAlias+"."+column.get2()),
+							new CustomSql(tableAlias+"."+column.get1()),
 							e.getID().getDBID());
 	
 					if (totalCond instanceof ComboCondition)
@@ -336,14 +434,15 @@ public class Formula2SQL extends FormulaTraverser {
 			String tableName = tablePrefix+tableCounter;
 			String tableDot = tableName+".";
 			query.addCustomFromTable(ph.tableName()+" "+tableName);
+			tableAliasToPredicate.put(tableName, ph);
 			Term[] arguments = atom.getArguments();
-			boolean tableAdded = false;
+			//boolean tableAdded = false;
 			for (int i=0;i<ph.argumentColumns().length;i++) {
 				Term arg = arguments[i];
 	
-				queryColumnsByPred.put(tableName, new Tuple3<Term, RDBMSPredicateHandle, String>
-								(arg, ph, ph.argumentColumns()[i]));
-				tableAdded = true;
+				queryColumnsByPred.put(tableName, new Tuple2<Term, String>
+								(arg, ph.argumentColumns()[i]));
+				//tableAdded = true;
 
 			
 				if (arg instanceof Variable) {
@@ -379,9 +478,10 @@ public class Formula2SQL extends FormulaTraverser {
 					query.addCondition(BinaryCondition.equalTo(new CustomSql(tableDot+ph.argumentColumns()[i]),  e.getID().getDBID() ));
 				} else assert arg instanceof Variable;
 			}
-			if(!tableAdded)
-				queryColumnsByPred.put(tableName, new Tuple3<Term, RDBMSPredicateHandle, String>
-					(null, ph, null));				
+			/*if(!tableAdded)
+				queryColumnsByPred.put(tableName, new Tuple2<Term, String>
+					(null, null));				
+			*/
 			
 			query.addCondition(new InCondition(new CustomSql(tableDot+ph.partitionColumn()),database.getReadIDs()));
 			if (!ph.isClosed()) {
@@ -467,9 +567,20 @@ public class Formula2SQL extends FormulaTraverser {
 		//System.out.println(outerQ.validate().toString());
 		//return outerQ.validate().toString();
 		//SelectQuery newQ  = new CustomSql("SELECT DISTINCT t1.arg0 AS X,t4.arg0 AS Y,tblX.id,tblY.id FROM a t1, b t2, c t3, d t4, e t5, f t6, g t7 INNER JOIN (SELECT t3.arg0 AS id FROM c t3 UNION SELECT t1.arg0 AS id FROM a t1 UNION SELECT t7.arg0 AS id FROM g t7 UNION SELECT t2.arg0 AS id FROM b t2)tblX ON (true) INNER JOIN (SELECT t6.arg0 AS id FROM f t6 UNION SELECT t5.arg0 AS id FROM e t5 UNION SELECT t4.arg0 AS id FROM d t4 UNION SELECT t7.arg1 AS id FROM g t7)tblY ON (true) WHERE ((t1.part IN (1,1000) ) AND (t1.psl < 50) AND (t2.arg0 = t1.arg0) AND (t2.part IN (1,1000) ) AND (t2.psl < 50) AND (t3.arg0 = t1.arg0) AND (t3.part IN (1,1000) ) AND (t3.psl < 50) AND (t4.part IN (1,1000) ) AND (t4.psl < 50) AND (t5.arg0 = t4.arg0) AND (t5.part IN (1,1000) ) AND (t5.psl < 50) AND (t6.arg0 = t4.arg0) AND (t6.part IN (1,1000) ) AND (t6.psl < 50) AND (t7.arg0 = t1.arg0) AND (t7.arg1 = t4.arg0) AND (t7.part IN (1,1000) ) AND (t7.psl < 50))");
-		
 				
 		//return q1.validate().toString();
+		
+		SelectQuery subQ = new SelectQuery();
+		subQ.addAllColumns();
+		subQ.addCustomFromTable("r_agent_dh");
+		SelectQuery outQ = new SelectQuery();
+		outQ.addAllColumns();
+		outQ.addCustomFromTable("("+subQ.toString()+")");
+		outQ.addCustomFromTable("someone_n_dh");
+		
+		
+		
+		//return new Tuple2<String, Integer> (outQ.validate().toString(), predCount);
 		return new Tuple2<String, Integer> (query.validate().toString(), predCount);
 	}
 	

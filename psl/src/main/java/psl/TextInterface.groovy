@@ -29,9 +29,6 @@ class Sim implements AttributeSimilarityFunction {
 		return Double.parseDouble(a)
 	}
 }
-println this.args[0]
-println this.args[1]
-println this.args[2]
 
 String pslFilePath = "run/test.psl";
 if (this.args.length != 0 && this.args[0].endsWith(".psl") )
