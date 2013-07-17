@@ -100,6 +100,8 @@ public class Formula2SQL extends FormulaTraverser {
 		return functionalAtoms;
 	}
 	
+	
+	//sort predicates to be used in the left outer-join query
 	private List<String> getSortTableAliases()
 	{
 		Vector<String> predList = new Vector<String>(tableAliasToPredicate.keySet());
@@ -212,45 +214,6 @@ public class Formula2SQL extends FormulaTraverser {
 		}
 		
 		String whereClauseLimitNullsCount = "";
-		//build unions, a union for each variable.
-		Set<Variable> allVars  = queryColumnsByVar.keySet();
-		for (Variable var: allVars)
-		{
-			if (!projection.contains(var))
-				continue;
-			UnionQuery uq = new UnionQuery(Type.UNION);
-			String nonNullColumn = "";
-			for (Tuple3<String, String, String> column : queryColumnsByVar.get(var))
-			{
-				SelectQuery cq = new SelectQuery();
-				cq.addAliasedColumn(new CustomSql(column.get1() + "." + column.get2()), "id");
-				cq.addCustomFromTable(column.get0() + " " + column.get1());
-				uq.addQueries(cq);
-				nonNullColumn = column.get1() + "." + column.get2() + ", " + nonNullColumn;
-				/*
-				if(whereClauseLimitNullsCount.equals(""))
-					whereClauseLimitNullsCount = "NVL2("  + column.get1() + "." + column.get2() + ", 0, 1)";  
-				else
-					whereClauseLimitNullsCount = whereClauseLimitNullsCount + " + NVL2("  + column.get1() + "." + column.get2() + ", 0, 1)";
-				*/
-							
-			}
-			if(isFirst)
-			{
-				query.addCustomFromTable("("+uq.validate().toString()+")tbl"+var.getName());
-				isFirst = false;
-			}
-			else
-				query.addCustomJoin(JoinType.LEFT_OUTER, "", "("+uq.validate().toString()+")tbl"+var.getName(), new CustomCondition("true"));
-
-			//Line below can be used for debugging
-			//query.addAliasedColumn(new CustomSql("tbl"+var.getName()+".id"), var.getName());
-			query.addAliasedColumn(new CustomSql("COALESCE("+nonNullColumn+"-2147483648)"), var.getName());
-		}
-		/*
-		if (!whereClauseLimitNullsCount.equals(""))
-			query.addCondition(new BinaryCondition(BinaryCondition.Op.LESS_THAN_OR_EQUAL_TO, new CustomSql(whereClauseLimitNullsCount), allowedNulls));
-		*/
 		
 		List<String> sortedTableAliasList = getSortTableAliases();
 		Set<Variable> addedVars = new HashSet<Variable>();
@@ -268,14 +231,36 @@ public class Formula2SQL extends FormulaTraverser {
 					{
 						System.out.println("add Variable:" + var.getName());
 						addedVars.add(var);
+//-----------------------------Build union
+						if (projection.contains(var))
+						{
+							UnionQuery uq = new UnionQuery(Type.UNION);
+							String nonNullColumn = "";
+							for (Tuple3<String, String, String> column : queryColumnsByVar.get(var))
+							{
+								SelectQuery cq = new SelectQuery();
+								cq.addAliasedColumn(new CustomSql(column.get1() + "." + column.get2()), "id");
+								cq.addCustomFromTable(column.get0() + " " + column.get1());
+								uq.addQueries(cq);
+								nonNullColumn = column.get1() + "." + column.get2() + ", " + nonNullColumn;							
+							}
+							if(isFirst)
+							{
+								query.addCustomFromTable("("+uq.validate().toString()+")tbl"+var.getName());
+								isFirst = false;
+							}
+							else
+								query.addCustomJoin(JoinType.LEFT_OUTER, "", "("+uq.validate().toString()+")tbl"+var.getName(), new CustomCondition("true"));
+	
+							//Line below can be used for debugging
+							//query.addAliasedColumn(new CustomSql("tbl"+var.getName()+".id"), var.getName());
+							query.addAliasedColumn(new CustomSql("COALESCE("+nonNullColumn+"-2147483648)"), var.getName());
+						}
+//-----------------------------End Build union
 					}
 				}
 			}
 			System.out.println("processTable: " + tableAliasToPredicate.get(tableAlias).tableName() + " " + queryColumnsByPred.get(tableAlias).toString() );
-		}
-		Set<String> allTableAliases  = queryColumnsByPred.keySet();
-		for (String tableAlias: allTableAliases)
-		{
 			//alias: var, predicate, col
 			Collection<Tuple2<Term, String>> allColumns = queryColumnsByPred.get(tableAlias);
 			//Tuple3<Term, RDBMSPredicateHandle, String> firstColumn = allColumns.iterator().next();
@@ -354,6 +339,7 @@ public class Formula2SQL extends FormulaTraverser {
 			else
 				query.addCustomJoin(JoinType.LEFT_OUTER, "", pred.tableName() +" "+ tableAlias, totalCond);
 		}
+				
 		if (!whereClauseLimitNullsCount.equals(""))
 			query.addCondition(new BinaryCondition(BinaryCondition.Op.LESS_THAN_OR_EQUAL_TO, new CustomSql(whereClauseLimitNullsCount), allowedNulls));
 
