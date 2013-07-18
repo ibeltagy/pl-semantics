@@ -145,6 +145,7 @@ class PSLTheoremProver(
 		}
     	//113,244,339,345,421,436  (zeros)
     	//347,352,406,498,509    (memory)
+    	//498,517,664,960,1431   (memroy)
     	//InnerJoin, OuterJoin, OuterJoinWithDummy;
     	//var resultScore = callPSL(mlnFile, "InnerJoin", timeout);
     	var resultScore = callPSL(mlnFile, "OuterJoin", timeout);

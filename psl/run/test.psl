@@ -23,7 +23,7 @@ prior,dance_v_dh,0.1
 prior,r_agent_dt,0.1
 prior,someone_n_dt,0.1
 prior,r_agent_dh,0.1
-rule,avg,r_agent_dh(HX0,HX1)&dance_v_dh(HX0)&someone_n_dh(HX1)&someone_n_dh(HX0)&someone_n_dh(HX2)&dance_v_dh(HX2)&r_agent_dh(HX0,HX2)&r_agent_dh(HX1,HX2)&r_agent_dh(HX3,HX4)&someone_n_dh(HX4)&dance_v_dh(HX5)>>entailment()
+rule,avg,dance_v_dh(HX0)&someone_n_dh(HX0)>>entailment()
 data,r_agent_dt,1000,1001
 data,dance_v_dt,1000
 data,someone_n_dt,1001

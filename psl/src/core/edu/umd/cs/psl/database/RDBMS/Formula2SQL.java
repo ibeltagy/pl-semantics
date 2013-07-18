@@ -286,7 +286,15 @@ public class Formula2SQL extends FormulaTraverser {
 					
 					//Line below can be used for debugging
 					//query.addCustomColumns(new CustomSql(tableAlias+"."+column.get2()));					
-					
+					if(isFirstPredColumn)
+					{
+						if(whereClauseLimitNullsCount.equals(""))
+							whereClauseLimitNullsCount = "NVL2("  + tableAlias + "." + column.get1() + ", 0, 1)";  
+						else
+							whereClauseLimitNullsCount = whereClauseLimitNullsCount + " + NVL2("  + tableAlias + "." + column.get1() + ", 0, 1)";
+						isFirstPredColumn = false;
+					}
+
 					if (partialGrounding.hasVariable(var)) {
 						arg = partialGrounding.getVariable(var);
 					} else {
@@ -297,16 +305,6 @@ public class Formula2SQL extends FormulaTraverser {
 						if (totalCond instanceof ComboCondition)
 							((ComboCondition)totalCond).addCondition(cond);
 						else totalCond = new ComboCondition(Op.AND, totalCond, cond);
-						
-						if(isFirstPredColumn)
-						{
-							if(whereClauseLimitNullsCount.equals(""))
-								whereClauseLimitNullsCount = "NVL2("  + tableAlias + "." + column.get1() + ", 0, 1)";  
-							else
-								whereClauseLimitNullsCount = whereClauseLimitNullsCount + " + NVL2("  + tableAlias + "." + column.get1() + ", 0, 1)";
-							isFirstPredColumn = false;
-						}
-						
 					}
 				}
 				
