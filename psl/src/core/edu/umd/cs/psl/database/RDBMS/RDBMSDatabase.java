@@ -607,7 +607,14 @@ public class RDBMSDatabase implements Database {
 				}
 								
 				try {
-				    rs = stmt.executeQuery(query);
+				    /*if (allowedNulls > 0)
+				    {
+				    	rs = stmt.executeQuery( "EXPLAIN ANALYZE "  + query);
+				    	rs.next();
+				    	System.out.println(rs.getString("PLAN"));
+				    }
+				    else*/ 
+				    	rs = stmt.executeQuery(query);
 				    rsmd = rs.getMetaData();
 				    try {
 				    	while (rs.next()) {

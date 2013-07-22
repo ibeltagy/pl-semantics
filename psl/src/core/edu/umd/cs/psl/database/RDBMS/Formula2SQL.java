@@ -171,10 +171,10 @@ public class Formula2SQL extends FormulaTraverser {
 			}
 			
 		}
-		for (String pred:predList)
+		/*for (String pred:predList)
 		{
 			System.out.println(tableAliasToPredicate.get(pred).tableName() + " " + queryColumnsByPred.get(pred).toString() );
-		}
+		}*/
 		return predList;
 	}
 	
@@ -202,16 +202,18 @@ public class Formula2SQL extends FormulaTraverser {
 		
 		boolean isFirst = true;
 		
-		if(projection.isEmpty()) 
+		/*if(projection.isEmpty()) 
 			query.addAllColumns();
 		else
-		{
+		{*/
 			SelectQuery qdummy = new SelectQuery();
-			qdummy.addAliasedColumn(new CustomSql("-2147483648"), "id");
+			//qdummy.addAliasedColumn(new CustomSql("-2147483648"), "dummy_id");
+			qdummy.addAliasedColumn(new CustomSql("0"), "nullCounts");
 			qdummy.addCustomFromTable("dual");
-			query.addCustomFromTable("("+qdummy.validate().toString()+")tblDummy");
+			query = qdummy; 
+			//query.addCustomFromTable("("+qdummy.validate().toString()+")tblDummy");
 			isFirst = false;
-		}
+		/*}*/
 		
 		String whereClauseLimitNullsCount = "";
 		
@@ -229,7 +231,31 @@ public class Formula2SQL extends FormulaTraverser {
 						//nothing
 					else
 					{
-						System.out.println("add Variable:" + var.getName());
+						for (Variable v:addedVars)
+						{
+							if (partialGrounding.hasVariable(v)) {
+								query.addAliasedColumn(new CustomSql(partialGrounding.getVariable(v)), v.getName()); 
+							} else {
+								query.addCustomColumns(new CustomSql(v.getName()));
+							}
+						}
+						
+						if (!whereClauseLimitNullsCount.equals(""))
+						{
+							query.addCondition(new BinaryCondition(BinaryCondition.Op.LESS_THAN_OR_EQUAL_TO, new CustomSql(whereClauseLimitNullsCount), allowedNulls));
+							query.addAliasedColumn(new CustomSql(whereClauseLimitNullsCount), "nullCounts");
+						}
+						SelectQuery tmp = query;
+						query = new SelectQuery();
+						query.addCustomFromTable("("+tmp+") innerTbl");
+						//query.addCustomColumns(new CustomSql("innerTbl.*"));
+						whereClauseLimitNullsCount = "innerTbl.nullCounts";
+						/*if (partialGrounding.hasVariable(var)) {
+							query.addAliasedColumn(new CustomSql(partialGrounding.getVariable(var)), var.getName()); 
+						} else {
+							query.addCustomColumns(new CustomSql(var.getName()));
+						}*/
+						//System.out.println("add Variable:" + var.getName());
 						addedVars.add(var);
 //-----------------------------Build union
 						if (projection.contains(var))
@@ -239,28 +265,31 @@ public class Formula2SQL extends FormulaTraverser {
 							for (Tuple3<String, String, String> column : queryColumnsByVar.get(var))
 							{
 								SelectQuery cq = new SelectQuery();
-								cq.addAliasedColumn(new CustomSql(column.get1() + "." + column.get2()), "id");
+								cq.addAliasedColumn(new CustomSql(column.get1() + "." + column.get2()), /*columnName*/var.getName());
 								cq.addCustomFromTable(column.get0() + " " + column.get1());
 								uq.addQueries(cq);
-								nonNullColumn = column.get1() + "." + column.get2() + ", " + nonNullColumn;							
+								nonNullColumn = column.get1() + "." + column.get2() + ", " + nonNullColumn;
 							}
-							if(isFirst)
+							/*if(isFirst)
 							{
 								query.addCustomFromTable("("+uq.validate().toString()+")tbl"+var.getName());
 								isFirst = false;
 							}
-							else
+							else*/ //It is never first.
 								query.addCustomJoin(JoinType.LEFT_OUTER, "", "("+uq.validate().toString()+")tbl"+var.getName(), new CustomCondition("true"));
 	
 							//Line below can be used for debugging
 							//query.addAliasedColumn(new CustomSql("tbl"+var.getName()+".id"), var.getName());
-							query.addAliasedColumn(new CustomSql("COALESCE("+nonNullColumn+"-2147483648)"), var.getName());
+							
+							//Select column
+							//query.addAliasedColumn(new CustomSql("COALESCE("+nonNullColumn+"-2147483648)"), var.getName());
+							//query.addCustomColumns(new CustomSql(var.getName()));//....
 						}
 //-----------------------------End Build union
 					}
 				}
 			}
-			System.out.println("processTable: " + tableAliasToPredicate.get(tableAlias).tableName() + " " + queryColumnsByPred.get(tableAlias).toString() );
+			//System.out.println("processTable: " + tableAliasToPredicate.get(tableAlias).tableName() + " " + queryColumnsByPred.get(tableAlias).toString() );
 			//alias: var, predicate, col
 			Collection<Tuple2<Term, String>> allColumns = queryColumnsByPred.get(tableAlias);
 			//Tuple3<Term, RDBMSPredicateHandle, String> firstColumn = allColumns.iterator().next();
@@ -294,13 +323,14 @@ public class Formula2SQL extends FormulaTraverser {
 							whereClauseLimitNullsCount = whereClauseLimitNullsCount + " + NVL2("  + tableAlias + "." + column.get1() + ", 0, 1)";
 						isFirstPredColumn = false;
 					}
-
+					
 					if (partialGrounding.hasVariable(var)) {
 						arg = partialGrounding.getVariable(var);
 					} else {
 						Condition cond = new BinaryCondition(BinaryCondition.Op.EQUAL_TO, 
 								new CustomSql(tableAlias+"."+column.get1()),
-								new CustomSql("tbl"+var.getName()+".id"));
+								//new CustomSql("tbl"+var.getName()+".id"));
+								new CustomSql(var.getName())); //changed column name
 		
 						if (totalCond instanceof ComboCondition)
 							((ComboCondition)totalCond).addCondition(cond);
@@ -337,12 +367,22 @@ public class Formula2SQL extends FormulaTraverser {
 			else
 				query.addCustomJoin(JoinType.LEFT_OUTER, "", pred.tableName() +" "+ tableAlias, totalCond);
 		}
-				
-		if (!whereClauseLimitNullsCount.equals(""))
-			query.addCondition(new BinaryCondition(BinaryCondition.Op.LESS_THAN_OR_EQUAL_TO, new CustomSql(whereClauseLimitNullsCount), allowedNulls));
-
-		return;
 		
+		for (Variable v:addedVars)
+		{
+			if (partialGrounding.hasVariable(v)) {
+				query.addAliasedColumn(new CustomSql(partialGrounding.getVariable(v)), v.getName()); 
+			} else {
+				query.addCustomColumns(new CustomSql(v.getName()));
+			}
+		}
+		
+		if (!whereClauseLimitNullsCount.equals(""))
+		{
+			query.addCondition(new BinaryCondition(BinaryCondition.Op.LESS_THAN_OR_EQUAL_TO, new CustomSql(whereClauseLimitNullsCount), allowedNulls));
+			query.addAliasedColumn(new CustomSql(whereClauseLimitNullsCount), "nullCounts");
+		}
+	
 	}
 
 	@Override
@@ -369,14 +409,28 @@ public class Formula2SQL extends FormulaTraverser {
 			for (int i=0;i<arguments.length;i++) fun.addCustomParams(convert[i]);
 			query.addCondition(BinaryCondition.greaterThan(fun, 0.0, false));
 		} else {
-			FunctionalPredicate predicate = (FunctionalPredicate)atom.getPredicate();
-			if (predicate==SpecialPredicates.Unequal) {
-				query.addCondition(BinaryCondition.notEqualTo(convert[0], convert[1]));
-			} else if (predicate==SpecialPredicates.Equal) {
-				query.addCondition(BinaryCondition.equalTo(convert[0], convert[1]));
-			} else if (predicate==SpecialPredicates.NonSymmetric) {
-				query.addCondition(BinaryCondition.lessThan(convert[0], convert[1],false));
-			} else throw new UnsupportedOperationException("Unrecognized functional Predicate: " + predicate);
+			if (allowedNulls>0)
+			{
+				FunctionalPredicate predicate = (FunctionalPredicate)atom.getPredicate();
+				if (predicate==SpecialPredicates.Unequal) {
+					query.addCondition(BinaryCondition.notEqualTo(new CustomSql(arguments[0]), new CustomSql(arguments[1])));
+				} else if (predicate==SpecialPredicates.Equal) {
+					query.addCondition(BinaryCondition.equalTo(new CustomSql(arguments[0]), new CustomSql(arguments[1])));
+				} else if (predicate==SpecialPredicates.NonSymmetric) {
+					query.addCondition(BinaryCondition.lessThan(new CustomSql(arguments[0]), new CustomSql(arguments[1]),false));
+				} else throw new UnsupportedOperationException("Unrecognized functional Predicate: " + predicate);
+			}
+			else 
+			{
+				FunctionalPredicate predicate = (FunctionalPredicate)atom.getPredicate();
+				if (predicate==SpecialPredicates.Unequal) {
+					query.addCondition(BinaryCondition.notEqualTo(convert[0], convert[1]));
+				} else if (predicate==SpecialPredicates.Equal) {
+					query.addCondition(BinaryCondition.equalTo(convert[0], convert[1]));
+				} else if (predicate==SpecialPredicates.NonSymmetric) {
+					query.addCondition(BinaryCondition.lessThan(convert[0], convert[1],false));
+				} else throw new UnsupportedOperationException("Unrecognized functional Predicate: " + predicate);	
+			}
 		}
 		
 		
