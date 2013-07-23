@@ -586,35 +586,55 @@ public class RDBMSDatabase implements Database {
 	    ResultSetMetaData rsmd ;
 	    int predCount = 0;
 	    int allowedNulls = -1;
+	    int minNullCnt = -1;
 	    do
 	    {
 			try {
 				results = new RDBMSResultList(projectTo.size());
 				for (int i=0;i<projectTo.size();i++) results.setVariable(projectTo.get(i), i);
 				Formula2SQL sqler = new Formula2SQL(partialGrounding, projectTo,this);
-				allowedNulls ++;
+
 				Tuple2<String, Integer> query_predicatesCount = sqler.getSQL(f, allowedNulls);
+
 				String query = query_predicatesCount.get0();
 				predCount = query_predicatesCount.get1().intValue();
 				log.trace(query);
 				
 				stmt = db.createStatement();
+				Statement  stmtCnt = db.createStatement();				
 				if(PSLConfiguration.timeout != 0)
 				{
 					int timeout  = (int) ((PSLConfiguration.timeout - System.currentTimeMillis() + PSLConfiguration.startTime)/1000 - 1);
 					log.trace("Timeout: " + timeout);
-					stmt.setQueryTimeout(timeout);	
+					stmt.setQueryTimeout(timeout);
+					stmtCnt.setQueryTimeout(timeout);
 				}
 								
 				try {
-				    /*if (allowedNulls > 0)
+
+				    if (allowedNulls == 0)
 				    {
-				    	rs = stmt.executeQuery( "EXPLAIN ANALYZE "  + query);
-				    	rs.next();
-				    	System.out.println(rs.getString("PLAN"));
+				    	ResultSet rsCnt = stmtCnt.executeQuery("select min(nullsCount) as minNullCnt from (" + query + ")");
+				    	rsCnt.next();
+						minNullCnt = rsCnt.getInt("minNullCnt");
+						rsCnt.close();
+						sqler = new Formula2SQL(partialGrounding, projectTo,this);
+						query_predicatesCount = sqler.getSQL(f, minNullCnt);
+						query = query_predicatesCount.get0();
+						log.trace(query);
+						rs = stmt.executeQuery(query);
+				    	//rs = stmt.executeQuery( "EXPLAIN ANALYZE "  + query + " limit 10000");
+				    	//rs = stmt.executeQuery( query + " limit 10000");
+				    	//rs = stmt.executeQuery( query);
+				    	//rs = stmt.executeQuery( "EXPLAIN ANALYZE "  + query);
+				    	//rs.next();
+				    	//System.out.println(rs.getString("PLAN"));
 				    }
-				    else*/ 
+				    else if (allowedNulls < 0)
 				    	rs = stmt.executeQuery(query);
+				    else break;
+					allowedNulls ++;
+				    
 				    rsmd = rs.getMetaData();
 				    try {
 				    	while (rs.next()) {
@@ -652,8 +672,9 @@ public class RDBMSDatabase implements Database {
 				log.error("SQL error: {}",e.getMessage());
 				throw new AssertionError(e);
 			}
-	    }while (results.size() == 0 & predCount>allowedNulls);
-		log.trace("Number of results: {}",results.size() + " at allowedNulls = " + allowedNulls);
+	    //}while (results.size() == 0 & predCount>allowedNulls);
+	    }while (results.size() == 0 & predCount!=0 & allowedNulls==0);
+		log.trace("Number of results: {}",results.size() + " at allowedNulls = " + minNullCnt );
 		//log.trace(results.toString());
 		
 		return results;
@@ -683,7 +704,6 @@ public class RDBMSDatabase implements Database {
 				}
 			}
 		}
-
 	}
 
 	@Override
