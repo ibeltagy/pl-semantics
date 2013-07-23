@@ -1,5 +1,6 @@
 package psl;
 
+import java.sql.DatabaseMetaData;
 import java.util.Map;
 
 import edu.umd.cs.psl.groovy.*;
@@ -109,7 +110,7 @@ while(( l = fr.readLine()) != null){
 			//m.add rule: (r_patient_dt(TX0,TX1)&r_agent_dt(TX0,TX2)&ride_v_dt(TX0)&bicycle_n_dt(TX1)&man_n_dt(TX2)&r_patient_dh(HX0,HX1)&r_agent_dh(HX0,HX2)&ride_v_dh(HX0)&bike_n_dh(HX1)&man_n_dh(HX2))>>entailment_h(), weight: 1
 			//m.add rule: (r_agent_dt(TX0,TX2)&sing_v_dt(TX0)&r_of_dt(TX2,TX1)&people_n_dt(TX1)&group_n_dt(TX2)&r_agent_dh(HX0,HX1)&sing_v_dh(HX0)&people_n_dh(HX1))>>entailment_h(),  weight: 1
 			data = new RelationalDataStore(m);
-			data.setup db : DatabaseDriver.H2;
+			data.setup db : DatabaseDriver.H2, type : DatabaseDriver.Type.Memory ;
 			evdStarted = true;			
 		}
 		splits = l.split(",");
