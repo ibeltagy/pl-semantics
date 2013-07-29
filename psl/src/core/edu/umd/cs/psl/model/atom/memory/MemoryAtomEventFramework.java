@@ -41,9 +41,14 @@ import edu.umd.cs.psl.model.atom.AtomEventObserver;
 import edu.umd.cs.psl.model.atom.AtomJob;
 import edu.umd.cs.psl.model.atom.AtomStatus;
 import edu.umd.cs.psl.model.atom.AtomStore;
+import edu.umd.cs.psl.model.formula.Conjunction;
+import edu.umd.cs.psl.model.formula.Formula;
+import edu.umd.cs.psl.model.formula.AbstractBranchFormula.ConjunctionTypes;
+import edu.umd.cs.psl.model.formula.Rule;
 import edu.umd.cs.psl.model.kernel.GroundKernel;
 import edu.umd.cs.psl.model.kernel.Kernel;
 import edu.umd.cs.psl.model.kernel.datacertainty.DataCertaintyKernel;
+import edu.umd.cs.psl.model.kernel.rule.ConstraintRuleKernel;
 import edu.umd.cs.psl.model.predicate.Predicate;
 import edu.umd.cs.psl.optimizer.NumericUtilities;
 
@@ -360,7 +365,29 @@ public class MemoryAtomEventFramework implements AtomEventFramework {
 
 	private void handleAtomEvent(Atom atom, AtomEvent event) {
 		for (AtomEventObserver me : atomObservers.get(event).get(atom.getPredicate())) {
-			me.notifyAtomEvent(event, atom, groundingMode, application);
+			boolean delayed = false;
+			if (me instanceof ConstraintRuleKernel)
+			{
+				ConstraintRuleKernel meConst = (ConstraintRuleKernel) me;
+				Formula f = meConst.getFormula();
+				if (f instanceof Rule )
+				{
+					Rule r = (Rule) f;
+					Formula b = r.getBody();
+					if (b instanceof Conjunction)
+					{
+						Conjunction conj = (Conjunction) b;
+						if(conj.conjType == ConjunctionTypes.avg)
+						{
+							;//add to the extra queue.
+							delayed = true;
+						}
+					}
+				}
+				else throw new RuntimeException("Unexpected formula: "  + f.toString());
+			}
+			if(!delayed)
+				me.notifyAtomEvent(event, atom, groundingMode, application);
 		}
 		for (AtomEventObserver me : atomObservers.get(event).get(AllPredicates)) {
 			me.notifyAtomEvent(event, atom, groundingMode, application);

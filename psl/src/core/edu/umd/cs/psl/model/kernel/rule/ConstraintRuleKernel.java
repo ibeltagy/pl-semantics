@@ -66,4 +66,6 @@ public class ConstraintRuleKernel extends AbstractRuleKernel {
 	public Kernel clone() {
 		return new ConstraintRuleKernel(model, formula);
 	}
+	
+	public Formula getFormula() {return this.formula;}
 }
