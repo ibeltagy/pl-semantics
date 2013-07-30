@@ -17,8 +17,11 @@
 package edu.umd.cs.psl.model.atom.memory;
 
 import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,6 +67,7 @@ public class MemoryAtomEventFramework implements AtomEventFramework {
 	private final EnumMap<AtomEvent,SetMultimap<Predicate,AtomEventObserver>> atomObservers;
 	
 	private final Queue<AtomJob> atomjobs;
+	private final Set<ConstraintRuleKernel> avgConstraintsQueu;
 	private final ActivationMode activationMode;
 	
 	private GroundingMode groundingMode;
@@ -72,6 +76,7 @@ public class MemoryAtomEventFramework implements AtomEventFramework {
 		this.application = application;
 		this.store = store;
 		atomjobs= new LinkedList<AtomJob>();
+		avgConstraintsQueu = new HashSet<ConstraintRuleKernel>();
 		activationMode = activemode;
 		groundingMode = GroundingMode.defaultGroundingMode;
 		atomObservers = new EnumMap<AtomEvent,SetMultimap<Predicate,AtomEventObserver>>(AtomEvent.class);
@@ -359,8 +364,18 @@ public class MemoryAtomEventFramework implements AtomEventFramework {
 				break;
 			default: throw new IllegalArgumentException("Unsupported event type: " + event);
 			}
-			
 		}
+		
+		Iterator<ConstraintRuleKernel> avgConstraintsQueuItr = avgConstraintsQueu.iterator();
+		while (avgConstraintsQueuItr.hasNext())
+		{
+			ConstraintRuleKernel me = avgConstraintsQueuItr.next();
+			me.groundAll(application);
+		}
+		avgConstraintsQueu.clear();
+		if(!atomjobs.isEmpty())
+			workOffJobQueue();
+		
 	}
 
 	private void handleAtomEvent(Atom atom, AtomEvent event) {
@@ -379,7 +394,7 @@ public class MemoryAtomEventFramework implements AtomEventFramework {
 						Conjunction conj = (Conjunction) b;
 						if(conj.conjType == ConjunctionTypes.avg)
 						{
-							;//add to the extra queue.
+							avgConstraintsQueu.add(meConst);//add to the extra queue.
 							delayed = true;
 						}
 					}

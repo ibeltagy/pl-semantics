@@ -195,8 +195,8 @@ public class Formula2SQL extends FormulaTraverser {
 		
 		predCount = noFormulas;
 		
-		if (allowedNulls < 0)
-			return;
+		//if (allowedNulls < 0)
+		//	return;
 		
 		query = new SelectQuery();
 		SelectQuery outerQuery = new SelectQuery();
