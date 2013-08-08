@@ -58,7 +58,7 @@ public class Formula2SQL extends FormulaTraverser {
 		InnerJoin, OuterJoin, OuterJoinWithDummy;
 	}
 	
-	public static QueryJoinMode queryJoinMode = QueryJoinMode.OuterJoin;
+	public static QueryJoinMode queryJoinMode = QueryJoinMode.InnerJoin;
 	
 	private static final String tablePrefix = "t";
 	
@@ -211,19 +211,13 @@ public class Formula2SQL extends FormulaTraverser {
 			//qdummy.addAliasedColumn(new CustomSql("-2147483648"), "dummy_id");
 			qdummy.addAliasedColumn(new CustomSql("0"), "nullCounts");
 			qdummy.addCustomFromTable("dual");
-			//query = qdummy; 
+			query = qdummy; 
 			//query.addCustomFromTable("("+qdummy.validate().toString()+")tblDummy");
-			query.addAllColumns();
-			//isFirst = false;
+			isFirst = false;
 		/*}*/
 		
 		String whereClauseLimitNullsCount = "";
 		String orderByClause = "";
-		
-		SelectQuery tmpQuery = new SelectQuery();
-		tmpQuery = qdummy;
-		
-		Variable prevVariable = null;
 		
 		List<String> sortedTableAliasList = getSortTableAliases();
 		Set<Variable> addedVars = new HashSet<Variable>();
@@ -239,16 +233,14 @@ public class Formula2SQL extends FormulaTraverser {
 						//nothing
 					else
 					{
-						/*for (Variable v:addedVars)
+						for (Variable v:addedVars)
 						{
 							if (partialGrounding.hasVariable(v)) {
-								tmpQuery.addAliasedColumn(new CustomSql(partialGrounding.getVariable(v)), v.getName()); 
+								query.addAliasedColumn(new CustomSql(partialGrounding.getVariable(v)), v.getName()); 
 							} else {
-								tmpQuery.addCustomColumns(new CustomSql(v.getName()));
+								query.addCustomColumns(new CustomSql(v.getName()));
 							}
-						}*/
-
-						
+						}
 						
 						if (!whereClauseLimitNullsCount.equals(""))
 						{
@@ -256,22 +248,15 @@ public class Formula2SQL extends FormulaTraverser {
 							//query.addCondition(new BinaryCondition(BinaryCondition.Op.LESS_THAN_OR_EQUAL_TO, new CustomSql(whereClauseLimitNullsCount), allowedNulls));
 							//query.addAliasedColumn(new CustomSql(whereClauseLimitNullsCount), "nullCounts");
 							
-							tmpQuery.addCustomOrderings(new CustomSql(orderByClause + " desc"));
+							query.addCustomOrderings(new CustomSql(orderByClause + " desc"));
 						}
-						//SelectQuery tmp = query;
-						//query = new SelectQuery();
+						SelectQuery tmp = query;
+						query = new SelectQuery();
 						//query.addCustomFromTable("("+tmp+" limit 1 ) innerTbl");
-						if (isFirst)
-							query.addCustomFromTable("("+tmpQuery+") tblDummy");
-						else 
-							query.addCustomFromTable("("+tmpQuery+") tbl" + prevVariable.getName());
-						isFirst = false;
+						query.addCustomFromTable("("+tmp+") innerTbl");
 						//query.addCustomColumns(new CustomSql("innerTbl.*"));
 						whereClauseLimitNullsCount = "innerTbl.nullCounts";
 						orderByClause = "";
-						tmpQuery = new SelectQuery();
-						tmpQuery.addCustomColumns(new CustomSql(var.getName()));
-						prevVariable = var;
 						/*if (partialGrounding.hasVariable(var)) {
 							query.addAliasedColumn(new CustomSql(partialGrounding.getVariable(var)), var.getName()); 
 						} else {
@@ -298,7 +283,7 @@ public class Formula2SQL extends FormulaTraverser {
 								isFirst = false;
 							}
 							else*/ //It is never first.
-								tmpQuery.addCustomFromTable("("+uq.validate().toString()+")tbl"+var.getName());
+								query.addCustomJoin(JoinType.LEFT_OUTER, "", "("+uq.validate().toString()+")tbl"+var.getName(), new CustomCondition("true"));
 	
 							//Line below can be used for debugging
 							//query.addAliasedColumn(new CustomSql("tbl"+var.getName()+".id"), var.getName());
@@ -389,21 +374,21 @@ public class Formula2SQL extends FormulaTraverser {
 			
 			if(isFirst)
 			{
-				tmpQuery.addCustomFromTable(pred.tableName() +" "+ tableAlias);
+				query.addCustomFromTable(pred.tableName() +" "+ tableAlias);
 				isFirst = false;
 			}
 			else
-				tmpQuery.addCustomJoin(JoinType.LEFT_OUTER, "", pred.tableName() +" "+ tableAlias, totalCond);
+				query.addCustomJoin(JoinType.LEFT_OUTER, "", pred.tableName() +" "+ tableAlias, totalCond);
 		}
 		
-		/*for (Variable v:addedVars)
+		for (Variable v:addedVars)
 		{
 			if (partialGrounding.hasVariable(v)) {
 				query.addAliasedColumn(new CustomSql(partialGrounding.getVariable(v)), v.getName()); 
 			} else {
 				query.addCustomColumns(new CustomSql(v.getName()));
 			}
-		}*/
+		}
 		
 		if (!whereClauseLimitNullsCount.equals(""))
 		{
@@ -411,11 +396,8 @@ public class Formula2SQL extends FormulaTraverser {
 			//query.addCondition(new BinaryCondition(BinaryCondition.Op.LESS_THAN_OR_EQUAL_TO, new CustomSql(whereClauseLimitNullsCount), allowedNulls));
 			//query.addAliasedColumn(new CustomSql(whereClauseLimitNullsCount), "nullCounts");
 			
-			tmpQuery.addCustomOrderings(new CustomSql(orderByClause + " desc"));
+			query.addCustomOrderings(new CustomSql(orderByClause + " desc"));
 		}
-		
-		query.addCustomFromTable("("+tmpQuery+") tbl" + prevVariable.getName());
-		
 		return;
 		
 	}
@@ -519,7 +501,16 @@ public class Formula2SQL extends FormulaTraverser {
 							String [] toSplits = to.split("\\.");
 							if (toSplits.length != 2)
 								throw new RuntimeException("Unexpected tableName.columName " + joins.get(var));
-							query.addCondition(BinaryCondition.equalTo(new CustomSql(tableDot+ph.argumentColumns()[i]),  new CustomSql(joins.get(var)) ));
+								if (conjType == ConjunctionTypes.avg)
+								{
+									ComboCondition threeCond = new ComboCondition(Op.OR);
+									threeCond.addCondition(BinaryCondition.equalTo(new CustomSql(tableDot+ph.argumentColumns()[i]),  new CustomSql(joins.get(var))));
+									threeCond.addCondition(BinaryCondition.equalTo(new CustomSql(tableDot+ph.argumentColumns()[i]),  new CustomSql("-1")));
+									threeCond.addCondition(BinaryCondition.equalTo(new CustomSql("-1"),  new CustomSql(joins.get(var))));
+									query.addCondition(threeCond);
+								}
+								else
+									query.addCondition(BinaryCondition.equalTo(new CustomSql(tableDot+ph.argumentColumns()[i]),  new CustomSql(joins.get(var)) ));
 						} else {
 							if (projection.contains(var)) {
 								query.addAliasedColumn(new CustomSql(tableDot+ph.argumentColumns()[i]), var.getName());
@@ -527,6 +518,8 @@ public class Formula2SQL extends FormulaTraverser {
 							joins.put(var, tableDot+ph.argumentColumns()[i]);
 						}
 						
+						if (conjType == ConjunctionTypes.and || conjType == ConjunctionTypes.min || conjType == ConjunctionTypes.notSet)
+							query.addCondition(BinaryCondition.notEqualTo(new CustomSql(tableDot+ph.argumentColumns()[i]),  new CustomSql("-1") ));
 					}
 				}
 				

@@ -110,8 +110,23 @@ while(( l = fr.readLine()) != null){
 			//m.add rule: (r_patient_dt(TX0,TX1)&r_agent_dt(TX0,TX2)&ride_v_dt(TX0)&bicycle_n_dt(TX1)&man_n_dt(TX2)&r_patient_dh(HX0,HX1)&r_agent_dh(HX0,HX2)&ride_v_dh(HX0)&bike_n_dh(HX1)&man_n_dh(HX2))>>entailment_h(), weight: 1
 			//m.add rule: (r_agent_dt(TX0,TX2)&sing_v_dt(TX0)&r_of_dt(TX2,TX1)&people_n_dt(TX1)&group_n_dt(TX2)&r_agent_dh(HX0,HX1)&sing_v_dh(HX0)&people_n_dh(HX1))>>entailment_h(),  weight: 1
 			data = new RelationalDataStore(m);
-			data.setup db : DatabaseDriver.H2, type : DatabaseDriver.Type.Memory ;
-			evdStarted = true;			
+			data.setup db : DatabaseDriver.H2, type : DatabaseDriver.Type.Disk;
+			evdStarted = true;
+			for (predicate in predicates)
+			{
+				//println predicate.value;
+				arity = predicate.value.getArity();
+				//println arity;
+				switch (arity)
+				{
+					case 1:
+						data.getInserter(predicate.value).insertValue(0, -1);
+						break;
+					case 2:
+						data.getInserter(predicate.value).insertValue(0, -1, -1);
+						break;
+				}
+			}
 		}
 		splits = l.split(",");
 		pred = predicates.get(splits[1])
