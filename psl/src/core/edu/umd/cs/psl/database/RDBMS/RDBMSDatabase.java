@@ -84,6 +84,11 @@ public class RDBMSDatabase implements Database {
 	 * Connection to the JDBC database
 	 */
 	private final Connection db;
+	
+	public Connection getConnection()
+	{
+		return db;
+	}
 	/**
 	 * RDBMSPredicateHandle for each predicate defined in this database. The RDBMSPredicateHandle
 	 * define how to map predicates onto relational tables.
@@ -629,7 +634,7 @@ public class RDBMSDatabase implements Database {
 						//query_predicatesCount = sqler.getSQL(f, minNullCnt);
 						query_predicatesCount = sqler.getSQL(f, 1000);
 						query = query_predicatesCount.get0();
-						//query = query + " limit 1";
+						//query = query + " limit 100";
 						log.trace(query);
 						
 				    	//rs = stmt.executeQuery( "EXPLAIN ANALYZE "  + query + " limit 10000");

@@ -112,6 +112,7 @@ while(( l = fr.readLine()) != null){
 			data = new RelationalDataStore(m);
 			data.setup db : DatabaseDriver.H2, type : DatabaseDriver.Type.Disk;
 			evdStarted = true;
+			/*
 			for (predicate in predicates)
 			{
 				//println predicate.value;
@@ -127,6 +128,7 @@ while(( l = fr.readLine()) != null){
 						break;
 				}
 			}
+			*/
 		}
 		splits = l.split(",");
 		pred = predicates.get(splits[1])
