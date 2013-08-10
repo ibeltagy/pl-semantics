@@ -73,7 +73,7 @@ boolean evdStarted = false;
 DataStore data;
 BufferedReader fr =  new BufferedReader(new FileReader(pslFilePath));
 while(( l = fr.readLine()) != null){
-	println l;
+	PSLModel.log.info(l);
 	if (l.startsWith("predicate,")) //"predicate,predicateName,argsCount"
 	{
 		splits = l.split(",");

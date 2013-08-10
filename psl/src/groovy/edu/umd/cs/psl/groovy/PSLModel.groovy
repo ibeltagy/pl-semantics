@@ -32,8 +32,12 @@ import java.util.Arrays;
 import edu.umd.cs.psl.groovy.util.*;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.umd.cs.psl.model.predicate.type.*;
 import edu.umd.cs.psl.database.Partition;
+import edu.umd.cs.psl.database.RDBMS.Formula2SQL;
 import edu.umd.cs.psl.model.argument.type.*;
 import edu.umd.cs.psl.model.argument.*;
 import edu.umd.cs.psl.model.predicate.*;
@@ -55,6 +59,9 @@ import edu.umd.cs.psl.groovy.syntax.*;
 import edu.umd.cs.psl.ui.ModelUI;
 
 class PSLModel extends ModelUI {
+	
+	private static final Logger log = LoggerFactory.getLogger(PSLModel.class);
+	
 	private static final String predicateKey ='predicate';
 	private static final String functionKey = 'function';
 	private static final String ruleKey = 'rule';

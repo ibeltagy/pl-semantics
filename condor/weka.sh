@@ -37,7 +37,7 @@ do
 	paste -d , $baseFilename $gtFilename | tail -n 750  >> tmp-test.arff
 
 	base=$(java -Xmx1024m -cp ../../weka/weka.jar weka.classifiers.meta.AdditiveRegression -i -t tmp-train.arff -T tmp-test.arff  -S 0.95 -I 10 -W weka.classifiers.rules.M5Rules -- )
-	echo "Wordgram: "
+	echo "==============================Wordgram: "
 	echo -n "$base "
 	echo "-"
 	echo "---------------------------------------------"
@@ -59,7 +59,7 @@ do
 	base2=$(java -Xmx1024m -cp ../../weka/weka.jar weka.classifiers.meta.AdditiveRegression -i -t tmp-train.arff -T tmp-test.arff  -S 0.95 -I 10 -W weka.classifiers.rules.M5Rules -- )
 
 #	base2=$(java -Xmx1024m -cp ../../weka/weka.jar weka.classifiers.meta.AdditiveRegression -i -t tmp-train.arff -T tmp-test.arff  -S 0.95 -I 10 -W weka.classifiers.rules.M5Rules -- | grep Correlation | awk '{print $3}' | tr '\n' ' ')
-	echo "Pair Sim"
+	echo "=======================================Pair Sim"
 	echo -n "$base2 "
 	echo "-"
 	echo "-------------------------------------------------"
@@ -81,7 +81,7 @@ do
 	#mln=$(java -Xmx1024m -cp ../../weka/weka.jar weka.classifiers.meta.AdditiveRegression -i -t tmp-train.arff -T tmp-test.arff  -S 0.95 -I 10 -W weka.classifiers.rules.M5Rules -- | grep Correlation | awk '{print $3}' | tr '\n' ' ')
 	#mln=$(java -Xmx1024m -cp ../../weka/weka.jar weka.classifiers.functions.LinearRegression -i -t tmp-train.arff -T tmp-test.arff | grep Correlation | awk '{print $3}' | tr '\n' ' ')
 	
-	echo "MLN"
+	echo "=================================================MLN"
 	echo -n "$mln "
 	echo "-"
 	echo "-------------------------------------------------"
@@ -120,7 +120,7 @@ do
 	comb=$(java -Xmx1024m -cp ../../weka/weka.jar weka.classifiers.meta.AdditiveRegression -i -t tmp-train.arff -T tmp-test.arff  -S 0.95 -I 10 -W weka.classifiers.rules.M5Rules -- )
 #	comb=$(java -Xmx1024m -cp ../../weka/weka.jar weka.classifiers.meta.AdditiveRegression -i -t tmp-train.arff -T tmp-test.arff  -S 0.95 -I 10 -W weka.classifiers.rules.M5Rules -- | grep Correlation | awk '{print $3}' | tr '\n' ' ')
 	#comb=$(java -Xmx1024m -cp ../../weka/weka.jar weka.classifiers.functions.LinearRegression -i -t tmp-train.arff -T tmp-test.arff | grep Correlation | awk '{print $3}' | tr '\n' ' ')
-	echo "Comb"	
+	echo "=================================================Comb"	
 	echo -n "$comb"
 	echo "-"
 	echo "-----------------------------------------"
