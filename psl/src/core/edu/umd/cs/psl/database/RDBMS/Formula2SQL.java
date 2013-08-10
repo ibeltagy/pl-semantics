@@ -525,14 +525,28 @@ public class Formula2SQL extends FormulaTraverser {
 			for (int i=0;i<arguments.length;i++) fun.addCustomParams(convert[i]);
 			query.addCondition(BinaryCondition.greaterThan(fun, 0.0, false));
 		} else {
-			FunctionalPredicate predicate = (FunctionalPredicate)atom.getPredicate();
-			if (predicate==SpecialPredicates.Unequal) {
-				query.addCondition(BinaryCondition.notEqualTo(convert[0], convert[1]));
-			} else if (predicate==SpecialPredicates.Equal) {
-				query.addCondition(BinaryCondition.equalTo(convert[0], convert[1]));
-			} else if (predicate==SpecialPredicates.NonSymmetric) {
-				query.addCondition(BinaryCondition.lessThan(convert[0], convert[1],false));
-			} else throw new UnsupportedOperationException("Unrecognized functional Predicate: " + predicate);
+			if (allowedNulls>=0)
+			{
+				FunctionalPredicate predicate = (FunctionalPredicate)atom.getPredicate();
+				if (predicate==SpecialPredicates.Unequal) {
+					query.addCondition(BinaryCondition.notEqualTo(new CustomSql(arguments[0]), new CustomSql(arguments[1])));
+				} else if (predicate==SpecialPredicates.Equal) {
+					query.addCondition(BinaryCondition.equalTo(new CustomSql(arguments[0]), new CustomSql(arguments[1])));
+				} else if (predicate==SpecialPredicates.NonSymmetric) {
+					query.addCondition(BinaryCondition.lessThan(new CustomSql(arguments[0]), new CustomSql(arguments[1]),false));
+				} else throw new UnsupportedOperationException("Unrecognized functional Predicate: " + predicate);
+			}
+			else 
+			{
+				FunctionalPredicate predicate = (FunctionalPredicate)atom.getPredicate();
+				if (predicate==SpecialPredicates.Unequal) {
+					query.addCondition(BinaryCondition.notEqualTo(convert[0], convert[1]));
+				} else if (predicate==SpecialPredicates.Equal) {
+					query.addCondition(BinaryCondition.equalTo(convert[0], convert[1]));
+				} else if (predicate==SpecialPredicates.NonSymmetric) {
+					query.addCondition(BinaryCondition.lessThan(convert[0], convert[1],false));
+				} else throw new UnsupportedOperationException("Unrecognized functional Predicate: " + predicate);	
+			}
 		}
 		
 		
