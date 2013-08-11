@@ -758,7 +758,7 @@ class PSLTheoremProver(
       //case FolIfExpression(first, second) => "(" + _convert(first, bound) + " >> " + _convert(second, bound) + ")"
       case FolIfExpression(first, second) =>  _convert(first, bound) + ">>" + _convert(second, bound) 
       case FolIffExpression(first, second) => "(" + _convert(first, bound) + " <=> " + _convert(second, bound) + ")"
-      case FolEqualityExpression(first, second) => ""
+      case FolEqualityExpression(first, second) => "dummyPred(Z)"
         	//"(" + _convert(first, bound) + " = " + _convert(second, bound) + ")";	
         	//both variables of the same type
 	        /* This part is not needed anymore because we do not have separate types for Events and Indvs anymore. 

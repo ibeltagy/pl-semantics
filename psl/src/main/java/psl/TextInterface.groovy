@@ -80,8 +80,10 @@ while(( l = fr.readLine()) != null){
 		arg = new LinkedHashMap();
 		for (i = 0;i< Integer.parseInt(splits[2]);i++)
 			arg.put("arg"+i, ArgumentTypes.Entity);
-		if (!splits[1].startsWith("all")) //predicates "all" are closed. 
-			arg.put("open", true)
+		//if (!splits[1].startsWith("all")) //predicates "all" are closed. 
+		//all predicates are open
+		arg.put("open", true)
+		
 		pred = m.addPredicate(splits[1], arg);
 		predicates.put(splits[1], pred);
 	}
