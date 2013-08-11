@@ -54,11 +54,11 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
           case HardWeightedExpression(e @ FolAtom(_, _*)) => true
           case _ => false
         }
-
+    val additionalEvid = evidenceAssumptions.map { case HardWeightedExpression(e) => e };
     delegate.prove(
       constants,
       declarations,
-      evidence ++ evidenceAssumptions.map { case HardWeightedExpression(e) => e },
+      evidence ++ additionalEvid.toSet,  //toSet to remove duplicate evidences
       newAssumptions,
       goal)
 

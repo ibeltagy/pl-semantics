@@ -135,8 +135,9 @@ while(( l = fr.readLine()) != null){
 		if (splits.length == 3) //one arg
 			//data.getInserter(pred).insertValue(0.4, Integer.parseInt(splits[2]));
 			data.getInserter(pred).insert(Integer.parseInt(splits[2]));
-		else //two args
+		else if (splits.length == 4)//two args
 			data.getInserter(pred).insert(Integer.parseInt(splits[2]), Integer.parseInt(splits[3]));
+		else throw new Exception ("Unsuported number of arguments");
 	}
 	else if (l.startsWith("query."))
 	{

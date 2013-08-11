@@ -278,6 +278,7 @@ class PSLTheoremProver(
       	pslFile.write("predicate,all_h,1\n")
       	pslFile.write("predicate,all_t,1\n")
       	pslFile.write("predicate,all,1\n")
+      	pslFile.write("predicate,dummyPred,1\n")
       	declarationNames.foreach {
 			case (pred, varTypes) => {
 				//pslFile.write("m.add predicate: \"%s\", %s open: true;\n".format(pred, varTypes.indices.map("arg" + _+": Entity, ").mkString("")))
@@ -451,7 +452,7 @@ class PSLTheoremProver(
 	          			);
 	        case e => throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
 	    }
-	     
+	    pslFile.write("data,dummyPred,999999\n");
 	    //Generate evidences for predicate "all"
 	     //allConst_h.foreach (const=>pslFile.write("data,all_h,%s\n".format(const)))
 	     //allConst_t.foreach (const=>pslFile.write("data,all_t,%s\n".format(const)))
@@ -740,7 +741,7 @@ class PSLTheoremProver(
 	     term match {
 	       //TODO: check if it is NonSymmetric or Unequal ??
 	   	   case FolEqualityExpression(first, second) => "#Unequal(%s,%s)".format(_convert(first, bound), _convert(second, bound))
-	   	   case _ => ""
+	   	   case _ => "dummyPred(Z)"
 	   	 } 
       }
          

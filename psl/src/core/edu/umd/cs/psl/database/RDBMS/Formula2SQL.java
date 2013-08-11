@@ -230,7 +230,7 @@ public class Formula2SQL extends FormulaTraverser {
 			//isFirst = false;
 		/*}*/
 		
-		String whereClauseLimitNullsCount = "";
+		//String whereClauseLimitNullsCount = "";
 		String orderByClause = "";
 		
 		SelectQuery tmpQuery = new SelectQuery();
@@ -241,6 +241,10 @@ public class Formula2SQL extends FormulaTraverser {
 		
 		List<String> sortedTableAliasList = getSortTableAliases();
 		Set<Variable> addedVars = new HashSet<Variable>();
+		
+		Set<Variable> usedVariablesInQuery = new HashSet<Variable>();
+		Vector<Tuple2<String, Condition>> leftJoins = new Vector<Tuple2<String,Condition>>();
+		
 		for (String tableAlias:sortedTableAliasList)
 		{
 			Collection<Tuple2<Term, String>> tableVars = queryColumnsByPred.get(tableAlias);
@@ -253,7 +257,7 @@ public class Formula2SQL extends FormulaTraverser {
 						//nothing
 					else
 					{
-						if (!whereClauseLimitNullsCount.equals(""))
+						if (!orderByClause.equals(""))
 						{
 							//Do nothing, do not add condtition and do not add column <<--------------
 							//query.addCondition(new BinaryCondition(BinaryCondition.Op.LESS_THAN_OR_EQUAL_TO, new CustomSql(whereClauseLimitNullsCount), allowedNulls));
@@ -275,6 +279,16 @@ public class Formula2SQL extends FormulaTraverser {
 							try {
 								if(!isFirst)
 								{
+									usedVariablesInQuery.remove(prevVariable);
+									for (Variable v:usedVariablesInQuery)
+									{
+										//tmpQuery.addCustomFromTable(new CustomSql("tbl"+v.getName()));
+										tmpQuery.addCustomJoin(JoinType.INNER, "", "tbl"+v.getName(),  new CustomCondition("true"));
+									}
+									for (Tuple2<String, Condition> leftJoin:  leftJoins)
+									{
+										tmpQuery.addCustomJoin(JoinType.LEFT_OUTER, "", leftJoin.get0(), leftJoin.get1());
+									}
 									tmpQuery.addCustomGroupings(new CustomSql(prevVariable.getName()));
 									//execute tmpQuery as an insertSelect
 									log.trace(tmpQuery.toString());
@@ -311,17 +325,19 @@ public class Formula2SQL extends FormulaTraverser {
 						
 
 						//query.addCustomColumns(new CustomSql("innerTbl.*"));
-						whereClauseLimitNullsCount = "innerTbl.nullCounts";
+						//whereClauseLimitNullsCount = "innerTbl.nullCounts";
 						orderByClause = "";
 						//tmpQuery = new SelectQuery(true);
 						tmpQuery = new SelectQuery();
 						tmpQuery.addCustomColumns(new CustomSql(var.getName()));
 						tmpQuery.addCustomFromTable("(" + qdummy.toString() + ") dummy");
-						for (Variable v:addedVars)
+						usedVariablesInQuery.clear();
+						leftJoins.clear();
+						/*for (Variable v:addedVars)
 						{
 							//tmpQuery.addCustomFromTable(new CustomSql("tbl"+v.getName()));
 							tmpQuery.addCustomJoin(JoinType.INNER, "", "tbl"+v.getName(),  new CustomCondition("true"));
-						}
+						}*/
 
 
 						prevVariable = var;
@@ -352,7 +368,8 @@ public class Formula2SQL extends FormulaTraverser {
 							}
 							else*/ //It is never first.
 								//tmpQuery.addCustomFromTable("("+uq.validate().toString()+")tbl"+var.getName());
-								tmpQuery.addCustomJoin(JoinType.LEFT_OUTER, "", "("+uq.validate().toString()+")tbl"+var.getName(),  new CustomCondition("true"));
+							leftJoins.add(new Tuple2<String, Condition>("("+uq.validate().toString()+")tbl"+var.getName(), new CustomCondition("true")));
+							//tmpQuery.addCustomJoin(JoinType.LEFT_OUTER, "", "("+uq.validate().toString()+")tbl"+var.getName(),  new CustomCondition("true"));
 								
 	
 							//Line below can be used for debugging
@@ -394,10 +411,11 @@ public class Formula2SQL extends FormulaTraverser {
 					//query.addCustomColumns(new CustomSql(tableAlias+"."+column.get2()));					
 					if(isFirstPredColumn)
 					{
-						if(whereClauseLimitNullsCount.equals(""))
+						/*if(whereClauseLimitNullsCount.equals(""))
 							whereClauseLimitNullsCount = "NVL2("  + tableAlias + "." + column.get1() + ", 0, 1)";  
 						else
 							whereClauseLimitNullsCount = whereClauseLimitNullsCount + " + NVL2("  + tableAlias + "." + column.get1() + ", 0, 1)";
+						*/
 						
 						if(orderByClause.equals(""))
 							orderByClause = "IFNULL(" + tableAlias + ".truth_value, 0)";  
@@ -414,6 +432,9 @@ public class Formula2SQL extends FormulaTraverser {
 								new CustomSql(tableAlias+"."+column.get1()),
 								//new CustomSql("tbl"+var.getName()+".id"));
 								new CustomSql(var.getName())); //changed column name
+						
+						usedVariablesInQuery.add(var);
+						
 		
 						if (totalCond instanceof ComboCondition)
 							((ComboCondition)totalCond).addCondition(cond);
@@ -448,7 +469,8 @@ public class Formula2SQL extends FormulaTraverser {
 				isFirst = false;
 			}
 			else*/
-				tmpQuery.addCustomJoin(JoinType.LEFT_OUTER, "", pred.tableName() +" "+ tableAlias, totalCond);
+			leftJoins.add(new Tuple2<String, Condition>(pred.tableName() +" "+ tableAlias, totalCond));
+			//tmpQuery.addCustomJoin(JoinType.LEFT_OUTER, "", pred.tableName() +" "+ tableAlias, totalCond);
 		}
 		
 		/*for (Variable v:addedVars)
@@ -460,7 +482,7 @@ public class Formula2SQL extends FormulaTraverser {
 			}
 		}*/
 		
-		if (!whereClauseLimitNullsCount.equals(""))
+		if (!orderByClause.equals(""))
 		{
 			//do nothing <<------------------------
 			//query.addCondition(new BinaryCondition(BinaryCondition.Op.LESS_THAN_OR_EQUAL_TO, new CustomSql(whereClauseLimitNullsCount), allowedNulls));
@@ -470,6 +492,17 @@ public class Formula2SQL extends FormulaTraverser {
 			tmpQuery.addCustomOrderings(new CustomSql("max("+orderByClause + ") desc"));
 
 		}
+		usedVariablesInQuery.remove(prevVariable);
+		for (Variable v:usedVariablesInQuery)
+		{
+			//tmpQuery.addCustomFromTable(new CustomSql("tbl"+v.getName()));
+			tmpQuery.addCustomJoin(JoinType.INNER, "", "tbl"+v.getName(),  new CustomCondition("true"));
+		}
+		for (Tuple2<String, Condition> leftJoin:  leftJoins)
+		{
+			tmpQuery.addCustomJoin(JoinType.LEFT_OUTER, "", leftJoin.get0(), leftJoin.get1());
+		}
+		
 		tmpQuery.addCustomGroupings(new CustomSql(prevVariable.getName()));
 		//execute tmpQuery as an insertSelect
 		log.trace(tmpQuery.toString());
