@@ -1,5 +1,5 @@
-mlnFilename=msrvid-act
-gtFilename=msrvid-gt
+mlnFilename=msrpar-act
+gtFilename=msrpar-gt
 baseFilename=msrvid-wordgram
 pairsimFilename=msrvid-vs-pair
 mulsimFilename=msrvid-vs-mul

@@ -17,3 +17,4 @@ resources/sts
 candc/bin/
 *.db
 psl/run
+*.class

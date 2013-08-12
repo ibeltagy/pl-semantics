@@ -521,14 +521,15 @@ public class Formula2SQL extends FormulaTraverser {
 		query = new  SelectQuery();
 		query.addAllColumns();
 		query.addCustomFromTable("(" + qdummy.toString() + ") dummy");
-		for (Variable v:addedVars)
+		
+		for (Variable v:projection)
 		{
-			//tmpQuery.addCustomFromTable(new CustomSql("tbl"+v.getName()));
-			query.addCustomJoin(JoinType.INNER, "", "tbl"+v.getName(),  new CustomCondition("true"));
+			if (addedVars.contains(v))
+				query.addCustomJoin(JoinType.INNER, "", "tbl"+v.getName(),  new CustomCondition("true"));
+			else
+				query.addCustomJoin(JoinType.INNER, "", "(SELECT 0 AS " + v.getName() + " FROM DUAL )tbl"+v.getName(),  new CustomCondition("true"));
+				
 		}
-
-		 
-		//query.addCustomFromTable("("+tmpQuery+") tbl" + prevVariable.getName());
 		
 		return;
 		

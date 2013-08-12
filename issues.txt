@@ -1,0 +1,72 @@
+830: takes 18 minutes: it is slightly changed to avoid this loong wait
+
+597: type
+610: type
+679: type
+803: type
+1399: type
+
+
+825: parsing (%) should be added to the forbidden char
+904: parsing (#) should be added to the forbidden char
+905: NotEqual: two variables unmatching types
+1067: parsing (%) should be added to the forbidden char
+1171: parsing (%) should be added to the forbidden char
+1341: parsing (@) should be added to the forbidden char
+
+1446: parsing (@) should be added to the forbidden char
+
+
+remove predicates named topic_
+
+remove _loc_, _nam_ ...
+
+
+133: wrong parse
+564: need a long paraphrasing rule
+918: add a rule between two predicates if their characters are matching. E.g sew and sewing. 
+940: we do not fix spelling mistakes. Maybe the hack above could help
+152: kengaroo. Why do not we remove _POS_ ?? THink carefully about it. 
+1321: people vs group of people
+1024: wrong parse. pizza vs slice of pizza
+245: wrong parse
+852: wrong parse
+951: wrong spelling of kangaroo. Slightly low weights. Solution on 918 may help a bit
+DO WE ALLOW rules between non-matching POS predicates ???
+963: terrible wrong parse for a very easy sentence. easy paraphrasing rule: chop up vs dice
+1305: terrible wrong parse. No workaround can fix it.
+95: wrong parse
+1488: boxer's nasty way of doing AND
+1040: wrong parse
+9: crappy boxing. It needs clever code.
+1131: paraprasing: apply butter = puttering, peice of bread vs bread
+1449: missed correference resolution. how do handle "neuter" ?
+223: wrong parse. 
+7: verctor space weight is very very low. 
+11: very low combination weights in case of very few lines
+
+1072: try to replace all relations with REL instead of the name
+r_of_dt(x, y) <=>  r_on_dt(y, x)
+r_and_dh(x, y) => r_and_dh(y,x)
+
+Try BP
+
+Try removing all rel except agent, patient
+
+terrible overestimated in PAR: 674, 531, 541, 712
+=========================================================
+PSL
+2-Is it better to limit number of nulls ? 
+
+3-replace "all" with "default". 
+
+4-grounding of avg, entailment_h & entailment_t >> entailment  does not work correctly if one of the two predicates in the LHS is zero. It works as AND not AVG
+
+5-Timeout: 498, 517, 664
+Ill-posed optimization: 960, 1431
+Zero because of error 4 above: 592, 924, 1418
+
+============================================================
+Logic: 
+-Handling negation is wrong.  For now, it is replaced with dummy predicate
+-Handling some of the equality contstraints is also wrong

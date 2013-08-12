@@ -54,3 +54,8 @@ Running STS test suite
 ----------------------
 
     ~/mln-semantics$ bin/mlnsem run
+
+Set Eclipse project: 
+--------------------
+-run bin/sbt...   then type eclipse
+-fix configuration path in scalabha project
