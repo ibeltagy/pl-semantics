@@ -41,16 +41,16 @@ class TextualTheoremProver(
     var txtEx  = (t match {
       case Some(txt) => txt;
       case _ => {
-        println ("Parsing failed. Return 0.5");
-        return Some (0.5);
+        println ("Parsing text failed. Return -2");
+        return Some (-2);
       }
     })
     
     var hypEx  = (h match {
       case Some(txt) => txt;
       case _ => {
-        println ("Parsing failed. Return 0.5");
-        return Some (0.5);
+        println ("Parsing hypothesis failed. Return -2");
+        return Some (-2);
       }
     })
     

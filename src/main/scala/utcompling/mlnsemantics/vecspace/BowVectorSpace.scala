@@ -12,7 +12,7 @@ object BowVectorSpace {
   }
 
   def apply(filename: String, filter: String => Boolean): Map[String, BowVector] = {
-    readLines(filename).map(_.split("\t")).flatMap {
+    readLines(filename, "ISO-8859-1").map(_.split("\t")).flatMap {
       case Array(word, vector @ _*) =>
         if (filter(word)) {
           val pairs =

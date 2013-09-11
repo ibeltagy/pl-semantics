@@ -4,81 +4,106 @@ export CANDCHOME=candc/bin
 export ALCHEMYHOME=/u/beltagy/workspace/deft/alchemy-2/bin
 export WORDNETHOME=resources/wordnet
 
-
 #export CANDCHOME="/u/beltagy/workspace/deft/candcLatest/bin"
 #export ALCHEMYHOME="/u/beltagy/workspace/deft/alchemy-2/bin"
 #export WORDNETHOME="/u/beltagy/workspace/deft/mln-semantics/resources/wordnet"
 
-
 SBT="java -Dfile.encoding=UTF8 -Xdebug -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=256m -jar bin/sbt-launch-*.jar"
 START="target/start"
-STS="resources/sts"
+RES="resources"
+version=3         #rte 1, 2, 3
+rtemode="test"    #test or train
 
 CMD=$1
 shift
-
 
 case $CMD in
   compile)
 	$SBT add-start-script-tasks start-script
    ;;
   run-vid)
-	$START utcompling.mlnsemantics.run.Sts run $STS/STS.MSRvid.in.txt $STS/STS.MSRvid.in.box $STS/STS.MSRvid.in.vs $STS/STS.MSRvid.gs.txt $STS/STS.MSRvid.out.txt "$@"
+	$START utcompling.mlnsemantics.run.Sts run $RES/sts/STS.MSRvid.in.txt $RES/sts/STS.MSRvid.in.box $RES/sts/STS.MSRvid.in.vs $RES/sts/STS.MSRvid.gs.txt $RES/sts/STS.MSRvid.out.txt "$@"
    ;;
   run-par)
-	$START utcompling.mlnsemantics.run.Sts run $STS/STS.MSRpar.in.txt $STS/STS.MSRpar.in.box $STS/STS.MSRpar.in.vs $STS/STS.MSRpar.gs.txt $STS/STS.MSRpar.out.txt "$@"
+	$START utcompling.mlnsemantics.run.Sts run $RES/sts/STS.MSRpar.in.txt $RES/sts/STS.MSRpar.in.box $RES/sts/STS.MSRpar.in.vs $RES/sts/STS.MSRpar.gs.txt $RES/sts/STS.MSRpar.out.txt "$@"
    ;;
   run-par-full)
-	$START utcompling.mlnsemantics.run.Sts run $STS/msrParFull.in.txt $STS/msrParFull.in.box $STS/msrParFull.in.vs $STS/msrParFull.gs.txt $STS/msrParFull.out.txt "$@"
+	$START utcompling.mlnsemantics.run.Sts run $RES/sts/msrParFull.in.txt $RES/sts/msrParFull.in.box $RES/sts/msrParFull.in.vs $RES/sts/msrParFull.gs.txt $RES/sts/msrParFull.out.txt "$@"
    ;;
   run)
-#	$START utcompling.mlnsemantics.run.Sts run $STS/prob.in.txt $STS/prob.in.box $STS/prob.in.vs $STS/prob.gs.txt $STS/prob.out.txt "$@"
-#	$START utcompling.mlnsemantics.run.Sts run $STS/STS.MSRvid.in.txt $STS/STS.MSRvid.in.box $STS/STS.MSRvid.in.vs $STS/STS.MSRvid.gs.txt $STS/STS.MSRvid.out.txt "$@"
-#	$START utcompling.mlnsemantics.run.Sts run $STS/STS.MSRpar.in.txt $STS/STS.MSRpar.in.box $STS/STS.MSRpar.in.vs $STS/STS.MSRpar.gs.txt $STS/STS.MSRpar.out.txt "$@"
-#	$START utcompling.mlnsemantics.run.Sts run $STS/STS.OnWN.in.txt $STS/STS.OnWN.in.box $STS/STS.OnWN.in.vs $STS/STS.OnWN.gs.txt $STS/STS.OnWN.out.txt "$@"
-#	$START utcompling.mlnsemantics.run.Sts run $STS/STS.SMTeuroparl.in.txt $STS/STS.SMTeuroparl.in.box $STS/STS.SMTeuroparl.in.vs $STS/STS.SMTeuroparl.gs.txt $STS/STS.SMTeuroparl.out.txt "$@"
-#	$START utcompling.mlnsemantics.run.Sts run $STS/STS.SMTnews.in.txt $STS/STS.SMTnews.in.box $STS/STS.SMTnews.in.vs $STS/STS.SMTnews.gs.txt $STS/STS.SMTnews.out.txt "$@"
-	$START utcompling.mlnsemantics.run.Sts run $STS/tmp.txt $STS/tmp.box $STS/tmp.vs $STS/tmp.gs.txt $STS/tmp.out -kbest 2 -task rte "$@"
+#	$START utcompling.mlnsemantics.run.Sts run $RES/sts/prob.in.txt $RES/sts/prob.in.box $RES/sts/prob.in.vs $RES/sts/prob.gs.txt $RES/sts/prob.out.txt "$@"
+#	$START utcompling.mlnsemantics.run.Sts run $RES/sts/STS.MSRvid.in.txt $RES/sts/STS.MSRvid.in.box $RES/sts/STS.MSRvid.in.vs $RES/sts/STS.MSRvid.gs.txt $RES/sts/STS.MSRvid.out.txt "$@"
+#	$START utcompling.mlnsemantics.run.Sts run $RES/sts/STS.MSRpar.in.txt $RES/sts/STS.MSRpar.in.box $RES/sts/STS.MSRpar.in.vs $RES/sts/STS.MSRpar.gs.txt $RES/sts/STS.MSRpar.out.txt "$@"
+#	$START utcompling.mlnsemantics.run.Sts run $RES/sts/STS.OnWN.in.txt $RES/sts/STS.OnWN.in.box $RES/sts/STS.OnWN.in.vs $RES/sts/STS.OnWN.gs.txt $RES/sts/STS.OnWN.out.txt "$@"
+#	$START utcompling.mlnsemantics.run.Sts run $RES/sts/STS.SMTeuroparl.in.txt $RES/sts/STS.SMTeuroparl.in.box $RES/sts/STS.SMTeuroparl.in.vs $RES/sts/STS.SMTeuroparl.gs.txt $RES/sts/STS.SMTeuroparl.out.txt "$@"
+#	$START utcompling.mlnsemantics.run.Sts run $RES/sts/STS.SMTnews.in.txt $RES/sts/STS.SMTnews.in.box $RES/sts/STS.SMTnews.in.vs $RES/sts/STS.SMTnews.gs.txt $RES/sts/STS.SMTnews.out.txt "$@"
+	$START utcompling.mlnsemantics.run.Sts run $RES/sts/tmp.txt $RES/sts/tmp.box $RES/sts/tmp.vs $RES/sts/tmp.gs.txt $RES/sts/tmp.out -kbest 2 -task rte "$@"
 	;;
   box)
-#	$START utcompling.mlnsemantics.run.Sts box $STS/prob.in.txt $STS/prob.in.box "$@"
-	$START utcompling.mlnsemantics.run.Sts box $STS/STS.MSRvid.in.txt $STS/STS.MSRvid.in.box "$@"
-#	$START utcompling.mlnsemantics.run.Sts box $STS/msrParFull.in.txt $STS/msrParFull.in.box "$@"
-#	$START utcompling.mlnsemantics.run.Sts box $STS/STS.MSRpar.in.txt $STS/STS.MSRpar.in.box "$@"
-#	$START utcompling.mlnsemantics.run.Sts box $STS/STS.OnWN.in.txt $STS/STS.OnWN.in.box "$@"
-#	$START utcompling.mlnsemantics.run.Sts box $STS/STS.SMTeuroparl.in.txt $STS/STS.SMTeuroparl.in.box "$@"
-#	$START utcompling.mlnsemantics.run.Sts box $STS/STS.SMTnews.in.txt $STS/STS.SMTnews.in.box "$@"
+#	$START utcompling.mlnsemantics.run.Sts box $RES/sts/prob.in.txt $RES/sts/prob.in.box "$@"
+	$START utcompling.mlnsemantics.run.Sts box $RES/sts/STS.MSRvid.in.txt $RES/sts/STS.MSRvid.in.box "$@"
+#	$START utcompling.mlnsemantics.run.Sts box $RES/sts/msrParFull.in.txt $RES/sts/msrParFull.in.box "$@"
+#	$START utcompling.mlnsemantics.run.Sts box $RES/sts/STS.MSRpar.in.txt $RES/sts/STS.MSRpar.in.box "$@"
+#	$START utcompling.mlnsemantics.run.Sts box $RES/sts/STS.OnWN.in.txt $RES/sts/STS.OnWN.in.box "$@"
+#	$START utcompling.mlnsemantics.run.Sts box $RES/sts/STS.SMTeuroparl.in.txt $RES/sts/STS.SMTeuroparl.in.box "$@"
+#	$START utcompling.mlnsemantics.run.Sts box $RES/sts/STS.SMTnews.in.txt $RES/sts/STS.SMTnews.in.box "$@"
 	;;
   vs)
-#	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/prob.in.lem $STS/prob.in.vs "$@"
-#	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/msrParFull.in.lem $STS/msrParFull.in.vs "$@"
-	$START utcompling.mlnsemantics.run.Sts vs /scratch/cluster/gboleda/dist-sem-models/bnc-ukwac-wacky.min50.lemma.alphasorted.ppmi.dan $STS/STS.MSRvid.in.lem $STS/STS.MSRvid.in.vs "$@"
-#	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/STS.MSRpar.in.lem $STS/STS.MSRpar.in.vs "$@"
-#	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/STS.OnWN.in.lem $STS/STS.OnWN.in.vs "$@"
-#	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/STS.SMTeuroparl.in.lem $STS/STS.SMTeuroparl.in.vs "$@"
-#	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/STS.SMTnews.in.lem $STS/STS.SMTnews.in.vs "$@"
+#	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $RES/sts/prob.in.lem $RES/sts/prob.in.vs "$@"
+#	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $RES/sts/msrParFull.in.lem $RES/sts/msrParFull.in.vs "$@"
+	$START utcompling.mlnsemantics.run.Sts vs /scratch/cluster/gboleda/dist-sem-models/bnc-ukwac-wacky.min50.lemma.alphasorted.ppmi.dan $RES/sts/STS.MSRvid.in.lem $RES/sts/STS.MSRvid.in.vs "$@"
+#	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $RES/sts/STS.MSRpar.in.lem $RES/sts/STS.MSRpar.in.vs "$@"
+#	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $RES/sts/STS.OnWN.in.lem $RES/sts/STS.OnWN.in.vs "$@"
+#	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $RES/sts/STS.SMTeuroparl.in.lem $RES/sts/STS.SMTeuroparl.in.vs "$@"
+#	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $RES/sts/STS.SMTnews.in.lem $RES/sts/STS.SMTnews.in.vs "$@"
 	;;
   vs-pos)
-#        $START utcompling.mlnsemantics.run.Sts vs /scratch/cluster/beltagy/deft/CORE_SS.bnc-ukwac-wacky.min50.10K.ppmi.svd_500.dan $STS/prob.in.lem $STS/prob.in.vs.pos "$@"
-#	$START utcompling.mlnsemantics.run.Sts vs /scratch/cluster/beltagy/deft/CORE_SS.bnc-ukwac-wacky.min50.10K.ppmi.svd_500.dan $STS/msrParFull.in.lem $STS/msrParFull.in.vs.pos "$@"
-#	$START utcompling.mlnsemantics.run.Sts vs /scratch/cluster/beltagy/deft/CORE_SS.bnc-ukwac-wacky.min50.10K.ppmi.svd_500.dan $STS/STS.MSRvid.in.lem $STS/STS.MSRvid.in.vs.pos "$@"
-	$START utcompling.mlnsemantics.run.Sts vs /scratch/cluster/beltagy/deft/CORE_SS.bnc-ukwac-wacky.min50.10K.ppmi.svd_500.dan $STS/STS.MSRpar.in.lem $STS/STS.MSRpar.in.vs.pos "$@"
+#        $START utcompling.mlnsemantics.run.Sts vs /scratch/cluster/beltagy/deft/CORE_SS.bnc-ukwac-wacky.min50.10K.ppmi.svd_500.dan $RES/sts/prob.in.lem $RES/sts/prob.in.vs.pos "$@"
+#	$START utcompling.mlnsemantics.run.Sts vs /scratch/cluster/beltagy/deft/CORE_SS.bnc-ukwac-wacky.min50.10K.ppmi.svd_500.dan $RES/sts/msrParFull.in.lem $RES/sts/msrParFull.in.vs.pos "$@"
+#	$START utcompling.mlnsemantics.run.Sts vs /scratch/cluster/beltagy/deft/CORE_SS.bnc-ukwac-wacky.min50.10K.ppmi.svd_500.dan $RES/sts/STS.MSRvid.in.lem $RES/sts/STS.MSRvid.in.vs.pos "$@"
+	$START utcompling.mlnsemantics.run.Sts vs /scratch/cluster/beltagy/deft/CORE_SS.bnc-ukwac-wacky.min50.10K.ppmi.svd_500.dan $RES/sts/STS.MSRpar.in.lem $RES/sts/STS.MSRpar.in.vs.pos "$@"
 	;;
   lem)
-#	$START utcompling.mlnsemantics.run.Sts lem $STS/prob.in.txt $STS/prob.in.lem "$@"
-#	$START utcompling.mlnsemantics.run.Sts lem $STS/STS.MSRvid.in.txt $STS/STS.MSRvid.in.lem "$@"
-	$START utcompling.mlnsemantics.run.Sts lem $STS/msrParFull.in.txt $STS/msrParFull.in.lem "$@"
-#	$START utcompling.mlnsemantics.run.Sts lem $STS/STS.MSRpar.in.txt $STS/STS.MSRpar.in.lem "$@"
-#	$START utcompling.mlnsemantics.run.Sts lem $STS/STS.OnWN.in.txt $STS/STS.OnWN.in.lem "$@"
-#	$START utcompling.mlnsemantics.run.Sts lem $STS/STS.SMTeuroparl.in.txt $STS/STS.SMTeuroparl.in.lem "$@"
-#	$START utcompling.mlnsemantics.run.Sts lem $STS/STS.SMTnews.in.txt $STS/STS.SMTnews.in.lem "$@"
+#	$START utcompling.mlnsemantics.run.Sts lem $RES/sts/prob.in.txt $RES/sts/prob.in.lem "$@"
+#	$START utcompling.mlnsemantics.run.Sts lem $RES/sts/STS.MSRvid.in.txt $RES/sts/STS.MSRvid.in.lem "$@"
+	$START utcompling.mlnsemantics.run.Sts lem $RES/sts/msrParFull.in.txt $RES/sts/msrParFull.in.lem "$@"
+#	$START utcompling.mlnsemantics.run.Sts lem $RES/sts/STS.MSRpar.in.txt $RES/sts/STS.MSRpar.in.lem "$@"
+#	$START utcompling.mlnsemantics.run.Sts lem $RES/sts/STS.OnWN.in.txt $RES/sts/STS.OnWN.in.lem "$@"
+#	$START utcompling.mlnsemantics.run.Sts lem $RES/sts/STS.SMTeuroparl.in.txt $RES/sts/STS.SMTeuroparl.in.lem "$@"
+#	$START utcompling.mlnsemantics.run.Sts lem $RES/sts/STS.SMTnews.in.txt $RES/sts/STS.SMTnews.in.lem "$@"
 	;;
   all)
-	$START utcompling.mlnsemantics.run.Sts box $STS/tmp.txt $STS/tmp.box -kbest 2 "$@"
-	$START utcompling.mlnsemantics.run.Sts lem $STS/tmp.txt $STS/tmp.lem "$@"
-	$START utcompling.mlnsemantics.run.Sts vs /home/myall86/RESEARCH/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $STS/tmp.lem $STS/tmp.vs "$@"
-	$START utcompling.mlnsemantics.run.Sts run $STS/tmp.txt $STS/tmp.box $STS/tmp.vs $STS/tmp.gs.txt $STS/tmp.out -kbest 2 -task rte "$@"
+	$START utcompling.mlnsemantics.run.Sts box $RES/sts/tmp.txt $RES/sts/tmp.box -kbest 2 "$@"
+	$START utcompling.mlnsemantics.run.Sts lem $RES/sts/tmp.txt $RES/sts/tmp.lem "$@"
+	$START utcompling.mlnsemantics.run.Sts vs /home/myall86/RESEARCH/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $RES/sts/tmp.lem $RES/sts/tmp.vs "$@"
+	$START utcompling.mlnsemantics.run.Sts run $RES/sts/tmp.txt $RES/sts/tmp.box $RES/sts/tmp.vs $RES/sts/tmp.gs.txt $RES/sts/tmp.out -kbest 2 -task rte "$@"
 	;;
+
+run-rte)
+	$START utcompling.mlnsemantics.run.Sts run $RES/rte/RTE$version.$rtemode.txt $RES/rte/RTE$version.$rtemode.box $RES/rte/RTE$version.$rtemode.lem $RES/rte/RTE$version.$rtemode.vs $RES/rte/RTE$version.$rtemode.gs $RES/rte/RTE$version.$rtemode.out "$@"
+
+#	$START utcompling.mlnsemantics.run.Sts run $RES/rte/RTE$version.$rtemode.txt $RES/rte/RTE$version.$rtemode.box $RES/rte/RTE$version.$rtemode.lem $RES/rte/RTE$version.$rtemode.vs $RES/rte/RTE$version.$rtemode.gs $RES/rte/RTE$version.$rtemode.out -kbest 1 -task rte -vectorMaker add -rules $RES/rte/rules -multiOut $RES/sts/multiOut-$rtemode/RTE$version.$rtemode.multiOut "$@"
+	;;
+
+rte-box-lem-vs)
+	$START utcompling.mlnsemantics.run.Sts box $RES/rte/RTE$version.$rtemode.txt $RES/rte/RTE$version.$rtemode.box "$@"
+	$START utcompling.mlnsemantics.run.Sts lem $RES/rte/RTE$version.$rtemode.txt $RES/rte/RTE$version.$rtemode.lem "$@"
+	$START utcompling.mlnsemantics.run.Sts vs /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt $RES/rte/RTE$version.$rtemode.lem $RES/rte/RTE$version.$rtemode.vs "$@"
+	;;  
+
+# run-trento)
+#	$START utcompling.mlnsemantics.run.Sts run $RES/sts/P.txt $RES/sts/P.box $RES/sts/P.lem $RES/sts/P.vs $RES/sts/P.gs $RES/sts/P.out -kbest 1 -task sts -vectorMaker add -phrases $RES/sts/phrases/phrases.lst -phraseVecs $RES/sts/phrases/word_phrase_sentence_ppmi_$reducedSpace.dm -multiOut $RES/sts/multiOut-test-P/$reducedSpace/tmp.multiOut "$@"
+#	$START utcompling.mlnsemantics.run.Sts run $RES/sts/Prev.txt $RES/sts/Prev.box $RES/sts/Prev.lem $RES/sts/Prev.vs $RES/sts/Prev.gs $RES/sts/Prev.out -kbest 1 -task sts -vectorMaker add -phrases $RES/sts/phrases/phrases.lst -phraseVecs $RES/sts/phrases/word_phrase_sentence_ppmi_$reducedSpace.dm -multiOut $RES/sts/multiOut-test-Prev/$reducedSpace/tmp.multiOut "$@"
+#
+#	$START utcompling.mlnsemantics.run.Sts run $RES/sts/P-S.txt $RES/sts/P-S.box $RES/sts/P-S.lem $RES/sts/P-S.vs $RES/sts/P-S.gs $RES/sts/P-S.out -kbest 1 -task sts -vectorMaker add -phrases $RES/sts/phrases/phrases.lst -phraseVecs $RES/sts/phrases/word_phrase_sentence_ppmi_$reducedSpace.dm -multiOut $RES/sts/multiOut-test-P-S/$reducedSpace/tmp.multiOut "$@"
+#	$START utcompling.mlnsemantics.run.Sts run $RES/sts/P-Srev.txt $RES/sts/P-Srev.box $RES/sts/P-Srev.lem $RES/sts/P-Srev.vs $RES/sts/P-Srev.gs $RES/sts/P-Srev.out -kbest 1 -task sts -vectorMaker add -phrases $RES/sts/phrases/phrases.lst -phraseVecs $RES/sts/phrases/word_phrase_sentence_ppmi_$reducedSpace.dm -multiOut $RES/sts/multiOut-test-P-Srev/$reducedSpace/tmp.multiOut "$@"
+#
+#	$START utcompling.mlnsemantics.run.Sts run $RES/sts/P-SD.txt $RES/sts/P-SD.box $RES/sts/P-SD.lem $RES/sts/P-SD.vs $RES/sts/P-SD.gs $RES/sts/P-SD.out -kbest 1 -task sts -vectorMaker add -phrases $RES/sts/phrases/phrases.lst -phraseVecs $RES/sts/phrases/word_phrase_sentence_ppmi_$reducedSpace.dm -multiOut $RES/sts/multiOut-test-P-SD/$reducedSpace/tmp.multiOut "$@"
+#	$START utcompling.mlnsemantics.run.Sts run $RES/sts/P-SDrev.txt $RES/sts/P-SDrev.box $RES/sts/P-SDrev.lem $RES/sts/P-SDrev.vs $RES/sts/P-SDrev.gs $RES/sts/P-SDrev.out -kbest 1 -task sts -vectorMaker add -phrases $RES/sts/phrases/phrases.lst -phraseVecs $RES/sts/phrases/word_phrase_sentence_ppmi_$reducedSpace.dm -multiOut $RES/sts/multiOut-test-P-SDrev/$reducedSpace/tmp.multiOut "$@"
+#	$START utcompling.mlnsemantics.run.Sts run $RES/sts/RTE$version.test.txt $RES/sts/RTE$version.test.box $RES/sts/RTE$version.test.lem $RES/sts/RTE$version.test.vs $RES/sts/RTE$version.test.gs $RES/sts/RTE$version.test.out -kbest 1 -task rte -vectorMaker add -multiOut $RES/sts/RTE$version.test.multiOut "$@"
+#	;;
+
+
   boxer)
     $START utcompling.mlnsemantics.run.BoxerCli "$@";;
 esac

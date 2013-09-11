@@ -17,6 +17,7 @@ resolvers ++= Seq(
 libraryDependencies ++= Seq(
   "edu.stanford.nlp" % "stanford-corenlp" % "1.3.4",
   "commons-logging" % "commons-logging" % "1.1.1",
+	"com.googlecode.aima-java" % "aima-core" % "0.10.5",
   "log4j" % "log4j" % "1.2.16" excludeAll(
     ExclusionRule(organization = "javax.mail"),
     ExclusionRule(organization = "javax.jms"),
@@ -48,6 +49,9 @@ libraryDependencies ++= Seq(
   "org.codehaus.jackson" % "jackson-mapper-asl" % "1.8.3",
   "org.codehaus.jackson" % "jackson-smile" % "1.8.6",
   "org.slf4j" % "slf4j-log4j12" % "1.6.1",
+  "org.apache.lucene" % "lucene-core" % "4.2.0",
+  "org.apache.lucene" % "lucene-analyzers-common" % "4.2.0",
+  "org.apache.lucene" % "lucene-queryparser" % "4.2.0",
   "org.apache.hbase" % "hbase" % "0.90.3-cdh3u1" excludeAll(
     ExclusionRule(organization = "org.apache.hadoop"),
     ExclusionRule(organization = "commons-logging"),

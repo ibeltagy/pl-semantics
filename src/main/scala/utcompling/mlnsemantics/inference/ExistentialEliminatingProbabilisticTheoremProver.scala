@@ -43,6 +43,7 @@ class ExistentialEliminatingProbabilisticTheoremProver(
           b += typ -> newV
 
           go(term.replace(v, FolVariableExpression(Variable(newV))))
+//	FolExistsExpression(v, go(term))	// does not eliminate existential quantifiers
 
         case _ =>
           e.visitStructured(go, e.construct)

@@ -23,11 +23,15 @@ import org.apache.commons.logging.LogFactory
 import support.HardWeightedExpression
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerNamed
 import utcompling.mlnsemantics.run.Sts
+import dhg.depparse.Lemmatize
 
 class InferenceRuleInjectingProbabilisticTheoremProver(
   wordnet: Wordnet,
   vecspaceFactory: ((String => Boolean) => Map[String, BowVector]),
   ruleWeighter: RuleWeighter,
+  paraphraseRules: List[String],
+  distWeight: Double = 1.0,
+  resourceWeight: Double = 1.0,
   delegate: ProbabilisticTheoremProver[BoxerExpression])
   extends ProbabilisticTheoremProver[BoxerExpression] {
 
@@ -37,7 +41,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
   
   private var vectorspaceFormatWithPOS = false; 
   
-  private var withPatientAgentInferenceRules = false;
+  private var withPatientAgentInferenceRules = true;
 
   private var inferenceRulesLevel = 2;  //0: no IR, 1: words only, 2: words + phrases 
 
@@ -65,7 +69,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
    
     withPatientAgentInferenceRules = Sts.opts.get("-peInf") match {
 		case Some(vst) => vst.toBoolean;
-		case _ => false;
+		case _ => true;
     }
    
     assumptions.foreach(x => LOG.info("\n" + d(x.expression).pretty))
@@ -93,9 +97,17 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     
     val assumRel = assumptions.flatMap(getAllRelations);
     val goalRel = List(goal).flatMap(getAllRelations);
-    //var rules = makeRules(assumPredsAndContexts, goalPredsAndContexts, vectorspace)
+
+	// Use this map to check variable types in inference rules
+	var predTypeMap = Map[String, String]()
+	for(assumPredsAndContext <- assumPredsAndContexts)
+		predTypeMap += ((assumPredsAndContext._1.name ++ "_t") -> variableType(assumPredsAndContext._1))
+	for(goalPredsAndContext <- goalPredsAndContexts)
+		predTypeMap += ((goalPredsAndContext._1.name ++ "_h") -> variableType(goalPredsAndContext._1))
+
+//    var rules = makeRules(assumPredsAndContexts, goalPredsAndContexts, vectorspace)
     //rules = rules ++ makeLongerRules(assumRel, goalRel, assumPredsAndContexts, goalPredsAndContexts, vectorspace);
-    var rules = makeLongerRules(assumRel, goalRel, assumPredsAndContexts, goalPredsAndContexts, vectorspace);
+    var rules = makeLongerRules(assumRel, goalRel, assumPredsAndContexts, goalPredsAndContexts, vectorspace, predTypeMap);
     //rules.foreach(x => LOG.info("\n" + d(x.expression).pretty))
     return rules
   }
@@ -150,10 +162,13 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 	    	
 	    	notUsedPred =  notUsedPred - arg1._1; 
 	    	notUsedPred =  notUsedPred - arg2._1;
+
+		val (varName1, varName2) = if(arg2._1.pos == "v") ("x1", "x0")
+					else ("x0", "x1")
 	    	
-	    	val arg1Changed = BoxerPred(arg1._1.discId, arg1._1.indices, BoxerVariable("x0"), arg1._1.name, arg1._1.pos, arg1._1.sense)
-	    	val arg2Changed = BoxerPred(arg2._1.discId, arg2._1.indices, BoxerVariable("x1"), arg2._1.name, arg2._1.pos, arg2._1.sense)
-	    	val rChanged = BoxerRel(r.discId, r.indices, BoxerVariable("x0"), BoxerVariable("x1"), r.name, r.sense)
+	    	val arg1Changed = BoxerPred(arg1._1.discId, arg1._1.indices, BoxerVariable(varName1), arg1._1.name, arg1._1.pos, arg1._1.sense)
+	    	val arg2Changed = BoxerPred(arg2._1.discId, arg2._1.indices, BoxerVariable(varName2), arg2._1.name, arg2._1.pos, arg2._1.sense)
+	    	val rChanged = BoxerRel(r.discId, r.indices, BoxerVariable(varName1), BoxerVariable(varName2), r.name, r.sense)
 	    	
 	    	//println ("//PHRASE(npn): " + arg1._1.name+"-"+arg1._1.pos + " " + r.name + " " + arg2._1.name+"-"+arg2._1.pos)
 	    	val context = (arg1._2 ++ arg2._2).toList.diff(arg1._1.name.split("_")).diff(arg2._1.name.split("_"));
@@ -182,6 +197,205 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
         )) 
   
   }
+
+	/**
+	 * Convert paraphrase rules in text format to FOL.
+	 */
+	private def convertParaphraseToFOL(
+		assumePreds: Iterable[BoxerPred],
+		goalPreds: Iterable[BoxerPred],
+		assumeRels: Iterable[BoxerRel], 
+		goalRels: Iterable[BoxerRel]
+	): List[(BoxerDrs, BoxerDrs, Double)] =
+	{
+		val assumePredsList = assumePreds.toList
+		val goalPredsList = goalPreds.toList
+		val assumeRelsList = assumeRels.toList
+		val goalRelsList = goalRels.toList
+
+		paraphraseRules.map { rule =>
+			val Array(id, left, right, score) = rule.split("\t")
+
+			val leftTokens = left.split(" ").flatMap(token => Array(token, Lemmatize(token, "")) )
+						.distinct
+
+			// Find relating predicates for the lhs
+			val matchAssumePreds = assumePredsList.filter { pred => 
+				var isContained = true
+				pred.name.split("_").foreach { token =>
+					if(token != "topic" && !leftTokens.contains(token) && !leftTokens.contains(token + "s")) 
+						isContained = false
+				}
+				isContained
+			}
+			val matchAssumePredVars = matchAssumePreds.map(pred => pred.variable.name)
+			val matchAssumeRels = assumeRelsList.filter(rel => 
+				(matchAssumePredVars.contains(rel.event.name) && matchAssumePredVars.contains(rel.variable.name))
+				|| ( (matchAssumePredVars.contains(rel.event.name) || matchAssumePredVars.contains(rel.variable.name)
+						|| matchAssumePredVars.isEmpty
+				     )
+				     && leftTokens.contains(rel.name)
+				   )
+			)
+
+			val rightTokens = right.split(" ").flatMap(token => Array(token, Lemmatize(token, "")) )
+						.distinct
+
+			// Find relating predicates for the rhs
+			val matchGoalPreds = goalPredsList.filter { pred => 
+				var isContained = true
+				pred.name.split("_").foreach { token =>
+					if(token != "topic" && !rightTokens.contains(token) && !rightTokens.contains(token + "s")) 
+						isContained = false
+				}
+				isContained
+			}
+			val matchGoalPredVars = matchGoalPreds.map(pred => pred.variable.name)
+			val matchGoalRels = goalRelsList.filter(rel => 
+				(matchGoalPredVars.contains(rel.event.name) && matchGoalPredVars.contains(rel.variable.name))
+				|| ( (matchGoalPredVars.contains(rel.event.name) || matchGoalPredVars.contains(rel.variable.name)
+						|| matchGoalPredVars.isEmpty
+				     )
+				     && rightTokens.contains(rel.name)
+				   )
+			)
+
+			// Use this map to rename variables in the rhs
+			var varNameMap = Map[String, String]()
+
+			val changedMatchGoalPreds = matchGoalPreds.map { pred =>
+/*				if(matchAssumePreds.size == 1 && matchGoalPreds.size == 1) 
+					varNameMap += (pred.variable.name -> matchAssumePreds(0).variable.name) 
+				else matchAssumePreds.foreach { assumePred =>
+					val assumePredName = ("_" + assumePred.name + "_").replaceAll("_topic_", "_")
+					val goalPredName = ("_" + pred.name + "_").replaceAll("_topic_", "_")
+					if( (assumePred.toString.contains(",v,") && pred.toString.contains(",v,")) ||
+						assumePredName.contains(goalPredName) || 
+						goalPredName.contains(assumePredName)
+					)
+						varNameMap += (pred.variable.name -> assumePred.variable.name) 
+				}
+*/
+				BoxerPred(pred.discId, 
+					pred.indices, 
+					//BoxerVariable("rhs_" + pred.variable.name), 
+					BoxerVariable(varNameMap.getOrElse(pred.variable.name, "rhs_" + pred.variable.name)), 
+					pred.name, 
+					pred.pos, 
+					pred.sense)
+			}
+			val changedMatchGoalRels = matchGoalRels.map { rel =>
+				BoxerRel(rel.discId, 
+					rel.indices, 
+					//BoxerVariable("rhs_" + rel.event.name), 
+					//BoxerVariable("rhs_" + rel.variable.name), 
+					BoxerVariable(varNameMap.getOrElse(rel.event.name, "rhs_" + rel.event.name)), 
+					BoxerVariable(varNameMap.getOrElse(rel.variable.name, "rhs_" + rel.variable.name)), 
+					rel.name, 
+					rel.sense)
+			}
+
+			val leftFOL = matchAssumePreds ++ matchAssumeRels
+			val rightFOL = changedMatchGoalPreds ++ changedMatchGoalRels
+			(BoxerDrs(List(), leftFOL), BoxerDrs(List(), rightFOL), score.toDouble)
+		}
+	}
+
+	/**
+	 * Convert paraphrase rules in FOL format to MLF.
+	 */
+	private def paraphraseRuleFOL(leftFOL: BoxerDrs, rightFOL: BoxerDrs, score: Double): List[WeightedExpression[BoxerExpression]] =
+	{
+		val unweightedRule = BoxerImp("h", List(), leftFOL, rightFOL)
+		return List(SoftWeightedExpression(unweightedRule, score * resourceWeight))
+	}
+
+	private def checkCompatibleType(
+		assumeFOL: BoxerExpression, 
+		goalFOL: BoxerExpression, 
+		assumeVarTypeMap: Map[String, String], 
+		goalVarTypeMap: Map[String, String]
+	): Boolean =
+	{
+		// Check phrase type
+		val BoxerDrs(_, assumeConds) = assumeFOL
+		val BoxerDrs(_, goalConds) = goalFOL
+		//if(assumeConds.size != goalConds.size) return false
+
+		if(assumeFOL.toString.contains(",v,") && !goalFOL.toString.contains(",v,")) return false
+		if(!assumeFOL.toString.contains(",v,") && goalFOL.toString.contains(",v,")) return false
+
+		// Check if the NEs are different, return false.
+		// The implementation is tricky and not totally correct.
+		if(assumeConds.size == 3 && goalConds.size == 3)
+		{
+			var flag = 0
+
+			val assumePrednamePos1 = assumeConds(0) match 
+			{
+				case BoxerPred(discId, indices, variable, name, pos, sense) => (name, pos)
+			}
+
+			val assumePrednamePos2 = assumeConds(1) match 
+			{
+				case BoxerPred(discId, indices, variable, name, pos, sense) => (name, pos)
+			}
+
+			val goalPrednamePos1 = goalConds(0) match 
+			{
+				case BoxerPred(discId, indices, variable, name, pos, sense) => (name, pos)
+			}
+
+			val goalPrednamePos2 = goalConds(1) match 
+			{
+				case BoxerPred(discId, indices, variable, name, pos, sense) => (name, pos)
+			}
+			
+			if(assumePrednamePos1._2.length > 1 || goalPrednamePos1._2.length > 1)
+			{
+				if(assumePrednamePos1._1.contains(goalPrednamePos1._1)
+					|| goalPrednamePos1._1.contains(assumePrednamePos1._1)
+				)
+					flag += 1
+				else flag -= 1
+			}
+
+			if(assumePrednamePos1._2.length > 1 || goalPrednamePos2._2.length > 1)
+			{
+				if(assumePrednamePos1._1.contains(goalPrednamePos2._1)
+					|| goalPrednamePos2._1.contains(assumePrednamePos1._1)
+				)
+					flag += 1
+				else flag -= 1
+			}
+
+			if(assumePrednamePos2._2.length > 1 || goalPrednamePos1._2.length > 1)
+			{
+				if(assumePrednamePos2._1.contains(goalPrednamePos1._1)
+					|| goalPrednamePos1._1.contains(assumePrednamePos2._1)
+				)
+					flag += 1
+				else flag -= 1
+			}
+
+			if(assumePrednamePos2._2.length > 1 || goalPrednamePos2._2.length > 1)
+			{
+				if(assumePrednamePos2._1.contains(goalPrednamePos2._1)
+					|| goalPrednamePos2._1.contains(assumePrednamePos2._1)
+				)
+					flag += 1
+				else flag -= 1
+			}
+			
+			if(flag < 0) return false
+		}
+
+		// Check argument type
+		for(varName <- assumeVarTypeMap.keys)
+			if(goalVarTypeMap.contains(varName) && (assumeVarTypeMap(varName) != goalVarTypeMap(varName))) return false
+
+		return true
+	}
   
   private def changeExpDirection (e: BoxerExpression): BoxerExpression =
   {
@@ -193,18 +407,27 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     }
   }
   
-  private def makeExpRule (assum: (BoxerExpression, Iterable[String], String), goal: (BoxerExpression, Iterable[String], String), discId: String, vectorspace: Map[String, BowVector]) : List[WeightedExpression[BoxerExpression]] = {
+  private def makeExpRule (assum: (BoxerExpression, Iterable[String], String), goal: (BoxerExpression, Iterable[String], String), discId: String, vectorspace: Map[String, BowVector], predTypeMap: Map[String, String], isEntail: Boolean) : List[WeightedExpression[BoxerExpression]] = {
    
     val rw = ruleWeighter.weightForRules(assum._3, assum._2, Seq((goal._3 , goal._2)).toMap, vectorspace);
     val changedAssum = changeExpDirection(assum._1);
-    if (rw.head._2.get  == 0)
+
+	val assumeVarTypeMap = 
+		if(isEntail) getAllPreds(assum._1).map(pred => (pred.variable.name, predTypeMap(pred.name ++ "_t"))).toMap
+		else getAllPreds(assum._1).map(pred => (pred.variable.name, predTypeMap(pred.name ++ "_h"))).toMap
+	val goalVarTypeMap = 
+		if(isEntail) getAllPreds(goal._1).map(pred => (pred.variable.name, predTypeMap(pred.name ++ "_h"))).toMap
+		else getAllPreds(goal._1).map(pred => (pred.variable.name, predTypeMap(pred.name ++ "_t"))).toMap
+	
+//    if (rw.head._2.get < 0.35)
+    if (rw.head._2.get <=0 || !checkCompatibleType(changedAssum, goal._1, assumeVarTypeMap, goalVarTypeMap))
     	return List();
     
     //val unweightedRule = BoxerDrs(List(List() -> BoxerVariable("x0")) ++ List(List() -> BoxerVariable("x1")), List(BoxerImp(discId, List(), changedAssum, goal._1)));
     val unweightedRule = BoxerImp(discId, List(), changedAssum, goal._1);
     
     
-    return List(SoftWeightedExpression(unweightedRule, rw.head._2.get));
+    return List(SoftWeightedExpression(unweightedRule, rw.head._2.get * distWeight));
     /*
     val BoxerPred(aDiscId, aIndices, aVariable, aName, aPos, aSense) = antecedent
     val BoxerPred(cDiscId, cIndices, cVariable, cName, cPos, cSense) = consequent
@@ -223,30 +446,42 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     //return List(); 
   }
   
-  private def makeLongerRules(assumRel: Iterable[BoxerRel], goalRel:Iterable[BoxerRel], assumPredsAndContexts: Iterable[(BoxerPred, Iterable[String])], goalPredsAndContexts: Iterable[(BoxerPred, Iterable[String])], vectorspace: Map[String, BowVector]): Set[WeightedExpression[BoxerExpression]] = {
-	
+  private def makeLongerRules(assumRel: Iterable[BoxerRel], goalRel:Iterable[BoxerRel], assumPredsAndContexts: Iterable[(BoxerPred, Iterable[String])], goalPredsAndContexts: Iterable[(BoxerPred, Iterable[String])], vectorspace: Map[String, BowVector], predTypeMap: Map[String, String]): Set[WeightedExpression[BoxerExpression]] = {
     val assumRelPred = findRelPred(assumPredsAndContexts, assumRel);
     val goalRelPred = findRelPred(goalPredsAndContexts, goalRel);
     
     var ret = List[WeightedExpression[BoxerExpression]] () ;
-	for (assumEntry <- assumRelPred )
+	for (goalEntry <- goalRelPred )
 	{
-		for (goalEntry <- goalRelPred )
+		for (assumEntry <- assumRelPred )
 		{
-			//DO not add rules if the word is the same
+			//DO not add rules if the word is the same??? Why?
 		     //Words should have the same POS and same entity type (individual or event)
 			
 		  //TODO: Think again about this. Are you sure you want to add rules between non-matching POS words 
-		  if (//assumPred._1.pos == goalPred._1.pos && 
-			    assumEntry._3 != goalEntry._3 )
+		//FIXIT: The block below should be fixed to generate bidirectional rules in case of STS, and do not generate 
+		//rules between similar words. Also, what is true and false in function makeExpRule?
+		//  if (//assumPred._1.pos == goalPred._1.pos && 
+		//	    assumEntry._3 != goalEntry._3 )
 			    //no need to check for the variable anymore before all of them are INDV now. 
 			    //assumPred._1.variable.name.charAt(0) == goalPred._1.variable.name.charAt(0))
-			{
-		      ret = ret ++ makeExpRule(assumEntry, goalEntry, "h", vectorspace);
-		      ret = ret ++ makeExpRule(goalEntry, assumEntry, "t", vectorspace);
-			}
+		//	{
+		      ret = ret ++ makeExpRule(assumEntry, goalEntry, "h", vectorspace, predTypeMap, true);
+		//      ret = ret ++ makeExpRule(goalEntry, assumEntry, "t", vectorspace, predTypeMap, false);
+		//	}
+		//====================================
 		}
 	} 
+
+	// Add paraphrase rules
+	val paraphraseFOL = convertParaphraseToFOL(assumPredsAndContexts.map(_._1), goalPredsAndContexts.map(_._1), assumRel, goalRel)
+	paraphraseFOL.foreach { ruleFOL =>
+		val BoxerDrs(_, leftFOL) = ruleFOL._1
+		val BoxerDrs(_, rightFOL) = ruleFOL._2
+		if(!leftFOL.isEmpty && !rightFOL.isEmpty)
+			ret = ret ++ paraphraseRuleFOL(ruleFOL._1, ruleFOL._2, ruleFOL._3)
+	}
+
 	return ret.toSet;
   }
 
@@ -275,7 +510,10 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 				var antecedentContext = assumPred._2;
 				var rhs = Map(goalPred._1 -> goalPred._2);
 				var goalPredsAndContextsByName = Map(goalPred._1.name -> rhs);
-				pred = BoxerPred("h", pred.indices, pred.variable, pred.name, pred.pos, pred.sense);
+				//FIXIT: Coung changd the line below from "h" to "t". I believe it should remain "h". 
+				//Test and fix
+				//pred = BoxerPred("h", pred.indices, pred.variable, pred.name, pred.pos, pred.sense);
+				pred = BoxerPred("t", pred.indices, pred.variable, pred.name, pred.pos, pred.sense);
 				
 				var compatible = true;
 				for (checkGoal <- goalPredsAndContexts){

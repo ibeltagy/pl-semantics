@@ -78,6 +78,9 @@ object Baseline {
             new RankingRuleWeighter(
               new AwithCtxCwithCtxVecspaceRuleWeighter(
                 new SimpleCompositeVectorMaker()))),
+	  List[String](),
+	  1.0,
+	  1.0,
           new TypeConvertingPTP(
             new BoxerExpressionInterpreter[FolExpression] {
               def interpret(x: BoxerExpression): FolExpression =

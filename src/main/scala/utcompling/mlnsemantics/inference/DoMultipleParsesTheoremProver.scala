@@ -14,8 +14,10 @@ import opennlp.scalabha.util.CollectionUtil._
 import org.apache.commons.logging.LogFactory
 import support.HardWeightedExpression
 import utcompling.mlnsemantics.run.Sts
+import opennlp.scalabha.util.FileUtils
 
 class DoMultipleParsesTheoremProver(
+  pairId: Int = 0,
   delegate: ProbabilisticTheoremProver[BoxerExpression])
   extends ProbabilisticTheoremProver[BoxerExpression] {  
   
@@ -37,19 +39,43 @@ class DoMultipleParsesTheoremProver(
 		case Some(tsk) => tsk;
 		case _ => "sts";
     }
+
+    val multiOutput =  Sts.opts.get("-multiOut") match {
+			case Some(out) => out
+			case _ => "multiOut"
+			}
+
     var score: Double = 0;
     var scoreDenum: Double = 0;
+    var index = 0;
+
     goal match {
       case BoxerPrs(goalParses) => goalParses.slice(0, kbest).foreach(goalParse=>{  
     	assumptions.head.expression match{
     	  case BoxerPrs(assumptionParses) => assumptionParses.slice(0, kbest).foreach(assumptionParse=>{
     	  //---------------------------given goalParse and assumptionParse, calculate one score then add it to total score
+	  index += 1
+	  val outFile = if(pairId == 0) multiOutput + "." + index
+			else multiOutput + "." + pairId + "." + index
     	  val result = delegate.prove(constants, declarations, evidence, List(HardWeightedExpression(assumptionParse._1)), goalParse._1)
     	  val oneScore = result match { case Some(s) => s; case None => 0.5};
     	  task match {
-    	    case "sts" => score += oneScore*(assumptionParse._2+goalParse._2); scoreDenum +=(assumptionParse._2+goalParse._2 ); //weighted average 
-    	    case "rte" => score = Math.max(score, oneScore); scoreDenum = 1; //max
-    	   }
+//    	    case "sts" => score += oneScore*(assumptionParse._2+goalParse._2); scoreDenum +=(assumptionParse._2+goalParse._2 ); //weighted average 
+	    case "sts" => 
+	    {
+		score += oneScore; scoreDenum += 1; // average
+		FileUtils.writeUsing(outFile) { f =>
+              		f.write(assumptionParse._2 + " " + goalParse._2 + " " + oneScore + " " + score + "\n")	
+		}	
+	    }
+    	    case "rte" => 
+	    {
+		score = Math.max(score, oneScore); scoreDenum = 1; // max
+		FileUtils.writeUsing(outFile) { f =>
+              		f.write(assumptionParse._2 + " " + goalParse._2 + " " + oneScore + " " + score + "\n")	
+		}	
+	    }
+    	  }
     	  //------------------------------  
     	  })
     	  case _ =>  throw new RuntimeException ("Premise and Hypothesis both should start with BoxerPrs")

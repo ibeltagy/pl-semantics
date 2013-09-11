@@ -31,6 +31,8 @@ import utcompling.mlnsemantics.inference.CompositionalRuleWeighter
 import utcompling.scalalogic.discourse.DiscourseInterpreter
 import utcompling.mlnsemantics.inference.DependencyParsedBoxerDiscourseInterpreter
 import dhg.depparse._
+import utcompling.mlnsemantics.util._
+import utcompling.mlnsemantics.vecspace.DistRules
 
 /**
  *
@@ -87,7 +89,7 @@ import dhg.depparse._
  * -log (DEBUG)               //log OFF, DEBUG, INFO
  * -varBind true, (false)     //with or without variable binding 
  * -timeout 0  				  //Timeout integerInMilliseconds  
- * -peInf true (false)          //include or execlude patient and agent infernece rules when irLvl = 2
+ * -peInf (true) false          //include or execlude patient and agent infernece rules when irLvl = 2
  * -irLvl 0 1 (2)             //infernec rules: 0)no infernece rules, 1)word-wise infernec rules, 2)words and phrases infenrec rules
  * -logic dep (box)           //get logical form from Boxer or Dependency parse
  * -kbest 3                    //number of parses. Default: 1
@@ -116,8 +118,8 @@ object Sts {
    * [HANDELED: cancel POS/NEG] 1239: fails because of POS/NEG
    * [HANDELED: noImp] 1367: one long FORALLS. It takes forever
    * 
-   * Examples with IMP but work fine on Alchamy: 4, 478, 572, 621, 649, 665, 681, 996, 1008, 1292, 1329, 1399
-   * Examples with IMP do not work on Alchamy: 86, 113, 250, 361, 1367
+   * Examples with IMP but work fine on Alchemy: 4, 478, 572, 621, 649, 665, 681, 996, 1008, 1292, 1329, 1399
+   * Examples with IMP do not work on Alchemy: 86, 113, 250, 361, 1367
    */
           
   //val Range(defaultRange) = "1-85,87-112,114-249,251-360,362-705,707-1040,1042-1215,1217-1238,1240-1366,1368-1500"
@@ -126,7 +128,7 @@ object Sts {
   //Try example 597,610,679
   //val Range(defaultRange) = "597,610,679,803,825,904,905,1067,1171,1341,1399,1446"
   //val Range(defaultRange) = "1-829,831-1500"
-  val Range(defaultRange) = "1-1500"
+  val Range(defaultRange) = "1-2000"
     
   var opts:Map[String, String] = Map(); //additional parameters passed from command line
   
@@ -203,11 +205,11 @@ object Sts {
           }
         } 
 
-      case Seq("run", stsFile, boxFile, stsVsFile, goldSimFile, outputSimFile) =>
-        run(stsFile, boxFile, stsVsFile, goldSimFile, outputSimFile, _ => true, defaultRange.toSet)
+      case Seq("run", stsFile, boxFile, lemFile, stsVsFile, goldSimFile, outputSimFile) =>
+        run(stsFile, boxFile, lemFile, stsVsFile, goldSimFile, outputSimFile, _ => true, defaultRange.toSet)
 
-      case Seq("run", stsFile, boxFile, stsVsFile, goldSimFile, outputSimFile, Range(range)) =>
-        run(stsFile, boxFile, stsVsFile, goldSimFile, outputSimFile, UniversalSet(), range.toSet)
+      case Seq("run", stsFile, boxFile, lemFile, stsVsFile, goldSimFile, outputSimFile, Range(range)) =>
+        run(stsFile, boxFile, lemFile, stsVsFile, goldSimFile, outputSimFile, UniversalSet(), range.toSet)
 
       //      case Seq("full", stsFile, fullVsFile) =>
       //        val sentences = readLines(stsFile).flatMap(_.split("\t")).toVector
@@ -224,11 +226,12 @@ object Sts {
       //Tokenize(a.replace("-","" )).mkString(" ");
     } 
     
-    def run(stsFile: String, boxFile: String, vsFile: String, goldSimFile: String, outputSimFile: String, allLemmas: String => Boolean, includedPairs: Int => Boolean) {
-      val pairs = readLines(stsFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
+    def run(stsFile: String, boxFile: String, lemFile: String, vsFile: String, goldSimFile: String, outputSimFile: String, allLemmas: String => Boolean, includedPairs: Int => Boolean) {
+      val pairs = readLines(stsFile, "ISO-8859-1").map(_.split("\t")).map { case Array(a, b) => (a, b) }
+	val lemPairs = readLines(lemFile, "ISO-8859-1").map(_.split("\t")).map { case Array(a, b) => (a, b) }
 
       val boxPairs =
-        FileUtils.readLines(boxFile)
+        FileUtils.readLines(boxFile, "ISO-8859-1")
           .map { case SomeRe(drsString) => Some(drsString); case "None" => None }
           .toList
           .grouped(2)
@@ -238,17 +241,81 @@ object Sts {
 		case Some(s) if (s.toBoolean == true) => ".pos";
 		case _ => "";
       })
+	// Weight of distributional inference rules
+	val distWeight = opts.get("-distWeight") match
+	{
+		case Some(weight) => weight.toDouble
+		case _ => 1.0
+	}
 
-      def probOfEnt2simScore(p: Double) = p * 5
+	// Weight of external inference rules
+	val resourceWeight = opts.get("-resourceWeight") match
+	{
+		case Some(weight) => weight.toDouble
+		case _ => 1.0
+	}
+
+      def probOfEnt2simScore(p: Double) = p
+
+	// Index phrases into Lucene repository
+	val luceneForPhrases = new Lucene
+	opts.get("-phrases") match
+	{
+		case Some(phrasesFile) =>
+			val step = 100000
+			val numPhrases = Source.fromFile(phrasesFile, "ISO-8859-1").getLines.size
+			val itrCount = (Math.ceil (numPhrases.toDouble / step)).intValue()
+			for(i <- 0 to itrCount - 1)
+			{
+				println(i)
+				val resource = Source.fromFile(phrasesFile, "ISO-8859-1")
+				val from  = i * step
+        	  		val to = Math.min((i + 1) * step, numPhrases)
+				val phrases = resource.getLines.slice(from, to).toIterable
+				luceneForPhrases.write(phrases)
+				resource.close
+			}
+		case _ => luceneForPhrases.write(Iterable[String]())
+	}
+
+	// Index paraphrase rules into Lucene repository
+	val lucene = new Lucene
+	opts.get("-rules") match
+	{
+		case Some(rulesFile) => 
+			println("Indexing paraphrase rules ...")
+			val start = System.nanoTime
+			val step = 100000
+			val numRules = Source.fromFile(rulesFile, "ISO-8859-1").getLines.size
+			val itrCount = (Math.ceil (numRules.toDouble / step)).intValue()
+			for(i <- 0 to itrCount - 1)
+			{
+				println(i)
+				val resource = Source.fromFile(rulesFile, "ISO-8859-1")
+				val from  = i * step
+        	  		val to = Math.min((i + 1) * step, numRules)
+				val rules = resource.getLines.slice(from, to).toIterable
+				lucene.write(rules)
+				resource.close
+			}
+			println("Finished indexing.")
+			val end = System.nanoTime
+			println("Indexing time: " + (end - start) / 1e9 + " s")
+			
+		case _ => lucene.write(Iterable[String]())
+	}
 
       def depParser = DepParser.load();
       val results =
         for (((((txt, hyp), boxPair), goldSim), i) <- (pairs zipSafe boxPairs zipSafe goldSims).zipWithIndex if includedPairs(i + 1)) yield {
+
           Sts.pairIndex = i+1;
           println("=============\n  Pair %s\n=============".format(i + 1))
           println(txt)
           println(hyp)
- 
+
+	  val (lemTxt, lemHyp) = lemPairs.next
+
           val compositeVectorMaker = opts.get("-vectorMaker") match {
             case Some("mul") => MultiplicationCompositeVectorMaker();
             case _ => SimpleCompositeVectorMaker();
@@ -258,26 +325,127 @@ object Sts {
             case Some("dep") => new DependencyParsedBoxerDiscourseInterpreter(depParser);
             case _ => new PreparsedBoxerDiscourseInterpreter(boxPair, new PassthroughBoxerExpressionInterpreter());
           }
-          
+
           val softLogicTool: ProbabilisticTheoremProver[FolExpression] = opts.get("-softLogic") match {
             case Some("psl") => new PSLTheoremProver()
-            case _ => AlchemyTheoremProver.findBinary();
+            case _ => AlchemyTheoremProver.findBinary(wordnet);
           }
-          
+
+	// Search phrases in Text-Hypothesis pair
+	val ignoredTokens = List("an", "the", "be", "is", "are", "to", "in", "on", "at", "of", "for")
+	
+	// Search phrases in Text
+	val txtQuery = SimpleTokenizer(txt + " " + lemTxt)
+		.filter(token => token.length > 1 && !ignoredTokens.contains(token))
+		.distinct
+		.mkString(" ")
+	
+	val txtPhrases = luceneForPhrases.read(txtQuery)
+		.filter { phrase =>
+
+			val Array(id, content) = phrase.split("\t")
+			val str = " " + content + " "
+
+			val simpleTxt = (" " + SimpleTokenizer(txt).mkString(" ") + " ")
+			val simpleLemTxt = (" " + SimpleTokenizer(lemTxt).mkString(" ") + " ")
+
+			val cond = simpleTxt.contains(str) || simpleLemTxt.contains(str)
+
+			val extraStr = " some" + str
+			val extraCond = !simpleTxt.contains(extraStr) && !simpleLemTxt.contains(extraStr)
+
+			cond && extraCond
+		}
+	.toList
+
+	// Search phrases in Hypothesis
+	val hypQuery = SimpleTokenizer(hyp + " " + lemHyp)
+		.filter(token => token.length > 1 && !ignoredTokens.contains(token))
+		.distinct
+		.mkString(" ")
+	
+	val hypPhrases = luceneForPhrases.read(hypQuery)
+		.filter { phrase =>
+
+			val Array(id, content) = phrase.split("\t")
+			val str = " " + content + " "
+
+			val simpleHyp =  (" " + SimpleTokenizer(hyp).mkString(" ") + " ")
+			val simpleLemHyp = (" " + SimpleTokenizer(lemHyp).mkString(" ") + " ")
+
+			val cond = simpleHyp.contains(str) || simpleLemHyp.contains(str)
+
+			val extraStr = " some" + str
+			val extraCond = !simpleHyp.contains(extraStr) && !simpleLemHyp.contains(extraStr)
+
+			cond && extraCond
+		}
+	.toList
+
+	// Compute similaritis between phrases and generate corresponding rules in the following format: 
+	// <id> TAB <text_phrase> TAB <hypo_phrase> TAB <sim_score>
+	val distRules = opts.get("-phraseVecs") match
+	{
+		case Some(phraseVecsFile) =>
+			DistRules(phraseVecsFile, txtPhrases, hypPhrases)
+		case _ => List[String]()
+	}
+
+	// Search rules in Text-Hypothesis pair
+	val start = System.nanoTime
+	val query = SimpleTokenizer(hyp + " " + lemHyp)
+		.filter(token => token.length > 1 && !ignoredTokens.contains(token))
+		.distinct
+		.mkString(" ")
+
+	val returnedRules = lucene.read(query)
+	val end = System.nanoTime
+	println("Searching time: " + (end - start) / 1e9 + " s")       
+	println("# returned rules: " + returnedRules.size)
+
+	val filterStart = System.nanoTime
+	val paraphraseRules = returnedRules
+		.filter { rule =>
+
+			val Array(id, left, right, score) = rule.split("\t")
+			val lhs = (" " + left + " ").replaceAll(" (a|an|the) ", " ")
+			val rhs = (" " + right + " ").replaceAll(" (a|an|the) ", " ")
+
+			val simpleTxt = (" " + SimpleTokenizer(txt).mkString(" ") + " ").replaceAll(" (a|an|the) ", " ")
+			val simpleHyp =  (" " + SimpleTokenizer(hyp).mkString(" ") + " ").replaceAll(" (a|an|the) ", " ")
+
+			val simpleLemTxt = (" " + SimpleTokenizer(lemTxt).mkString(" ") + " ").replaceAll(" (a|an|the) ", " ")
+			val simpleLemHyp = (" " + SimpleTokenizer(lemHyp).mkString(" ") + " ").replaceAll(" (a|an|the) ", " ")
+
+			(simpleTxt.contains(lhs) || simpleLemTxt.contains(lhs) ) && 
+				(simpleHyp.contains(rhs) || simpleLemHyp.contains(rhs) )
+		}
+	.toList
+//	.sortBy(- _.split("\t")(3).toDouble)
+
+	val filterEnd = System.nanoTime
+	println("Filtering time: " + (filterEnd - filterStart) / 1e9 + " s")
+
+	paraphraseRules.foreach(rule => println("*** " + rule))   
+
           val ttp =
             new TextualTheoremProver( //1
               logicFormSource,                   //TODO 1: probably, I need to add a step to rename 
               									//either variables, or predicates or both.  
               									//THe rest of the code depends on what I am doing here
-             new DoMultipleParsesTheoremProver( //rename variables and predicates+remove extra parses if any.
+	     new DoMultipleParsesTheoremProver( //rename variables and predicates+remove extra parses if any.
+	      0, // pairId
               new MergeSameVarPredProbabilisticTheoremProver( //TODO 2: do not merge vars of different parses
-                //new FindEventsProbabilisticTheoremProver(
+                new FindEventsProbabilisticTheoremProver(
 	              new GetPredicatesDeclarationsProbabilisticTheoremProver(
 		              new InferenceRuleInjectingProbabilisticTheoremProver( //2 //TODO 3: all pairs ?? 
 		                wordnet,
 		                words => BowVectorSpace(vsFileMod, x => words(x) && allLemmas(x)),
 		                new SameLemmaHardClauseRuleWeighter(
 		                  new AwithCvecspaceWithSpillingSimilarityRuleWeighter(compositeVectorMaker)), 
+				distRules ++ paraphraseRules,
+				distWeight,
+				resourceWeight,
 		                new TypeConvertingPTP( //3
 		                  new BoxerExpressionInterpreter[FolExpression] {
 		                    def interpret(x: BoxerExpression): FolExpression =
@@ -288,7 +456,8 @@ object Sts {
 		                              new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))))).fol
 		                  },
 		                	new PositiveEqEliminatingProbabilisticTheoremProver(//TODO 4: list of parses
-		                          new FromEntToEqvProbabilisticTheoremProver( //TODO 5: ANDing goals is wrong  
+
+		                          //new FromEntToEqvProbabilisticTheoremProver( //TODO 5: ANDing goals is wrong  
 		                    		  new ExistentialEliminatingProbabilisticTheoremProver(
 		                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver(//TODO 6: how to generate evidences ?
 		                    						  softLogicTool)))))))))) //TODO 7: how to generate MLN ?
@@ -302,6 +471,11 @@ object Sts {
       val (ps, golds) = results.map(_._2).unzip
       println(ps.mkString("["," ","]"))
       println(golds.mkString("["," ","]"))
+	FileUtils.writeUsing(outputSimFile) { f =>
+          
+              f.write(ps.mkString(" ") + "\n")
+		f.write(golds.mkString(" ") + "\n")
+        }
     }
   }
 
