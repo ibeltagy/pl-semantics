@@ -72,7 +72,7 @@ class CncLemmatizeCorpusMapper extends Mapper[Object, Text, IntWritable, Text] {
     val candcArgs = Map[String, String](
       "--candc-printer" -> "boxer")
 //    "--candc-int-betas" -> "0.00075 0.0003 0.0001 0.00005 0.00001")
->>>>>>> coung/master
+
     val candcOut = candc.batchParse(tokenized, candcArgs, None, Some("boxer"))
     val outputs = splitOutput(candcOut)
     val lemmatized = lemmatize(outputs)

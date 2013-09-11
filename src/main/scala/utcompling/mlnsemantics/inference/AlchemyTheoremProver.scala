@@ -801,7 +801,6 @@ class AlchemyTheoremProver(
     //Dunno, but it seems that MC-SAT is better
     //val allArgs = "-ptpe" :: "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
     val allArgs = "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
-<<<<<<< HEAD
     val timeout = Sts.opts.get("-timeout") match {
 			case Some(t) => Some(t.toLong);
 			case  _=> None;
@@ -833,15 +832,6 @@ class AlchemyTheoremProver(
     	val results = readLines(result).mkString("\n").trim
     	LOG.debug("results file:\n" + results)
     }
-=======
-    println("Args: " + allArgs);
-    //val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, LOG.isDebugEnabled, false);
-    val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, true);
-
-    val results = readLines(result).mkString("\n").trim
-
-    LOG.debug("results file:\n" + results + "\n")
->>>>>>> coung/master
 
     exitcode match {
       case 0 => Some(score.toString())
@@ -947,8 +937,7 @@ class AlchemyTheoremProver(
       case FolExistsExpression(variable, term) => "exist " + variable.name + " (" + _convert(term, bound + variable) + ")"
       case FolAllExpression(variable, term) => "(forall " + variable.name + " (" + _convert(term, bound + variable) + "))"
       case FolNegatedExpression(term) => "!(" + _convert(term, bound) + ")"
-//      case FolAndExpression(first, second) => "(" + _convert(first, bound) + " ^ " + _convert(second, bound) + ")"
-	case FolAndExpression(first, second) => _convert(first, bound) + " ^ " + _convert(second, bound)
+      case FolAndExpression(first, second) => "(" + _convert(first, bound) + " ^ " + _convert(second, bound) + ")"
       case FolOrExpression(first, second) => "(" + _convert(first, bound) + " v " + _convert(second, bound) + ")"
       case FolIfExpression(first, second) => "(" + _convert(first, bound) + " => " + _convert(second, bound) + ")"
       case FolIffExpression(first, second) => "(" + _convert(first, bound) + " <=> " + _convert(second, bound) + ")"
