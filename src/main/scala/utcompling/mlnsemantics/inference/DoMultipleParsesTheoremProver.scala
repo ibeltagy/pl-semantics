@@ -60,24 +60,24 @@ class DoMultipleParsesTheoremProver(
     	  val result = delegate.prove(constants, declarations, evidence, List(HardWeightedExpression(assumptionParse._1)), goalParse._1)
     	  val oneScore = result match { case Some(s) => s; case None => 0.5};
     	  task match {
-//    	    case "sts" => score += oneScore*(assumptionParse._2+goalParse._2); scoreDenum +=(assumptionParse._2+goalParse._2 ); //weighted average 
-	    case "sts" => 
-	    {
-		score += oneScore; scoreDenum += 1; // average
-		FileUtils.writeUsing(outFile) { f =>
-              		f.write(assumptionParse._2 + " " + goalParse._2 + " " + oneScore + " " + score + "\n")	
-		}	
-	    }
-    	    case "rte" => 
-	    {
-		score = Math.max(score, oneScore); scoreDenum = 1; // max
-		FileUtils.writeUsing(outFile) { f =>
-              		f.write(assumptionParse._2 + " " + goalParse._2 + " " + oneScore + " " + score + "\n")	
-		}	
-	    }
-    	  }
-    	  //------------------------------  
-    	  })
+					//case "sts" => score += oneScore*(assumptionParse._2+goalParse._2); scoreDenum +=(assumptionParse._2+goalParse._2 ); //weighted average 
+					case "sts" => 
+					{
+					  score += oneScore; scoreDenum += 1; // average
+					  //FileUtils.writeUsing(outFile) { f =>
+					  //	f.write(assumptionParse._2 + " " + goalParse._2 + " " + oneScore + " " + score + "\n")	
+					  //}	
+					}
+					case "rte" => 
+					{
+					  score = Math.max(score, oneScore); scoreDenum = 1; // max
+					  //FileUtils.writeUsing(outFile) { f =>
+					  //	f.write(assumptionParse._2 + " " + goalParse._2 + " " + oneScore + " " + score + "\n")	
+					  //}	
+					}
+    	 }
+    	 //------------------------------  
+    	 })
     	  case _ =>  throw new RuntimeException ("Premise and Hypothesis both should start with BoxerPrs")
     	}
       })

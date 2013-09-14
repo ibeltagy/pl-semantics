@@ -163,12 +163,12 @@ Run Aidan's code on local machine
 * ./run local trc1.MaxTransform data/rules.in data/sentences.txt data/out
 
 
-Merging Cuong's fork with main
+Merging Cuong's fork with main(ToDo)
 ------------------------------
 * Code of running condor is replaced with my scripts for condor. What is still missing is organizging the output and running the scripts on it. 
 * Changes in GetPredicatesDeclarationsProbabilisticTheoremProver.scala, HardAssumptionAsEvidenceProbabilisticTheoremProver.scala, InferenceRuleInjectingProbabilisticTheoremProver.scala, AlchemyTheoremProver.scala related to predicates naming _dh, _dt are reverted. Still, it is necessary to declare all predicates as open-world because now evidence predicates are close-world. 
 * In AlchemyTheoremProver.scala, there is a function to generate rules based on wordnet, it is commented for now but it should not
 * Changes in MergeSameVarPredProbabilisticTheoremProver.scala are reverted. I need to reimplmenet them by, 1)commenting MergeSameVarPredProbabilisticTheoremProver in STS. 2)replace BoxerName with BoxerPred, make sure this applied to Text, Hypothesis and Inference rules as well
 * I have no idea what this file does ExistentialEliminatingProbabilisticTheoremProver.scala
-* Cuong commented this class FromEntToEqvProbabilisticTheoremProver, do not know why. It remains commented. 
-* Search the file InferenceRuleInjectingProbabilisticTheoremProver.scala for FIXIT (they are two), read comment and fix. 
+* Lucene rules are generated for RTE (from T to H), but not from H to T to do STS
+* Run the system on Torrento's dataset with their phrases.

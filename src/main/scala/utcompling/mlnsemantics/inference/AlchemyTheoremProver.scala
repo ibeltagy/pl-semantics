@@ -90,9 +90,7 @@ class AlchemyTheoremProver(
     //var queryParam : String = """entailment\("entailed",""";
     var typeParam_h : List[String]= List();
     var typeParam_t : List[String]= List();
-    
-    
-    
+        
     if(!varBind.get){
 	    typeParam_h = List("ent");
 	    typeParam_t = List("ent");
@@ -150,6 +148,7 @@ class AlchemyTheoremProver(
 	//We do not generate rules between predicates having the same name
 	//This function generate rules using WordNet. This is removed for now
 	//val samePredRule = createSamePredRule(declarationNames)
+   val samePredRule = "";
 	//if(samePredRule != "") predsInRules :+= samePredRule
 
     val mlnFile = makeMlnFile(
@@ -440,7 +439,7 @@ class AlchemyTheoremProver(
 
       val weightThreshold  = Sts.opts.get("-wThr") match {
 			case Some(thr) => thr.toDouble;
-			case _ => 0.35;
+			case _ => 0.20;
 		}
 		assumptions
         .flatMap {
@@ -494,18 +493,6 @@ class AlchemyTheoremProver(
 
       f.write("\n")
 	
-      var queryString = convert(universalifyGoalFormula(goal -> entailmentConsequent))
-				.replaceAll("\"", "")
-				.replaceAll("""\(entailed\)""", "(\"entailed\")")
-				// remove FolEqualityExpression
-				.replaceAll("""\^[^\(]+\([^=\(]*=[^>\)]+\)|\([^=\(\)]+=[^>\^\)]+\)[^\^\)]\^""", "")	
-				// remove theme relation predicates 
-				.replaceAll("""\^[^\(]+(theme)[^\)]+\)""", "")	
-				.replaceAll("""\([^\(]+(theme)[^\^]+\^""", "(")
-	//	+ ".\n")
-
-
-	f.write(queryString + ".\n")
 
       //f.write(handwrittenRules);
       
@@ -724,10 +711,20 @@ class AlchemyTheoremProver(
 
       
       task match {
-      	case "rte" => f.write(convert(universalifyGoalFormula(goal -> entailmentConsequent)) + ". //(ditAnd)\n") //normal anding
+      	case "rte" => 
+				  var queryString = convert(universalifyGoalFormula(goal -> entailmentConsequent))
+						  //.replaceAll("\"", "")
+						  .replaceAll("""\(entailed\)""", "(\"entailed\")")
+						  // remove FolEqualityExpression
+						  .replaceAll("""\^[^\(]+\([^=\(]*=[^>\)]+\)|\([^=\(\)]+=[^>\^\)]+\)[^\^\)]\^""", "")
+						  // remove theme relation predicates
+						  .replaceAll("""\^[^\(]+(theme)[^\)]+\)""", "")
+						  .replaceAll("""\([^\(]+(theme)[^\^]+\^""", "(")
+				
+              	f.write(queryString + ".\n");
+				  //f.write(convert(universalifyGoalFormula(goal -> entailmentConsequent)) + ". //(ditAnd)\n") //normal anding
       	case "sts" => writeTwoGoals(goal);
       }
-      
       
       //f.write(average(goal));  a->ent, where a is one of the anded formulas
 
@@ -771,13 +768,15 @@ class AlchemyTheoremProver(
     FileUtils.writeUsing(tempFile) { f =>
       f.write("//\n");
       evidence.foreach {
-        case e @ FolAtom(pred, args @ _*) => {  // Remove all evidence predicates that don't appear in inference rules.
+        case e @ FolAtom(pred, args @ _*) => { 
+						// Remove all evidence predicates that don't appear in inference rules.
 						// This can help to reduce domain size.
-						val predName = pred.name.replace("'", "")
-						var isUsedAsEvidence = false
-						predsInRules.foreach(x => if (x.contains(predName)) isUsedAsEvidence = true)
-						if(isUsedAsEvidence) f.write(convert(e) + "\n")
-						else f.write("")
+						//val predName = pred.name.replace("'", "")
+						//var isUsedAsEvidence = false
+						//predsInRules.foreach(x => if (x.contains(predName)) isUsedAsEvidence = true)
+						//if(isUsedAsEvidence) f.write(convert(e) + "\n")
+						//else f.write("")
+						f.write (convert(e) + "\n");
 					}
         case e => throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
       }

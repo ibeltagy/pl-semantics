@@ -43,7 +43,9 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
   
   private var withPatientAgentInferenceRules = true;
 
-  private var inferenceRulesLevel = 2;  //0: no IR, 1: words only, 2: words + phrases 
+  private var inferenceRulesLevel = 2;  //0: no IR, 1: words only, 2: words + phrases
+  
+  private var task = "sts";  //sts or rte 
 
   private def d(drs: BoxerExpression) =
     new Boxer2DrtExpressionInterpreter().interpret(
@@ -71,6 +73,12 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 		case Some(vst) => vst.toBoolean;
 		case _ => true;
     }
+
+	task = Sts.opts.get("-task") match {
+      case Some(t) => t;
+      case _ => "sts";
+    }
+
    
     assumptions.foreach(x => LOG.info("\n" + d(x.expression).pretty))
     val rules = inferenceRulesLevel match {
@@ -459,16 +467,17 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 		     //Words should have the same POS and same entity type (individual or event)
 			
 		  //TODO: Think again about this. Are you sure you want to add rules between non-matching POS words 
-		//FIXIT: The block below should be fixed to generate bidirectional rules in case of STS, and do not generate 
+		//FIXIT(done): The block below should be fixed to generate bidirectional rules in case of STS, and do not generate 
 		//rules between similar words. Also, what is true and false in function makeExpRule?
-		//  if (//assumPred._1.pos == goalPred._1.pos && 
-		//	    assumEntry._3 != goalEntry._3 )
+		  if (//assumPred._1.pos == goalPred._1.pos && 
+			    assumEntry._3 != goalEntry._3 )
 			    //no need to check for the variable anymore before all of them are INDV now. 
 			    //assumPred._1.variable.name.charAt(0) == goalPred._1.variable.name.charAt(0))
-		//	{
+			{
 		      ret = ret ++ makeExpRule(assumEntry, goalEntry, "h", vectorspace, predTypeMap, true);
-		//      ret = ret ++ makeExpRule(goalEntry, assumEntry, "t", vectorspace, predTypeMap, false);
-		//	}
+				if(task == "sts")
+			      ret = ret ++ makeExpRule(goalEntry, assumEntry, "t", vectorspace, predTypeMap, false);
+			}
 		//====================================
 		}
 	} 
@@ -510,10 +519,9 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 				var antecedentContext = assumPred._2;
 				var rhs = Map(goalPred._1 -> goalPred._2);
 				var goalPredsAndContextsByName = Map(goalPred._1.name -> rhs);
-				//FIXIT: Coung changd the line below from "h" to "t". I believe it should remain "h". 
+				//FIXIT(fixed): Coung changd the line below from "h" to "t". I believe it should remain "h". 
 				//Test and fix
-				//pred = BoxerPred("h", pred.indices, pred.variable, pred.name, pred.pos, pred.sense);
-				pred = BoxerPred("t", pred.indices, pred.variable, pred.name, pred.pos, pred.sense);
+				pred = BoxerPred("h", pred.indices, pred.variable, pred.name, pred.pos, pred.sense);
 				
 				var compatible = true;
 				for (checkGoal <- goalPredsAndContexts){
@@ -530,24 +538,27 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 				  println ("hh" + goalPred._1.toString() + assumPred._1.toString() + " \n");
 				}
 
-				var lhs = Map(assumPred._1 -> assumPred._2);
-				var assumPredsAndContextsByName = Map(assumPred._1.name -> lhs); 
-				pred = goalPred._1;
-				pred = BoxerPred("t", pred.indices, pred.variable, pred.name, pred.pos, pred.sense);
-				
-				compatible = true;
-				for (checkAssum <- assumPredsAndContexts){
-					if (checkAssum._1.name == pred.name &&
-					    checkAssum._1.pos == pred.pos &&
-					    checkAssum._1.variable.name.charAt(0) != pred.variable.name.charAt(0))
-					  compatible = false;
-				}
-				if (compatible){
-					val rule = makeRulesForPred(pred, goalPred._2, assumPredsAndContextsByName , vectorspace);
-					ret = List.concat(ret, rule);
-				}
-				else {
-				  println ("tt" + goalPred._1.toString() + assumPred._1.toString() + " \n");
+				if(task == "sts")
+				{
+						  var lhs = Map(assumPred._1 -> assumPred._2);
+						  var assumPredsAndContextsByName = Map(assumPred._1.name -> lhs); 
+						  pred = goalPred._1;
+						  pred = BoxerPred("t", pred.indices, pred.variable, pred.name, pred.pos, pred.sense);
+						  
+						  compatible = true;
+						  for (checkAssum <- assumPredsAndContexts){
+							  if (checkAssum._1.name == pred.name &&
+									checkAssum._1.pos == pred.pos &&
+									checkAssum._1.variable.name.charAt(0) != pred.variable.name.charAt(0))
+								 compatible = false;
+						  }
+						  if (compatible){
+							  val rule = makeRulesForPred(pred, goalPred._2, assumPredsAndContextsByName , vectorspace);
+							  ret = List.concat(ret, rule);
+						  }
+						  else {
+							 println ("tt" + goalPred._1.toString() + assumPred._1.toString() + " \n");
+						  }
 				}				
 			}
 		}

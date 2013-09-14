@@ -11,7 +11,7 @@ case class BoxerDate(indicesPol: List[BoxerIndex], pol: String, indicesYear: Lis
     def ::(index: Int) = BoxerDate(indicesPol, pol, indicesYear, year, indicesMonth, month, indicesDay, day)
 
     override def toString(): String =
-        "date([%s]:%s, [%s]:%s, [%s]:%s, [%s]:%s)".format(indicesPol.mkString(","), pol, indicesYear.mkString(","), year, indicesMonth.mkString(","), month, indicesDay.mkString(","), day)
+        "date([%s]:(%s), [%s]:%s, [%s]:%s, [%s]:%s)".format(indicesPol.mkString(","), pol, indicesYear.mkString(","), year, indicesMonth.mkString(","), month, indicesDay.mkString(","), day)
 
 }
 

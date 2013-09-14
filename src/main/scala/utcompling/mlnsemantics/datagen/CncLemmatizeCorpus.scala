@@ -68,15 +68,20 @@ class CncLemmatizeCorpusMapper extends Mapper[Object, Text, IntWritable, Text] {
   }
 
   def parseToLemmas(sentences: Seq[java.lang.String]): Seq[Option[List[(String, String)]]] = {
-    val tokenized = sentences.map(s => Tokenize(s).mkString(" "))
-    val candcArgs = Map[String, String](
+    //println ("=============sentences====================\n"+sentences);
+		val tokenized = sentences.map(s => Tokenize(s).mkString(" "))
+   //println ("=============tokenized=====================\n"+tokenized); 
+	val candcArgs = Map[String, String](
       "--candc-printer" -> "boxer")
 //    "--candc-int-betas" -> "0.00075 0.0003 0.0001 0.00005 0.00001")
 
     val candcOut = candc.batchParse(tokenized, candcArgs, None, Some("boxer"))
+	//println ("===================candcOut===================\n"+candcOut);
     val outputs = splitOutput(candcOut)
+    //println ("===============outputs===================\n"+outputs);
     val lemmatized = lemmatize(outputs)
-    val wordsAndLemmas = tokenized.indices.map(idx => lemmatized.get(100 * idx + 99))
+    //println("===================lemmatized===============\n"+lemmatized)   
+ val wordsAndLemmas = tokenized.indices.map(idx => lemmatized.get(20 * idx + 19))
 //	val wordsAndLemmas = lemmatized.keys.toSeq.sorted.map(lemmatized.get)
     wordsAndLemmas
   }

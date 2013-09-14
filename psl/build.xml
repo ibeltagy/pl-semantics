@@ -5,12 +5,12 @@
               directory with the processing instruction <?eclipse.ant.import?>
               as the first entry and export the buildfile again. --><project basedir="." default="build" name="psl">
     <property environment="env"/>
-    <property name="M2_REPO" value="/home/beltagy/.m2/repository"/>
+    <property name="M2_REPO" value="/u/beltagy/.m2/repository"/>
     <property name="debuglevel" value="source,lines,vars"/>
     <property name="target" value="1.6"/>
     <property name="source" value="1.6"/>
     <path id="Groovy DSL Support.libraryclasspath">
-        <pathelement location="/home/beltagy/.groovy/greclipse/global_dsld_support"/>
+        <pathelement location="/u/beltagy/.groovy/greclipse/global_dsld_support"/>
         <pathelement location="/usr/eclipse/plugins/org.codehaus.groovy_2.0.6.xx-RELEASE-20121219-0800-e37/plugin_dsld_support/"/>
     </path>
     <path id="psl.classpath">

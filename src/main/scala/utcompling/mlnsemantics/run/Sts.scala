@@ -167,8 +167,10 @@ object Sts {
 	          {
 		          val from  = i * step;
 		          val to = Math.min((i+1)*step, totalSen);
+					println (from + ", " +  to);
+					 println (sentences.slice(from, to));
 		          val lemmatized = new CncLemmatizeCorpusMapper().parseToLemmas(sentences.slice(from, to))
-		          
+		          println(lemmatized);
 		          lemmatized
 		            .map(_.map(_.map(_._2).mkString(" ")).getOrElse("______parse_failed______"))
 		            .grouped(2).foreach { case Seq(a, b) => f.write("%s\t%s\n".format(a, b)) }
@@ -228,7 +230,7 @@ object Sts {
     
     def run(stsFile: String, boxFile: String, lemFile: String, vsFile: String, goldSimFile: String, outputSimFile: String, allLemmas: String => Boolean, includedPairs: Int => Boolean) {
       val pairs = readLines(stsFile, "ISO-8859-1").map(_.split("\t")).map { case Array(a, b) => (a, b) }
-	val lemPairs = readLines(lemFile, "ISO-8859-1").map(_.split("\t")).map { case Array(a, b) => (a, b) }
+		val lemPairs = readLines(lemFile, "ISO-8859-1").map(_.split("\t")).map { case Array(a, b) => (a, b) }
 
       val boxPairs =
         FileUtils.readLines(boxFile, "ISO-8859-1")
@@ -255,8 +257,17 @@ object Sts {
 		case _ => 1.0
 	}
 
-      def probOfEnt2simScore(p: Double) = p
-
+   def probOfEnt2simScore(p: Double) = {
+	   
+		val task = opts.get("-task") match
+   	{
+      	case Some(t) => t
+	      case _ => "sts";
+   	}
+		if(task == "sts")
+			p * 5;
+		else p;
+	}
 	// Index phrases into Lucene repository
 	val luceneForPhrases = new Lucene
 	opts.get("-phrases") match
@@ -307,14 +318,14 @@ object Sts {
 
       def depParser = DepParser.load();
       val results =
-        for (((((txt, hyp), boxPair), goldSim), i) <- (pairs zipSafe boxPairs zipSafe goldSims).zipWithIndex if includedPairs(i + 1)) yield {
+        for ((((((txt, hyp), boxPair), goldSim), (lemTxt, lemHyp)), i) <- (pairs zipSafe boxPairs zipSafe goldSims zipSafe lemPairs).zipWithIndex if includedPairs(i + 1)) yield {
 
           Sts.pairIndex = i+1;
           println("=============\n  Pair %s\n=============".format(i + 1))
           println(txt)
           println(hyp)
 
-	  val (lemTxt, lemHyp) = lemPairs.next
+	       //val (lemTxt, lemHyp) = lemPairs.next
 
           val compositeVectorMaker = opts.get("-vectorMaker") match {
             case Some("mul") => MultiplicationCompositeVectorMaker();
@@ -435,7 +446,7 @@ object Sts {
               									//THe rest of the code depends on what I am doing here
 	     new DoMultipleParsesTheoremProver( //rename variables and predicates+remove extra parses if any.
 	      0, // pairId
-              new MergeSameVarPredProbabilisticTheoremProver( //TODO 2: do not merge vars of different parses
+              //new MergeSameVarPredProbabilisticTheoremProver(//This is completely wrong. //TODO 2: do not merge vars of different parsee
                 new FindEventsProbabilisticTheoremProver(
 	              new GetPredicatesDeclarationsProbabilisticTheoremProver(
 		              new InferenceRuleInjectingProbabilisticTheoremProver( //2 //TODO 3: all pairs ?? 
@@ -457,7 +468,7 @@ object Sts {
 		                  },
 		                	new PositiveEqEliminatingProbabilisticTheoremProver(//TODO 4: list of parses
 
-		                          //new FromEntToEqvProbabilisticTheoremProver( //TODO 5: ANDing goals is wrong  
+		                      new FromEntToEqvProbabilisticTheoremProver( //TODO 5: ANDing goals is wrong  
 		                    		  new ExistentialEliminatingProbabilisticTheoremProver(
 		                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver(//TODO 6: how to generate evidences ?
 		                    						  softLogicTool)))))))))) //TODO 7: how to generate MLN ?
@@ -471,10 +482,10 @@ object Sts {
       val (ps, golds) = results.map(_._2).unzip
       println(ps.mkString("["," ","]"))
       println(golds.mkString("["," ","]"))
-	FileUtils.writeUsing(outputSimFile) { f =>
+	   FileUtils.writeUsing(outputSimFile) { f =>
           
-              f.write(ps.mkString(" ") + "\n")
-		f.write(golds.mkString(" ") + "\n")
+           f.write(ps.mkString(" ") + "\n")
+		     f.write(golds.mkString(" ") + "\n")
         }
     }
   }
