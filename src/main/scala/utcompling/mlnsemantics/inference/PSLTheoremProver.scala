@@ -59,18 +59,9 @@ class PSLTheoremProver(
     goal: FolExpression): Option[Double] = {
 
     if (varBind == None)
-    	varBind  = Sts.opts.get("-varBind") match {
-			case Some("true") => Some(true);
-			case _ => Some(false);
-		}
+    	varBind  = Sts.opts.varBind
     else varBind  = Some(false); //second call
-    
-    task = Sts.opts.get("-task") match {
-		case Some(tsk) => tsk;
-		case _ => "sts";
-      }
-    
-    
+       
     declarations.foreach { dec =>
       dec match {
         case (FolAtom(Variable(pred), args @ _*), argTypes) =>
@@ -139,16 +130,12 @@ class PSLTheoremProver(
     try 
     {
 
-    	val timeout = Sts.opts.get("-timeout") match {
-			case Some(t) => Some(t.toLong);
-			case  _=> None;
-		}
     	//113,244,339,345,421,436  (zeros)
     	//347,352,406,498,509    (memory)
     	//498,517,664,960,1431   (memroy)
     	//InnerJoin, OuterJoin, OuterJoinWithDummy;
     	//var resultScore = callPSL(mlnFile, "InnerJoin", timeout);
-    	var resultScore = callPSL(mlnFile, "OuterJoin", timeout);
+    	var resultScore = callPSL(mlnFile, "OuterJoin", Sts.opts.timeout);
     	
     	//if (resultScore == 0 )
     	//	resultScore = callPSL(mlnFile, "OuterJoin", timeout);
@@ -301,11 +288,6 @@ class PSLTheoremProver(
 		}
 		
        //=================Inference rules		
-		val weightThreshold  = Sts.opts.get("-wThr") match {
-			case Some(thr) => thr.toDouble;
-			case _ => 0.0;
-		}
-		
 		//var similarityTable: List[(String, Double)] = List(); 
 		//var lastSimilarityID:Integer = 0;
 		assumptions
@@ -314,7 +296,7 @@ class PSLTheoremProver(
             weight match {
               case Double.PositiveInfinity => Some(HardWeightedExpression(folEx))
               case Double.NegativeInfinity => None ;//Some(HardWeightedExpression(-folEx))
-              case _ if weight < weightThreshold => None
+              case _ if weight < Sts.opts.weightThreshold => None
               case _ => Some(e)
             }
           case e @ HardWeightedExpression(folEx) => Some(e)

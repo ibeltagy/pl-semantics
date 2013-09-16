@@ -37,11 +37,7 @@ class ModalDiscourseInterpreter(
     new PassthroughBoxerExpressionInterpreter(),
     CandcImpl.findBinary(),
     BoxerImpl.findBinary(),
-    Sts.opts.get("-kbest") match {
-		case Some(kbest) => kbest.toInt;
-		case _ => 1;
-    	}
-    ),
+    Sts.opts.kbest),
   candcDiscourseParser: DiscourseParser[Discourse] = new CandcDiscourseParser(CandcImpl.findBinary()),
   polarityLexicon: PolarityLexicon = PolarityLexicon.fromFile("resources/polarity-lexicon/polarity_lexicon_expanded.txt"))
   extends DiscourseInterpreter[BoxerExpression] {

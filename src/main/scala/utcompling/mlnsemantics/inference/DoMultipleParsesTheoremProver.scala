@@ -30,36 +30,21 @@ class DoMultipleParsesTheoremProver(
     assumptions: List[WeightedExpression[BoxerExpression]],
     goal: BoxerExpression): Option[Double] = {
 
-    val kbest = Sts.opts.get("-kbest") match {
-		case Some(cnt) => cnt.toInt;
-		case _ => 1000;
-    }
-    
-    val task = Sts.opts.get("-task") match {
-		case Some(tsk) => tsk;
-		case _ => "sts";
-    }
-
-    val multiOutput =  Sts.opts.get("-multiOut") match {
-			case Some(out) => out
-			case _ => "multiOut"
-			}
-
     var score: Double = 0;
     var scoreDenum: Double = 0;
     var index = 0;
 
     goal match {
-      case BoxerPrs(goalParses) => goalParses.slice(0, kbest).foreach(goalParse=>{  
+      case BoxerPrs(goalParses) => goalParses.slice(0, Sts.opts.kbest).foreach(goalParse=>{  
     	assumptions.head.expression match{
-    	  case BoxerPrs(assumptionParses) => assumptionParses.slice(0, kbest).foreach(assumptionParse=>{
+    	  case BoxerPrs(assumptionParses) => assumptionParses.slice(0, Sts.opts.kbest).foreach(assumptionParse=>{
     	  //---------------------------given goalParse and assumptionParse, calculate one score then add it to total score
 	  index += 1
-	  val outFile = if(pairId == 0) multiOutput + "." + index
-			else multiOutput + "." + pairId + "." + index
+	  val outFile = if(pairId == 0) Sts.opts.multipleOutputFiles + "." + index
+			else Sts.opts.multipleOutputFiles + "." + pairId + "." + index
     	  val result = delegate.prove(constants, declarations, evidence, List(HardWeightedExpression(assumptionParse._1)), goalParse._1)
     	  val oneScore = result match { case Some(s) => s; case None => 0.5};
-    	  task match {
+    	  Sts.opts.task match {
 					//case "sts" => score += oneScore*(assumptionParse._2+goalParse._2); scoreDenum +=(assumptionParse._2+goalParse._2 ); //weighted average 
 					case "sts" => 
 					{

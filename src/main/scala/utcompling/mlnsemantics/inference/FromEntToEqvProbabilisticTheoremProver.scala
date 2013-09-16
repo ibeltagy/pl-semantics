@@ -24,11 +24,7 @@ class FromEntToEqvProbabilisticTheoremProver(
     assumptions: List[WeightedExpression[FolExpression]],
     goal: FolExpression): Option[Double] = {
 
-    val task = Sts.opts.get("-task") match {
-		case Some(tsk) => tsk;
-		case _ => "sts";
-    }
-    task match {
+    Sts.opts.task match {
       case "rte" => {
 	    val prem = renameVars(assumptions.head.expression, "t");
 	    val hyp = renameVars(goal, "h");

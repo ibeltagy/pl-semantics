@@ -76,27 +76,7 @@ import utcompling.mlnsemantics.vecspace.DistRules
  * 1-85,87-127,129-190,192-216,218-276,278-317,319-335,337-360,362-416,418-458,460-531,533-554,556-564,566-568,570-607,609-663,665-691,693-705,707-714,716-719,721-736,739-75
  */
 
-/**
- * Input parameters
- * -vsWithPos true, (false)   //use vector space with POS or vector space without POS
- * -vectorMaker (add), mul    //vector composition, addition or multiplication
- * -chopLvl prp, (rp)         //chopping level: PredicateRelationPredicate or RelationPredicate 
- * -noDup (true), false       //noDuplicates when generating Infernece rules
- * -scaleW (true), false      //Scale Weight when generating inference rules
- * -maxProb (0.93)            //max probablity 
- * -wThr (0.35)               //cut off threshold for weights
- * -range (1-1500)            //pairs range 
- * -log (DEBUG)               //log OFF, DEBUG, INFO
- * -varBind true, (false)     //with or without variable binding 
- * -timeout 0  				  //Timeout integerInMilliseconds  
- * -peInf (true) false          //include or execlude patient and agent infernece rules when irLvl = 2
- * -irLvl 0 1 (2)             //infernec rules: 0)no infernece rules, 1)word-wise infernec rules, 2)words and phrases infenrec rules
- * -logic dep (box)           //get logical form from Boxer or Dependency parse
- * -kbest 3                    //number of parses. Default: 1
- * -task sts					//sts, or rte. Default: sts
- * -softLogic (mln) psl			//use PSL or MLN. Default: MLN
- * -keepUniv false (true)		//keep univ quantifiers, or replace them with Exist. Default: true (keep them)
- */
+
 
 
 
@@ -130,7 +110,8 @@ object Sts {
   //val Range(defaultRange) = "1-829,831-1500"
   val Range(defaultRange) = "1-2000"
     
-  var opts:Map[String, String] = Map(); //additional parameters passed from command line
+  //var opts:Map[String, String] = Map(); //additional parameters passed from command line
+  var opts:Config = null;
   
   val SomeRe = """Some\((.*)\)""".r
 
@@ -148,12 +129,10 @@ object Sts {
         }
       }
 
-    opts = optPairs.toMap
-    println("args: " + opts.mkString(", "))
+    println("args: " + optPairs.toMap.mkString(", "))
+    opts = new Config(optPairs.toMap);
 
-    val loglevel = opts.get("-log").map(Level.toLevel).getOrElse(Level.DEBUG)
-
-    Logger.getRootLogger.setLevel(loglevel)
+    Logger.getRootLogger.setLevel(opts.loglevel)
 
     newArgs.toSeq match {
       case Seq("lem", stsFile, lemFile) =>
@@ -239,82 +218,59 @@ object Sts {
           .grouped(2)
       val goldSims = FileUtils.readLines(goldSimFile).map(_.toDouble)
       
-      val vsFileMod = vsFile  + (opts.get("-vsWithPos") match {
-		case Some(s) if (s.toBoolean == true) => ".pos";
-		case _ => "";
-      })
-	// Weight of distributional inference rules
-	val distWeight = opts.get("-distWeight") match
-	{
-		case Some(weight) => weight.toDouble
-		case _ => 1.0
-	}
+      val vsFileMod = vsFile + ( if(opts.vectorspaceFormatWithPOS) ".pos" else "" );
 
-	// Weight of external inference rules
-	val resourceWeight = opts.get("-resourceWeight") match
-	{
-		case Some(weight) => weight.toDouble
-		case _ => 1.0
-	}
-
-   def probOfEnt2simScore(p: Double) = {
-	   
-		val task = opts.get("-task") match
-   	{
-      	case Some(t) => t
-	      case _ => "sts";
-   	}
-		if(task == "sts")
+    def probOfEnt2simScore(p: Double) = {
+		if(opts.task == "sts")
 			p * 5;
 		else p;
 	}
 	// Index phrases into Lucene repository
 	val luceneForPhrases = new Lucene
-	opts.get("-phrases") match
+	if (opts.phrasesFile != "")
 	{
-		case Some(phrasesFile) =>
-			val step = 100000
-			val numPhrases = Source.fromFile(phrasesFile, "ISO-8859-1").getLines.size
-			val itrCount = (Math.ceil (numPhrases.toDouble / step)).intValue()
-			for(i <- 0 to itrCount - 1)
-			{
-				println(i)
-				val resource = Source.fromFile(phrasesFile, "ISO-8859-1")
-				val from  = i * step
-        	  		val to = Math.min((i + 1) * step, numPhrases)
-				val phrases = resource.getLines.slice(from, to).toIterable
-				luceneForPhrases.write(phrases)
-				resource.close
-			}
-		case _ => luceneForPhrases.write(Iterable[String]())
+		val step = 100000
+		val numPhrases = Source.fromFile(opts.phrasesFile, "ISO-8859-1").getLines.size
+		val itrCount = (Math.ceil (numPhrases.toDouble / step)).intValue()
+		for(i <- 0 to itrCount - 1)
+		{
+			println(i)
+			val resource = Source.fromFile(opts.phrasesFile, "ISO-8859-1")
+			val from  = i * step
+    	  		val to = Math.min((i + 1) * step, numPhrases)
+			val phrases = resource.getLines.slice(from, to).toIterable
+			luceneForPhrases.write(phrases)
+			resource.close
+		}
 	}
+	else
+		luceneForPhrases.write(Iterable[String]())
 
 	// Index paraphrase rules into Lucene repository
 	val lucene = new Lucene
-	opts.get("-rules") match
+	if (opts.rulesFile != "")
 	{
-		case Some(rulesFile) => 
-			println("Indexing paraphrase rules ...")
-			val start = System.nanoTime
-			val step = 100000
-			val numRules = Source.fromFile(rulesFile, "ISO-8859-1").getLines.size
-			val itrCount = (Math.ceil (numRules.toDouble / step)).intValue()
-			for(i <- 0 to itrCount - 1)
-			{
-				println(i)
-				val resource = Source.fromFile(rulesFile, "ISO-8859-1")
-				val from  = i * step
-        	  		val to = Math.min((i + 1) * step, numRules)
-				val rules = resource.getLines.slice(from, to).toIterable
-				lucene.write(rules)
-				resource.close
-			}
-			println("Finished indexing.")
-			val end = System.nanoTime
-			println("Indexing time: " + (end - start) / 1e9 + " s")
-			
-		case _ => lucene.write(Iterable[String]())
+		println("Indexing paraphrase rules ...")
+		val start = System.nanoTime
+		val step = 100000
+		val numRules = Source.fromFile(opts.rulesFile, "ISO-8859-1").getLines.size
+		val itrCount = (Math.ceil (numRules.toDouble / step)).intValue()
+		for(i <- 0 to itrCount - 1)
+		{
+			println(i)
+			val resource = Source.fromFile(opts.rulesFile, "ISO-8859-1")
+			val from  = i * step
+    	  		val to = Math.min((i + 1) * step, numRules)
+			val rules = resource.getLines.slice(from, to).toIterable
+			lucene.write(rules)
+			resource.close
+		}
+		println("Finished indexing.")
+		val end = System.nanoTime
+		println("Indexing time: " + (end - start) / 1e9 + " s")
 	}
+	else
+		lucene.write(Iterable[String]())
 
       def depParser = DepParser.load();
       val results =
@@ -327,19 +283,19 @@ object Sts {
 
 	       //val (lemTxt, lemHyp) = lemPairs.next
 
-          val compositeVectorMaker = opts.get("-vectorMaker") match {
-            case Some("mul") => MultiplicationCompositeVectorMaker();
-            case _ => SimpleCompositeVectorMaker();
+          val compositeVectorMaker = opts.compositeVectorMaker match {
+            case "mul" => MultiplicationCompositeVectorMaker();
+            case "add" => SimpleCompositeVectorMaker();
           }
           
-          val logicFormSource: DiscourseInterpreter[BoxerExpression] = opts.get("-logic") match {
-            case Some("dep") => new DependencyParsedBoxerDiscourseInterpreter(depParser);
-            case _ => new PreparsedBoxerDiscourseInterpreter(boxPair, new PassthroughBoxerExpressionInterpreter());
+          val logicFormSource: DiscourseInterpreter[BoxerExpression] = opts.logicFormSource match {
+            case "dep" => new DependencyParsedBoxerDiscourseInterpreter(depParser);
+            case "box" => new PreparsedBoxerDiscourseInterpreter(boxPair, new PassthroughBoxerExpressionInterpreter());
           }
 
-          val softLogicTool: ProbabilisticTheoremProver[FolExpression] = opts.get("-softLogic") match {
-            case Some("psl") => new PSLTheoremProver()
-            case _ => AlchemyTheoremProver.findBinary(wordnet);
+          val softLogicTool: ProbabilisticTheoremProver[FolExpression] = opts.softLogicTool match {
+            case "psl" => new PSLTheoremProver()
+            case "mln" => AlchemyTheoremProver.findBinary(wordnet);
           }
 
 	// Search phrases in Text-Hypothesis pair
@@ -395,12 +351,10 @@ object Sts {
 
 	// Compute similaritis between phrases and generate corresponding rules in the following format: 
 	// <id> TAB <text_phrase> TAB <hypo_phrase> TAB <sim_score>
-	val distRules = opts.get("-phraseVecs") match
-	{
-		case Some(phraseVecsFile) =>
-			DistRules(phraseVecsFile, txtPhrases, hypPhrases)
-		case _ => List[String]()
-	}
+	val distRules = if(opts.phraseVecsFile != "")
+						DistRules(opts.phraseVecsFile, txtPhrases, hypPhrases);
+					else List[String]();
+	
 
 	// Search rules in Text-Hypothesis pair
 	val start = System.nanoTime
@@ -455,8 +409,8 @@ object Sts {
 		                new SameLemmaHardClauseRuleWeighter(
 		                  new AwithCvecspaceWithSpillingSimilarityRuleWeighter(compositeVectorMaker)), 
 				distRules ++ paraphraseRules,
-				distWeight,
-				resourceWeight,
+				opts.distWeight,
+				opts.resourceWeight,
 		                new TypeConvertingPTP( //3
 		                  new BoxerExpressionInterpreter[FolExpression] {
 		                    def interpret(x: BoxerExpression): FolExpression =

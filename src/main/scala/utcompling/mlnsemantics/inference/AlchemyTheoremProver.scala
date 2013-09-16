@@ -17,7 +17,6 @@ import java.util.StringTokenizer
 import utcompling.mlnsemantics.run.Sts
 import scala.sys.process.Process
 import scala.sys.process.ProcessLogger
-
 import edu.mit.jwi.item.POS
 import scala.collection.JavaConversions._
 import utcompling.mlnsemantics.wordnet.Wordnet
@@ -63,17 +62,8 @@ class AlchemyTheoremProver(
     goal: FolExpression): Option[Double] = {
 
     if (varBind == None)
-    	varBind  = Sts.opts.get("-varBind") match {
-			case Some("true") => Some(true);
-			case _ => Some(false);
-		}
+    	varBind  = Sts.opts.varBind;
     else varBind  = Some(false); //second call
-    
-    task = Sts.opts.get("-task") match {
-		case Some(tsk) => tsk;
-		case _ => "sts";
-      }
-    
     
     declarations.foreach { dec =>
       dec match {
@@ -437,17 +427,14 @@ class AlchemyTheoremProver(
 
       f.write("\n//begin assumptions\n")
 
-      val weightThreshold  = Sts.opts.get("-wThr") match {
-			case Some(thr) => thr.toDouble;
-			case _ => 0.20;
-		}
+
 		assumptions
         .flatMap {
           case e @ SoftWeightedExpression(folEx, weight) =>
             weight match {
               case Double.PositiveInfinity => Some(HardWeightedExpression(folEx))
               case Double.NegativeInfinity => None ;//Some(HardWeightedExpression(-folEx))
-              case _ if weight < weightThreshold => None
+              case _ if weight < Sts.opts.weightThreshold => None
               case _ => Some(e)
             }
           case e @ HardWeightedExpression(folEx) => Some(e)
@@ -465,13 +452,10 @@ class AlchemyTheoremProver(
 	              val folExpString = convert(folExp);
 	              //This is a nasty hack to inverse what alchamy does when it splits a formula into smaller formulas
 	              var count = folExpString.split("=>").apply(1).count(_ == '^') + 1;
-					  Sts.opts.get("-scaleW") match {
-							case Some(s) => s.toBoolean match {
-								case false => count = 1;
-								case _ =>;
-							} 
-							case _ => ;
-					  }
+				  
+	              if (!Sts.opts.scaleW) 
+				    count = 1;
+				  
 	              usedWeight = usedWeight * count; 
 	              f.write("%.15f %s\n".format(usedWeight, folExpString))
 	            }
@@ -549,12 +533,6 @@ class AlchemyTheoremProver(
 	        }
 	      }
       }
-      //Chopping levels: type of mini-clauses
-      //rp, prp
-      val chopLvl  = Sts.opts.get("-chopLvl") match {
-			case Some(thr) => thr;
-			case _ => "rp";
-	  }
 
       val allGoalVariables: Set[Variable] = findAllVars(goal);      
        
@@ -562,7 +540,7 @@ class AlchemyTheoremProver(
       def writeMiniClauses (doPrint : Boolean): Integer = {
            var n = 0;
 	      //write relation predicates
-          if (chopLvl == "rp"){
+          if (Sts.opts.chopLvl == "rp"){
             ////////////////////// man(x) ^ agent(x, y)
 		      for(nonRelationExpr<- nonRelationsMap )
 		      {
@@ -585,7 +563,7 @@ class AlchemyTheoremProver(
 			      }
 		      }
 		   ////////////////////// man(x) ^ agent(x, y)
-          } else if (chopLvl == "prp") {
+          } else if (Sts.opts.chopLvl == "prp") {
                  ////////////////////// man(x) ^ agent(x, y) ^ drive(y)
 		    var notUsedNonRelations = nonRelationsMap;
 		    
@@ -654,21 +632,17 @@ class AlchemyTheoremProver(
       
       def mapNtoW (n:Int) = {
         
-	      val maxProb = Sts.opts.get("-maxProb") match {
-	         case Some(prob) => prob.toDouble;
-	         case _ => 0.93;
-	      }     
 	      //AlchemyTheoremProver.pairIndx
 	      //entWeight  = entWeights(AlchemyTheoremProver.pairIndx)
 	      //if n is not in the list of weights, set it to 1
 	
 	      if (n >= entWeights.size)
-	    	  entWeight = (-prior + log(maxProb) - log(1-maxProb))/n;
+	    	  entWeight = (-prior + log(Sts.opts.maxProb) - log(1-Sts.opts.maxProb))/n;
 	      else
 	    	  entWeight = entWeights(n);
 	      
 	      if (entWeight == 0)
-	      	  entWeight = (-prior + log(maxProb) - log(1-maxProb))/n;
+	      	  entWeight = (-prior + log(Sts.opts.maxProb) - log(1-Sts.opts.maxProb))/n;
       }
       
 
@@ -800,11 +774,8 @@ class AlchemyTheoremProver(
     //Dunno, but it seems that MC-SAT is better
     //val allArgs = "-ptpe" :: "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
     val allArgs = "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
-    val timeout = Sts.opts.get("-timeout") match {
-			case Some(t) => Some(t.toLong);
-			case  _=> None;
-		}
-    val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, LOG.isDebugEnabled, timeout);
+
+    val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, LOG.isDebugEnabled, Sts.opts.timeout);
 	val out = new StringBuilder
 	val err = new StringBuilder
  

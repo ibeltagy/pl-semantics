@@ -38,14 +38,6 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
   private val LOG = LogFactory.getLog(classOf[InferenceRuleInjectingProbabilisticTheoremProver])
 
   private val NotPred = """^not_(.+)$""".r
-  
-  private var vectorspaceFormatWithPOS = false; 
-  
-  private var withPatientAgentInferenceRules = true;
-
-  private var inferenceRulesLevel = 2;  //0: no IR, 1: words only, 2: words + phrases
-  
-  private var task = "sts";  //sts or rte 
 
   private def d(drs: BoxerExpression) =
     new Boxer2DrtExpressionInterpreter().interpret(
@@ -58,30 +50,8 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     assumptions: List[WeightedExpression[BoxerExpression]],
     goal: BoxerExpression): Option[Double] = {
 
-    vectorspaceFormatWithPOS = Sts.opts.get("-vsWithPos") match {
-		case Some(vst) => vst.toBoolean;
-		case _ => false;
-    }
- 
-    inferenceRulesLevel = Sts.opts.get("-irLvl") match {
-		case Some(vst) => vst.toInt;
-		case _ => 2;
-    }
-    
-   
-    withPatientAgentInferenceRules = Sts.opts.get("-peInf") match {
-		case Some(vst) => vst.toBoolean;
-		case _ => true;
-    }
-
-	task = Sts.opts.get("-task") match {
-      case Some(t) => t;
-      case _ => "sts";
-    }
-
-   
     assumptions.foreach(x => LOG.info("\n" + d(x.expression).pretty))
-    val rules = inferenceRulesLevel match {
+    val rules = Sts.opts.inferenceRulesLevel match {
 		case 0 => Set();
 		case _ => makeNewRules(assumptions.map(_.expression), goal);
 	 }
@@ -95,7 +65,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     val allPredsAndContexts =  List.concat(assumPredsAndContexts, goalPredsAndContexts);
     val vectorspace = vecspaceFactory(allPredsAndContexts.flatMap {
       case (pred, context) => {
-        val l = pred.name.split("_").map (n => n + (vectorspaceFormatWithPOS match {
+        val l = pred.name.split("_").map (n => n + (Sts.opts.vectorspaceFormatWithPOS match {
         case true => "-" + pred.pos;
         case false => "";
         })) ++ context
@@ -123,7 +93,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
   def getAllPredsAndContexts(e: BoxerExpression): Seq[(BoxerPred, Seq[String])] = {
     val preds = getAllPreds(e)
     val predsAndContexts = preds.zipWithIndex.map { case (p, i) => p -> (preds.take(i) ++ preds.drop(i + 1)) }
-    val newPredsAndContexts = predsAndContexts.mapVals(_.map(p => (stripNot(p.name) + (vectorspaceFormatWithPOS match {
+    val newPredsAndContexts = predsAndContexts.mapVals(_.map(p => (stripNot(p.name) + (Sts.opts.vectorspaceFormatWithPOS match {
         case true => "-" +p.pos;
         case false => "";
     }))));
@@ -148,7 +118,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
   private def getAllRelations(e: BoxerExpression): Seq[BoxerRel] =
     e match {
       case p: BoxerRel => {
-    	if ((p.name == "patient" || p.name == "agent") && !withPatientAgentInferenceRules )  
+    	if ((p.name == "patient" || p.name == "agent") && !Sts.opts.withPatientAgentInferenceRules )  
     		Seq.empty[BoxerRel]
     	else Seq(p)
       }
@@ -159,7 +129,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     var mapPredVar  = (preds.map(row => row._1.variable.name -> row)).toMap;
     var notUsedPred = preds.toMap;
 
-	  if (inferenceRulesLevel == 1) //no phrases
+	  if (Sts.opts.inferenceRulesLevel == 1) //no phrases
 			mapPredVar = mapPredVar.empty
     
     rel.flatMap(r => {
@@ -180,7 +150,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 	    	
 	    	//println ("//PHRASE(npn): " + arg1._1.name+"-"+arg1._1.pos + " " + r.name + " " + arg2._1.name+"-"+arg2._1.pos)
 	    	val context = (arg1._2 ++ arg2._2).toList.diff(arg1._1.name.split("_")).diff(arg2._1.name.split("_"));
-	    	var words = vectorspaceFormatWithPOS match {
+	    	var words = Sts.opts.vectorspaceFormatWithPOS match {
 	    		case true => arg1._1.name +"-" +arg1._1.pos + "_" + arg2._1.name+"-" +arg2._1.pos ;
 	    		case false => arg1._1.name + "_" + arg2._1.name;
 	    	}
@@ -192,16 +162,10 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 	    	Some((exp, context, words))
     	}
     	else None;
-    }).toSet ++ (Sts.opts.get("-noDup") match {
-                     case Some(s) => s.toBoolean match {
-                        case false => preds;
-                        case _ => notUsedPred;
-                     }
-                     case _ => notUsedPred;
-                 }).map(p => (
+    }).toSet ++ (if (Sts.opts.duplicatePhraselAndLexicalRule) preds else notUsedPred).map(p => (
         BoxerDrs(List(), List(BoxerPred(p._1.discId, p._1.indices, BoxerVariable("x1"), p._1.name, p._1.pos, p._1.sense))),
         p._2,
-        vectorspaceFormatWithPOS match {case true => p._1.name +"-" + p._1.pos; case false => p._1.name;}  
+        Sts.opts.vectorspaceFormatWithPOS match {case true => p._1.name +"-" + p._1.pos; case false => p._1.name;}  
         )) 
   
   }
@@ -475,7 +439,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 			    //assumPred._1.variable.name.charAt(0) == goalPred._1.variable.name.charAt(0))
 			{
 		      ret = ret ++ makeExpRule(assumEntry, goalEntry, "h", vectorspace, predTypeMap, true);
-				if(task == "sts")
+				if(Sts.opts.task == "sts")
 			      ret = ret ++ makeExpRule(goalEntry, assumEntry, "t", vectorspace, predTypeMap, false);
 			}
 		//====================================
@@ -538,7 +502,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 				  println ("hh" + goalPred._1.toString() + assumPred._1.toString() + " \n");
 				}
 
-				if(task == "sts")
+				if(Sts.opts.task == "sts")
 				{
 						  var lhs = Map(assumPred._1 -> assumPred._2);
 						  var assumPredsAndContextsByName = Map(assumPred._1.name -> lhs); 
