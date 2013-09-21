@@ -1,3 +1,43 @@
+Merging Cuong's fork with main(ToDo)
+------------------------------
+* Code of running condor is replaced with my scripts for condor. What is still missing is organizging the output and running the scripts on it. 
+* Changes in GetPredicatesDeclarationsProbabilisticTheoremProver.scala, HardAssumptionAsEvidenceProbabilisticTheoremProver.scala, InferenceRuleInjectingProbabilisticTheoremProver.scala, AlchemyTheoremProver.scala related to predicates naming _dh, _dt are reverted. Still, it is necessary to declare all predicates as open-world because now evidence predicates are close-world. 
+* In AlchemyTheoremProver.scala, there is a function to generate rules based on wordnet, it is commented for now but it should not
+* Changes in MergeSameVarPredProbabilisticTheoremProver.scala are reverted. I need to reimplmenet them by, 1)commenting MergeSameVarPredProbabilisticTheoremProver in STS. 2)replace BoxerName with BoxerPred, make sure this applied to Text, Hypothesis and Inference rules as well
+* I have no idea what this file does ExistentialEliminatingProbabilisticTheoremProver.scala
+* Run the system on Torrento's dataset with their phrases.
+//==========================================
+
+-Function: InferenceRuleInjectingProbabilisticTheoremProver.convertParaphraseToFOL is completely wrong. 
+espcially, How to map variables from LHS to RHS ? do we use a new Existential Quantifier ? 
+Now, the mapping is so messed up. It is as it was implemented by coung
+
+-How to generate rules for phrases. We need a principled way to extract phrases and map them to logical expressions.
+Assuming we follow the technique we have now, there still a problem with it. e.g:
+ A little boy is playing.	A fat girl is eating.
+Phrases are: 
+little boy	(correct)
+fat girl	(correct)
+little boy play	(not sure)
+little play	(not sure)
+boy play	(not sure)
+fat girl eat	(not sure)
+girl eat	(not sure)
+fat eat		(not sure)
+For now, all of them are possible phrases.
+
+-Removing punctuation and special charactgers before parsing is wrong. This is done in the following places:
+scala-logic/src/main/scala/utcompling/scalalogic/discourse/candc/boxer/expression/BoxerExpression.scala:  val forbiddenChars = """-|\.|,|\+|#|@|\$|%""".r;
+src/main/scala/utcompling/mlnsemantics/util/StringUtil.scala:    .replaceAll("""([\?!\";\|\[\].,'_<>:\+\*-/&\^%\$#@~`=\(\)\d\\])""", " ")
+src/main/scala/utcompling/mlnsemantics/run/Sts.scala:      Tokenize("""-|'|`|‘|’|/|"|“|”|\)|\(|&|>|<|=|\$|:|\+""".r.replaceAllIn(a, " ").filterNot(  (c:Char) => ( c > 127)  )).mkString(" ");
+
+-Why Coung is doing all this ReplaceAll in AlchmeyThearomProver ?
+
+-Phrasal weights (Baroni) not supported yet. 
+
+-Check the pipeline. Why am I remvoing the existentials ?
+
+//==========================================
 830: takes 18 minutes: it is slightly changed to avoid this loong wait
 
 597: type

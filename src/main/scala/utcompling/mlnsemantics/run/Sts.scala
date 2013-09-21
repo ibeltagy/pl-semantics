@@ -33,6 +33,7 @@ import utcompling.mlnsemantics.inference.DependencyParsedBoxerDiscourseInterpret
 import dhg.depparse._
 import utcompling.mlnsemantics.util._
 import utcompling.mlnsemantics.vecspace.DistRules
+import org.apache.commons.logging.LogFactory
 
 /**
  *
@@ -76,10 +77,9 @@ import utcompling.mlnsemantics.vecspace.DistRules
  * 1-85,87-127,129-190,192-216,218-276,278-317,319-335,337-360,362-416,418-458,460-531,533-554,556-564,566-568,570-607,609-663,665-691,693-705,707-714,716-719,721-736,739-75
  */
 
-
-
-
-
+class Sts{
+  
+}
 object Sts {
 
   //val Range(defaultRange) = "1-85,87-127,129-190,192-216,218-249,251-276,278-317,319-335,337-351,353-360,362-416,418-458,460-497,499-531,533-554,556-564,566-568,570-604,606-607,609-663,665-685,687-691,693-705,707-714,716-719,721-736,739-750"
@@ -108,6 +108,9 @@ object Sts {
   //Try example 597,610,679
   //val Range(defaultRange) = "597,610,679,803,825,904,905,1067,1171,1341,1399,1446"
   //val Range(defaultRange) = "1-829,831-1500"
+
+  private val LOG = LogFactory.getLog(classOf[Sts])
+
   val Range(defaultRange) = "1-2000"
     
   //var opts:Map[String, String] = Map(); //additional parameters passed from command line
@@ -208,202 +211,150 @@ object Sts {
     } 
     
     def run(stsFile: String, boxFile: String, lemFile: String, vsFile: String, goldSimFile: String, outputSimFile: String, allLemmas: String => Boolean, includedPairs: Int => Boolean) {
-      val pairs = readLines(stsFile, "ISO-8859-1").map(_.split("\t")).map { case Array(a, b) => (a, b) }
+		val pairs = readLines(stsFile, "ISO-8859-1").map(_.split("\t")).map { case Array(a, b) => (a, b) }
 		val lemPairs = readLines(lemFile, "ISO-8859-1").map(_.split("\t")).map { case Array(a, b) => (a, b) }
 
-      val boxPairs =
+		val boxPairs =
         FileUtils.readLines(boxFile, "ISO-8859-1")
           .map { case SomeRe(drsString) => Some(drsString); case "None" => None }
           .toList
           .grouped(2)
-      val goldSims = FileUtils.readLines(goldSimFile).map(_.toDouble)
+        val goldSims = FileUtils.readLines(goldSimFile).map(_.toDouble)
       
-      val vsFileMod = vsFile + ( if(opts.vectorspaceFormatWithPOS) ".pos" else "" );
+      	val vsFileMod = vsFile + ( if(opts.vectorspaceFormatWithPOS) ".pos" else "" );
 
-    def probOfEnt2simScore(p: Double) = {
-		if(opts.task == "sts")
-			p * 5;
-		else p;
-	}
-	// Index phrases into Lucene repository
-	val luceneForPhrases = new Lucene
-	if (opts.phrasesFile != "")
-	{
-		val step = 100000
-		val numPhrases = Source.fromFile(opts.phrasesFile, "ISO-8859-1").getLines.size
-		val itrCount = (Math.ceil (numPhrases.toDouble / step)).intValue()
-		for(i <- 0 to itrCount - 1)
-		{
-			println(i)
-			val resource = Source.fromFile(opts.phrasesFile, "ISO-8859-1")
-			val from  = i * step
-    	  		val to = Math.min((i + 1) * step, numPhrases)
-			val phrases = resource.getLines.slice(from, to).toIterable
-			luceneForPhrases.write(phrases)
-			resource.close
+	    def probOfEnt2simScore(p: Double) = {
+			if(opts.task == "sts")
+				p * 5;
+			else p;
 		}
-	}
-	else
-		luceneForPhrases.write(Iterable[String]())
-
-	// Index paraphrase rules into Lucene repository
-	val lucene = new Lucene
-	if (opts.rulesFile != "")
-	{
-		println("Indexing paraphrase rules ...")
-		val start = System.nanoTime
-		val step = 100000
-		val numRules = Source.fromFile(opts.rulesFile, "ISO-8859-1").getLines.size
-		val itrCount = (Math.ceil (numRules.toDouble / step)).intValue()
-		for(i <- 0 to itrCount - 1)
-		{
-			println(i)
-			val resource = Source.fromFile(opts.rulesFile, "ISO-8859-1")
-			val from  = i * step
-    	  		val to = Math.min((i + 1) * step, numRules)
-			val rules = resource.getLines.slice(from, to).toIterable
-			lucene.write(rules)
-			resource.close
-		}
-		println("Finished indexing.")
-		val end = System.nanoTime
-		println("Indexing time: " + (end - start) / 1e9 + " s")
-	}
-	else
-		lucene.write(Iterable[String]())
-
-      def depParser = DepParser.load();
-      val results =
-        for ((((((txt, hyp), boxPair), goldSim), (lemTxt, lemHyp)), i) <- (pairs zipSafe boxPairs zipSafe goldSims zipSafe lemPairs).zipWithIndex if includedPairs(i + 1)) yield {
-
-          Sts.pairIndex = i+1;
-          println("=============\n  Pair %s\n=============".format(i + 1))
-          println(txt)
-          println(hyp)
-
-	       //val (lemTxt, lemHyp) = lemPairs.next
-
-          val compositeVectorMaker = opts.compositeVectorMaker match {
-            case "mul" => MultiplicationCompositeVectorMaker();
-            case "add" => SimpleCompositeVectorMaker();
-          }
-          
-          val logicFormSource: DiscourseInterpreter[BoxerExpression] = opts.logicFormSource match {
-            case "dep" => new DependencyParsedBoxerDiscourseInterpreter(depParser);
-            case "box" => new PreparsedBoxerDiscourseInterpreter(boxPair, new PassthroughBoxerExpressionInterpreter());
-          }
-
-          val softLogicTool: ProbabilisticTheoremProver[FolExpression] = opts.softLogicTool match {
-            case "psl" => new PSLTheoremProver()
-            case "mln" => AlchemyTheoremProver.findBinary(wordnet);
-          }
-
-	// Search phrases in Text-Hypothesis pair
-	val ignoredTokens = List("an", "the", "be", "is", "are", "to", "in", "on", "at", "of", "for")
+		// Index phrases into Lucene repository
+		val luceneForPhrases = new Lucene(opts.phrasesFile )
 	
-	// Search phrases in Text
-	val txtQuery = SimpleTokenizer(txt + " " + lemTxt)
-		.filter(token => token.length > 1 && !ignoredTokens.contains(token))
-		.distinct
-		.mkString(" ")
+		// Index paraphrase rules into Lucene repository
+		val lucene = new Lucene (opts.rulesFile)
 	
-	val txtPhrases = luceneForPhrases.read(txtQuery)
-		.filter { phrase =>
-
-			val Array(id, content) = phrase.split("\t")
-			val str = " " + content + " "
-
-			val simpleTxt = (" " + SimpleTokenizer(txt).mkString(" ") + " ")
-			val simpleLemTxt = (" " + SimpleTokenizer(lemTxt).mkString(" ") + " ")
-
-			val cond = simpleTxt.contains(str) || simpleLemTxt.contains(str)
-
-			val extraStr = " some" + str
-			val extraCond = !simpleTxt.contains(extraStr) && !simpleLemTxt.contains(extraStr)
-
-			cond && extraCond
-		}
-	.toList
-
-	// Search phrases in Hypothesis
-	val hypQuery = SimpleTokenizer(hyp + " " + lemHyp)
-		.filter(token => token.length > 1 && !ignoredTokens.contains(token))
-		.distinct
-		.mkString(" ")
+		def depParser = DepParser.load();
+		val results =
+	    for ((((((txt, hyp), boxPair), goldSim), (lemTxt, lemHyp)), i) <- (pairs zipSafe boxPairs zipSafe goldSims zipSafe lemPairs).zipWithIndex if includedPairs(i + 1)) yield {
 	
-	val hypPhrases = luceneForPhrases.read(hypQuery)
-		.filter { phrase =>
+			Sts.pairIndex = i+1;
+			println("=============\n  Pair %s\n=============".format(i + 1))
+			println(txt)
+			println(hyp)
+		
+			val compositeVectorMaker = opts.compositeVectorMaker match {
+				case "mul" => MultiplicationCompositeVectorMaker();
+				case "add" => SimpleCompositeVectorMaker();
+			}			  
+			val logicFormSource: DiscourseInterpreter[BoxerExpression] = opts.logicFormSource match {
+				case "dep" => new DependencyParsedBoxerDiscourseInterpreter(depParser);
+				case "box" => new PreparsedBoxerDiscourseInterpreter(boxPair, new PassthroughBoxerExpressionInterpreter());
+			}			
+			val softLogicTool: ProbabilisticTheoremProver[FolExpression] = opts.softLogicTool match {
+				case "psl" => new PSLTheoremProver()
+				case "mln" => AlchemyTheoremProver.findBinary(wordnet);
+			}		
+			// Search phrases in Text-Hypothesis pair
+			val ignoredTokens = List("an", "the", "be", "is", "are", "to", "in", "on", "at", "of", "for")
+			
+			// Search phrases in Text
+			val txtQuery = SimpleTokenizer(txt + " " + lemTxt)
+				.filter(token => token.length > 1 && !ignoredTokens.contains(token))
+				.distinct
+				.mkString(" ")
+			
+			val txtPhrases = luceneForPhrases.read(txtQuery)
+				.filter { phrase =>
 
-			val Array(id, content) = phrase.split("\t")
-			val str = " " + content + " "
+				val Array(id, content) = phrase.split("\t")
+				val str = " " + content + " "
+	
+				val simpleTxt = (" " + SimpleTokenizer(txt).mkString(" ") + " ")
+				val simpleLemTxt = (" " + SimpleTokenizer(lemTxt).mkString(" ") + " ")
+	
+				val cond = simpleTxt.contains(str) || simpleLemTxt.contains(str)
+	
+				val extraStr = " some" + str
+				val extraCond = !simpleTxt.contains(extraStr) && !simpleLemTxt.contains(extraStr)
+	
+				cond && extraCond
+			}.toList
 
-			val simpleHyp =  (" " + SimpleTokenizer(hyp).mkString(" ") + " ")
-			val simpleLemHyp = (" " + SimpleTokenizer(lemHyp).mkString(" ") + " ")
+			// Search phrases in Hypothesis
+			val hypQuery = SimpleTokenizer(hyp + " " + lemHyp)
+				.filter(token => token.length > 1 && !ignoredTokens.contains(token))
+				.distinct
+				.mkString(" ")
+			
+			val hypPhrases = luceneForPhrases.read(hypQuery)
+				.filter { phrase =>
+		
+					val Array(id, content) = phrase.split("\t")
+					val str = " " + content + " "
+		
+					val simpleHyp =  (" " + SimpleTokenizer(hyp).mkString(" ") + " ")
+					val simpleLemHyp = (" " + SimpleTokenizer(lemHyp).mkString(" ") + " ")
+		
+					val cond = simpleHyp.contains(str) || simpleLemHyp.contains(str)
+		
+					val extraStr = " some" + str
+					val extraCond = !simpleHyp.contains(extraStr) && !simpleLemHyp.contains(extraStr)
+		
+					cond && extraCond
+				}.toList
 
-			val cond = simpleHyp.contains(str) || simpleLemHyp.contains(str)
-
-			val extraStr = " some" + str
-			val extraCond = !simpleHyp.contains(extraStr) && !simpleLemHyp.contains(extraStr)
-
-			cond && extraCond
-		}
-	.toList
-
-	// Compute similaritis between phrases and generate corresponding rules in the following format: 
-	// <id> TAB <text_phrase> TAB <hypo_phrase> TAB <sim_score>
-	val distRules = if(opts.phraseVecsFile != "")
-						DistRules(opts.phraseVecsFile, txtPhrases, hypPhrases);
-					else List[String]();
+			// Compute similaritis between phrases and generate corresponding rules in the following format: 
+			// <id> TAB <text_phrase> TAB <hypo_phrase> TAB <sim_score>
+			val distRules = if(opts.phraseVecsFile != "")
+								DistRules(opts.phraseVecsFile, txtPhrases, hypPhrases);
+							else List[String]();
 	
 
-	// Search rules in Text-Hypothesis pair
-	val start = System.nanoTime
-	val query = SimpleTokenizer(hyp + " " + lemHyp)
-		.filter(token => token.length > 1 && !ignoredTokens.contains(token))
-		.distinct
-		.mkString(" ")
-
-	val returnedRules = lucene.read(query)
-	val end = System.nanoTime
-	println("Searching time: " + (end - start) / 1e9 + " s")       
-	println("# returned rules: " + returnedRules.size)
-
-	val filterStart = System.nanoTime
-	val paraphraseRules = returnedRules
-		.filter { rule =>
-
-			val Array(id, left, right, score) = rule.split("\t")
-			val lhs = (" " + left + " ").replaceAll(" (a|an|the) ", " ")
-			val rhs = (" " + right + " ").replaceAll(" (a|an|the) ", " ")
-
-			val simpleTxt = (" " + SimpleTokenizer(txt).mkString(" ") + " ").replaceAll(" (a|an|the) ", " ")
-			val simpleHyp =  (" " + SimpleTokenizer(hyp).mkString(" ") + " ").replaceAll(" (a|an|the) ", " ")
-
-			val simpleLemTxt = (" " + SimpleTokenizer(lemTxt).mkString(" ") + " ").replaceAll(" (a|an|the) ", " ")
-			val simpleLemHyp = (" " + SimpleTokenizer(lemHyp).mkString(" ") + " ").replaceAll(" (a|an|the) ", " ")
-
-			(simpleTxt.contains(lhs) || simpleLemTxt.contains(lhs) ) && 
-				(simpleHyp.contains(rhs) || simpleLemHyp.contains(rhs) )
-		}
-	.toList
-//	.sortBy(- _.split("\t")(3).toDouble)
-
-	val filterEnd = System.nanoTime
-	println("Filtering time: " + (filterEnd - filterStart) / 1e9 + " s")
-
-	paraphraseRules.foreach(rule => println("*** " + rule))   
+			// Search rules in Text-Hypothesis pair
+			val start = System.nanoTime
+			val query = SimpleTokenizer(hyp + " " + lemHyp)
+				.filter(token => token.length > 1 && !ignoredTokens.contains(token))
+				.distinct
+				.mkString(" ")
+		
+			val returnedRules = lucene.read(query)
+			val end = System.nanoTime
+			println("Searching time: " + (end - start) / 1e9 + " s")       
+			println("# returned rules: " + returnedRules.size)
+		
+			val filterStart = System.nanoTime
+			val paraphraseRules = returnedRules
+				.filter { rule =>
+		
+					val Array(id, left, right, score) = rule.split("\t")
+					val lhs = (" " + left + " ").replaceAll(" (a|an|the) ", " ")
+					val rhs = (" " + right + " ").replaceAll(" (a|an|the) ", " ")
+		
+					val simpleTxt = (" " + SimpleTokenizer(txt).mkString(" ") + " ").replaceAll(" (a|an|the) ", " ")
+					val simpleHyp =  (" " + SimpleTokenizer(hyp).mkString(" ") + " ").replaceAll(" (a|an|the) ", " ")
+		
+					val simpleLemTxt = (" " + SimpleTokenizer(lemTxt).mkString(" ") + " ").replaceAll(" (a|an|the) ", " ")
+					val simpleLemHyp = (" " + SimpleTokenizer(lemHyp).mkString(" ") + " ").replaceAll(" (a|an|the) ", " ")
+		
+					(simpleTxt.contains(lhs) || simpleLemTxt.contains(lhs) ) && 
+						(simpleHyp.contains(rhs) || simpleLemHyp.contains(rhs) )
+				}.toList
+		
+			val filterEnd = System.nanoTime
+			println("Filtering time: " + (filterEnd - filterStart) / 1e9 + " s")
+			LOG.trace ("Found rules: ");
+			paraphraseRules.foreach(rule => LOG.trace(rule))   
 
           val ttp =
             new TextualTheoremProver( //1
-              logicFormSource,                   //TODO 1: probably, I need to add a step to rename 
-              									//either variables, or predicates or both.  
-              									//THe rest of the code depends on what I am doing here
+              logicFormSource,
 	     new DoMultipleParsesTheoremProver( //rename variables and predicates+remove extra parses if any.
 	      0, // pairId
-              //new MergeSameVarPredProbabilisticTheoremProver(//This is completely wrong. //TODO 2: do not merge vars of different parsee
+              //new MergeSameVarPredProbabilisticTheoremProver(//This is completely wrong. Do not merge vars of different parsee
                 new FindEventsProbabilisticTheoremProver(
 	              new GetPredicatesDeclarationsProbabilisticTheoremProver(
-		              new InferenceRuleInjectingProbabilisticTheoremProver( //2 //TODO 3: all pairs ?? 
+		              new InferenceRuleInjectingProbabilisticTheoremProver( //2  
 		                wordnet,
 		                words => BowVectorSpace(vsFileMod, x => words(x) && allLemmas(x)),
 		                new SameLemmaHardClauseRuleWeighter(
@@ -420,15 +371,13 @@ object Sts {
 		                            new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(
 		                              new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))))).fol
 		                  },
-		                	new PositiveEqEliminatingProbabilisticTheoremProver(//TODO 4: list of parses
-
-		                      new FromEntToEqvProbabilisticTheoremProver( //TODO 5: ANDing goals is wrong  
+		                	new PositiveEqEliminatingProbabilisticTheoremProver(
+		                      new FromEntToEqvProbabilisticTheoremProver( //5: ANDing goals  
 		                    		  new ExistentialEliminatingProbabilisticTheoremProver(
-		                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver(//TODO 6: how to generate evidences ?
-		                    						  softLogicTool)))))))))) //TODO 7: how to generate MLN ?
+		                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver(//6: generate evidences
+		                    						  softLogicTool)))))))))) //Alchemy or PSL
 
           val p = ttp.prove(sepTokens(txt), sepTokens(hyp))
-          //println("%s  [actual: %.2f, gold: %s]".format(p, probOfEnt2simScore(p.get), goldSim))
           println("Some(%.2f) [actual: %.2f, gold: %s]".format(p.get, probOfEnt2simScore(p.get), goldSim))
           i -> (probOfEnt2simScore(p.get), goldSim)
         }
@@ -436,10 +385,9 @@ object Sts {
       val (ps, golds) = results.map(_._2).unzip
       println(ps.mkString("["," ","]"))
       println(golds.mkString("["," ","]"))
-	   FileUtils.writeUsing(outputSimFile) { f =>
-          
+	  FileUtils.writeUsing(outputSimFile) { f =>
            f.write(ps.mkString(" ") + "\n")
-		     f.write(golds.mkString(" ") + "\n")
+		   f.write(golds.mkString(" ") + "\n")
         }
     }
   }

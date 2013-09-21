@@ -51,9 +51,7 @@ class AlchemyTheoremProver(
   private var entailmentConsequent:FolExpression = FolAtom(Variable("entailment_h"), Variable("ent_h"));
   
   private var varBind: Option[Boolean] = None;
-  
-  private var task = "sts";
-  
+   
   override def prove(
     constants: Map[String, Set[String]],
     declarations: Map[FolExpression, Seq[String]],
@@ -427,7 +425,6 @@ class AlchemyTheoremProver(
 
       f.write("\n//begin assumptions\n")
 
-
 		assumptions
         .flatMap {
           case e @ SoftWeightedExpression(folEx, weight) =>
@@ -684,7 +681,7 @@ class AlchemyTheoremProver(
 
 
       
-      task match {
+      Sts.opts.task match {
       	case "rte" => 
 				  var queryString = convert(universalifyGoalFormula(goal -> entailmentConsequent))
 						  //.replaceAll("\"", "")
@@ -791,7 +788,7 @@ class AlchemyTheoremProver(
     val score2 = out.mkString("").trim().toDouble;
     out.clear();
     
-    val score  = task match {
+    val score  = Sts.opts.task match {
       case "sts" => (score1 + score2) / 2.0;
       case "rte" => score1;
     }  
