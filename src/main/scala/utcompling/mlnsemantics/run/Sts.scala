@@ -309,6 +309,9 @@ object Sts {
 			val distRules = if(opts.phraseVecsFile != "")
 								DistRules(opts.phraseVecsFile, txtPhrases, hypPhrases);
 							else List[String]();
+         LOG.trace ("Distributional rules: ");
+         distRules.foreach(rule => LOG.trace(rule))
+
 	
 
 			// Search rules in Text-Hypothesis pair
@@ -343,7 +346,7 @@ object Sts {
 		
 			val filterEnd = System.nanoTime
 			println("Filtering time: " + (filterEnd - filterStart) / 1e9 + " s")
-			LOG.trace ("Found rules: ");
+			LOG.trace ("Filtered rules: ");
 			paraphraseRules.foreach(rule => LOG.trace(rule))   
 
           val ttp =

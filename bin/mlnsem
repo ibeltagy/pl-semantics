@@ -69,11 +69,15 @@ case $CMD in
 #	$START utcompling.mlnsemantics.run.Sts lem $RES/sts/STS.SMTnews.in.txt $RES/sts/STS.SMTnews.in.lem "$@"
 	;;
   all)
-	#$START utcompling.mlnsemantics.run.Sts box $RES/sts/prob.in.txt $RES/sts/prob.in.box "$@"
-	#$START utcompling.mlnsemantics.run.Sts lem $RES/sts/prob.in.txt $RES/sts/prob.in.lem "$@"
-	#$START utcompling.mlnsemantics.run.Sts vs $RES/full.vs $RES/sts/prob.in.lem $RES/sts/prob.in.vs "$@"
+	$START utcompling.mlnsemantics.run.Sts box $RES/sts/prob.in.txt $RES/sts/prob.in.box "$@"
+	$START utcompling.mlnsemantics.run.Sts lem $RES/sts/prob.in.txt $RES/sts/prob.in.lem "$@"
+	$START utcompling.mlnsemantics.run.Sts vs $RES/full.vs $RES/sts/prob.in.lem $RES/sts/prob.in.vs "$@"
 	$START utcompling.mlnsemantics.run.Sts run $RES/sts/prob.in.txt $RES/sts/prob.in.box $RES/sts/prob.in.lem $RES/sts/prob.in.vs  $RES/sts/prob.gs.txt $RES/sts/prob.out.txt "$@"
 	;;
+ tst)
+   $START utcompling.mlnsemantics.run.Sts run $RES/sts/prob.in.txt $RES/sts/prob.in.box $RES/sts/prob.in.lem $RES/sts/prob.in.vs  $RES/sts/prob.gs.txt $RES/sts/prob.out.txt "$@"
+   ;;
+
 
 run-rte)
 	$START utcompling.mlnsemantics.run.Sts run $RES/rte/RTE$version.$rtemode.txt $RES/rte/RTE$version.$rtemode.box $RES/rte/RTE$version.$rtemode.lem $RES/rte/RTE$version.$rtemode.vs $RES/rte/RTE$version.$rtemode.gs $RES/rte/RTE$version.$rtemode.out -rules $RES/rules "$@"

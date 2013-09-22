@@ -2,9 +2,17 @@ package utcompling.mlnsemantics.vecspace
 
 import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.FileUtils._
+import org.apache.commons.logging.LogFactory
+
+
+class DistRules
+{
+}
 
 object DistRules
 {
+	private val LOG = LogFactory.getLog(classOf[DistRules])
+
 	def apply(filename: String, txtPhrases: List[String], hypPhrases: List[String]): List[String] =
 	{
 		val phraseVecs = readLines(filename, "ISO-8859-1").toList
@@ -17,6 +25,8 @@ object DistRules
 				.map(_.toDouble)
 				.toList
 		}
+	   LOG.trace ("Found Text Phrases: ");
+      txtPhrases.foreach(vec => LOG.trace(vec))
 
 		val hypPhraseVecs = hypPhrases.map { hypPhrase =>
 			val Array(id, content) = hypPhrase.split("\t")
@@ -25,6 +35,10 @@ object DistRules
 				.map(_.toDouble)
 				.toList
 		}
+
+      LOG.trace ("Found Hypothesis Phrases: ");
+      hypPhrases.foreach(vec => LOG.trace(vec))
+
 
 		txtPhrases.zip(txtPhraseVecs).foreach { case (txtPhrase, txtPhraseVec) =>
 			val Array(txtId, txtContent) = txtPhrase.split("\t")

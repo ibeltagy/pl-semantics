@@ -138,7 +138,7 @@ class Config(opts: Map[String, String] = Map()) {
   }
 
   //what level of inference rules to generate: 
-  //0)no infernece rules, 1)word-wise infernec rules, 2)words and phrases infenrec rules
+  //-1)no rules at all  0)pre-compiled rules. No on-the-fly rules 1)pre-compiled rules + lexical rules, 2)all rules(precompiled, lexical, phrasal)
   val inferenceRulesLevel = opts.get("-irLvl") match {
     case Some(vst) => vst.toInt;
     case _ => 2;

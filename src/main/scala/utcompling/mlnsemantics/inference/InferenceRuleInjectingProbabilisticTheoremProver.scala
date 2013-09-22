@@ -52,7 +52,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 
     assumptions.foreach(x => LOG.info("\n" + d(x.expression).pretty))
     val rules = Sts.opts.inferenceRulesLevel match {
-		case 0 => Set();
+		case -1 => Set();
 		case _ => makeNewRules(assumptions.map(_.expression), goal);
 	 }
     LOG.info("\n" + d(goal).pretty)
@@ -489,34 +489,42 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
   }
   
   private def makeLongerRules(assumRel: Iterable[BoxerRel], goalRel:Iterable[BoxerRel], assumPredsAndContexts: Iterable[(BoxerPred, Iterable[String])], goalPredsAndContexts: Iterable[(BoxerPred, Iterable[String])], vectorspace: Map[String, BowVector], predTypeMap: Map[String, String]): Set[WeightedExpression[BoxerExpression]] = {
-    val assumRelPred = findRelPred(assumPredsAndContexts, assumRel);
-    val goalRelPred = findRelPred(goalPredsAndContexts, goalRel);
     
-    var ret = List[WeightedExpression[BoxerExpression]] () ;
-    
-	for (goalEntry <- goalRelPred )
-	{
-		for (assumEntry <- assumRelPred )
-		{
-			//DO not add rules if the word is the same??? Why?
-		     //Words should have the same POS and same entity type (individual or event)
-			
-		  //TODO: Think again about this. Are you sure you want to add rules between non-matching POS words 
-		//FIXIT(done): The block below should be fixed to generate bidirectional rules in case of STS, and do not generate 
-		//rules between similar words. Also, what is true and false in function makeExpRule?
-		  if (//assumPred._1.pos == goalPred._1.pos && 
-			    assumEntry._3 != goalEntry._3 )
-			    //no need to check for the variable anymore before all of them are INDV now. 
-			    //assumPred._1.variable.name.charAt(0) == goalPred._1.variable.name.charAt(0))
+	 var ret = List[WeightedExpression[BoxerExpression]] () ;
+
+
+	 if (Sts.opts.inferenceRulesLevel > 0){ //if > 0, add lexical and phrasal distrbutional rules
+		
+			//findRelPred handels if inferenceRulesLevel is 1 or 2
+		  val assumRelPred = findRelPred(assumPredsAndContexts, assumRel);
+		  val goalRelPred = findRelPred(goalPredsAndContexts, goalRel);
+				
+				
+			for (goalEntry <- goalRelPred )
 			{
-		      ret = ret ++ makeExpRule(assumEntry, goalEntry, "h", vectorspace, predTypeMap, true);
-		      if(Sts.opts.task == "sts")
-		    	  ret = ret ++ makeExpRule(goalEntry, assumEntry, "t", vectorspace, predTypeMap, false);
-			}
-		//====================================
-		}
-	} 
-	
+				  for (assumEntry <- assumRelPred )
+				  {
+					  //DO not add rules if the word is the same??? Why?
+						 //Words should have the same POS and same entity type (individual or event)
+					  
+					 //TODO: Think again about this. Are you sure you want to add rules between non-matching POS words 
+				  //FIXIT(done): The block below should be fixed to generate bidirectional rules in case of STS, and do not generate 
+				  //rules between similar words. Also, what is true and false in function makeExpRule?
+					 if (//assumPred._1.pos == goalPred._1.pos && 
+							assumEntry._3 != goalEntry._3 )
+							//no need to check for the variable anymore before all of them are INDV now. 
+							//assumPred._1.variable.name.charAt(0) == goalPred._1.variable.name.charAt(0))
+					  {
+						  ret = ret ++ makeExpRule(assumEntry, goalEntry, "h", vectorspace, predTypeMap, true);
+						  if(Sts.opts.task == "sts")
+							 ret = ret ++ makeExpRule(goalEntry, assumEntry, "t", vectorspace, predTypeMap, false);
+					  }
+				  //====================================
+				  }
+			 } 
+	}
+
+	//if inferenceRulesLevel > -1, all corpus rules
 	// Add paraphrase rules
 	val paraphraseFOL = convertParaphraseToFOL(assumPredsAndContexts.map(_._1), goalPredsAndContexts.map(_._1), assumRel, goalRel)
 	paraphraseFOL.foreach { ruleFOL =>
