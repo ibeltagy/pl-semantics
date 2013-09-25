@@ -1,5 +1,12 @@
 package utcompling.mlnsemantics.util
 
+import java.io.BufferedReader
+import java.io.Reader
+import java.io.StringReader
+import scala.collection.JavaConversions.asScalaIterator
+import edu.stanford.nlp.process.PTBTokenizer
+import edu.stanford.nlp.process.WordTokenFactory
+
 /**
  * Copyright 2013 Jason Baldridge
  * 
@@ -24,17 +31,4 @@ object DecimalToPercent extends (Double => String) {
   def apply(num: Double) = df.format(num*100)
 }
 
-/**
- * A very simple tokenizer that pulls most puncuation off the characters.
- * Given a raw string, tokenize it with a simple regular expression, returning
- * an IndexedSeq[String] with one token per element.
- */
-object SimpleTokenizer {
-  def apply(text: String): IndexedSeq[String] = text
-    .replaceAll("""([\?!\";\|\[\].,'_<>:\+\*-/&\^%\$#@~`=\(\)\d\\])""", " ")
-    .toLowerCase
-    .trim
-    .split("\\s+")
-    .toIndexedSeq
-}
 

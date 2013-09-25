@@ -15,7 +15,8 @@ object DistRules
 
 	def apply(filename: String, txtPhrases: List[String], hypPhrases: List[String]): List[String] =
 	{
-		val phraseVecs = readLines(filename, "ISO-8859-1").toList
+		//val phraseVecs = readLines(filename, "ISO-8859-1").toList
+	    val phraseVecs = readLines(filename).toList
 		var distRules = List[String]()
 
 		val txtPhraseVecs = txtPhrases.map { txtPhrase =>

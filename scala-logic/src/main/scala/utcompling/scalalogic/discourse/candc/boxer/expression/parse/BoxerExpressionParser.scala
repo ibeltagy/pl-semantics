@@ -12,7 +12,7 @@ import scala.collection.mutable.SetBuilder
  */
 class BoxerExpressionParser(discourseId: String = "0") extends LogicParser[BoxerExpression] {
 
-    override protected val quoteChars = List(('\'', '\'', '\\', false))
+    override protected val quoteChars = List(('\'', '\'', '\\', true))
 
     override protected def getAllSymbols() = List("(", ")", ",", "[", "]", ":")
 

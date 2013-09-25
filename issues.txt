@@ -28,15 +28,16 @@ girl eat	(not sure)
 fat eat		(not sure)
 For now, all of them are possible phrases.
 
--Removing punctuation and special charactgers before parsing is wrong. This is done in the following places:
-scala-logic/src/main/scala/utcompling/scalalogic/discourse/candc/boxer/expression/BoxerExpression.scala:  val forbiddenChars = """-|\.|,|\+|#|@|\$|%""".r;
-src/main/scala/utcompling/mlnsemantics/util/StringUtil.scala:    .replaceAll("""([\?!\";\|\[\].,'_<>:\+\*-/&\^%\$#@~`=\(\)\d\\])""", " ")
-src/main/scala/utcompling/mlnsemantics/run/Sts.scala:      Tokenize("""-|'|`|‘|’|/|"|“|”|\)|\(|&|>|<|=|\$|:|\+""".r.replaceAllIn(a, " ").filterNot(  (c:Char) => ( c > 127)  )).mkString(" ");
+-Tokenization and removing special charactgers: 
+1)Tokenization details and different modes of tokenization are in utcompling/mlnsemantics/datagen.Tokenize.scala
+2)removing special characters: HandleSpecialCharProbabilisticTheoremProver. Is this the right place ? Should not it be right before calling MLN/PSL ? would it be better NOT to remove special characters. Instead, replace them with some other characters ?  I will keep it like this for now until I find an example where this needs to be changed. 
+In all cases, candc gets somehow confused when parsing special characters. 
 
 -Why Coung is doing all this ReplaceAll in AlchmeyThearomProver ?
 
 -Check the pipeline. Why am I remvoing the existentials ?
 
+-When parsing, WH questions are removed. This can be fixed here: BoxerExpressionParser
 //==========================================
 830: takes 18 minutes: it is slightly changed to avoid this loong wait
 

@@ -22,18 +22,19 @@ import org.apache.log4j.Level
 import utcompling.mlnsemantics.vecspace.BowVector
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.PredicateCleaningBoxerExpressionInterpreterDecorator
 import utcompling.mlnsemantics.inference._
-import utcompling.mlnsemantics.datagen.Tokenize
 import utcompling.mlnsemantics.datagen.CncLemmatizeCorpusMapper
-import scala.io.Source
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.PassthroughBoxerExpressionInterpreter
 import utcompling.scalalogic.discourse.impl.PreparsedBoxerDiscourseInterpreter
 import utcompling.mlnsemantics.inference.CompositionalRuleWeighter
 import utcompling.scalalogic.discourse.DiscourseInterpreter
 import utcompling.mlnsemantics.inference.DependencyParsedBoxerDiscourseInterpreter
 import dhg.depparse._
-import utcompling.mlnsemantics.util._
 import utcompling.mlnsemantics.vecspace.DistRules
 import org.apache.commons.logging.LogFactory
+import utcompling.mlnsemantics.datagen.Tokenize
+import utcompling.mlnsemantics.datagen.SimpleTokenizer
+import utcompling.mlnsemantics.util.Config
+import utcompling.mlnsemantics.util.Lucene
 
 /**
  *
@@ -173,7 +174,7 @@ object Sts {
 
       case Seq("box", stsFile, boxFile) =>
         val di = new ModalDiscourseInterpreter()
-        val sentences = readLines(stsFile).flatMap(_.split("\t")).map(sepTokens).toList
+        val sentences = readLines(stsFile).flatMap(_.split("\t")).map(Tokenize.separateTokens).toList
         val step = 400; //file is large. It should be partitioned before passed to the parser
         val totalSen = sentences.length;
         val itrCount = (Math.ceil (totalSen*1.0 / step)).intValue();   
@@ -201,21 +202,16 @@ object Sts {
       //        val allLemmas = lemmatized.flatten.flatMap(_.map(_._2)).toSet
       //        run(stsFile, fullVsFile, _ => true)
     }
-
-    def sepTokens(a: String)= {
-      //Tokenize(a.replace("-","" ).replace("\"", " ").replace("\'", " ").replace("‘", " ").replace("’", " ").replace("/", " ").replace("“", " ").replace("”", " ").replace(")", " ").replace("(", " ")).mkString(" ");
-      //remove non-ascii characters
-      //remove control 
-      Tokenize("""-|'|`|‘|’|/|"|“|”|\)|\(|&|>|<|=|\$|:|\+""".r.replaceAllIn(a, " ").filterNot(  (c:Char) => ( c > 127)  )).mkString(" ");
-      //Tokenize(a.replace("-","" )).mkString(" ");
-    } 
     
     def run(stsFile: String, boxFile: String, lemFile: String, vsFile: String, goldSimFile: String, outputSimFile: String, allLemmas: String => Boolean, includedPairs: Int => Boolean) {
-		val pairs = readLines(stsFile, "ISO-8859-1").map(_.split("\t")).map { case Array(a, b) => (a, b) }
-		val lemPairs = readLines(lemFile, "ISO-8859-1").map(_.split("\t")).map { case Array(a, b) => (a, b) }
+		//val pairs = readLines(stsFile, "ISO-8859-1").map(_.split("\t")).map { case Array(a, b) => (a, b) }
+		//val lemPairs = readLines(lemFile, "ISO-8859-1").map(_.split("\t")).map { case Array(a, b) => (a, b) }
+    	val pairs = readLines(stsFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
+		val lemPairs = readLines(lemFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
 
 		val boxPairs =
-        FileUtils.readLines(boxFile, "ISO-8859-1")
+        //FileUtils.readLines(boxFile, "ISO-8859-1")
+		FileUtils.readLines(boxFile)
           .map { case SomeRe(drsString) => Some(drsString); case "None" => None }
           .toList
           .grouped(2)
@@ -356,7 +352,8 @@ object Sts {
 	      0, // pairId
               //new MergeSameVarPredProbabilisticTheoremProver(//This is completely wrong. Do not merge vars of different parsee
                 new FindEventsProbabilisticTheoremProver(
-	              new GetPredicatesDeclarationsProbabilisticTheoremProver(
+	              new HandleSpecialCharProbabilisticTheoremProver(
+	                new GetPredicatesDeclarationsProbabilisticTheoremProver(
 		              new InferenceRuleInjectingProbabilisticTheoremProver( //2  
 		                wordnet,
 		                words => BowVectorSpace(vsFileMod, x => words(x) && allLemmas(x)),
@@ -378,9 +375,9 @@ object Sts {
 		                      new FromEntToEqvProbabilisticTheoremProver( //5: ANDing goals  
 		                    		  new ExistentialEliminatingProbabilisticTheoremProver(
 		                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver(//6: generate evidences
-		                    						  softLogicTool)))))))))) //Alchemy or PSL
+		                    						  softLogicTool))))))))))) //Alchemy or PSL
 
-          val p = ttp.prove(sepTokens(txt), sepTokens(hyp))
+          val p = ttp.prove(Tokenize(txt).mkString(" "), Tokenize(hyp).mkString(" "))
           println("Some(%.2f) [actual: %.2f, gold: %s]".format(p.get, probOfEnt2simScore(p.get), goldSim))
           i -> (probOfEnt2simScore(p.get), goldSim)
         }

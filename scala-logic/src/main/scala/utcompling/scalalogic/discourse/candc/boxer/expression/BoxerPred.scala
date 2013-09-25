@@ -11,8 +11,7 @@ case class BoxerPred(discId: String, indices: List[BoxerIndex], variable: BoxerV
   def ::(index: Int) = BoxerPred(discId, List(BoxerIndex(index)), variable, name, pos, sense)
 
   override def toString(): String =
-    //"[%s]:pred(%s,%s,%s,%d)".format(indices.mkString(","), variable.name, name, pos, sense)
-    "[%s]:pred(%s,%s,%s,%d)".format(indices.mkString(","), variable.name, nameToMlnIdentifier(name), pos, sense)
+    "[%s]:pred(%s,%s,%s,%d)".format(indices.mkString(","), variable.name, name, pos, sense)
 
 }
 

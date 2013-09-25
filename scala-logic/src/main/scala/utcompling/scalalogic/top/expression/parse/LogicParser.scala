@@ -182,7 +182,8 @@ abstract class LogicParser[T] {
                     throw new ParseException(None, "Empty quoted token found")
                 //This text was quated that means it has some special characters. 
                 //Remove all these special characters before returning the token.
-                return (Some(token.toString.replaceAll("'", "")), count)
+                //Update: All quotes remain
+                return (Some(token.toString/*.replaceAll("'", "")*/), count)
             } catch {
                 case e: NoSuchElementException => throw new ExpectedMoreTokensException(Some(getCurrentIndex), Some("End of input reached.  Start quote character [" + start + "] not followed by end quote character [" + end + "]"), e)
             }

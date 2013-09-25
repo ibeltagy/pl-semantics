@@ -2,17 +2,6 @@ package utcompling.scalalogic.discourse.candc.boxer.expression
 
 abstract class BoxerExpression {
 
-  val forbiddenChars = """-|\.|,|\+|#|@|\$|%""".r;
-  
-  def nameToMlnIdentifier(name: String ): String = 
-  {
-		  var mlnId = forbiddenChars.replaceAllIn(name, "");
-		  if (mlnId.length() == 0 )
-		    mlnId = "id";
-		  else if (!mlnId.charAt(0).isLetter)
-			  mlnId = "id_" + mlnId;
-		  return mlnId;
-  }
   def visit[R](function: BoxerExpression => R, combinator: List[R] => R, default: R): R
 
   def visitConstruct(function: BoxerExpression => BoxerExpression): BoxerExpression

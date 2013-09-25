@@ -22,7 +22,35 @@ class Tokenizer {
   def tokenize(reader: Reader): Iterator[String] = new PTBTokenizer(new BufferedReader(reader), new WordTokenFactory, "").map(_.word)
 }
 
+//Mainly used when parsing 
 object Tokenize {
   private val tokenizer = new Tokenizer()
   def apply(s: String) = tokenizer.tokenize(s)
+  def separateTokens(s: String) = tokenizer.tokenize(s).mkString(" ");
 }
+
+/*def sepTokens(a: String)= {
+  //Tokenize(a.replace("-","" ).replace("\"", " ").replace("\'", " ").replace("‘", " ").replace("’", " ").replace("/", " ").replace("“", " ").replace("”", " ").replace(")", " ").replace("(", " ")).mkString(" ");
+  //remove non-ascii characters
+  //remove control 
+  Tokenize(a).mkString(" ");
+	//Tokenize("""-|'|`|‘|’|/|"|“|”|\)|\(|&|>|<|=|\$|:|\+""".r.replaceAllIn(a, " ").filterNot(  (c:Char) => ( c > 127)  )).mkString(" ");
+  //Tokenize(a.replace("-","" )).mkString(" ");
+} */
+
+
+/**
+ * A very simple tokenizer that pulls most puncuation off the characters.
+ * Given a raw string, tokenize it with a simple regular expression, returning
+ * an IndexedSeq[String] with one token per element.
+ */
+//Mainly used when indexing text in Lucene
+object SimpleTokenizer {
+  def apply(text: String): IndexedSeq[String] = text
+    .replaceAll("""([\?!\";\|\[\].,'_<>:\+\*-/&\^%\$#@~`=\(\)\d\\])""", " ")
+    .toLowerCase
+    .trim
+    .split("\\s+")
+    .toIndexedSeq
+}
+

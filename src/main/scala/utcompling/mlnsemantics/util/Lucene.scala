@@ -55,12 +55,14 @@ class Lucene(rulesFileName: String) {
   def writeRulesFile(rulesFile: String) {
 	val start = System.nanoTime
 	val step = 100000
-	val numRules = Source.fromFile(rulesFile, "ISO-8859-1").getLines.size
+	//val numRules = Source.fromFile(rulesFile, "ISO-8859-1").getLines.size
+	val numRules = Source.fromFile(rulesFile).getLines.size
 	val itrCount = (Math.ceil (numRules.toDouble / step)).intValue()
 	for(i <- 0 to itrCount - 1)
 	{
 		LOG.info(i)
-		val resource = Source.fromFile(rulesFile, "ISO-8859-1")
+		//val resource = Source.fromFile(rulesFile, "ISO-8859-1")
+		val resource = Source.fromFile(rulesFile)
 		val from  = i * step
 	  		val to = Math.min((i + 1) * step, numRules)
 		val rules = resource.getLines.slice(from, to).toIterable
