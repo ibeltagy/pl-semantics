@@ -188,8 +188,8 @@ abstract public class AbstractGroundRule implements GroundKernel {
 				throw new RuntimeException("conjunction combiner is not set");
 		}
 		
-		if (!headFound)
-			throw new RuntimeException("NO head found");
+		//if (!headFound)
+		//	throw new RuntimeException("NO head found");
 		return sum;
 	}
 	

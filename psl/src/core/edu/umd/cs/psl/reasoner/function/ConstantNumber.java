@@ -49,6 +49,11 @@ public class ConstantNumber implements FunctionSingleton {
 		return true;
 	}
 	
+	public String toString ()
+	{
+		return "" + value; 
+	}
+	
 	
 	
 }

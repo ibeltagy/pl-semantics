@@ -87,4 +87,14 @@ public class FunctionSum implements Iterable<FunctionSummand>, FunctionTerm {
 		return true;
 	}
 	
+	public String toString()
+	{
+		String res = "";
+		for (FunctionSummand s: sum)
+		{
+			res = res + " + " + s.toString();
+		}
+		return res.substring(2);
+	}
+	
 }

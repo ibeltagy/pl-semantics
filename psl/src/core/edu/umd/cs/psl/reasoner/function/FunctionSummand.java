@@ -71,4 +71,9 @@ public class FunctionSummand implements FunctionTerm {
 		return term.isConstant();
 	}
 	
+	public String toString()
+	{
+		return coeff+"*" + term.toString();
+	}
+	
 }
