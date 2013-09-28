@@ -1,0 +1,240 @@
+
+## WARNING!  DO NOT USE THIS FILE UNLESS YOU HAVE EXPLICIT PERMISSION!
+
+
+########################################################################################################################
+## Copyright (c) 2004-2008 by the Palo Alto Research Center.
+## All rights reserved. This software/data is made available AS IS, and PARC makes no warranty about the software/data, 
+## its performance or its conformity to any specification. Please do not distribute.
+#######################################################################################################################
+
+
+abhor	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed abhorred that Mary had vacation.		##automatically generated
+accept	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed accepted that the policy failed.		##automatically generated
+acknowledge	V-SUBJ-OBJexpl-XCOMPinf	VB	xcomp	theme	fact_p	They acknowledged the report to be correct.		##automatically generated
+acknowledge	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed acknowledged that Mary knew it.		##automatically generated
+add	V-SUBJ-COMPEXthat	VB	ccomp	theme	impl_np*	Ed didn't add that Mary arrived.		##automatically generated
+admit	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed admitted that Mary arrived.		##automatically generated
+admit	V-SUBJ-OBJexpl-XCOMPinf	VB	xcomp	theme	impl_pp	The report was admitted to be incorrect.		##automatically generated
+affect	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	fact_n	Ed affected to draw.		##automatically generated
+allow	V-SUBJ-OBJexpl-XCOMPinf	VB	xcomp	theme	impl_pp_nn	John allowed there to be balloons.		##automatically generated
+allow	V-SUBJ-OBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	Children were allowed to hop.		##automatically generated
+amaze	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It amazed John that Mary left.		##automatically generated
+amuse	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It amused Ed that Mary left.		##automatically generated
+annoy	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It annoyed Jim that Mary left.		##automatically generated
+appoint	V-SUBJ-OBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp*	Ed was appointed to run the shop.		##automatically generated
+appreciate	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed appreciated that Mary arrived.		##automatically generated
+arrange	V-SUBJ-COMPEXthat	VB	ccomp	theme	impl_pp	Ed arranged that Mary could attend.		##automatically generated
+ascertain	V-SUBJ-COMPEXthat	VB	ccomp	theme	impl_pp*	Ed ascertained that Mary went.		##automatically generated
+astonish	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It astonished Bob that Larry wanted to die.		##automatically generated
+astound	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It astounded Ed that John had left.		##automatically generated
+attempt	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_nn	Ed didn't attempt to go.		##automatically generated
+baffle	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It baffled Ed that John had left.		##automatically generated
+bear	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	John couldn't bear to leave.		##automatically generated
+begin	V-SUBJexpl-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	It had begun to rain.		##automatically generated
+bewilder	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It bewildered Ed that John had left.		##automatically generated
+bore	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It bored Ed that John had left.		##automatically generated
+bother	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	Ed didn't bother to cry.		##automatically generated
+bother	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It bothered Ed that John had left.		##automatically generated
+bring	V-SUBJ-OBJexpl-XCOMPinf	VB	xcomp	theme	impl_pp	Ed brought himself to confess.		##automatically generated
+care	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed didn't care that Mary went.		##automatically generated
+care	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed didn't care that Mary went.		##automatically generated
+care	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_nn*	Ed didn't care to go.		##automatically generated
+cause	V-SUBJ-OBJexpl-XCOMPinf	VB	xcomp	theme	impl_pp	Ed caused Mary to cry.		##automatically generated
+cease	V-SUBJexpl-XCOMPinf	VB	xcomp+to	theme	fact_p	It ceased to rain.		##automatically generated
+come	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	Ed came to know about the story.		##automatically generated
+compel	V-SUBJ-OBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp*	Ed compelled Bill to go.		##automatically generated
+compel	V-SUBJ-OBJexpl-XCOMPinf	VB	xcomp	theme	impl_pp*	The subpoena compelled there to be an trial.		##automatically generated
+compete	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_nn	Ed didn't compete to solve the problem.		##automatically generated
+comprehend	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed comprehended that Bill had died.		##automatically generated
+concede	V-SUBJ-COMPEXthat	VB	ccomp	theme	impl_pp*	Ed conceded that Mary had arrived.		##automatically generated
+condemn	V-SUBJ-OBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp*_nn*	They condemned him to die.		##automatically generated
+condescend	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	They condescended to go.		##automatically generated
+confess	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp*	Ed confessed to have cheated in the exam.		##automatically generated
+confess	V-SUBJ-OBLto-COMPEXthat	VB	ccomp+that	theme	fact_p*	Mary confessed to Ed that she had taken the money.		##automatically generated
+confess	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p*	She confessed that she had taken the money.		##automatically generated
+confirm	V-SUBJ-COMPEXthat	VB	ccomp	theme	impl_pp	She confirmed that she had taken the money.		##automatically generated
+confuse	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It confused Ed that John had left.		##automatically generated
+consent	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp*_nn*	Ed consented to go.		##automatically generated
+continue	V-SUBJexpl-XCOMPinf	VB	xcomp+to	theme	fact_p	It continued to rain.		##automatically generated
+convince	V-SUBJ-OBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp*_nn*	Ed convinced Mary to go.		##automatically generated
+dare	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	Ed dared to speak.		##automatically generated
+decline	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pn	Ed declined to go.		##automatically generated
+deign	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	Ed didn't deign to sign the book.		##automatically generated
+delight	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It delighted Ed that John had left.		##automatically generated
+demonstrate	V-SUBJ-COMPEXthat	VB	ccomp	theme	impl_pp	Ed demonstrated that the gadget worked.		##automatically generated
+deplore	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed deplored that Mary arrived.		##automatically generated
+depress	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It depressed Ed that John had left.		##automatically generated
+determine	V-SUBJ-COMPEXthat	VB	ccomp	theme	impl_pp*	Ed determined that Mary won.		##automatically generated
+detest	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed detested that Mary had arrived early.		##automatically generated
+disappoint	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It disappointed Ed that John had left.		##automatically generated
+disclose	V-SUBJ-OBLto-COMPEXthat	VB	ccomp+that	theme	fact_p*	Ed disclosed to the competitors that Mary had arrived.		##automatically generated
+disclose	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p*	Ed disclosed that Mary had arrived.		##automatically generated
+disconcert	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It disconcerted Ed that John had left.		##automatically generated
+discourage	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It discouraged Ed that John had left.		##automatically generated
+discover	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed discovered that Mary arrived.		##automatically generated
+discover	V-SUBJ-OBJexpl-XCOMPinf	VB	xcomp	theme	impl_pp	Ed discovered Bill to be in Paris.		##automatically generated
+disenchant	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It disenchanted Ed that John had left.		##automatically generated
+disgust	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It discouraged Ed that John had left.		##automatically generated
+distress	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It distressed Ed that John had left.		##automatically generated
+drive	V-SUBJ-OBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp	Ed was driven to write poetry.		##automatically generated
+drive	V-SUBJ-OBJexpl-XCOMPinf	VB	xcomp	theme	impl_pp	Low pressure drove it to rain		##automatically generated
+dumbfound	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It dumbfounded Ed that John had left.		##automatically generated
+embarrass	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It embarrassed Ed that John had left.		##automatically generated
+employ	V-SUBJ-OBJ-XCOMPinf	VB	xcomp+to	theme	none	Ed was employed to write.		##automatically generated
+enable	V-SUBJ-OBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	The grant enabled Mary to write.		##automatically generated
+enchant	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It enchanted Ed that John had left.		##automatically generated
+encourage	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It encouraged Ed that John had left.		##automatically generated
+ensure	V-SUBJ-COMPEXthat	VB	ccomp	theme	impl_pp	Ed ensured that Mary arrived.		##automatically generated
+envy	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed envied that Mary had succeeded.		##automatically generated
+establish	V-SUBJ-COMPEXthat	VB	ccomp	theme	impl_pp*	Ed established that Mary had arrived.		##automatically generated
+excite	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It excited Ed that John had left.		##automatically generated
+explain	V-SUBJ-COMPEXthat	VB	ccomp	theme	impl_np	John didn't explain that Bill didn't arrive.		##automatically generated
+explain	V-SUBJ-OBLto-COMPEXthat	VB	ccomp+that	theme	impl_np	Ed didn't explain to Mary that Bill didn't arrive.		##automatically generated
+fail	V-SUBJexpl-XCOMPinf	VB	xcomp+to	theme	impl_pn_np	Ed failed to open the door.		##automatically generated
+find	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed found that Mary had arrived.		##automatically generated
+flabbergast	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It flabbergasted Ed that John had left.		##automatically generated
+forbid	V-SUBJ-OBJ-XCOMPinf	VB	xcomp+to	theme	impl_pn*	Ed's common sense forbade him to answer.		##automatically generated
+force	V-SUBJ-OBJexpl-XCOMPinf	VB	xcomp	theme	impl_pp	The rules forced there to be a rematch.		##automatically generated
+force	V-SUBJ-OBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp	Ed was forced to go.		##automatically generated
+foresee	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed foresaw that Bill would arrive.		##automatically generated
+forget	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed forgot that Mary went.		##automatically generated
+forget	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pn_np	Ed forgot to go to the doctor.		##automatically generated
+frighten	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It frightened Ed that John had left.		##automatically generated
+get	V-SUBJ-OBJexpl-XCOMPinf	VB	xcomp	theme	impl_pp_nn	Ed got it to rain sparks.		##automatically generated
+get	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	Ed got to write to the doctor.		##automatically generated
+go	V-SUBJ-XCOMPinf_prt(on_)	VB	xcomp+to	theme	impl_pp_nn	Ed went on to become famous.		##automatically generated
+grant	V-SUBJ-OBJ-COMPEXthat	???	???	???	impl_pp	Ed granted Mary that Bill arrived.		##automatically generated
+grant	V-SUBJ-COMPEXthat	VB	ccomp	theme	impl_pp	Ed granted that she was right.		##automatically generated
+grow	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	Ed grew to like Mary.		##automatically generated
+guess	V-SUBJ-COMPEXthat	VB	ccomp	theme	impl_np	Ed didn't guess that Mary arrived.		##automatically generated
+hasten	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp	Ed hastened to go.		##automatically generated
+hate	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	fact_p	Ed hated to leave the party.		##automatically generated
+hate	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed hated that Mary went home.		##automatically generated
+have	V-SUBJ-OBJexpl-XCOMPbase	???	???	???	impl_pp_nn	John had Mary leave.		##automatically generated
+have	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp*	Ed had to go.		##automatically generated
+help	V-SUBJ-XCOMPbase	???	???	???	impl_pp	Ed helped clean the house.		##automatically generated
+help	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp	Ed helped to clean the house.		##automatically generated
+help	V-SUBJ-OBJexpl-XCOMPbase	???	???	???	impl_pp	John helped Mary leave.		##automatically generated
+help	V-SUBJ-OBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp	John helped Mary to leave.		##automatically generated
+hesitate	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_np	Ed didn't hesitate to go.		##automatically generated
+horrify	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It horrified Ed that John had left.		##automatically generated
+identify	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed identified that Mary had a problem.		##automatically generated
+impress	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It impressed Ed that John had left.		##automatically generated
+induce	V-SUBJ-OBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp*	Ed was induced to go.		##automatically generated
+influence	V-SUBJ-OBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp*	Ed was influenced to vote for Bush.		##automatically generated
+inspire	V-SUBJ-OBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp*	Ed inspired Bill to go.		##automatically generated
+jump	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp	Ed jumped to help John.		##automatically generated
+know	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed knew that Mary arrived.		##automatically generated
+know	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	Ed knew to pay attention.		##automatically generated
+know	V-SUBJ-OBJexpl-XCOMPinf	VB	xcomp	theme	fact_p	John knew there to be fish in the lake.		##automatically generated
+lament	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed lamented that Mary went.		##automatically generated
+lead	V-SUBJ-OBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp	Falling profits led the company to explore new paths.		##automatically generated
+lead	V-SUBJ-OBJexpl-XCOMPinf	VB	xcomp	theme	impl_pp	Growth encouraging policies led there to be much available capital.		##automatically generated
+learn	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed learned that Bill arrived.		##automatically generated
+learn	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp*_nn*	Ed learned to fly.		##automatically generated
+let	V-SUBJ-OBJexpl-XCOMPbase	???	???	???	impl_pp_nn	John let Mary leave.		##automatically generated
+like	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed liked that Mary arrived.		##automatically generated
+like	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	fact_p	John liked to fly.		##automatically generated
+live	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	Ed lived to draw.		##automatically generated
+loathe	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	fact_p	John loathed to fly.		##automatically generated
+love	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed loved that Mary arrived.		##automatically generated
+love	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	fact_p	Ed loved to bake.		##automatically generated
+make	V-SUBJ-OBJ-XCOMPbase	???	???	???	impl_pp	John made Mary leave.		##automatically generated
+make	V-SUBJ-OBJexpl-XCOMPbase	???	???	???	impl_pp	Low pressure made it rain.		##automatically generated
+manage	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	Ed managed to leave.		##automatically generated
+matter	V-SUBJextra-COMPEXthat	???	???	???	fact_p	It mattered that Mary arrived.		##automatically generated
+mean	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_np	Ed didn't mean to go.		##automatically generated
+mind	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed didn't mind that Mary went.		##automatically generated
+miss	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed missed that Mary was supposed to be there.		##automatically generated
+mystify	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It mystified Ed that John had left.		##automatically generated
+neglect	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pn_np	Ed neglected to call Mary.		##automatically generated
+note	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed noted that Mary went.		##automatically generated
+notice	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed noticed that Mary went.		##automatically generated
+observe	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed observed that Mary went.		##automatically generated
+observe	V-SUBJ-OBJexpl-XCOMPinf	VB	xcomp	theme	impl_pp	The Deputy observed there to be a red mark on her face.		##automatically generated
+opt	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp*	Ed opted to close the factory.		##automatically generated
+outrage	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It outraged Ed that John had left.		##automatically generated
+own	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	He was reluctant to own that he was indebted.		##automatically generated
+perceive	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p*	Ed perceived that Mary arrived.		##automatically generated
+permit	V-SUBJ-OBJexpl-XCOMPinf	VB	xcomp	theme	impl_nn	Ed didn't permit there to be balloons.		##automatically generated
+permit	V-SUBJ-OBJ-XCOMPinf	VB	xcomp+to	theme	impl_nn	The rules didn't permit Ed to smoke.		##automatically generated
+permit	V-SUBJ-OBJ-XCOMPinf	VB	xcomp+to	theme	impl_nn*	The rules didn't permit Ed to smoke.		##automatically generated
+perplex	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It perplexed Ed that John had left.		##automatically generated
+persuade	V-SUBJ-OBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp*_nn*	Ed persuaded Mary to go.		##automatically generated
+pity	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	All the monks pitied that he was acquiring unwholesome Karma.		##automatically generated
+please	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It pleased Ed that John had left.		##automatically generated
+predict	V-SUBJ-COMPEXthat	VB	ccomp	theme	impl_np	Ed didn't predict that Mary arrived.		##automatically generated
+pretend	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_n	Ed pretended that Mary arrived.		##automatically generated
+pretend	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	fact_n	Ed pretended to cry.		##automatically generated
+prevail	V-SUBJ-OBL-XCOMPinf(on)	???	???	???	impl_pp_nn	Ed prevailed on Mary to go.		##automatically generated
+proceed	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	Ed proceeded to write.		##automatically generated
+prove	V-SUBJ-OBJexpl-XCOMPinf	VB	xcomp	theme	impl_pp	Ed proved there to be errors.		##automatically generated
+prove	V-SUBJ-OBL-COMPEXthat(to)	???	???	???	impl_pp	Ed proved to Mary that Bill wrote it.		##automatically generated
+prove	V-SUBJ-COMPEXthat	VB	ccomp	theme	impl_pp	Ed proved that Bill arrived.		##automatically generated
+provoke	V-SUBJ-OBJexpl-XCOMPinf	VB	xcomp	theme	impl_pp	Ed provoked there to be a strike.		##automatically generated
+provoke	V-SUBJ-OBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp	Ed was provoked to go.		##automatically generated
+puzzle	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It puzzled Ed that John had left.		##automatically generated
+qualify	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_nn	Ed didn't qualify to play in the championship.		##automatically generated
+read	V-SUBJ-COMPEXthat	VB	ccomp	theme	impl_np*	Ed didn't read that Mary arrived.		##automatically generated
+realize	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed realized that Mary arrived.		##automatically generated
+recall	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p*	Ed recalled that Mary arrived.		##automatically generated
+recognize	V-SUBJ-OBJexpl-XCOMPinf	VB	xcomp	theme	fact_p	John recognized the idea to be foolish.		##automatically generated
+recognize	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed recognized that Mary arrived.		##automatically generated
+recollect	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p*	Ed recollected that Mary arrived.		##automatically generated
+reconfirm	V-SUBJ-COMPEXthat	VB	ccomp	theme	impl_pp*	Ed reconfirmed that Mary arrived.		##automatically generated
+reflect	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed reflected that Mary had arrived.		##automatically generated
+refrain	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pn_np	Ed refrained to comment.		##automatically generated
+refuse	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pn	Ed refused to go.		##automatically generated
+register	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed registered that Mary went.		##automatically generated
+regret	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed regretted that Mary went.		##automatically generated
+regret	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	fact_p	Ed regretted to smoke.		##automatically generated
+rejoice	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed rejoiced that Mary went.		##automatically generated
+relearn	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp*_nn*	Ed relearned to walk.		##automatically generated
+remain	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pn	Ed remained to be convinced.		##automatically generated
+remember	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed remembered that Mary went.		##automatically generated
+remember	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	Ed remembered to go.		##automatically generated
+remind	V-SUBJ-OBJ-COMPEXthat	???	???	???	fact_p	Ed reminded Mary that Bill went.		##automatically generated
+respect	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed respected that Mary pursued her career.		##automatically generated
+reveal	V-SUBJ-OBJexpl-XCOMPinf	VB	xcomp	theme	impl_pp	There was revealed to be presents.		##automatically generated
+reveal	V-SUBJ-OBL-COMPEXthat(to)	???	???	???	fact_p	Ed revealed to Mary that Bill arrived.		##automatically generated
+reveal	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed revealed that Bill went.		##automatically generated
+rope	V-SUBJ-OBJ-XCOMPinf_prt(in_)	???	???	???	impl_pp	John roped in Mary to set the table.		##automatically generated
+satisfy	V-SUBJ-OBJ-COMPEXthat	???	???	???	fact_p	Ed satisfied Mary that Bill arrived.		##automatically generated
+see	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed saw that Mary left.		##automatically generated
+see	V-SUBJ-OBJexpl-XCOMPbase	???	???	???	fact_p	John saw Mary leave.		##automatically generated
+serve	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	Canals served to convey traffic through the city.		##automatically generated
+show	V-SUBJ-OBJ-COMPEXthat	???	???	???	impl_pp	Ed showed Mary that Bill arrived.		##automatically generated
+show	V-SUBJ-OBJ-XCOMPinf_prt(up_)	???	???	???	impl_pp	Ed showed John up to be lazy.		##automatically generated
+show	V-SUBJ-COMPEXthat	VB	ccomp	theme	impl_pp	Ed showed that Bill arrived.		##automatically generated
+specify	V-SUBJ-COMPEXthat	VB	ccomp	theme	impl_np	Ed didn't specify that Mary arrived.		##automatically generated
+start	V-SUBJexpl-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	It didn't start to rain		##automatically generated
+start	V-SUBJ-XCOMPinf_prt(in_)	???	???	???	impl_pp_nn	John started in to write the novel.		##automatically generated
+startle	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It startled Ed that John had left.		##automatically generated
+stay	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	Ed didn't stay to eat.		##automatically generated
+stress	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed didn't stress that Mary arrived.		##automatically generated
+stupefy	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It stupefied Ed that John had left.		##automatically generated
+surprise	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It surprised Ed that John had left.		##automatically generated
+suspect	V-SUBJ-COMPEXthat	VB	ccomp	theme	impl_np	Ed didn't suspect that Mary arrived.		##automatically generated
+tell	V-SUBJ-OBJ-COMPEXthat	???	???	???	impl_np*	Ed didn't tell Mary that Bill arrived.		##automatically generated
+tend	V-SUBJexpl-XCOMPinf	VB	xcomp+to	theme	impl_pp	It tended to rain.		##automatically generated
+think	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_nn	Ed didn't think to sell it.		##automatically generated
+tolerate	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed tolerated that Mary arrived.		##automatically generated
+touch	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It touched Ed that John had left.		##automatically generated
+treasure	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed treasured that Mary was going.		##automatically generated
+trouble	V-SUBJ-OBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	Bill troubled Ed to go to the store.		##automatically generated
+trouble	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	Ed had troubled to go.		##automatically generated
+turn	V-SUBJ-XCOMPinf_prt(out_)	???	???	???	impl_pp_nn	Ed turned out to drink.		##automatically generated
+understand	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed understood that Mary arrived.		##automatically generated
+unnerve	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It unnerved Ed that John had left.		##automatically generated
+upset	V-SUBJ-OBJ-COMPEXopt_extra	VB	ccomp+that	theme	fact_p	It upset Ed that John had left.		##automatically generated
+use	V-SUBJ-OBJ-XCOMPinf_scon	???	???	???	impl_pp	John used the key to open the door.		##automatically generated
+use	V-SUBJexpl-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	Ed used to drink.		##automatically generated
+verify	V-SUBJ-COMPEXthat	VB	ccomp	theme	impl_pp	Ed verified that Mary arrived.		##automatically generated
+wake	V-SUBJ-XCOMPinf	VB	xcomp+to	theme	impl_pp_nn	Ed woke to find that breakfast had arrived.		##automatically generated
+warn	V-SUBJ-OBJ-COMPEXthat	???	???	???	impl_np*	Ed didn't warn Mary that Bill arrived.		##automatically generated
+warn	V-SUBJ-COMPEXthat	VB	ccomp	theme	impl_np*	Ed didn't warn that Bill had arrived.		##automatically generated
+warrant	V-SUBJ-COMPEXthat	VB	ccomp	theme	impl_pp*	Ed warranted that Mary had a point.		##automatically generated
+watch	V-SUBJ-OBJexpl-XCOMPbase	???	???	???	fact_p	John watched Mary leave.		##automatically generated
+wonder	V-SUBJ-COMPEXthat	VB	ccomp	theme	fact_p	Ed wondered that Mary had arrived.		##automatically generated
+
