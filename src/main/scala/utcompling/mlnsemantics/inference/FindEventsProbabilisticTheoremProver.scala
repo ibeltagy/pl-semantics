@@ -44,6 +44,7 @@ class FindEventsProbabilisticTheoremProver(
           		BoxerRel(discId, indices, convertVarToEvntPropVar(event), convertVarToEvntPropVar(variable), name, sense);
         case BoxerPred(discId, indices, variable, name, pos, sense) => 
           			BoxerPred(discId, indices, convertVarToEvntPropVar(variable), name, pos, sense)
+        case BoxerAlfa(variable, first, second) => BoxerAlfa(convertVarToEvntPropVar(variable), first, second);
         case BoxerDrs (ref, cond) => BoxerDrs (ref.map ( (listRef:(List[BoxerIndex], BoxerVariable)) =>{
           (listRef._1, convertVarToEvntPropVar(listRef._2))
         } ), cond.map (convertToEvntPropVar));

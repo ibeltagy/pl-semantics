@@ -27,15 +27,21 @@ import org.apache.log4j.Level
 import utcompling.mlnsemantics.wordnet.WordnetImpl
 import utcompling.mlnsemantics.inference.support._
 import utcompling.scalalogic.discourse.DiscourseInterpreter
+import org.apache.commons.logging.LogFactory
 
 class TextualTheoremProver(
   discourseIterpreter: DiscourseInterpreter[BoxerExpression],
   probabilisticTheoremProver: ProbabilisticTheoremProver[BoxerExpression]) {
 
+  private val LOG = LogFactory.getLog(classOf[TextualTheoremProver])
+  
   def prove(text: String, hyp: String): Option[Double] =
     prove(List(text), List(hyp))
 
   def prove(text: List[String], hyp: List[String]): Option[Double] = {
+
+    LOG.trace(text)
+    LOG.trace(hyp)
     val List(t, h) = discourseIterpreter.batchInterpretMultisentence(List(text, hyp), Some(List("t", "h")), false, false)
 
     var txtEx  = (t match {

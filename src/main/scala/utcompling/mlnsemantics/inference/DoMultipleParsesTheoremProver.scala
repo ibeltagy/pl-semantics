@@ -30,7 +30,10 @@ class DoMultipleParsesTheoremProver(
     assumptions: List[WeightedExpression[BoxerExpression]],
     goal: BoxerExpression): Option[Double] = {
 
-    var score: Double = 0;
+    var score: Double = Sts.opts.task match {
+      case "sts" => 0;
+      case "rte" => -10;
+    }
     var scoreDenum: Double = 0;
     var index = 0;
 

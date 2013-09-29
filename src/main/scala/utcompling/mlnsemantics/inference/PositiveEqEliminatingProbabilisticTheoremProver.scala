@@ -9,190 +9,190 @@ import opennlp.scalabha.util.CollectionUtil._
 import support.HardWeightedExpression
 import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 import utcompling.mlnsemantics.run.Sts
+import utcompling.scalalogic.discourse.candc.boxer.expression._
+import org.apache.commons.logging.LogFactory
+import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.Boxer2DrtExpressionInterpreter
 
 class PositiveEqEliminatingProbabilisticTheoremProver(
-  delegate: ProbabilisticTheoremProver[FolExpression])
-  extends ProbabilisticTheoremProver[FolExpression] {
+  delegate: ProbabilisticTheoremProver[BoxerExpression])
+  extends ProbabilisticTheoremProver[BoxerExpression] {
 
-
+  private val LOG = LogFactory.getLog(classOf[PositiveEqEliminatingProbabilisticTheoremProver])
   /**
-   * Assuming: 
-   * --negated equality expressions are like !eq(x1,x2) and it is never 
+   * Assuming:
+   * --negated equality expressions are like !eq(x1,x2) and it is never
    * !( eq(x1,x2) ^ ..... ^ ... )
    * --equality expressions are between variables, not formulas
    * --no duplicate equality expressions
-   * --equality expressions like x1 = x2 ^ x2 = x3 will cause a problem, but 
+   * --equality expressions like x1 = x2 ^ x2 = x3 will cause a problem, but
    * we do not care. Let's hope this case does not happen
    */
-  def prove(
-    constants: Map[String, Set[String]], // type -> constant
-    declarations: Map[FolExpression, Seq[String]], // predicate -> seq[type] 
-    evidence: List[FolExpression],
-    assumptions: List[WeightedExpression[FolExpression]],
-    goal: FolExpression): Option[Double] = {
+  override def prove(
+    constants: Map[String, Set[String]],
+    declarations: Map[BoxerExpression, Seq[String]],
+    evidence: List[BoxerExpression],
+    assumptions: List[WeightedExpression[BoxerExpression]],
+    goal: BoxerExpression): Option[Double] = {
 
-    val goalEqualities = findEq(goal);
-    val newGoal = removeEq(goal, goalEqualities);
+    object AllDone extends Exception { }
     
-    val assumEqualities = findEq(assumptions.head.expression);
-    val newAssumption = removeEq(assumptions.head.expression, assumEqualities);
-   
-    val newAssumptions = List (HardWeightedExpression (newAssumption)) ++ 
-    					assumptions.filterNot( _ == assumptions.head);
+    def groupEqvClasses(eq: List[Set[String]]): List[Set[String]] =
+    {
+        //var equalities = eq.map(x => (x.head -> x)).toMap; //map is wrong x1=x2, x1=x3
+        var groupedEq = eq;
+        var changed = true;
+        while (changed) {
+          changed = false
+          try{
+	          groupedEq.foreach(outerEq =>
+	          {
+	              groupedEq.foreach(innerEq =>
+	                {
+	                  if (outerEq != innerEq) //not the same entry
+	                  {
+	                    if ((outerEq & innerEq).size != 0) { //if there is an intersection 
+	                      groupedEq  = (outerEq ++ innerEq) :: groupedEq ; //group them in one set and add this set to the list
+	                      groupedEq = groupedEq.filter(e=> (e != outerEq && e != innerEq)); //remove the two small sets
+	                      changed = true;
+	                      throw AllDone;  //simulating "break". This is important because changing groupedEq messes up the outer two loops. 
+	                    }
+	                  }
+	                })
+	            })
+            }catch {case AllDone =>}
+        }
+        return groupedEq;
+      }
     
-    /*val newDeclarations = for (declaration <- declarations)
-    					yield {
-    	var declarationTypes = declaration._2;
-    	var declarationFol = declaration._1 match {
-    	  case FolAtom(pred, args @ _*) => {
-     		 
-     		 val equalities = pred.name.charAt(pred.name.length()-1) match {
-     		   case 'h' => goalEqualities;
-     		   case 't' => assumEqualities;
-     		 }
-     		 val argsCount = args.length;
-     		 val arg = declaration._1.asInstanceOf[FolApplicationExpression].argument;
-     		 val fun = declaration._1.asInstanceOf[FolApplicationExpression].function;
-    	     var newArg = arg; 
-	         for (p <- equalities)
-		     {
-		    	val origVarName = arg.asInstanceOf[FolVariableExpression].variable.name;
-    	    	if (p._2.equals(origVarName))
-		    	{
-		    	  newArg = FolVariableExpression(Variable(p._1));
-	    	     //set type
-		    	  val typ = p._1.charAt(0) match {
-			      	case 'x' => "indv"
-			        case 'e' => "evnt"
-			        case 'p' => "prop"
-			        case _ => "indv"
-		    	  }
-		    	  declarationTypes = declarationTypes.updated(argsCount-1, typ)
-		    	}
-		     }
-	         
-	    	 var newFun = fun match {
-	    	      case FolVariableExpression(v) => FolVariableExpression(v);
-	    	      case FolApplicationExpression(fun, arg) =>{
-	    	        var newArg = arg;
-	    	        for (p <- equalities)
-				    {
-				    	val origVarName = arg.asInstanceOf[FolVariableExpression].variable.name;
-		    	    	if (p._2.equals(origVarName))
-				    	{
-				    	  newArg = FolVariableExpression(Variable(p._1));
-			    	     //set type
-				    	  val typ = p._1.charAt(0) match {
-					      	case 'x' => "indv"
-					        case 'e' => "evnt"
-					        case 'p' => "prop"
-					        case _ => "indv"
-				    	  }
-				    	  declarationTypes = declarationTypes.updated(0, typ)
-				    	}
-				    }	    	        
-				    FolApplicationExpression (fun, newArg);
-	    	      };
-	    	      case _ => throw new Exception("wrong format of a declaration predicate");
-	    	 }
-	    	 FolApplicationExpression(newFun, newArg)
+    LOG.trace("DRSs before changes: ")	
+    
+    inNot = false;
+    var assumEqualities = findEq(assumptions.head.expression)//.map(x => (x.head -> x));
+    equalities = groupEqvClasses(assumEqualities);
+    val newAssumption = removeEq(assumptions.head.expression);
+    LOG.trace("\n" + new Boxer2DrtExpressionInterpreter().interpret(assumptions.head.expression).pretty)    
+    LOG.trace(equalities) 
 
-    	  }
-    	  case _ => throw new Exception("wrong format of a declaration predicate");
-    	}
-    	declarationFol -> declarationTypes;
-    }
-    */
+    val newAssumptions = List(HardWeightedExpression(newAssumption)) ++
+      assumptions.filterNot(_ == assumptions.head);
+    
+    inNot = false;
+    var goalEqualities = findEq(goal); 
+    equalities  = groupEqvClasses(goalEqualities);
+    val newGoal = removeEq(goal);
+    LOG.trace("\n" + new Boxer2DrtExpressionInterpreter().interpret(goal).pretty)    
+    LOG.trace(equalities)    
+
     delegate.prove(
       constants,
       declarations,
-      evidence, 
+      evidence,
       newAssumptions,
       newGoal)
   }
+ 
+  //private var equalities:Map[String,Set[String]] = Map();
+  private var equalities:List[Set[String]] = List();
+  private var inNot = false;
   
-  private def removeEq(input: FolExpression, eq: List[(String, String)]): FolExpression =
-  {
-    input match {	
-   	
-    case FolParseExpression(exps) => FolParseExpression( exps.map(e=> (removeEq(e._1, eq) , e._2) ) )
-    case FolExistsExpression(variable, term) => FolExistsExpression (removeEq(variable, eq), removeEq(term, eq));
-
-   	case FolAllExpression(variable, term) => Sts.opts.keepUniv match {
-   	  case true => FolAllExpression(removeEq(variable, eq), removeEq(term, eq)); 
-   	  case false => removeEq(term, eq);
-   	}
-
-   	case FolIfExpression(first, second) => Sts.opts.keepUniv match {
-   	  case true => FolIfExpression(removeEq(first, eq), removeEq(second, eq)) 
-   	  case false => FolAndExpression(removeEq(first, eq), removeEq(second, eq))
-   	}
-   	
-   	case FolNegatedExpression(term) => FolNegatedExpression(removeEq(term, eq))
-   	case FolAndExpression(first, second) => FolAndExpression(removeEq(first, eq), removeEq(second, eq))
-   	case FolOrExpression(first, second) => FolOrExpression(removeEq(first, eq), removeEq(second, eq))   	
-   	case FolIffExpression(first, second) => FolIffExpression(removeEq(first, eq), removeEq(second, eq))
-   	case FolEqualityExpression(first, second) => FolEqualityExpression(first, second)//do not apply it to eq expr
-   	//case FolAtom(pred, args @ _*) => FolAtom(pred, args.map(v => Variable(namePrefix+v.name)))
-   	case FolVariableExpression(v) => FolVariableExpression(removeEq(v, eq))
-    case FolApplicationExpression(fun, arg) => FolApplicationExpression(removeEq(fun, eq), removeEq(arg, eq))
-    
-   }
-  }
   
-  private def removeEq(input: Variable, eq: List[(String, String)]): Variable=
-  {
-    for (val p <- eq)
-    {
-    	if (p._2.equals(input.name))
-    	  return Variable(p._1);
+  private def findEq(e: BoxerExpression): List[Set[String]] = {
+    e match {
+      case BoxerNot(discId, indices, drs) => {
+        inNot = true;
+        findEq(drs)
+      }
+      case BoxerDrs(refs, conds) => {
+        val currentInNot = inNot;  //use a local copy 
+        inNot = false; //for the recursive call, always say not in NOT
+        if (conds.size == 1 && currentInNot && conds.head.isInstanceOf[BoxerEq]) 
+          List(); //negated equality
+        else
+        { //if equality found, it should be non-negated. 
+          conds.flatMap(c=> {
+           if (c.isInstanceOf[BoxerEq] && currentInNot)//equality under NOT in a list of conditions longer than 1
+        	   throw new RuntimeException("Un-supported DRS: negated DRS that has an EQ with other predicates");
+           findEq(c) //apply findEq to the condition
+          })
+        }
+      }
+      case BoxerEq(discId, indices, first, second) => {
+          List(Set(first.name, second.name)) //called only for non-negated equalities
+      }
+      case _ => {
+        e.visit(findEq, (parts: List[List[Set[String]]]) => parts.flatten, List.empty[Set[String]])
+      }
     }
-    return input;
+  }
+
+  private def removeEq(e: BoxerExpression): BoxerExpression = {
+    e match {
+      case BoxerAlfa(variable, first, second) => 
+        BoxerAlfa(removeEq(variable), removeEq(first), removeEq(second)); 
+
+      case BoxerCard(discId, indices, variable, num, typ) =>
+        BoxerCard(discId, indices, removeEq(variable), num, typ)
+      
+
+      case BoxerNot(discId, indices, drs) => {
+    	  inNot = true;  
+    	  BoxerNot(discId, indices, removeEq(drs))
+      }      
+      case BoxerDrs(ref, cond) =>{
+        val currentInNot = inNot;  //use a local copy 
+        inNot = false; //for the recursive call, always say not in NOT
+        val conditions = 
+        ( 
+	        if (cond.size == 1 && currentInNot && cond.head.isInstanceOf[BoxerEq]) 
+	          cond //negated equality
+	        else if (cond.size == 1 && !currentInNot && cond.head.isInstanceOf[BoxerEq]) 
+	          throw new RuntimeException("Un-supported DRS: can not handle drs of size one where this one predicate is an equality expression");
+	        else
+	        { //if equality found, it should be non-negated. 
+	          cond.flatMap(c=> {
+	           if (c.isInstanceOf[BoxerEq] && currentInNot)//equality under NOT in a list of conditions longer than 1
+	        	   throw new RuntimeException("Un-supported DRS: negated DRS that has an EQ with other predicates");
+	           else if (c.isInstanceOf[BoxerEq])
+	        	   List() //remove equality expression 
+	           else 
+	        	   List(removeEq(c)) //apply findEq to the condition
+	          })
+	        }
+	    )
+	    if(conditions.size == 0)
+	    	throw new RuntimeException("Un-supported DRS: after removing BoxerEq, remains an empty DRS");
+        BoxerDrs(ref.map((listRef: (List[BoxerIndex], BoxerVariable)) => {
+          (listRef._1, removeEq(listRef._2))
+        }), conditions);
+      }
+      case BoxerEq(discId, indices, first, second) => throw new RuntimeException("Should not call removeEq on BoxerEq")
+      
+      
+      case BoxerNamed(discId, indices, variable, name, typ, sense) => 
+        BoxerNamed(discId, indices, removeEq(variable), name, typ, sense)
+      
+      case BoxerPred(discId, indices, variable, name, pos, sense) =>
+        BoxerPred(discId, indices, removeEq(variable), name, pos, sense)
+      
+      case BoxerProp(discId, indices, variable, drs) =>
+        BoxerProp(discId, indices, removeEq(variable), removeEq(drs))
+      
+      case BoxerRel(discId, indices, event, variable, name, sense) =>
+        BoxerRel(discId, indices, removeEq(event), removeEq(variable), name, sense);
+      
+      case BoxerTimex(discId, indices, variable, timeExp) => 
+        BoxerTimex(discId, indices, removeEq(variable), timeExp);
+      
+      case _ => e.visitConstruct(removeEq)
+    }
   }
   
-  private def findEq(input: FolExpression): List[(String, String)] =
+  def removeEq(v: BoxerVariable): BoxerVariable = 
   {
-    //val b = List[(String, String)]()
-    input match {
-   	case FolParseExpression(exps) =>  exps.flatMap(e=>findEq(e._1))
-    case FolExistsExpression(variable, term) => findEq(term) ;
-   	case FolAllExpression(variable, term) => findEq(term);
-   	case FolAndExpression(first, second) =>  findEq(first) ++  findEq(second);
-   	case FolOrExpression(first, second) => findEq(first) ++  findEq(second);   	
-   	case FolIfExpression(first, second) => findEq(first) ++  findEq(second);
-   	case FolIffExpression(first, second) => findEq(first) ++  findEq(second);
-
-   	case FolNegatedExpression(term) => {
-   	 term match {
-   	   case FolEqualityExpression(first, second) => List();
-   	   case _ => findEq(term);
-   	 } 
-   	}
-   	
-   	case FolEqualityExpression(first, second) => {
-   	  val var1 = first match {
-   	    case FolVariableExpression(variable) => variable.name
-   	    case _ => throw new Exception ("Unrecongnized format, argumets of equality expression should be variables");
-   	  }
-   	 
-   	  val var2 = second match {
-   	    case FolVariableExpression(variable) => variable.name
-   	    case _ => throw new Exception ("Unrecongnized format, argumets of equality expression should be variables");
-   	  }
-   	  
-   	  //Both variables should be of the same type (both individuals or both events). 
-   	  //Cases where variables types are different imply that the sentence is not parsed correctly. 
-   	  //Such equality constraints are skipped because they are wrong and because they miss us the MLN 
-   	  if (var1.charAt(0) == var2.charAt(0))
-   	    return List((var1, var2));
-   	  else return List();
-   	}
-
-   	//case FolAtom(pred, args @ _*) => FolAtom(pred, args.map(v => Variable(namePrefix+v.name)))
-   	case FolVariableExpression(v) => List();
-    case FolApplicationExpression(fun, arg) => findEq(fun);
-   }
-   //return b;   
+  	equalities.foreach(eq => {
+  		if (eq.contains(v.name))
+  		  return BoxerVariable(eq.head);
+  	})
+	return v;
   }
-
 }

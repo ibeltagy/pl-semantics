@@ -351,6 +351,7 @@ object Sts {
 	     new DoMultipleParsesTheoremProver( //rename variables and predicates+remove extra parses if any.
 	      0, // pairId
               //new MergeSameVarPredProbabilisticTheoremProver(//This is completely wrong. Do not merge vars of different parsee
+	      	new PositiveEqEliminatingProbabilisticTheoremProver(	      
                 new FindEventsProbabilisticTheoremProver(
 	              new HandleSpecialCharProbabilisticTheoremProver(
 	                new GetPredicatesDeclarationsProbabilisticTheoremProver(
@@ -371,7 +372,6 @@ object Sts {
 		                            new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(
 		                              new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))))).fol
 		                  },
-		                	new PositiveEqEliminatingProbabilisticTheoremProver(
 		                      new FromEntToEqvProbabilisticTheoremProver( //5: ANDing goals  
 		                    		  new ExistentialEliminatingProbabilisticTheoremProver(
 		                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver(//6: generate evidences
