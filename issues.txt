@@ -38,6 +38,12 @@ In all cases, candc gets somehow confused when parsing special characters.
 -Check the pipeline. Why am I remvoing the existentials ?
 
 -When parsing, WH questions are removed. This can be fixed here: BoxerExpressionParser
+
+-Choung removes "theme" predicates in AlchmeyThearomProver. I have undone that. I am trying to make sure that anything that applies to both MLN and PSL be in a common place.
+
+-Predicates declarations and types has a lot of redundunt code and unused code. The whole thing needs re-coding.
+
+-Finding variables types is disabled because the generation of inference rules does not respect them. Enabling it again requires careful coding for the inference rules generation. In all cases, PSL does not have variables types. 
 //==========================================
 830: takes 18 minutes: it is slightly changed to avoid this loong wait
 

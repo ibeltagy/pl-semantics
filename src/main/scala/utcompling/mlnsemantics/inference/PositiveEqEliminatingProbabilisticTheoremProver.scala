@@ -22,10 +22,6 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
    * Assuming:
    * --negated equality expressions are like !eq(x1,x2) and it is never
    * !( eq(x1,x2) ^ ..... ^ ... )
-   * --equality expressions are between variables, not formulas
-   * --no duplicate equality expressions
-   * --equality expressions like x1 = x2 ^ x2 = x3 will cause a problem, but
-   * we do not care. Let's hope this case does not happen
    */
   override def prove(
     constants: Map[String, Set[String]],
@@ -67,20 +63,20 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
     LOG.trace("DRSs before changes: ")	
     
     inNot = false;
+    LOG.trace("\n" + new Boxer2DrtExpressionInterpreter().interpret(assumptions.head.expression).pretty)
     var assumEqualities = findEq(assumptions.head.expression)//.map(x => (x.head -> x));
     equalities = groupEqvClasses(assumEqualities);
     val newAssumption = removeEq(assumptions.head.expression);
-    LOG.trace("\n" + new Boxer2DrtExpressionInterpreter().interpret(assumptions.head.expression).pretty)    
     LOG.trace(equalities) 
 
     val newAssumptions = List(HardWeightedExpression(newAssumption)) ++
       assumptions.filterNot(_ == assumptions.head);
     
     inNot = false;
+    LOG.trace("\n" + new Boxer2DrtExpressionInterpreter().interpret(goal).pretty)
     var goalEqualities = findEq(goal); 
     equalities  = groupEqvClasses(goalEqualities);
     val newGoal = removeEq(goal);
-    LOG.trace("\n" + new Boxer2DrtExpressionInterpreter().interpret(goal).pretty)    
     LOG.trace(equalities)    
 
     delegate.prove(
@@ -145,8 +141,9 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
         ( 
 	        if (cond.size == 1 && currentInNot && cond.head.isInstanceOf[BoxerEq]) 
 	          cond //negated equality
-	        else if (cond.size == 1 && !currentInNot && cond.head.isInstanceOf[BoxerEq]) 
-	          throw new RuntimeException("Un-supported DRS: can not handle drs of size one where this one predicate is an equality expression");
+
+	        //else if (cond.size == 1 && !currentInNot && cond.head.isInstanceOf[BoxerEq]) //no need for this. It still works even with empty DRSs 
+	        //  throw new RuntimeException("Un-supported DRS: can not handle drs of size one where this one predicate is an equality expression");
 	        else
 	        { //if equality found, it should be non-negated. 
 	          cond.flatMap(c=> {
@@ -159,8 +156,8 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
 	          })
 	        }
 	    )
-	    if(conditions.size == 0)
-	    	throw new RuntimeException("Un-supported DRS: after removing BoxerEq, remains an empty DRS");
+	    //if(conditions.size == 0)  //no need for this. It still works even with empty DRSs
+	    //	throw new RuntimeException("Un-supported DRS: after removing BoxerEq, remains an empty DRS");
         BoxerDrs(ref.map((listRef: (List[BoxerIndex], BoxerVariable)) => {
           (listRef._1, removeEq(listRef._2))
         }), conditions);

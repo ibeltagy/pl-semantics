@@ -51,7 +51,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     goal: BoxerExpression): Option[Double] = {
 
     assumptions.foreach(x => LOG.info("\n" + d(x.expression).pretty))
-    LOG.info("\n" + d(goal).pretty)    
+    LOG.info("\n" + d(goal).pretty)
     val rules = Sts.opts.inferenceRulesLevel match {
 		case -1 => Set();
 		case _ => makeNewRules(assumptions.map(_.expression), goal);

@@ -463,9 +463,9 @@ class AlchemyTheoremProver(
 	            
           case HardWeightedExpression(folEx) => f.write(insertExistQuant(convert(folEx)
 						// remove FolEqualityExpression
-						.replaceAll("""\^[^\(]+\([^=\(]*=[^>\)]+\)|\([^=\(\)]+=[^>\^\)]+\)[^\^\)]\^""", "")
+						//.replaceAll("""\^[^\(]+\([^=\(]*=[^>\)]+\)|\([^=\(\)]+=[^>\^\)]+\)[^\^\)]\^""", "")
 						// replace constants with variables
-						.replaceAll("\"", "")		
+						//.replaceAll("\"", "")		
 						+ ".\n"))
         }
 	// Add same name predicates inference rules
@@ -687,10 +687,11 @@ class AlchemyTheoremProver(
 						  //.replaceAll("\"", "")
 						  .replaceAll("""\(entailed\)""", "(\"entailed\")")
 						  // remove FolEqualityExpression
-						  .replaceAll("""\^[^\(]+\([^=\(]*=[^>\)]+\)|\([^=\(\)]+=[^>\^\)]+\)[^\^\)]\^""", "")
+						  //.replaceAll("""\^[^\(]+\([^=\(]*=[^>\)]+\)|\([^=\(\)]+=[^>\^\)]+\)[^\^\)]\^""", "")
+
 						  // remove theme relation predicates
-						  .replaceAll("""\^[^\(]+(theme)[^\)]+\)""", "")
-						  .replaceAll("""\([^\(]+(theme)[^\^]+\^""", "(")
+						  //.replaceAll("""\^[^\(]+(theme)[^\)]+\)""", "")
+						  //.replaceAll("""\([^\(]+(theme)[^\^]+\^""", "(")
 				
               	f.write(queryString + ".\n");
 				  //f.write(convert(universalifyGoalFormula(goal -> entailmentConsequent)) + ". //(ditAnd)\n") //normal anding

@@ -352,7 +352,7 @@ object Sts {
 	      0, // pairId
               //new MergeSameVarPredProbabilisticTheoremProver(//This is completely wrong. Do not merge vars of different parsee
 	      	new PositiveEqEliminatingProbabilisticTheoremProver(	      
-                new FindEventsProbabilisticTheoremProver(
+                //new FindEventsProbabilisticTheoremProver(
 	              new HandleSpecialCharProbabilisticTheoremProver(
 	                new GetPredicatesDeclarationsProbabilisticTheoremProver(
 		              new InferenceRuleInjectingProbabilisticTheoremProver( //2  
@@ -375,7 +375,7 @@ object Sts {
 		                      new FromEntToEqvProbabilisticTheoremProver( //5: ANDing goals  
 		                    		  new ExistentialEliminatingProbabilisticTheoremProver(
 		                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver(//6: generate evidences
-		                    						  softLogicTool))))))))))) //Alchemy or PSL
+		                    						  softLogicTool)))))))))) //Alchemy or PSL
 
           val p = ttp.prove(Tokenize(txt).mkString(" "), Tokenize(hyp).mkString(" "))
           println("Some(%.2f) [actual: %.2f, gold: %s]".format(p.get, probOfEnt2simScore(p.get), goldSim))
