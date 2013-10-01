@@ -43,7 +43,7 @@ public class PairwiseWordSimilarity {
 	    public static int docsCount = 1;
     	
 	    public static BowVectorSpace vectorspace = null;// new BowVectorSpace(stsVsFile, x => words.contains(x) )
-	    public static RuleWeighter rw = new AwithCvecspaceWithSpillingSimilarityRuleWeighter(new MultiplicationCompositeVectorMaker());
+	    public static RuleWeighter rw = new AwithCvecspaceWithSpellingSimilarityRuleWeighter(new MultiplicationCompositeVectorMaker());
    		//val sim = rw.weightForRules(txtWords.mkString("_"), txtWords, Map(hypWords.mkString("_")-> hypWords), vectorspace)
 	    
 	    public static double sentenceSim(String [] s1, String []s2, boolean diffOnly)

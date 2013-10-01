@@ -3,7 +3,6 @@ package utcompling.mlnsemantics.inference
 import utcompling.mlnsemantics.vecspace.BowVector
 import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.CollectionUtil._
-import utcompling.mlnsemantics.inference.CompositeVectorMaker
 
 trait RuleWeighter {
   def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: Map[String, BowVector]): Iterable[(String, Option[Double])]
@@ -50,11 +49,11 @@ case class AwithCvecspaceRuleWeighter(
   }
 }
 
-case class AwithCvecspaceWithSpillingSimilarityRuleWeighter(
+case class AwithCvecspaceWithSpellingSimilarityRuleWeighter(
   compositeVectorMaker: CompositeVectorMaker)
   extends RuleWeighter {
 
-  private def spillingSimilarity (s1: String, s2: String): Double = {
+  private def spellingSimilarity (s1: String, s2: String): Double = {
     if (s1.length() < 5)
       return 0;
     if (s2.length() < 5)
@@ -67,17 +66,17 @@ case class AwithCvecspaceWithSpillingSimilarityRuleWeighter(
       return 0;
   }
   override def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: Map[String, BowVector]) = {
-    val pv = compositeVectorMaker.make (antecedent.split("_"), vectorspace);
+    val pv = compositeVectorMaker.make (antecedent.split(" "), vectorspace);
     consequentAndContexts.map {
       case (consequent, consequentContext) =>
-        val w = spillingSimilarity(antecedent, consequent);
-        val v = compositeVectorMaker.make (consequent.split("_"), vectorspace);
+        val w = spellingSimilarity(antecedent, consequent);
+        val v = compositeVectorMaker.make (consequent.split(" "), vectorspace);
         consequent -> Some(v match {
           case cv => pv match {
     		case pv => pv cosine cv
-    		//case None => w  //if vector space does not work, use spilling
+    		//case None => w  //if vector space does not work, use spelling
           	}
-          //case None => w  //if vector space does not work, use spilling
+          //case None => w  //if vector space does not work, use spelling
         })
     }
   }
@@ -87,13 +86,13 @@ case class CompositionalRuleWeighter(
   compositeVectorMaker: CompositeVectorMaker)
   extends RuleWeighter {
 
-  val ruleWeighter = AwithCvecspaceWithSpillingSimilarityRuleWeighter(compositeVectorMaker);
+  val ruleWeighter = AwithCvecspaceWithSpellingSimilarityRuleWeighter(compositeVectorMaker);
   
   override def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: Map[String, BowVector]) = {
-	val antecedentWords =  antecedent.split("_")
+	val antecedentWords =  antecedent.split(" ")
     consequentAndContexts.map {
       case (consequent, consequentContext) =>{
-        val consequentWords = consequent.split("_")
+        val consequentWords = consequent.split(" ")
         var totalW = 0.0;
         
         antecedentWords.foreach(aw =>{

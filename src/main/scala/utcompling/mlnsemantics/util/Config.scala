@@ -26,98 +26,142 @@ import org.apache.log4j.Level
 
 class Config(opts: Map[String, String] = Map()) {
 
+  //log levels as defined by log4j
   val loglevel = opts.get("-log").map(Level.toLevel).getOrElse(Level.DEBUG);
+  
+  val timeout = opts.get("-timeout") match {
+    case Some(t) => Some(t.toLong);
+    case _ => None;
+  }
 
-  // Weight of distributional inference rules
+  //-------------------------------------------Precompiled distributional phrases (like Marco Baroni's phrases)
+
+  // Scaling weights of distributional inference rules  
   val distWeight = opts.get("-distWeight") match {
     case Some(weight) => weight.toDouble
     case _ => 1.0
   }
 
-  //Weight of external inference rules
-  val resourceWeight = opts.get("-resourceWeight") match {
-    case Some(weight) => weight.toDouble
-    case _ => 1.0
-  }
-
-  //task: rte, sts
-  val task = opts.get("-task") match {
-    case Some("rte") => "rte";
-    case _ => "sts";
-  }
-
-  val compositeVectorMaker = opts.get("-vectorMaker") match {
-    case Some("mul") => "mul";
-    case _ => "add";
-  }
-
-  val logicFormSource = opts.get("-logic") match {
-    case Some("dep") => "dep";
-    case _ => "box";
-  }
-
-  val softLogicTool = opts.get("-softLogic") match {
-    case Some("psl") => "psl"
-    case _ => "mln"
-  }
-
-  val vectorspaceFormatWithPOS = opts.get("-vsWithPos") match {
-    case Some(vst) => vst.toBoolean;
-    case _ => false;
-  }
-
-  //file contains phrases similarities
+  //file contains list of phrases (resources/phrases.lst)
   val phrasesFile = opts.get("-phrases") match {
     case Some(phrasesFile) => phrasesFile;
     case _ => "";
   }
 
+  //files contains vectors of these phrases (resources/phrase-vectors/word_phrase_sentence_*)
   val phraseVecsFile = opts.get("-phraseVecs") match {
     case Some(phraseVecsFile) => phraseVecsFile;
     case _ => "";
   }
 
-  //file contains paraphrase similarities
+  //-------------------------------------------Precompiled paraphrase dataset
+  
+  //Scaling weights of pre-compiled list of paraphrases 
+  val rulesWeight = opts.get("-rulesWeight") match {
+    case Some(weight) => weight.toDouble
+    case _ => 1.0
+  }
+    
+  //file contains paraphrase similarities (resources/rules)
   val rulesFile = opts.get("-rules") match {
     case Some(rulesFile) => rulesFile;
     case _ => "";
   }
 
-  //variable binding
-  val varBind = opts.get("-varBind") match {
-    case Some("true") => Some(true);
-    case _ => Some(false);
+  //-------------------------------------------On-the-fly inference rules generation 
+  
+  //vector composition, addition or multiplication 
+  val compositeVectorMaker = opts.get("-vectorMaker") match {
+    case Some("mul") => "mul";
+    case _ => "add";
+  }
+  
+  //vector space has POS or not. The one I am using now is without POS. Gemma has ones with POS
+  //The case of "with POS", is not well tested. Expect it to break 
+  val vectorspaceFormatWithPOS = opts.get("-vsWithPos") match {
+    case Some(vst) => vst.toBoolean;
+    case _ => false;
+  }
+   
+  //generate distributional phrasel inference rules for phrases including ones with agent and patient relations= 
+  val withPatientAgentInferenceRules = opts.get("-peInf") match {
+    case Some(vst) => vst.toBoolean;
+    case _ => true;
   }
 
+  //Generate phrasal and lexical rules for the same predicate.  
+  val duplicatePhraselAndLexicalRule = opts.get("-dupPhraseLexical") match {
+    case Some(s) => s.toBoolean
+    case _ => true;
+  }
+  
+  //-------------------------------------------Arguments general for all inference rules
+  
+   //what level of inference rules to generate: 
+  //-1)no rules at all  0)pre-compiled rules. No on-the-fly rules 1)pre-compiled rules + lexical rules, 2)all rules(precompiled, lexical, phrasal)
+  val inferenceRulesLevel = opts.get("-irLvl") match {
+    case Some(vst) => vst.toInt;
+    case _ => 2;
+  }
+  
   //weight threshold
   val weightThreshold = opts.get("-wThr") match {
     case Some(thr) => thr.toDouble;
     case _ => 0.20;
   }
 
-  //Chopping levels: type of mini-clauses
+  //-------------------------------------------logic and inference
+
+  val logicFormSource = opts.get("-logic") match {
+    case Some("dep") => "dep";
+    case _ => "box";
+  }
+
+  //keep universal quantifiers or replace them with existentials
+  val keepUniv = opts.get("-keepUniv") match {
+    case Some("false") => false;
+    case _ => true;
+  }
+  
+  val softLogicTool = opts.get("-softLogic") match {
+    case Some("psl") => "psl"
+    case _ => "mln"
+  }
+
+  //-------------------------------------------task
+    
+  //task: rte, sts
+  val task = opts.get("-task") match {
+    case Some("sts") => "sts";
+    case _ => "rte";
+  }
+
+  //variable binding (only on sts with mln)
+  val varBind = opts.get("-varBind") match {
+    case Some("true") => Some(true);
+    case _ => Some(false);
+  }
+
+  //Chopping levels: type of mini-clauses (only on sts with mln)
   //rp (relation ^ predicate), prp (predicate ^ relation ^ predicate)
   val chopLvl = opts.get("-chopLvl") match {
     case Some("prp") => "prp";
     case _ => "rp";
   }
 
-  //maximum probability. It is part of the equation to calculate the average-combiners's weights 
+  //maximum probability. It is part of the equation to calculate the average-combiners's weights (only on sts with mln) 
   val maxProb = opts.get("-maxProb") match {
     case Some(prob) => prob.toDouble;
     case _ => 0.93;
   }
 
-  //MLN splits weights on formulas. If scaleW is true, reverse this default MLN behaviour
+  //MLN splits weights on formulas. If scaleW is true, reverse this default MLN behaviour (only on mln)
   val scaleW = opts.get("-scaleW") match {
     case Some(s) => s.toBoolean
     case _ => true;
   }
 
-  val timeout = opts.get("-timeout") match {
-    case Some(t) => Some(t.toLong);
-    case _ => None;
-  }
+  //-------------------------------------------multiple parses
 
   //number of parses
   val kbest = opts.get("-kbest") match {
@@ -130,31 +174,7 @@ class Config(opts: Map[String, String] = Map()) {
     case Some(out) => out
     case _ => "multiOut"
   }
-
-  //keep universal quantifiers or replace them with existentials
-  val keepUniv = opts.get("-keepUniv") match {
-    case Some("false") => false;
-    case _ => true;
-  }
-
-  //what level of inference rules to generate: 
-  //-1)no rules at all  0)pre-compiled rules. No on-the-fly rules 1)pre-compiled rules + lexical rules, 2)all rules(precompiled, lexical, phrasal)
-  val inferenceRulesLevel = opts.get("-irLvl") match {
-    case Some(vst) => vst.toInt;
-    case _ => 2;
-  }
-  //generate distributional phrasel inference rules for phrases including ones with agent and patient relations= 
-  val withPatientAgentInferenceRules = opts.get("-peInf") match {
-    case Some(vst) => vst.toBoolean;
-    case _ => true;
-  }
-
-  //Generate phrasal and lexical rules for the same predicate.  
-  val duplicatePhraselAndLexicalRule = opts.get("-dupPhraseLexical") match {
-    case Some(s) => s.toBoolean
-    case _ => true;
-  }
-
+  
 }
 
 object Config {

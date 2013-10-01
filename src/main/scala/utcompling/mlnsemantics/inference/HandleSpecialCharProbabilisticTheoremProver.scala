@@ -27,17 +27,11 @@ class HandleSpecialCharProbabilisticTheoremProver(
     assumptions: List[WeightedExpression[BoxerExpression]],
     goal: BoxerExpression): Option[Double] = {
 
-    val specialChars = """([\?!\";\|\[\].,'_<>:\+\*-/&\^%\$#@~`=\(\)\\])""".r;
-
-    def clearName(name: String): String =
-      {
-        var mlnId = specialChars.replaceAllIn(name, "_"); //remove all scpecial characeters. 
-        mlnId = mlnId.map(c=> {
-          if (c.toShort> 127) 'X' //remove non-ascii characters 
-          else c;
-        })
-        return mlnId;
-      }
+    def clearName(name: String): String = //remove surrounding quotes -if any-
+    {
+        //TODO
+        return name;
+    }
     
     def go(e: BoxerExpression): BoxerExpression = {
       e match {
@@ -51,6 +45,10 @@ class HandleSpecialCharProbabilisticTheoremProver(
       }
     }
 
-    delegate.prove(constants, declarations, evidence, List(HardWeightedExpression(go(assumptions.head.expression))), go(goal))
+    delegate.prove(constants, declarations, evidence, 
+      assumptions.map {
+        case HardWeightedExpression(e) => HardWeightedExpression(go(e))
+        case SoftWeightedExpression(e, w) => SoftWeightedExpression(go(e), w)
+      }, go(goal))
   }
 }

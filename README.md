@@ -1,30 +1,64 @@
 mln-semantics
 =============
 
-Set up workspace
+Set up workspace (without PSL)
 ----------------
 
     ~$ git clone git@github.com:islambeltagy/mln-semantics.git
     ~/mln-semantics$ cd mln-semantics
-    ~/mln-semantics$ cd scala-logic
-    ~/mln-semantics/scala-logic$ git clone git@github.com:utcompling/Scalabha.git scalabha
-    ~/mln-semantics/scala-logic$ cd ..
     ~/mln-semantics$ chmod u+x bin/mlnsem
 
-    (In scala-logic/scalabha/build.sbt file, replace the following line:
-	"org.scalanlp" % "breeze-learn_2.9.2" % "0.2-SNAPSHOT" changing(),
-    by
-	"org.scalanlp" % "breeze-learn_2.9.2" % "0.2" changing(),
-    )
-
     ~/mln-semantics$ bin/mlnsem compile
+
+    ~/mln-semantics$ ln -s  /u/beltagy/workspace/deft/mln-semantics/candc candc
+    ~/mln-semantics$ ln -s  /u/beltagy/workspace/deft/mln-semantics/alchemy alchemy
     
     ~/mln-semantics$ cd resources
-    ~/mln-semantics/resources$ ln -s /u/beltagy/workspace/deft/STS/ sts
     ~/mln-semantics/resources$ ln -s /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt full.vs
-    ~/mln-semantics/resources$ ln -s /u/dhg/Corpora/polarity-lexicon polarity-lexicon
-    ~/mln-semantics/resources$ ln -s /u/ckcuong/RESEARCH/Programs/WordNet-3.0/dict/ wordnet
+    ~/mln-semantics/resources$ ln -s /u/dhg/Corpora/wordnet-3.0/ wordnet
+    ~/mln-semantics/resources$ ln -s /u/beltagy/workspace/deft/mln-semantics/resources/englishPCFG.ser.gz englishPCFG.ser.gz
+    ~/mln-semantics/resources$ ln -s /u/beltagy/workspace/deft/mln-semantics/resources/rules rules
+    ~/mln-semantics/resources$ ln -s /u/beltagy/workspace/deft/mln-semantics/resources/phrase-vectors phrase-vectors
     ~/mln-semantics/resources$ cd ..
+    ~/mln-semantics$ cd lib
+    ~/mln-semantics/lib$ ln -s /u/beltagy/workspace/deft/mln-semantics/lib/ws4j-1.0.1.jar ws4j-1.0.1.jar
+
+
+Running our system on different datasets
+----------------------
+- RTE and STS datasets we have now are FraCas, RTE1, RTE2, RTE3, MsrVid, MsrPar. 
+I will add RTE4-RTE7 and Trento dataset soon. Each dataset has an apprevition (listed in bin/mlnsem)
+FraCas: frc
+MsrVid: vid
+MsrPar: par
+RTEi training set: rte i train
+RTEi training set: rte i test
+
+- First, some helping files need to be generated for each dataset.
+~/mln-semantics$ bin/mlnsem gen DataSetAppreviation
+for example, ~/mln-semantics$ bin/mlnsem gen rte 2 test
+
+- Then, run the system for this dataset: 
+~/mln-semantics$ bin/mlnsem run DataSetAppreviation
+
+-Please check bin/mlnsem for more details
+
+Command line arguments: 
+----------------------
+They are all listed in src/main/scala/utcompling/mlnsemantics/util/Config.scala
+Default values are good enough to run the system. 
+One argument is not listed, which is the range argument. 
+Let's say you want to run the 4th, 5th, 6th, and 9th pairs of FraCas. Command is: 
+~/mln-semantics$ bin/mlnsem run frc 4-6,9
+
+
+Import the project on Eclipse: 
+--------------------
+-Install Scala's plugin on your eclipse.
+-Use sbt to generate eclipse project files: 
+	-java -jar bin/sbt-launch-0.11.2.jar
+	-When it starts, type: eclipse
+	-Two projects are generated mln-semantics and scala-logic. Import them to eclipse and you are done. 
 
 
 Using Boxer
@@ -51,15 +85,23 @@ Regarding tokenization: The code will automatically tokenize all input sentences
 the input is given tokenized or not.  It will not do sentence-splitting, however, but this can be included
 if it would be useful.
 
-Running STS test suite
-----------------------
-    ~/mln-semantics$ bin/mlnsem run
+
+==========================================================================================
+==================THE FOLLOWING IS NOT PART OF THE SYSTEM NOW=============================
+==========================================================================================
 
 
-Set Eclipse project: 
---------------------
--run bin/sbt...   then type eclipse
--fix configuration path in scalabha project
+Run Aidan's code on local machine
+---------------------------------
+* git clone git@github.com:raptros/tr-corpus-one.git
+
+* Start the soap server with the correct arguments - `$CANDC_HOME/bin/soap_server --models $CANDC_HOME/models --server localhost:12200 --candc-printer boxer` will do the job
+
+* ./run local trc1.MaxTransform data/rules.in data/sentences.txt data/out
+
+==========================================================================================
+================= THE FOLLOWING IS NOT UPDATED OR OBSOLETE================================
+==========================================================================================
 
 
 Running RTE test suite (work by Cuong)
@@ -82,6 +124,7 @@ Running RTE test suite (work by Cuong)
     ~/mln-semantics/data$ ./script.sh classify 1
     ~/mln-semantics/data$ ./script.sh classify 2
     ~/mln-semantics/data$ ./script.sh classify 3
+
 
 
 RTE descriptions
@@ -138,6 +181,10 @@ because we get more parse fails with it.
 Get positions of words in sentence. Words with same name will be treated differently based on their position.
 
 
+==========================================================================================
+==============ALL THE FOLLOWING STILL APPLIES=============================================
+==========================================================================================
+
 Trento errors
 -------------
 
@@ -154,10 +201,4 @@ Trento errors
 * No vector representation for sentences "A woman fries eggs" and "A woman fries big eggs" in group 5.
 
 
-Run Aidan's code on local machine
----------------------------------
-* git clone git@github.com:raptros/tr-corpus-one.git
 
-* Start the soap server with the correct arguments - `$CANDC_HOME/bin/soap_server --models $CANDC_HOME/models --server localhost:12200 --candc-printer boxer` will do the job
-
-* ./run local trc1.MaxTransform data/rules.in data/sentences.txt data/out

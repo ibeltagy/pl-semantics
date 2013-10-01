@@ -12,7 +12,7 @@ import java.text.DecimalFormat
 object VsPairwise {
      
   val stsVsFile = "/home/beltagy/workspace/deft/mln-semantics/resources/sts/STS.MSRvid.in.vs";
-  val rw: RuleWeighter = AwithCvecspaceWithSpillingSimilarityRuleWeighter(SimpleCompositeVectorMaker());
+  val rw: RuleWeighter = AwithCvecspaceWithSpellingSimilarityRuleWeighter(SimpleCompositeVectorMaker());
   var vectorspace = BowVectorSpace(stsVsFile)
   
   def sim(word1:String, word2:String):Double = 

@@ -30,7 +30,10 @@ For now, all of them are possible phrases.
 
 -Tokenization and removing special charactgers: 
 1)Tokenization details and different modes of tokenization are in utcompling/mlnsemantics/datagen.Tokenize.scala
-2)removing special characters: HandleSpecialCharProbabilisticTheoremProver. Is this the right place ? Should not it be right before calling MLN/PSL ? would it be better NOT to remove special characters. Instead, replace them with some other characters ?  I will keep it like this for now until I find an example where this needs to be changed. 
+2)removing special characters: It is two steps, 
+(a) removing quotes if the text is quoted before generating inference rules.  
+(b) replace special characters with _ before convert to FOL in PredicateCleaningBoxerExpressionInterpreterDecorator
+Is this the right place ? Should not it be right before calling MLN/PSL ? would it be better NOT to remove special characters. Instead, replace them with some other characters ?  I will keep it like this for now until I find an example where this needs to be changed. 
 In all cases, candc gets somehow confused when parsing special characters. 
 
 -Why Coung is doing all this ReplaceAll in AlchmeyThearomProver ?
@@ -44,6 +47,8 @@ In all cases, candc gets somehow confused when parsing special characters.
 -Predicates declarations and types has a lot of redundunt code and unused code. The whole thing needs re-coding.
 
 -Finding variables types is disabled because the generation of inference rules does not respect them. Enabling it again requires careful coding for the inference rules generation. In all cases, PSL does not have variables types. 
+//==========================================DONE
+
 //==========================================
 830: takes 18 minutes: it is slightly changed to avoid this loong wait
 

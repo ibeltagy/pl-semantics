@@ -6,3 +6,6 @@ rules*
 *.lem
 *.vs
 *.out
+phrase-vectors
+phrases.lst.idx
+

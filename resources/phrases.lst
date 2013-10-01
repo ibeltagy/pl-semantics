@@ -1,0 +1,926 @@
+1	actress
+2	airplane
+3	avocado
+4	baby
+5	baker
+6	ball
+7	band
+8	baseball
+9	baths
+10	bicycle
+11	bike
+12	bird
+13	boy
+14	boys@@
+15	bulldog
+16	cake
+17	chef
+18	child
+19	chops
+20	cook
+21	cooks@@
+22	dances
+23	dog
+24	door
+25	dough
+26	drink
+27	drinks@@
+28	egg
+29	eggs@@
+30	food
+31	fruit
+32	fry
+33	girl
+34	glass
+35	group
+36	guitar
+37	gull
+38	gun
+39	guy
+40	guys@@
+41	hamster
+42	hamsters@@
+43	horse
+44	instrument
+45	jet
+46	lady
+47	liquid
+48	males
+49	man
+50	mango
+51	men
+52	milk
+53	movements
+54	music
+55	nuts
+56	onion
+57	onions@@
+58	passenger
+59	people
+60	person
+61	persons@@
+62	pistol
+63	plane
+64	player
+65	practice
+66	practices@@
+67	revolver
+68	rides
+69	room
+70	rope
+71	seed
+72	seeds@@
+73	showers
+74	soldier
+75	songs
+76	stores
+77	team
+78	tires
+79	vegetable
+80	vegetables@@
+81	violin
+82	water
+83	weight
+84	woman
+85	acoustic
+86	amateur
+87	asian
+88	big
+89	blue
+90	clear
+91	commercial
+92	electric
+93	fat
+94	few
+95	flip
+96	green
+97	heavy
+98	huge
+99	large
+100	little
+101	musical
+102	old
+103	other
+104	physical
+105	several
+106	small
+107	strong
+108	tall
+109	white
+110	young
+111	add
+112	bath
+113	chase
+114	chop
+115	climb
+116	cook
+117	cut
+118	do
+119	drink
+120	eat
+121	enter
+122	feed
+123	fight
+124	fire
+125	flip
+126	fly
+127	fry
+128	hold
+129	lift
+130	make
+131	move
+132	open
+133	peel
+134	perform
+135	play
+136	pour
+137	practice
+138	prepare
+139	pull
+140	push
+141	ride
+142	roll
+143	run
+144	seat
+145	shoot
+146	sing
+147	slice
+148	splash
+149	throw
+150	walk
+151	work
+152	a
+153	no
+154	one
+155	some
+156	the
+157	three
+158	two
+159	a acoustic guitar
+160	a airplane
+161	a amateur team
+162	a baby
+163	a baker
+164	a ball
+165	a band
+166	a baseball
+167	a bicycle
+168	a big avocado
+169	a big ball
+170	a big bike
+171	a big cake
+172	a big fruit
+173	a big person
+174	a big room
+175	a big rope
+176	a bike
+177	a bird
+178	a boy
+179	a bulldog
+180	a cake
+181	a chef
+182	a child
+183	a clear liquid
+184	a cook
+185	a dog
+186	a door
+187	a dough
+188	a drink
+189	a egg
+190	a electric guitar
+191	a fat man
+192	a fruit
+193	a girl
+194	a glass
+195	a green bike
+196	a green fruit
+197	a guitar
+198	a gull
+199	a gun
+200	a guy
+201	a hamster
+202	a horse
+203	a huge ball
+204	a instrument
+205	a jet
+206	a lady
+207	a large ball
+208	a large blue ball
+209	a large dog
+210	a little dog
+211	a man
+212	a mango
+213	a milk
+214	a musical band
+215	a musical group
+216	a old guitar
+217	a old man
+218	a onion
+219	a person
+220	a pistol
+221	a plane
+222	a revolver
+223	a room
+224	a rope
+225	a seed
+226	a small baby
+227	a small dog
+228	a small woman
+229	a soldier
+230	a tall person
+231	a tall room
+232	a team
+233	a violin
+234	a white baby
+235	a white bird
+236	a white onion
+237	a woman
+238	a young girl
+239	a young horse
+240	acoustic guitar
+241	acoustic man
+242	amateur team
+243	big avocado
+244	big ball
+245	big bike
+246	big blue ball
+247	big blue dog
+248	big cake
+249	big dog
+250	big egg
+251	big fruit
+252	big person
+253	big persons@@
+254	big room
+255	big rope
+256	big tires
+257	blue ball
+258	blue dog
+259	clear liquid
+260	electric guitar
+261	fat man
+262	green bike
+263	green fruit
+264	heavy people
+265	heavy persons
+266	heavy tires
+267	huge ball
+268	huge dog
+269	huge men
+270	huge tires
+271	large ball
+272	large blue ball
+273	large dog
+274	large tires
+275	little ball
+276	little big ball
+277	little blue ball
+278	little dog
+279	little men
+280	musical band
+281	musical group
+282	musical music
+283	no acoustic guitar
+284	no acoustic man
+285	no baby
+286	no baker
+287	no ball
+288	no baseball
+289	no bicycle
+290	no big ball
+291	no big fruit
+292	no big room
+293	no big rope
+294	no bike
+295	no bird
+296	no boy
+297	no boys@@
+298	no bulldog
+299	no cake
+300	no clear liquid
+301	no dog
+302	no door
+303	no dough
+304	no drink
+305	no egg
+306	no fat man
+307	no food
+308	no fruit
+309	no girl
+310	no glass
+311	no green bike
+312	no green fruit
+313	no guitar
+314	no gun
+315	no guy
+316	no guys@@
+317	no hamster
+318	no horse
+319	no huge ball
+320	no huge dog
+321	no lady
+322	no large ball
+323	no large blue ball
+324	no large dog
+325	no little ball
+326	no little dog
+327	no man
+328	no mango
+329	no men
+330	no milk
+331	no musical band
+332	no musical music
+333	no nuts
+334	no onion
+335	no people
+336	no person
+337	no pistol
+338	no player
+339	no revolver
+340	no room
+341	no rope
+342	no seed
+343	no seeds@@
+344	no small baby
+345	no songs
+346	no tall room
+347	no team
+348	no tires
+349	no vegetable
+350	no water
+351	no white baseball
+352	no white males
+353	no white men
+354	no white milk
+355	no white woman
+356	no woman
+357	no young girl
+358	no young horse
+359	old guitar
+360	old man
+361	one horse
+362	one lady
+363	several hamsters
+364	several seeds
+365	small baby
+366	small dog
+367	small tires
+368	small woman
+369	some airplane
+370	some baseball
+371	some bird
+372	some dough
+373	some guitar
+374	some heavy people
+375	some jet
+376	some man
+377	some men
+378	some people
+379	some plane
+380	some seed
+381	some seeds@@
+382	some tires
+383	some vegetable
+384	some water
+385	some white baseball
+386	some white bird
+387	some white men
+388	some woman
+389	strong tires
+390	tall person
+391	tall room
+392	the airplane
+393	the baby
+394	the baker
+395	the band
+396	the baseball
+397	the big blue ball
+398	the big blue dog
+399	the big dog
+400	the bird
+401	the blue dog
+402	the boy
+403	the cook
+404	the dough
+405	the girl
+406	the guitar
+407	the gun
+408	the heavy persons
+409	the heavy tires
+410	the horse
+411	the jet
+412	the lady
+413	the little big ball
+414	the little blue ball
+415	the little dog
+416	the man
+417	the mango
+418	the men
+419	the milk
+420	the onion
+421	the person
+422	the plane
+423	the player
+424	the rope
+425	the soldier
+426	the tires
+427	the violin
+428	the water
+429	the weight
+430	the white bird
+431	the white milk
+432	the woman
+433	three men
+434	two big persons
+435	two men
+436	two tires
+437	two white males
+438	white baby
+439	white baseball
+440	white bird
+441	white males
+442	white men
+443	white milk
+444	white onion
+445	white woman
+446	young girl
+447	young horse
+448	a acoustic guitar play a man
+449	a acoustic guitar play no man
+450	a airplane fly
+451	a amateur team play
+452	a baby drink milk
+453	a baby feed a woman
+454	a baby feed no woman
+455	a baby hold a small woman
+456	a ball chase a dog
+457	a band perform
+458	a band play
+459	a band play music
+460	a baseball throw men
+461	a baseball throw some people
+462	a bicycle ride a man
+463	a big avocado peel no man
+464	a big ball chase a dog
+465	a big fruit peel a woman
+466	a big person peel a fruit
+467	a big room enter a man
+468	a big rope climb a man
+469	a bike ride a man
+470	a bird bath
+471	a bird drink some water
+472	a bird play
+473	a bulldog chase a large blue ball
+474	a cake cook a woman
+475	a cake make a big person
+476	a cake make a person
+477	a chef peel a mango
+478	a chef work dough
+479	a child drink milk
+480	a clear liquid drink a man
+481	a dog chase a ball
+482	a dog chase a big ball
+483	a dog play
+484	a door open a man
+485	a dough work a woman
+486	a dough work no woman
+487	a drink drink a man
+488	a drink drink no man
+489	a egg cook a person
+490	a egg cook a woman
+491	a fat man drink water
+492	a fruit peel a woman
+493	a girl chop onion
+494	a girl cut a onion
+495	a girl cut the onion
+496	a girl play violin
+497	a girl ride a horse
+498	a girl slice a onion
+499	a glass drink a man
+500	a glass drink no man
+501	a green bike ride a man
+502	a green fruit peel a woman
+503	a green fruit peel no woman
+504	a guitar play a man
+505	a guitar play no acoustic man
+506	a guitar play no man
+507	a gull play
+508	a gull splash
+509	a gun fire a man
+510	a gun shoot a guy
+511	a gun shoot the man
+512	a guy shoot a gun
+513	a hamster eat food
+514	a hamster eat nut
+515	a hamster eat seed
+516	a hamster eat several seed
+517	a hamster eat some seed
+518	a horse ride a girl
+519	a horse ride a lady
+520	a horse ride a woman
+521	a horse ride a young girl
+522	a horse ride no girl
+523	a horse ride no lady
+524	a horse ride no woman
+525	a horse ride the girl
+526	a huge ball chase a little dog
+527	a instrument play a man
+528	a jet fly
+529	a lady play violin
+530	a lady ride a horse
+531	a lady ride one horse
+532	a large ball chase a little dog
+533	a large ball chase no little dog
+534	a large blue ball chase a bulldog
+535	a large dog chase no little ball
+536	a little dog chase a huge ball
+537	a little dog chase a large ball
+538	a little dog chase no large ball
+539	a man climb a big rope
+540	a man climb a rope
+541	a man drink a clear liquid
+542	a man drink a drink
+543	a man drink a glass
+544	a man drink no drink
+545	a man drink water
+546	a man enter a big room
+547	a man enter a room
+548	a man enter a tall room
+549	a man fire a gun
+550	a man open a door
+551	a man play a acoustic guitar
+552	a man play a electric guitar
+553	a man play a guitar
+554	a man play a instrument
+555	a man play no acoustic guitar
+556	a man ride a bicycle
+557	a man ride a big bike
+558	a man ride a bike
+559	a man ride a green bike
+560	a man shoot a pistol
+561	a man shoot a revolver
+562	a man shoot the gun
+563	a mango peel a woman
+564	a milk drink a baby
+565	a milk drink a child
+566	a milk drink the baby
+567	a musical band perform
+568	a musical band play music
+569	a musical group perform
+570	a old man play guitar
+571	a onion cut a girl
+572	a onion cut a woman
+573	a onion cut no woman
+574	a onion slice a woman
+575	a person cook a egg
+576	a person cook egg
+577	a person drink
+578	a person make a big cake
+579	a person make cake
+580	a person peel a big fruit
+581	a person peel a mango
+582	a person ride a horse
+583	a person work dough
+584	a pistol shoot a man
+585	a plane fly
+586	a revolver shoot a man
+587	a room enter a man
+588	a rope climb a man
+589	a seed eat several hamster
+590	a small baby feed a woman
+591	a small baby feed no woman
+592	a small baby hold a woman
+593	a small dog run
+594	a small woman feed a baby
+595	a tall person make a big cake
+596	a tall room enter a man
+597	a team play baseball
+598	a team practice
+599	a violin play a girl
+600	a violin play a lady
+601	a violin play a woman
+602	a violin play the woman
+603	a white bird bath
+604	a white onion chop a woman
+605	a woman chop a white onion
+606	a woman cook a egg
+607	a woman cook big egg
+608	a woman cook egg
+609	a woman cut a onion
+610	a woman feed a baby
+611	a woman feed a small baby
+612	a woman hold a small baby
+613	a woman peel a fruit
+614	a woman peel a green fruit
+615	a woman peel a mango
+616	a woman play the violin
+617	a woman play violin
+618	a woman ride a horse
+619	a woman slice a onion
+620	a woman slice no vegetable
+621	a woman slice some vegetable
+622	a woman slice vegetable
+623	a woman work dough
+624	a woman work no dough
+625	a woman work some dough
+626	a young girl ride a horse
+627	a young horse ride a girl
+628	baseball play a team
+629	baseball play no men
+630	baseball play no team
+631	baseball play two men
+632	baseball practice guy
+633	baseball practice no boy
+634	baseball practice the boy
+635	baseball practice the player
+636	food eat a hamster
+637	guy practice baseball
+638	huge men roll no tires
+639	huge men roll small tires
+640	huge tires roll little men
+641	men flip large tires
+642	men flip the tires
+643	men flip tires
+644	men play music
+645	men roll huge tires
+646	men roll tires
+647	music play a band
+648	music play men
+649	no acoustic guitar play a man
+650	no baby drink milk
+651	no baby drink white milk
+652	no baby feed a woman
+653	no baby hold a small woman
+654	no baker work dough
+655	no ball chase a dog
+656	no ball chase no dog
+657	no baseball play a boy
+658	no baseball practice boy
+659	no baseball practice guy
+660	no baseball practice player
+661	no baseball practice white men
+662	no baseball throw a man
+663	no baseball throw men
+664	no baseball throw people
+665	no baseball throw white men
+666	no bicycle ride a man
+667	no bicycle ride no man
+668	no big fruit peel a woman
+669	no big room enter a man
+670	no big room enter no man
+671	no big rope climb a man
+672	no big rope climb no man
+673	no bike ride a man
+674	no bike ride no man
+675	no bird drink water
+676	no boy play baseball
+677	no boy practice baseball
+678	no bulldog chase a large blue ball
+679	no cake cook a woman
+680	no cake make a person
+681	no clear liquid drink a man
+682	no dog chase a ball
+683	no dog chase a big ball
+684	no dog chase no ball
+685	no dog chase no big ball
+686	no door open a man
+687	no dough work a baker
+688	no dough work a person
+689	no dough work a woman
+690	no drink drink a man
+691	no egg cook a person
+692	no egg cook a woman
+693	no egg cook no person
+694	no egg cook no woman
+695	no fat man drink water
+696	no food eat a hamster
+697	no fruit peel a woman
+698	no girl chop onion
+699	no girl cut a onion
+700	no girl cut no onion
+701	no girl play violin
+702	no girl ride a horse
+703	no girl ride a young horse
+704	no glass drink a man
+705	no green bike ride a man
+706	no green fruit peel a woman
+707	no guitar play a man
+708	no guitar play a old man
+709	no guitar play no man
+710	no guitar play some man
+711	no guitar play the man
+712	no gun fire a man
+713	no gun fire no man
+714	no gun shoot a guy
+715	no gun shoot a man
+716	no gun shoot no guy
+717	no guy shoot a gun
+718	no guy practice baseball
+719	no hamster eat food
+720	no hamster eat nut
+721	no hamster eat seed
+722	no hamster eat several seed
+723	no horse ride a girl
+724	no horse ride a lady
+725	no horse ride a woman
+726	no horse ride a young girl
+727	no horse ride no girl
+728	no horse ride no lady
+729	no horse ride no woman
+730	no horse ride one lady
+731	no lady play violin
+732	no lady ride one horse
+733	no large ball chase a little dog
+734	no large ball chase no little dog
+735	no large blue ball chase a bulldog
+736	no large dog chase no little ball
+737	no little ball chase no huge dog
+738	no little ball chase the big blue dog
+739	no little dog chase a huge ball
+740	no little dog chase a large ball
+741	no little dog chase no huge ball
+742	no little dog chase no large ball
+743	no little dog chase the big blue ball
+744	no man climb a big rope
+745	no man climb a rope
+746	no man drink a clear liquid
+747	no man drink a drink
+748	no man drink a glass
+749	no man drink water
+750	no man enter a big room
+751	no man enter a room
+752	no man enter a tall room
+753	no man fire a gun
+754	no man open a door
+755	no man play a acoustic guitar
+756	no man play a old guitar
+757	no man play no guitar
+758	no man ride a bicycle
+759	no man ride a big bike
+760	no man ride a bike
+761	no man ride a green bike
+762	no man shoot a gun
+763	no man shoot a pistol
+764	no man shoot a revolver
+765	no man throw a baseball
+766	no mango peel no woman
+767	no men flip tires
+768	no men play baseball
+769	no men throw a baseball
+770	no milk drink a baby
+771	no milk drink a white baby
+772	no musical band play music
+773	no musical music play a band
+774	no nuts eat a hamster
+775	no onion chop a girl
+776	no onion cut a girl
+777	no onion cut no girl
+778	no onion cut no woman
+779	no onion slice a woman
+780	no onion slice no woman
+781	no people sing no songs
+782	no people sing songs
+783	no people throw a baseball
+784	no person cook a egg
+785	no person cook no egg
+786	no person make cake
+787	no person work dough
+788	no pistol shoot a man
+789	no player practice baseball
+790	no revolver shoot a man
+791	no revolver shoot no man
+792	no room enter a man
+793	no room enter no man
+794	no rope climb a man
+795	no rope climb no man
+796	no seed eat several hamster
+797	no seed eat a hamster
+798	no small baby feed a woman
+799	no small baby feed no woman
+800	no small baby hold a woman
+801	no songs sing no people
+802	no tall room enter a man
+803	no tall room enter no man
+804	no team play baseball
+805	no tires flip no men
+806	no water drink a bird
+807	no water drink a fat man
+808	no water drink a man
+809	no white baseball practice men
+810	no white baseball throw men
+811	no white males throw a baseball
+812	no white men practice baseball
+813	no white milk drink a baby
+814	no white woman chop a onion
+815	no woman cook a egg
+816	no woman cook cake
+817	no woman cook no egg
+818	no woman cut a onion
+819	no woman cut no onion
+820	no woman feed a baby
+821	no woman feed a small baby
+822	no woman hold a small baby
+823	no woman peel a big fruit
+824	no woman peel a fruit
+825	no woman peel a green fruit
+826	no woman peel a mango
+827	no woman peel no mango
+828	no woman ride a horse
+829	no woman slice a onion
+830	no woman slice some vegetable
+831	no woman work dough
+832	no young girl ride a horse
+833	no young horse ride a girl
+834	no young horse ride no girl
+835	nuts eat a hamster
+836	one horse ride no lady
+837	one lady ride a horse
+838	onions chop a girl
+839	people sing songs
+840	several hamsters eat seed
+841	several seed eat a hamster
+842	several seed eat no hamster
+843	some airplane fly
+844	some baseball throw people
+845	some bird bath
+846	some bird drink water
+847	some dough work a woman
+848	some guitar play no man
+849	some heavy people lift the tires
+850	some jet fly
+851	some man play no guitar
+852	some men flip tires
+853	some people lift the heavy tires
+854	some people throw a baseball
+855	some plane fly
+856	some seed eat a hamster
+857	some tires lift the heavy persons
+858	some water drink a bird
+859	some water drink a man
+860	some white baseball practice men
+861	some white bird bath
+862	some white men practice baseball
+863	some woman work a dough
+864	songs sing no people
+865	songs sing people
+866	strong tires pull two big persons
+867	the airplane fly
+868	the baby drink milk
+869	the baby drink white milk
+870	the baker work dough
+871	the band play
+872	the baseball practice boy
+873	the baseball practice player
+874	the big blue ball chase the little dog
+875	the bird bath
+876	the bird drink water
+877	the boy practice baseball
+878	the cook cut onion
+879	the cook peel a mango
+880	the dough work a baker
+881	the girl ride a horse
+882	the guitar play no man
+883	the gun shoot a man
+884	the heavy tires lift no person
+885	the heavy tires lift some people
+886	the horse ride a girl
+887	the jet fly
+888	the lady slice onion
+889	the little big ball chase the blue dog
+890	the little blue ball chase the big dog
+891	the little dog chase the big blue ball
+892	the man climb a rope
+893	the man play music
+894	the man play no guitar
+895	the man play the guitar
+896	the man shoot a gun
+897	the mango peel a cook
+898	the men lift the weight
+899	the milk drink a baby
+900	the onion cut a girl
+901	the person peel a mango
+902	the plane fly
+903	the player practice baseball
+904	the rope climb a man
+905	the rope climb a soldier
+906	the soldier climb a rope
+907	the violin play a woman
+908	the water drink some bird
+909	the weight lift the men
+910	the white bird bath
+911	the white milk drink a baby
+912	three men play baseball
+913	tires flip men
+914	tires push two men
+915	tires roll men
+916	two men flip heavy tires
+917	two men flip tires
+918	two men move tires
+919	two men push large tires
+920	two men push tires
+921	two men roll big tires
+922	two men roll huge tires
+923	two tires move men
+924	two white males throw a baseball
+925	water drink a fat man
+926	water drink a man

@@ -66,7 +66,13 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     val allPredsAndContexts =  List.concat(assumPredsAndContexts, goalPredsAndContexts);
     val vectorspace = vecspaceFactory(allPredsAndContexts.flatMap {
       case (pred, context) => {
-        val l = pred.name.split("_").map (n => n + (Sts.opts.vectorspaceFormatWithPOS match {
+        //do not split with "_". This was mainly when we were doing the wrong step of merging the predicates of the same variables in one predicate. 
+        /*val l = pred.name.split("_").map (n => n + (Sts.opts.vectorspaceFormatWithPOS match {
+        case true => "-" + pred.pos;
+        case false => "";
+        })) ++ context
+        */
+        val l = List(pred.name + (Sts.opts.vectorspaceFormatWithPOS match {
         case true => "-" + pred.pos;
         case false => "";
         })) ++ context
@@ -101,7 +107,8 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     val newPredsAndContextsSplit = newPredsAndContexts.mapVals(l=>{
       var flatL: List[String] = List();
       l.foreach(e=>{
-        flatL = flatL ++ e.split("_");
+        //flatL = flatL ++ e.split("_");  //split is wrong. We do not use the "_" any more as a word separator
+        flatL = flatL ++ List(e);
       })
       flatL
     }) 
@@ -152,7 +159,8 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 	        	if(words == "")
 	        	  word
 	        	else
-	        	  (words + "_" + word)
+	        	  //(words + "_" + word)
+	        	  (words + " " + word) //separate words of a phrase with a space
 	         }
 	      )
 	      
@@ -196,16 +204,22 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 				    	val rChanged = BoxerRel(r.discId, r.indices, BoxerVariable(varName1), BoxerVariable(varName2), r.name, r.sense)
 				    	
 				    	//println ("//PHRASE(npn): " + arg1._1.name+"-"+arg1._1.pos + " " + r.name + " " + arg2._1.name+"-"+arg2._1.pos)
-				    	val context = (arg1._2 ++ arg2._2).toList.diff(arg1._1.name.split("_")).diff(arg2._1.name.split("_"));
+				    	//val context = (arg1._2 ++ arg2._2).toList.diff(arg1._1.name.split("_")).diff(arg2._1.name.split("_"));
+				    	//Do not split
+				    	val context = (arg1._2 ++ arg2._2).toList.diff(List(arg1._1.name)).diff(List(arg2._1.name)).toSet;
+				    	
 				    	var words = Sts.opts.vectorspaceFormatWithPOS match {
-				    		case true => arg1._1.name +"-" +arg1._1.pos + "_" + arg2._1.name+"-" +arg2._1.pos ;
-				    		case false => arg1._1.name + "_" + arg2._1.name;
+				    		//case true => arg1._1.name +"-" +arg1._1.pos + "_" + arg2._1.name+"-" +arg2._1.pos ;
+				    		//case false => arg1._1.name + "_" + arg2._1.name;
+				    		//use space to split between words of a phrase
+				    	  	case true => arg1._1.name +"-" +arg1._1.pos + " " + arg2._1.name+"-" +arg2._1.pos ;
+				    		case false => arg1._1.name + " " + arg2._1.name;
 				    	}
 				    		
 				    	val vars = List(List() -> BoxerVariable("x0")) ++ List(List() -> BoxerVariable("x1"));
 				    	val cond = List(arg1Changed) ++ List(arg2Changed) ++ List(rChanged);
 				    	val exp = BoxerDrs(vars, cond);
-				    	phrasesList = phrasesList ++ List((exp, context, words)) 
+				    	phrasesList = phrasesList ++ List((exp, context.toList, words)) 
 	    			}
 	    		)
 	    	)
@@ -245,13 +259,15 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 						.distinct
 
 			// Find relating predicates for the lhs
-			val matchAssumePreds = assumePredsList.filter { pred => 
-				var isContained = true
-				pred.name.split("_").foreach { token =>
+			val matchAssumePreds = assumePredsList.filter { pred =>
+			   
+				/*var isContained = true
+				pred.name.split("_").foreach { token =>    //again, split is wrong
 					if(token != "topic" && !leftTokens.contains(token) && !leftTokens.contains(token + "s")) 
 						isContained = false
 				}
-				isContained
+				isContained*/
+			   (pred.name == "topic" || leftTokens.contains(pred.name) || leftTokens.contains(pred.name+ "s"))
 			}
 			val matchAssumePredVars = matchAssumePreds.map(pred => pred.variable.name)
 			val matchAssumeRels = assumeRelsList.filter(rel => 
@@ -268,12 +284,13 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 
 			// Find relating predicates for the rhs
 			val matchGoalPreds = goalPredsList.filter { pred => 
-				var isContained = true
-				pred.name.split("_").foreach { token =>
+				/*var isContained = true
+				pred.name.split("_").foreach { token =>   //again, split here is wrong
 					if(token != "topic" && !rightTokens.contains(token) && !rightTokens.contains(token + "s")) 
 						isContained = false
 				}
-				isContained
+				isContained*/
+			  (pred.name == "topic" || rightTokens.contains(pred.name) || rightTokens.contains(pred.name + "s"))
 			}
 			val matchGoalPredVars = matchGoalPreds.map(pred => pred.variable.name)
 			val matchGoalRels = goalRelsList.filter(rel => 

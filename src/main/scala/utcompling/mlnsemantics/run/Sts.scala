@@ -25,7 +25,6 @@ import utcompling.mlnsemantics.inference._
 import utcompling.mlnsemantics.datagen.CncLemmatizeCorpusMapper
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.PassthroughBoxerExpressionInterpreter
 import utcompling.scalalogic.discourse.impl.PreparsedBoxerDiscourseInterpreter
-import utcompling.mlnsemantics.inference.CompositionalRuleWeighter
 import utcompling.scalalogic.discourse.DiscourseInterpreter
 import utcompling.mlnsemantics.inference.DependencyParsedBoxerDiscourseInterpreter
 import dhg.depparse._
@@ -254,6 +253,7 @@ object Sts {
 			// Search phrases in Text-Hypothesis pair
 			val ignoredTokens = List("an", "the", "be", "is", "are", "to", "in", "on", "at", "of", "for")
 			
+			//=========================The following code should be moved somewhere else. It is related to Lucene========================== 
 			// Search phrases in Text
 			val txtQuery = SimpleTokenizer(txt + " " + lemTxt)
 				.filter(token => token.length > 1 && !ignoredTokens.contains(token))
@@ -343,39 +343,47 @@ object Sts {
 			val filterEnd = System.nanoTime
 			println("Filtering time: " + (filterEnd - filterStart) / 1e9 + " s")
 			LOG.trace ("Filtered rules: ");
-			paraphraseRules.foreach(rule => LOG.trace(rule))   
+			paraphraseRules.foreach(rule => LOG.trace(rule))
+			
+		 //=========================================END of code that should be moved away===================================================
 
           val ttp =
-            new TextualTheoremProver( //1
+            new TextualTheoremProver( // 1<==
               logicFormSource,
-	     new DoMultipleParsesTheoremProver( //rename variables and predicates+remove extra parses if any.
+	     new DoMultipleParsesTheoremProver( // 2<==
 	      0, // pairId
-              //new MergeSameVarPredProbabilisticTheoremProver(//This is completely wrong. Do not merge vars of different parsee
-	      	new PositiveEqEliminatingProbabilisticTheoremProver(	      
-                //new FindEventsProbabilisticTheoremProver(
-	              new HandleSpecialCharProbabilisticTheoremProver(
-	                new GetPredicatesDeclarationsProbabilisticTheoremProver(
-		              new InferenceRuleInjectingProbabilisticTheoremProver( //2  
+            //new MergeSameVarPredProbabilisticTheoremProver(  //This is completely wrong. Do not merge vars of different parsee
+	      	 //new PositiveEqEliminatingProbabilisticTheoremProver(  //Replacing equalities with variable renaming is wrong. For example, if the equality is negated, or in the RHS of an implication	      
+                //new FindEventsProbabilisticTheoremProver(   //3<== Find event variables and prop variables. This is important to reduce domain size. 
+	      													   //However, InferenceRuleInjectingProbabilisticTheoremProver breaks because of it. 
+	      														//Fix InferenceRuleInjectingProbabilisticTheoremProver before uncomment this
+	      														//Anyway, variables types is not supported in PSL
+	              new HandleSpecialCharProbabilisticTheoremProver( // 4<== class name is misleading. Just remove the surrounding quotes if the predicate name is quoted. 
+	            		  											//This is necessary before generating inference rules, because generating inference rules searches vector space 
+	                new GetPredicatesDeclarationsProbabilisticTheoremProver(  // 5<==Generate predicates declarations. I believe this should be moved closer to the inference   
+		              new InferenceRuleInjectingProbabilisticTheoremProver( // 6<== Generate Inference rules on the fly + convert the other rules to FOL then add them to the inference problem.
+		            		  												// This file need significant rewriting 
 		                wordnet,
 		                words => BowVectorSpace(vsFileMod, x => words(x) && allLemmas(x)),
 		                new SameLemmaHardClauseRuleWeighter(
-		                  new AwithCvecspaceWithSpillingSimilarityRuleWeighter(compositeVectorMaker)), 
-				distRules ++ paraphraseRules,
-				opts.distWeight,
-				opts.resourceWeight,
-		                new TypeConvertingPTP( //3
+		                  new AwithCvecspaceWithSpellingSimilarityRuleWeighter(compositeVectorMaker)), 
+						distRules ++ paraphraseRules,
+						opts.distWeight,
+						opts.rulesWeight,
+		                new TypeConvertingPTP( // 7<== Entry point for final modifications on Boxer's representation before converting to FOL
 		                  new BoxerExpressionInterpreter[FolExpression] {
 		                    def interpret(x: BoxerExpression): FolExpression =
-		                      new Boxer2DrtExpressionInterpreter().interpret(
-		                        new OccurrenceMarkingBoxerExpressionInterpreterDecorator().interpret(
-		                          new MergingBoxerExpressionInterpreterDecorator().interpret(
-		                            new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(
-		                              new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))))).fol
+		                      new Boxer2DrtExpressionInterpreter().interpret( // 11<== Convert from Boxer to DRT 
+		                        //new OccurrenceMarkingBoxerExpressionInterpreterDecorator().interpret(  //empty 
+		                          new MergingBoxerExpressionInterpreterDecorator().interpret( // 10<== merging some unnecessery boxes 
+		                            new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret( // 9<== I could not understand this 
+		                              new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret( // 8<== replace all remaining special characters with _
+		                                  x)))).fol  // 12<== conver DRT to FOL. My question is, why move from Boxer to DRT to FOL. Why not directly to FOL ???
 		                  },
 		                      new FromEntToEqvProbabilisticTheoremProver( //5: ANDing goals  
 		                    		  new ExistentialEliminatingProbabilisticTheoremProver(
 		                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver(//6: generate evidences
-		                    						  softLogicTool)))))))))) //Alchemy or PSL
+		                    						  softLogicTool))))))))) //Alchemy or PSL
 
           val p = ttp.prove(Tokenize(txt).mkString(" "), Tokenize(hyp).mkString(" "))
           println("Some(%.2f) [actual: %.2f, gold: %s]".format(p.get, probOfEnt2simScore(p.get), goldSim))
