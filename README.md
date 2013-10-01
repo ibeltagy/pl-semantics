@@ -24,7 +24,7 @@ Set up workspace (without PSL)
     ~/mln-semantics/lib$ ln -s /u/beltagy/workspace/deft/mln-semantics/lib/ws4j-1.0.1.jar ws4j-1.0.1.jar
     ~/mln-semantics/lib$ cd ..
     ~/mln-semantics$ bin/mlnsem gen prb		#Generate helping the files for a toy dataset I call it prb
-    ~/mln-semantics$ bin/mlnsem run prb		#Run the toy examples or prb
+    ~/mln-semantics$ bin/mlnsem run prb		#Run the toy examples of prb
 
 
 Running our system on different datasets
@@ -32,12 +32,12 @@ Running our system on different datasets
 - RTE and STS datasets we have now are FraCas, RTE1, RTE2, RTE3, MsrVid, MsrPar, Prob
 I will add RTE4-RTE7 and Trento dataset soon. Each dataset has an apprevition (listed in bin/mlnsem)
 
-FraCas: frc
-MsrVid: vid
-MsrPar: par
-RTEi training set: rte i train
-RTEi training set: rte i test
-Prob: prb		#This dataset contains few examples I selected. Each example represents one specific Problem. 
+	* FraCas: frc
+	* MsrVid: vid
+	* MsrPar: par
+	* RTEi training set: rte i train
+	* RTEi training set: rte i test
+	* Prob: prb		#This dataset contains few examples I selected. Each example represents one specific Problem. 
 
 - First, some helping files need to be generated for each dataset using:
 
@@ -59,7 +59,7 @@ They are all listed in
 
 src/main/scala/utcompling/mlnsemantics/util/Config.scala
 
-Default values are good enough to run the system. Only nne argument is not listed, which is the "range" argument. 
+Default values are good enough to run the system. Only one argument is not listed, which is the "range" argument. 
 
 Let's say you want to run the 4th, 5th, 6th, and 9th pairs of FraCas. Command is: 
 
@@ -74,7 +74,7 @@ Import the project on Eclipse:
 
 * java -jar bin/sbt-launch-0.11.2.jar
 
-* When it starts, type: eclipse
+* When it starts, type: `eclipse`
 
 * Two projects are generated mln-semantics and scala-logic. Import them to eclipse and you are done. 
 
