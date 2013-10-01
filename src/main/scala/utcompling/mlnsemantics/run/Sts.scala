@@ -319,8 +319,8 @@ object Sts {
 		
 			val returnedRules = lucene.read(query)
 			val end = System.nanoTime
-			println("Searching time: " + (end - start) / 1e9 + " s")       
-			println("# returned rules: " + returnedRules.size)
+			LOG.debug("Searching time: " + (end - start) / 1e9 + " s")       
+			LOG.debug("# returned rules: " + returnedRules.size)
 		
 			val filterStart = System.nanoTime
 			val paraphraseRules = returnedRules
@@ -341,7 +341,7 @@ object Sts {
 				}.toList
 		
 			val filterEnd = System.nanoTime
-			println("Filtering time: " + (filterEnd - filterStart) / 1e9 + " s")
+			LOG.debug ("Filtering time: " + (filterEnd - filterStart) / 1e9 + " s")
 			LOG.trace ("Filtered rules: ");
 			paraphraseRules.foreach(rule => LOG.trace(rule))
 			
@@ -378,12 +378,13 @@ object Sts {
 		                          new MergingBoxerExpressionInterpreterDecorator().interpret( // 10<== merging some unnecessery boxes 
 		                            new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret( // 9<== I could not understand this 
 		                              new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret( // 8<== replace all remaining special characters with _
-		                                  x)))).fol  // 12<== conver DRT to FOL. My question is, why move from Boxer to DRT to FOL. Why not directly to FOL ???
+		                                  x)))).fol  // 12<== convert DRT to FOL. My question is, why move from Boxer to DRT to FOL. Why not directly to FOL ???
 		                  },
-		                      new FromEntToEqvProbabilisticTheoremProver( //5: ANDing goals  
-		                    		  new ExistentialEliminatingProbabilisticTheoremProver(
-		                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver(//6: generate evidences
-		                    						  softLogicTool))))))))) //Alchemy or PSL
+		                      new FromEntToEqvProbabilisticTheoremProver( // 13<== goal =  premise ^  hypothesis. This is for STS  
+		                    		  new ExistentialEliminatingProbabilisticTheoremProver( // 14<== WHat ??
+		                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver( // 15<== Generate evidence from premise. 
+	                    						  									//I believe this should be moved to before convert to FOL
+		                    						  softLogicTool))))))))) // 16<== run Alchemy or PSL
 
           val p = ttp.prove(Tokenize(txt).mkString(" "), Tokenize(hyp).mkString(" "))
           println("Some(%.2f) [actual: %.2f, gold: %s]".format(p.get, probOfEnt2simScore(p.get), goldSim))

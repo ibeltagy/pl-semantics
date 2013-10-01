@@ -761,11 +761,7 @@ class AlchemyTheoremProver(
     if (LOG.isDebugEnabled) {
       LOG.debug("mln file:\n" + readLines(mln).mkString("\n").trim)
       LOG.debug("evidence file:\n" + readLines(evidence).mkString("\n").trim)
-    }
-    else if (LOG.isInfoEnabled) {
-      LOG.info("mln file:\n" + readLines(mln).mkString("\n").trim)
-    }
-    
+    }    
 
     //lifted belife propagation works better
     //val allArgs = "-bp" :: "-lifted" :: "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
@@ -773,7 +769,7 @@ class AlchemyTheoremProver(
     //val allArgs = "-ptpe" :: "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
     val allArgs = "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
 
-    val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, LOG.isDebugEnabled, Sts.opts.timeout);
+    val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, LOG.isTraceEnabled, Sts.opts.timeout);
 	val out = new StringBuilder
 	val err = new StringBuilder
  

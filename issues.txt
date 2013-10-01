@@ -28,9 +28,10 @@ girl eat	(not sure)
 fat eat		(not sure)
 For now, all of them are possible phrases.
 
--Tokenization and removing special charactgers: 
-1)Tokenization details and different modes of tokenization are in utcompling/mlnsemantics/datagen.Tokenize.scala
-2)removing special characters: It is two steps, 
+-Tokenization:
+Tokenization details and different modes of tokenization are in utcompling/mlnsemantics/datagen.Tokenize.scala
+
+-Removing special characters: It is two steps, 
 (a) removing quotes if the text is quoted before generating inference rules.  
 (b) replace special characters with _ before convert to FOL in PredicateCleaningBoxerExpressionInterpreterDecorator
 Is this the right place ? Should not it be right before calling MLN/PSL ? would it be better NOT to remove special characters. Instead, replace them with some other characters ?  I will keep it like this for now until I find an example where this needs to be changed. 

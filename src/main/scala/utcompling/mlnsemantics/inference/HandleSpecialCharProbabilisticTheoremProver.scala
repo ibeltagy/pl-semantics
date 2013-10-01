@@ -29,8 +29,9 @@ class HandleSpecialCharProbabilisticTheoremProver(
 
     def clearName(name: String): String = //remove surrounding quotes -if any-
     {
-        //TODO
-        return name;
+        if(name.length() > 2 && name.charAt(0) == ''' && name.charAt(name.length() - 1) == ''')
+          name.substring(1, name.length()-1);
+        else name
     }
     
     def go(e: BoxerExpression): BoxerExpression = {
