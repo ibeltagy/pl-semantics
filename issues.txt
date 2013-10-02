@@ -1,3 +1,8 @@
+Suggestions: 
+* Weighted universal rule to simulate generalized quantifiers.
+
+
+//==========================================
 Merging Cuong's fork with main(ToDo)
 ------------------------------
 * Code of running condor is replaced with my scripts for condor. What is still missing is organizging the output and running the scripts on it. 
@@ -48,6 +53,10 @@ In all cases, candc gets somehow confused when parsing special characters.
 -Predicates declarations and types has a lot of redundunt code and unused code. The whole thing needs re-coding.
 
 -Finding variables types is disabled because the generation of inference rules does not respect them. Enabling it again requires careful coding for the inference rules generation. In all cases, PSL does not have variables types. 
+
+-I mistakenly removed the code for KeepUniv. Here is it 
+https://github.com/islambeltagy/mln-semantics/blob/dbf28d782e3603855c33990ea3f9b2100755fc7f/src/main/scala/utcompling/mlnsemantics/inference/PositiveEqEliminatingProbabilisticTheoremProver.scala
+
 //==========================================DONE
 
 //==========================================
