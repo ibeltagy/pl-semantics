@@ -372,19 +372,21 @@ object Sts {
 						opts.rulesWeight,
 		                new TypeConvertingPTP( // 7<== Entry point for final modifications on Boxer's representation before converting to FOL
 		                  new BoxerExpressionInterpreter[FolExpression] {
-		                    def interpret(x: BoxerExpression): FolExpression =
-		                      new Boxer2DrtExpressionInterpreter().interpret( // 11<== Convert from Boxer to DRT 
+		                    def interpret(x: BoxerExpression): FolExpression = {
+		                      val drt = new Boxer2DrtExpressionInterpreter().interpret( // 11<== Convert from Boxer to DRT 
 		                        //new OccurrenceMarkingBoxerExpressionInterpreterDecorator().interpret(  //empty 
 		                          new MergingBoxerExpressionInterpreterDecorator().interpret( // 10<== merging some unnecessery boxes 
 		                            new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret( // 9<== I could not understand this 
-		                              new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret( // 8<== replace all remaining special characters with _
-		                                  x)))).fol  // 12<== convert DRT to FOL. My question is, why move from Boxer to DRT to FOL. Why not directly to FOL ???
+		                              new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x)))); // 8<== replace all remaining special characters with _
+		                      LOG.trace(drt.pretty);            
+		                      drt.fol  // 12<== convert DRT to FOL. My question is, why move from Boxer to DRT to FOL. Why not directly to FOL ???
+		                    }
 		                  },
 		                      new FromEntToEqvProbabilisticTheoremProver( // 13<== goal =  premise ^  hypothesis. This is for STS  
-		                    		  new ExistentialEliminatingProbabilisticTheoremProver( // 14<== WHat ??
+		                    		  //new ExistentialEliminatingProbabilisticTheoremProver( // 14<== WHat ?? More wrong code.
 		                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver( // 15<== Generate evidence from premise. 
 	                    						  									//I believe this should be moved to before convert to FOL
-		                    						  softLogicTool))))))))) // 16<== run Alchemy or PSL
+		                    						  softLogicTool)))))))) // 16<== run Alchemy or PSL
 
           val p = ttp.prove(Tokenize(txt).mkString(" "), Tokenize(hyp).mkString(" "))
           println("Some(%.2f) [actual: %.2f, gold: %s]".format(p.get, probOfEnt2simScore(p.get), goldSim))
