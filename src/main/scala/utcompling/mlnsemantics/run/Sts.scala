@@ -34,6 +34,7 @@ import utcompling.mlnsemantics.datagen.Tokenize
 import utcompling.mlnsemantics.datagen.SimpleTokenizer
 import utcompling.mlnsemantics.util.Config
 import utcompling.mlnsemantics.util.Lucene
+import utcompling.scalalogic.drt.expression.DrtApplicationExpression
 
 /**
  *
@@ -376,10 +377,12 @@ object Sts {
 		                    def interpret(x: BoxerExpression): FolExpression = {
 		                      val drt = new Boxer2DrtExpressionInterpreter().interpret( // 11<== Convert from Boxer to DRT 
 		                        //new OccurrenceMarkingBoxerExpressionInterpreterDecorator().interpret(  //empty 
-		                          new MergingBoxerExpressionInterpreterDecorator().interpret( // 10<== merging some unnecessery boxes 
-		                            new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret( // 9<== I could not understand this 
-		                              new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x)))); // 8<== replace all remaining special characters with _
-		                      LOG.trace(drt.pretty);            
+		                          //new MergingBoxerExpressionInterpreterDecorator().interpret( // 10<== //Redundant. It is merged with MergingBoxerExpressionInterpreterDecorator
+		                            new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret( // 9<== replacing Merge and Alpha with DRS + remove unnecessary sub-boxes. 
+		                            																	//Removing unnecessary This is correct as long as we are NOT doing embedded propositions.
+		                              new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))); // 8<== replace all remaining special characters with _
+		                      if (!drt.isInstanceOf[DrtApplicationExpression])//for debugging, print the DRT Boxes before convert to FOL
+		                    	  LOG.trace("\n" + drt.pretty);        
 		                      drt.fol  // 12<== convert DRT to FOL. My question is, why move from Boxer to DRT to FOL. Why not directly to FOL ???
 		                    }
 		                  },

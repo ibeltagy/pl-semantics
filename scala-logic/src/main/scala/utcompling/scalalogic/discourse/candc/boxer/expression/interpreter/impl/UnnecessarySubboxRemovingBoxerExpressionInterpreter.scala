@@ -12,6 +12,12 @@ class UnnecessarySubboxRemovingBoxerExpressionInterpreter extends BoxerExpressio
       case BoxerDrs(refs, conds) =>
         val (crushedE, eVars) = crush(e, Set())
         crushedE
+      case BoxerAlfa(_variable, first, second) =>
+        val (crushedE, eVars) = crush(e, Set())
+        crushedE
+      case BoxerMerge(_pred, first, second) =>
+        val (crushedE, eVars) = crush(e, Set())
+        crushedE        
       case _ =>
         e.visitConstruct(this.interpret)
     }
@@ -25,8 +31,10 @@ class UnnecessarySubboxRemovingBoxerExpressionInterpreter extends BoxerExpressio
         val thisVars = Set[BoxerVariable]()
         val (firstCrushed, firstVars) = crush(first, propVarsInScope | thisVars)
         val (secondCrushed, secondVars) = crush(second, propVarsInScope | thisVars)
-        (BoxerAlfa(variable, firstCrushed, secondCrushed), thisVars | firstVars | secondVars)
-
+        //(BoxerAlfa(variable, firstCrushed, secondCrushed), thisVars | firstVars | secondVars)
+        //Merge the two boxes of Alfa in one DRS BOX
+        (BoxerDrs(firstCrushed.refs ++ secondCrushed.refs, firstCrushed.conds ++ secondCrushed.conds), firstVars | secondVars)
+       
       case BoxerApp(function, argument) =>
         val (functionCrushed, functionVars) = crush(function, propVarsInScope)
         val (argumentCrushed, argumentVars) = crush(argument, propVarsInScope)
@@ -58,7 +66,11 @@ class UnnecessarySubboxRemovingBoxerExpressionInterpreter extends BoxerExpressio
       case BoxerMerge(pred, first, second) =>
         val (firstCrushed, firstVars) = crush(first, propVarsInScope)
         val (secondCrushed, secondVars) = crush(second, propVarsInScope)
-        (BoxerMerge(pred, firstCrushed, secondCrushed), firstVars | secondVars)
+        //(BoxerMerge(pred, firstCrushed, secondCrushed), firstVars | secondVars)
+        //Merge the two boxes of Merge in one DRS BOX        
+        (BoxerDrs(firstCrushed.refs ++ secondCrushed.refs, firstCrushed.conds ++ secondCrushed.conds), firstVars | secondVars)
+        
+
 
       case BoxerNamed(discId, indices, variable, name, typ, sense) =>
         (BoxerNamed(discId, indices, variable, name, typ, sense), Set(variable))
