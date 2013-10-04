@@ -123,8 +123,10 @@ class Config(opts: Map[String, String] = Map()) {
     case _ => true;
   }
   
+  //What probabilistic logic tool to be used, PSL or MLN. NONE is a dummy inference that always returns 0. 
   val softLogicTool = opts.get("-softLogic") match {
     case Some("psl") => "psl"
+    case Some("none") => "none"
     case _ => "mln"
   }
 

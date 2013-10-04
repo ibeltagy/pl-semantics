@@ -248,6 +248,7 @@ object Sts {
 			}			
 			val softLogicTool: ProbabilisticTheoremProver[FolExpression] = opts.softLogicTool match {
 				case "psl" => new PSLTheoremProver()
+				case "none" => new NoneTheoremProver()
 				case "mln" => AlchemyTheoremProver.findBinary(wordnet);
 			}		
 			// Search phrases in Text-Hypothesis pair

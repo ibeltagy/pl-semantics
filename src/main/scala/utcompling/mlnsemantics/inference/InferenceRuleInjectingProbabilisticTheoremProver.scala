@@ -164,6 +164,8 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 	         }
 	      )
 	      
+	      //println("//PHRASE(pp): " + w)
+
 	      //context
 	      var context = predPairList._2.flatMap( predPair=> predPair._2)
 	      
@@ -203,7 +205,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 				    	val arg2Changed = BoxerPred(arg2._1.discId, arg2._1.indices, BoxerVariable(varName2), arg2._1.name, arg2._1.pos, arg2._1.sense)
 				    	val rChanged = BoxerRel(r.discId, r.indices, BoxerVariable(varName1), BoxerVariable(varName2), r.name, r.sense)
 				    	
-				    	//println ("//PHRASE(npn): " + arg1._1.name+"-"+arg1._1.pos + " " + r.name + " " + arg2._1.name+"-"+arg2._1.pos)
+				    	//println("//PHRASE(prp): " + arg1._1.name+"-"+arg1._1.pos + " " + r.name + " " + arg2._1.name+"-"+arg2._1.pos)
 				    	//val context = (arg1._2 ++ arg2._2).toList.diff(arg1._1.name.split("_")).diff(arg2._1.name.split("_"));
 				    	//Do not split
 				    	val context = (arg1._2 ++ arg2._2).toList.diff(List(arg1._1.name)).diff(List(arg2._1.name)).toSet;
@@ -495,8 +497,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 	val goalVarTypeMap = 
 		if(isEntail) getAllPreds(goal._1).map(pred => (pred.variable.name, predTypeMap(pred.name ++ "_h"))).toMap
 		else getAllPreds(goal._1).map(pred => (pred.variable.name, predTypeMap(pred.name ++ "_t"))).toMap
-	
-//    if (rw.head._2.get < 0.35)
+
     if (rw.head._2.get <=0 || !checkCompatibleType(changedAssum, goal._1, assumeVarTypeMap, goalVarTypeMap))
     	return List();
     
