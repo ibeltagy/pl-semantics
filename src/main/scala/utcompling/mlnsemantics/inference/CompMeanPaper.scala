@@ -95,22 +95,19 @@ object CompMeanPaper {
         new TextualTheoremProver(
           new FakeDiscourseInterpreter(filename + ".drs"),
           new InferenceRuleInjectingProbabilisticTheoremProver(
-            new WordnetImpl(),
             (words: (String => Boolean)) => BowVectorSpace("resources/nytgiga.lem.1m.vc.f2000.m50.wInf", words),
             new TopRuleWeighter(
               new RankingRuleWeighter(
                 new AwithCtxCwithCtxVecspaceRuleWeighter(
                   new SimpleCompositeVectorMaker()))),
 	    List[String](),
-	    1.0,
-	    1.0,
-            new TypeConvertingPTP(
-              new BoxerExpressionInterpreter[FolExpression] {
-                def interpret(x: BoxerExpression): FolExpression =
-                  new Boxer2DrtExpressionInterpreter().interpret(
-                    new OccurrenceMarkingBoxerExpressionInterpreterDecorator().interpret(
-                      new MergingBoxerExpressionInterpreterDecorator().interpret(
-                        new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(x)))).fol
+        new TypeConvertingPTP(
+          new BoxerExpressionInterpreter[FolExpression] {
+            def interpret(x: BoxerExpression): FolExpression =
+              new Boxer2DrtExpressionInterpreter().interpret(
+                new OccurrenceMarkingBoxerExpressionInterpreterDecorator().interpret(
+                  new MergingBoxerExpressionInterpreterDecorator().interpret(
+                    new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(x)))).fol
               },
               new FakeProbabilisticTheoremProver(
                 new Prover9TheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/LADR-2009-11A/bin/prover9"), 5, false)))))

@@ -26,18 +26,21 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.MultiMap
 
 class InferenceRuleInjectingProbabilisticTheoremProver(
-  wordnet: Wordnet,
+
   vecspaceFactory: ((String => Boolean) => Map[String, BowVector]),
   ruleWeighter: RuleWeighter,
   paraphraseRules: List[String],
-  distWeight: Double = 1.0,
-  resourceWeight: Double = 1.0,
+ 
   delegate: ProbabilisticTheoremProver[BoxerExpression])
   extends ProbabilisticTheoremProver[BoxerExpression] {
 
   private val LOG = LogFactory.getLog(classOf[InferenceRuleInjectingProbabilisticTheoremProver])
 
   private val NotPred = """^not_(.+)$""".r
+  
+  private val wordnet = Sts.wordnet;
+  private val distWeight = Sts.opts.distWeight;
+  private val resourceWeight = Sts.opts.rulesWeight;
 
   private def d(drs: BoxerExpression) =
     new Boxer2DrtExpressionInterpreter().interpret(
@@ -93,7 +96,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 	//var rules = makeRules(assumPredsAndContexts, goalPredsAndContexts, vectorspace)
     //rules = rules ++ makeLongerRules(assumRel, goalRel, assumPredsAndContexts, goalPredsAndContexts, vectorspace);
     var rules = makeLongerRules(assumRel, goalRel, assumPredsAndContexts, goalPredsAndContexts, vectorspace, predTypeMap);
-    rules.foreach(x => LOG.trace("\n" + d(x.expression).pretty))
+    //rules.foreach(x => LOG.trace("\n" + d(x.expression).pretty))
     return rules
   }
 
@@ -482,7 +485,13 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
   private def paraphraseRuleFOL(leftFOL: BoxerDrs, rightFOL: BoxerDrs, discId: String, score: Double): List[WeightedExpression[BoxerExpression]] =
   {
 	val changedLHS = changeExpDirection(leftFOL);
-    val unweightedRule = BoxerImp(discId, List(), changedLHS, rightFOL)
+
+	var rhs = rightFOL
+ 	rhs = BoxerDrs(List(), rhs.conds);
+ 	var lhs = changedLHS.asInstanceOf[BoxerDrs]();
+ 	lhs = BoxerDrs((lhs.refs ++ rhs.refs).toSet.toList, lhs.conds);
+    
+ 	val unweightedRule = BoxerImp(discId, List(), lhs, rhs)
 	return List(SoftWeightedExpression(unweightedRule, score * resourceWeight))
   }
   
@@ -502,7 +511,14 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     	return List();
     
     //val unweightedRule = BoxerDrs(List(List() -> BoxerVariable("x0")) ++ List(List() -> BoxerVariable("x1")), List(BoxerImp(discId, List(), changedAssum, goal._1)));
-    val unweightedRule = BoxerImp(discId, List(), changedAssum, goal._1);
+ 	var rhs = goal._1.asInstanceOf[BoxerDrs]();
+ 	rhs = BoxerDrs(List(), rhs.conds);
+ 	
+ 	var lhs = changedAssum.asInstanceOf[BoxerDrs]();
+ 	lhs = BoxerDrs((lhs.refs ++ rhs.refs).toSet.toList, lhs.conds);
+
+ 	
+    val unweightedRule = BoxerImp(discId, List(), lhs, rhs);
     
     return List(SoftWeightedExpression(unweightedRule, rw.head._2.get * distWeight)); 
   }

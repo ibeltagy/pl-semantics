@@ -31,11 +31,11 @@ class TypeConvertingPTP(
     //val newConstants = constants.mapVals(_.map(converter.interpret))
     val newDeclarations = declarations.mapKeys(converter.interpret)
     val newEvidence = evidence.map(converter.interpret)
+    val newGoal = converter.interpret(goal)
     val newAssumptions = assumptions.map {
       case HardWeightedExpression(e) => HardWeightedExpression(converter.interpret(e))
       case SoftWeightedExpression(e, w) => SoftWeightedExpression(converter.interpret(e), w)
     }
-    val newGoal = converter.interpret(goal)
 
     delegate.prove(constants, newDeclarations, newEvidence, newAssumptions, newGoal)
   }

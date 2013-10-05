@@ -17,7 +17,6 @@ import utcompling.mlnsemantics.run.Sts
 import opennlp.scalabha.util.FileUtils
 
 class DoMultipleParsesTheoremProver(
-  pairId: Int = 0,
   delegate: ProbabilisticTheoremProver[BoxerExpression])
   extends ProbabilisticTheoremProver[BoxerExpression] {  
   
@@ -42,12 +41,11 @@ class DoMultipleParsesTheoremProver(
     	assumptions.head.expression match{
     	  case BoxerPrs(assumptionParses) => assumptionParses.slice(0, Sts.opts.kbest).foreach(assumptionParse=>{
     	  //---------------------------given goalParse and assumptionParse, calculate one score then add it to total score
-	  index += 1
-	  val outFile = if(pairId == 0) Sts.opts.multipleOutputFiles + "." + index
-			else Sts.opts.multipleOutputFiles + "." + pairId + "." + index
-    	  val result = delegate.prove(constants, declarations, evidence, List(HardWeightedExpression(assumptionParse._1)), goalParse._1)
-    	  val oneScore = result match { case Some(s) => s; case None => 0.5};
-    	  Sts.opts.task match {
+			  index += 1
+			  val outFile = Sts.opts.multipleOutputFiles + "." + Sts.pairIndex + "." + index
+			  val result = delegate.prove(constants, declarations, evidence, List(HardWeightedExpression(assumptionParse._1)), goalParse._1)
+			  val oneScore = result match { case Some(s) => s; case None => 0.5};
+			  Sts.opts.task match {
 					//case "sts" => score += oneScore*(assumptionParse._2+goalParse._2); scoreDenum +=(assumptionParse._2+goalParse._2 ); //weighted average 
 					case "sts" => 
 					{
@@ -63,7 +61,7 @@ class DoMultipleParsesTheoremProver(
 					  //	f.write(assumptionParse._2 + " " + goalParse._2 + " " + oneScore + " " + score + "\n")	
 					  //}	
 					}
-    	 }
+			  }
     	 //------------------------------  
     	 })
     	  case _ =>  throw new RuntimeException ("Premise and Hypothesis both should start with BoxerPrs")

@@ -353,8 +353,7 @@ object Sts {
             new TextualTheoremProver( // 1<==
               logicFormSource,
 	     new DoMultipleParsesTheoremProver( // 2<==
-	      0, // pairId
-            //new MergeSameVarPredProbabilisticTheoremProver(  //This is completely wrong. Do not merge vars of different parsee
+            //new MergeSameVarPredProbabilisticTheoremProver(  //This is completely wrong. Do not merge predicates of same variable
 	      	 //new PositiveEqEliminatingProbabilisticTheoremProver(  //Replacing equalities with variable renaming is wrong. For example, if the equality is negated, or in the RHS of an implication	      
                 //new FindEventsProbabilisticTheoremProver(   //3<== Find event variables and prop variables. This is important to reduce domain size. 
 	      													   //However, InferenceRuleInjectingProbabilisticTheoremProver breaks because of it. 
@@ -365,13 +364,10 @@ object Sts {
 	                new GetPredicatesDeclarationsProbabilisticTheoremProver(  // 5<==Generate predicates declarations. I believe this should be moved closer to the inference   
 		              new InferenceRuleInjectingProbabilisticTheoremProver( // 6<== Generate Inference rules on the fly + convert the other rules to FOL then add them to the inference problem.
 		            		  												// This file need significant rewriting 
-		                wordnet,
 		                words => BowVectorSpace(vsFileMod, x => words(x) && allLemmas(x)),
 		                new SameLemmaHardClauseRuleWeighter(
 		                  new AwithCvecspaceWithSpellingSimilarityRuleWeighter(compositeVectorMaker)), 
 						distRules ++ paraphraseRules,
-						opts.distWeight,
-						opts.rulesWeight,
 		                new TypeConvertingPTP( // 7<== Entry point for final modifications on Boxer's representation before converting to FOL
 		                  new BoxerExpressionInterpreter[FolExpression] {
 		                    def interpret(x: BoxerExpression): FolExpression = {
@@ -379,7 +375,7 @@ object Sts {
 		                        //new OccurrenceMarkingBoxerExpressionInterpreterDecorator().interpret(  //empty 
 		                          //new MergingBoxerExpressionInterpreterDecorator().interpret( // 10<== //Redundant. It is merged with MergingBoxerExpressionInterpreterDecorator
 		                            new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret( // 9<== replacing Merge and Alpha with DRS + remove unnecessary sub-boxes. 
-		                            																	//Removing unnecessary This is correct as long as we are NOT doing embedded propositions.
+		                            																	//Removing unnecessary sub-boxes is correct as long as we are NOT doing embedded propositions.
 		                              new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))); // 8<== replace all remaining special characters with _
 		                      if (!drt.isInstanceOf[DrtApplicationExpression])//for debugging, print the DRT Boxes before convert to FOL
 		                    	  LOG.trace("\n" + drt.pretty);        

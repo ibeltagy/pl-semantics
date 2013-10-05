@@ -72,24 +72,21 @@ object Baseline {
       new TextualTheoremProver(
         new ModalDiscourseInterpreter(),
         new InferenceRuleInjectingProbabilisticTheoremProver(
-          new WordnetImpl(),
           vsf1,
           new TopRuleWeighter(
             new RankingRuleWeighter(
               new AwithCtxCwithCtxVecspaceRuleWeighter(
                 new SimpleCompositeVectorMaker()))),
 	  List[String](),
-	  1.0,
-	  1.0,
-          new TypeConvertingPTP(
-            new BoxerExpressionInterpreter[FolExpression] {
-              def interpret(x: BoxerExpression): FolExpression =
-                new Boxer2DrtExpressionInterpreter().interpret(
-                  new OccurrenceMarkingBoxerExpressionInterpreterDecorator().interpret(
-                    new MergingBoxerExpressionInterpreterDecorator().interpret(
-                      new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(
-                        new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))))).fol
-            },
+      new TypeConvertingPTP(
+        new BoxerExpressionInterpreter[FolExpression] {
+          def interpret(x: BoxerExpression): FolExpression =
+            new Boxer2DrtExpressionInterpreter().interpret(
+              new OccurrenceMarkingBoxerExpressionInterpreterDecorator().interpret(
+                new MergingBoxerExpressionInterpreterDecorator().interpret(
+                  new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(
+                    new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))))).fol
+        },
             new FakeProbabilisticTheoremProver(
               //              new TheoremProver[FolExpression, String] {
               //                def prove(assumptions: List[FolExpression], goal: Option[FolExpression] = None, verbose: Boolean = false): Option[String] = {
