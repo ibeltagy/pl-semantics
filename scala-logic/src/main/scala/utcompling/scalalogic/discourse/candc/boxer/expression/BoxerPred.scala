@@ -6,7 +6,7 @@ case class BoxerPred(discId: String, indices: List[BoxerIndex], variable: BoxerV
     default
 
   def visitConstruct(function: BoxerExpression => BoxerExpression): BoxerExpression =
-    BoxerPred(discId, indices, variable, name, pos, sense)
+    BoxerPred(discId, indices, function(variable).asInstanceOf[BoxerVariable], name, pos, sense)
 
   def ::(index: Int) = BoxerPred(discId, List(BoxerIndex(index)), variable, name, pos, sense)
 

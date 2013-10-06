@@ -8,7 +8,7 @@ case class BoxerProp(discId: String, indices: List[BoxerIndex], variable: BoxerV
     combinator(List(function(drs)))
 
   def visitConstruct(function: BoxerExpression => BoxerExpression): BoxerExpression =
-    BoxerProp(discId, indices, variable, function(drs))
+    BoxerProp(discId, indices, function(variable).asInstanceOf[BoxerVariable], function(drs))
 
   override def toString() =
     "[%s]:prop(%s,%s)".format(indices.mkString(","), variable.name, drs)

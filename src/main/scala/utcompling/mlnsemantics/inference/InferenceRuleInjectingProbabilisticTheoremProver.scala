@@ -389,6 +389,26 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 		goalVarTypeMap: Map[String, String]
 	): Boolean =
 	{
+	     assumeVarTypeMap.foreach(e =>
+	     {
+	    	 try{
+	    		 if (e._2 != goalVarTypeMap.get(e._1).get)
+	    		   return false;
+	    	 }catch {
+	    	 	case e:NoSuchElementException =>
+	    	 }
+	     })
+	     goalVarTypeMap.foreach(e =>
+	     {
+	    	 try{
+	    		 if (e._2 != assumeVarTypeMap.get(e._1).get)
+	    		   return false;
+	    	 }catch {
+	    	 	case e:NoSuchElementException =>  
+	    	 }
+	     })
+	     return true;
+	     /*
 		// Check phrase type
 		val BoxerDrs(_, assumeConds) = assumeFOL
 		val BoxerDrs(_, goalConds) = goalFOL
@@ -467,6 +487,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 			if(goalVarTypeMap.contains(varName) && (assumeVarTypeMap(varName) != goalVarTypeMap(varName))) return false
 
 		return true
+		*/
 	}
   
   private def changeExpDirection (e: BoxerExpression): BoxerExpression =

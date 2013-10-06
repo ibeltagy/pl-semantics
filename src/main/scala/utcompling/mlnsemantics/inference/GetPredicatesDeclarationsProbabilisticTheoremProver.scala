@@ -144,7 +144,7 @@ class GetPredicatesDeclarationsProbabilisticTheoremProver(
       }
       
     }
-    val (predTypes, constTypes) = combinePredicatesAndArgTypes(List(txtExPredArg, hypExPredArg))
+    val (newDeclarations, constTypes) = combinePredicatesAndArgTypes(List(txtExPredArg, hypExPredArg))
     //val (predTypes, constTypes) = combinePredicatesAndArgTypes(List(txtEx, hypEx).map(getPredicatesAndArgTypes))
     
     val constants =
@@ -155,10 +155,7 @@ class GetPredicatesDeclarationsProbabilisticTheoremProver(
         "indv_t" -> Set("default_indv_t_variable"),
         "evnt_t" -> Set("default_evnt_t_variable"),
         "prop_t" -> Set("default_prop_t_variable")) ++ constTypes
-    val declarations = predTypes //List("man(ind)", "mortal(ind)")
-    val evidence = List() //"man(socrates)"
-    val newAssumptions = List(HardWeightedExpression(txtEx))
-    val newGoal = hypEx
-    delegate.prove(constants, declarations, evidence, newAssumptions, newGoal)
+
+    delegate.prove(constants, newDeclarations, evidence, assumptions, goal)
   } 
 }

@@ -8,7 +8,8 @@ case class BoxerRel(discId: String, indices: List[BoxerIndex], event: BoxerVaria
     default
 
   def visitConstruct(function: BoxerExpression => BoxerExpression): BoxerExpression =
-    BoxerRel(discId, indices, event, variable, name, sense)
+    BoxerRel(discId, indices, function(event).asInstanceOf[BoxerVariable], 
+        function(variable).asInstanceOf[BoxerVariable], name, sense)
 
   override def toString(): String =
     "[%s]:rel(%s,%s,%s,%d)".format(indices.mkString(","), event.name, variable.name, name, sense)

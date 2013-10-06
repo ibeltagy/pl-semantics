@@ -11,7 +11,8 @@ case class BoxerVariable(name: String) extends BoxerExpression with Ordered[Boxe
     sys.error("BoxerVariable.visit() is not implemented")
 
   def visitConstruct(function: BoxerExpression => BoxerExpression): BoxerExpression =
-    sys.error("BoxerVariable.visitConstruct() is not implemented")
+    BoxerVariable(name)
+    
 
   override def toString() =
     name

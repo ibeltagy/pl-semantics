@@ -6,7 +6,7 @@ case class BoxerLam(variable: BoxerVariable, term: BoxerExpression) extends Boxe
     combinator(List(function(term)))
 
   def visitConstruct(function: BoxerExpression => BoxerExpression): BoxerExpression =
-    BoxerLam(variable, function(term))
+    BoxerLam(function(variable).asInstanceOf[BoxerVariable], function(term))
 
   override def toString() =
     "lam(%s,%s)".format(variable, term)

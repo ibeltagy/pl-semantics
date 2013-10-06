@@ -6,7 +6,7 @@ case class BoxerEq(discId: String, indices: List[BoxerIndex], first: BoxerVariab
     default
 
   def visitConstruct(function: BoxerExpression => BoxerExpression): BoxerExpression =
-    BoxerEq(discId, indices, first, second)
+    BoxerEq(discId, indices, function(first).asInstanceOf[BoxerVariable], function(second).asInstanceOf[BoxerVariable])
 
   override def toString(): String =
     "[%s]:eq(%s,%s)".format(indices.mkString(","), first.name, second.name)

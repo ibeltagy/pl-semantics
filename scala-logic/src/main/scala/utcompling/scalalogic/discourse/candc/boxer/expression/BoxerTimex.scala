@@ -6,7 +6,7 @@ case class BoxerTimex(discId: String, indices: List[BoxerIndex], variable:BoxerV
         default
 
     def visitConstruct(function: BoxerExpression => BoxerExpression): BoxerExpression = 
-        BoxerTimex(discId, indices, variable, timeExp)
+        BoxerTimex(discId, indices, function(variable).asInstanceOf[BoxerVariable], function(timeExp))
 
     def ::(index: Int) = BoxerTimex(discId, List(BoxerIndex(index)), variable, timeExp)
 

@@ -6,7 +6,7 @@ case class BoxerDrs(override val refs: List[(List[BoxerIndex], BoxerVariable)], 
     combinator(conds.map(function))
 
   def visitConstruct(function: BoxerExpression => BoxerExpression): BoxerExpression =
-    BoxerDrs(refs, conds.map(function))
+    BoxerDrs(refs.map (ref => (ref._1, function(ref._2).asInstanceOf[BoxerVariable])), conds.map(function))
 
   override def toString(): String = {
     val refs = this.refs.map { case (i, v) => "[" + i.mkString(",") + "]:" + v.name }
