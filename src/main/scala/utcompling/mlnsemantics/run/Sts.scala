@@ -356,27 +356,27 @@ object Sts {
             //new MergeSameVarPredProbabilisticTheoremProver(  //This is completely wrong. Do not merge predicates of same variable
 	      	 //new PositiveEqEliminatingProbabilisticTheoremProver(  //Replacing equalities with variable renaming is wrong. For example, if the equality is negated, or in the RHS of an implication	      
 	      	 //new GetPredicatesDeclarationsProbabilisticTheoremProver(  // 4<==Generate predicates declarations. I believe this should be moved closer to the inference
-	         
 	    		new FindEventsProbabilisticTheoremProver(   //3,4<== Find event variables and prop variables. This is important to reduce domain size. 
 	      													   //However, InferenceRuleInjectingProbabilisticTheoremProver breaks because of it. 
 	      														//Fix InferenceRuleInjectingProbabilisticTheoremProver before uncomment this
 	      														//Anyway, variables types is not supported in PSL
-
+	    														//Keeping or removing Universal quantifiers is here too. 
                     new HandleSpecialCharProbabilisticTheoremProver( // 5<== class name is misleading. Just remove the surrounding quotes if the predicate name is quoted. 
 	            		  											//This is necessary before generating inference rules, because generating inference rules searches vector space 
-	                  new InferenceRuleInjectingProbabilisticTheoremProver( // 6<== Generate Inference rules on the fly + convert the other rules to FOL then add them to the inference problem.
+                      new InferenceRuleInjectingProbabilisticTheoremProver( // 6<== Generate Inference rules on the fly + convert the other rules to FOL then add them to the inference problem.
 		            		  												// This file need significant rewriting 
 		                words => BowVectorSpace(vsFileMod, x => words(x) && allLemmas(x)),
 		                new SameLemmaHardClauseRuleWeighter(
 		                  new AwithCvecspaceWithSpellingSimilarityRuleWeighter(compositeVectorMaker)), 
 						distRules ++ paraphraseRules,
-		                new TypeConvertingPTP( // 7<== Entry point for final modifications on Boxer's representation before converting to FOL
+					   new FromEntToEqvProbabilisticTheoremProver( // 6.5<== goal =  premise ^  hypothesis. This is for STS  
+						new TypeConvertingPTP( // 7<== Entry point for final modifications on Boxer's representation before converting to FOL
 		                  new BoxerExpressionInterpreter[FolExpression] {
 		                    def interpret(x: BoxerExpression): FolExpression = {
 		                      val drt = new Boxer2DrtExpressionInterpreter().interpret( // 11<== Convert from Boxer to DRT 
 		                        //new OccurrenceMarkingBoxerExpressionInterpreterDecorator().interpret(  //empty 
 		                          //new MergingBoxerExpressionInterpreterDecorator().interpret( // 10<== //Redundant. It is merged with MergingBoxerExpressionInterpreterDecorator
-		                            new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret( // 9<== replacing Merge and Alpha with DRS + remove unnecessary sub-boxes. 
+		                            new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret( // 9<== replacing Merge and Alpha with DRS + remove unnecessary sub-boxes + remove unnecessary variables 
 		                            																	//Removing unnecessary sub-boxes is correct as long as we are NOT doing embedded propositions.
 		                              new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))); // 8<== replace all remaining special characters with _
 		                      if (!drt.isInstanceOf[DrtApplicationExpression])//for debugging, print the DRT Boxes before convert to FOL
@@ -384,11 +384,10 @@ object Sts {
 		                      drt.fol  // 12<== convert DRT to FOL. My question is, why move from Boxer to DRT to FOL. Why not directly to FOL ???
 		                    }
 		                  },
-		                      new FromEntToEqvProbabilisticTheoremProver( // 13<== goal =  premise ^  hypothesis. This is for STS  
-		                    		  //new ExistentialEliminatingProbabilisticTheoremProver( // 14<== WHat ?? More wrong code.
-		                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver( // 15<== Generate evidence from premise. 
-	                    						  									//I believe this should be moved to before convert to FOL
-		                    						  softLogicTool)))))))) // 16<== run Alchemy or PSL
+		                  	//new ExistentialEliminatingProbabilisticTheoremProver( // 14<== WHat ?? More wrong code.
+		                  		new HardAssumptionAsEvidenceProbabilisticTheoremProver( // 15<== Generate evidence from premise. 
+	                    						  									//I believe this should be moved before convert to FOL
+		                    		softLogicTool)))))))) // 16<== run Alchemy or PSL
 
           val p = ttp.prove(Tokenize(txt).mkString(" "), Tokenize(hyp).mkString(" "))
           println("Some(%.2f) [actual: %.2f, gold: %s]".format(p.get, probOfEnt2simScore(p.get), goldSim))

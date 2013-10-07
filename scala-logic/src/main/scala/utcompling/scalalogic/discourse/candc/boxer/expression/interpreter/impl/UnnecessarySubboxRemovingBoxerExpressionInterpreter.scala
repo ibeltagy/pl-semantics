@@ -56,7 +56,6 @@ class UnnecessarySubboxRemovingBoxerExpressionInterpreter extends BoxerExpressio
           resultConds.map {
             case BoxerProp(discId, indices, variable, drs) if allResultVars(variable) && indices.isEmpty =>
               (drs.refs, drs.conds, Set[BoxerVariable](variable))
-              //(drs.refs, drs.conds, Set[BoxerVariable]())
             case e =>
               (List[(List[BoxerIndex], BoxerVariable)](), List(e), Set[BoxerVariable]())
           }.unzip3
@@ -78,8 +77,6 @@ class UnnecessarySubboxRemovingBoxerExpressionInterpreter extends BoxerExpressio
         //(BoxerMerge(pred, firstCrushed, secondCrushed), firstVars | secondVars)
         //Merge the two boxes of Merge in one DRS BOX        
         (BoxerDrs(firstCrushed.refs ++ secondCrushed.refs, firstCrushed.conds ++ secondCrushed.conds), firstVars | secondVars)
-        
-
 
       case BoxerNamed(discId, indices, variable, name, typ, sense) =>
         (BoxerNamed(discId, indices, variable, name, typ, sense), Set(variable))

@@ -236,7 +236,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     sameVarList ++
     //lexical predicates
     (if (Sts.opts.duplicatePhraselAndLexicalRule) preds else notUsedPred).map(p => (
-        BoxerDrs(List(List() -> BoxerVariable("x0")) ++ List(List() -> BoxerVariable("x1")), List(BoxerPred(p._1.discId, p._1.indices, BoxerVariable("x1"), p._1.name, p._1.pos, p._1.sense))),
+        BoxerDrs(List(List() -> BoxerVariable("x0")) ++ List(List() -> BoxerVariable("x1")), List(BoxerPred(p._1.discId, p._1.indices, BoxerVariable(if(p._1.pos == "v")"x0"else "x1"), p._1.name, p._1.pos, p._1.sense))),
         p._2,
         Sts.opts.vectorspaceFormatWithPOS match {case true => p._1.name +"-" + p._1.pos; case false => p._1.name;}  
         )) 

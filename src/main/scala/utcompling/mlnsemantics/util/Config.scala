@@ -129,6 +129,12 @@ class Config(opts: Map[String, String] = Map()) {
     case Some("none") => "none"
     case _ => "mln"
   }
+  
+  //recover event variables and prop variables or not
+ val withEventProp = opts.get("-withEventProp") match {
+    case Some("false") => false;
+    case _ => true;
+  }
 
   //-------------------------------------------task
     

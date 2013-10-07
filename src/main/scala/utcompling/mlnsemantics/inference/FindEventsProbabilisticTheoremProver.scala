@@ -13,6 +13,7 @@ import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.CollectionUtil._
 import org.apache.commons.logging.LogFactory
 import support.HardWeightedExpression
+import utcompling.mlnsemantics.run.Sts
 
 class FindEventsProbabilisticTheoremProver(
   delegate: ProbabilisticTheoremProver[BoxerExpression])
@@ -32,23 +33,24 @@ class FindEventsProbabilisticTheoremProver(
 
     var newDeclarationsDetailed : Map[BoxerExpression/*representative exp*/, Seq[(String/*x,e,p,d*/, Set/*vars confirming this type*/[(String/*t,h*/, String/*varname*/)])]] = Map();
     
-    //var indvVarsAssumption:List[BoxerVariable] = List();
-    //var indvVarsGoal:List[BoxerVariable] = List();
     var conflicts:Set[(String/*t,h*/, String/*varname*/)] = Set();
     
-    var eventVars = findEventVar(newAssumption).toSet;
-    var propVars = findPropVar(newAssumption).toSet;
+    var eventVars:Set[(String, String)] = Set();
+    var propVars:Set[(String, String)] = Set();
     var TOrH = "t";
+    if (Sts.opts.withEventProp){
+	    eventVars = findEventVar(newAssumption).toSet;
+	    propVars = findPropVar(newAssumption).toSet;
+	    eventVars = eventVars ++ findEventVar(newGoal).toSet;
+	    propVars = propVars ++ findPropVar(newGoal).toSet;
+    }
     
-    eventVars = eventVars ++ findEventVar(newGoal).toSet;
-    propVars = propVars ++ findPropVar(newGoal).toSet;
-    
-    findDeclarations(newAssumption);
-    findDeclarations(newGoal);
+    findDeclarations(newAssumption);//fill in newDeclarationsDetailed and conflicts
+    findDeclarations(newGoal);//fill in newDeclarationsDetailed and conflicts
 
-    newAssumption = convertToEvntPropVar(newAssumption);
+    newAssumption = convertToEvntPropVar(newAssumption);//use conflicts, eventVars and propVars to rename variables
     TOrH = "h";
-    newGoal = convertToEvntPropVar(newGoal);
+    newGoal = convertToEvntPropVar(newGoal); //use conflicts, eventVars and propVars to rename variables
     
     def addDeclaration(exp: BoxerExpression, types: Seq[BoxerVariable], discId: String) = {
     	try{
@@ -103,6 +105,16 @@ class FindEventsProbabilisticTheoremProver(
 
     def convertToEvntPropVar(e: BoxerExpression): BoxerExpression = {
       e match {
+        case BoxerImp(discId, indices, first, second) =>{
+          val changedFirst = convertToEvntPropVar(first)
+          val changedSecond = convertToEvntPropVar(second)
+          Sts.opts.keepUniv match { 
+   	  		case true => BoxerImp(discId, indices, changedFirst, changedSecond) 
+   	  		case false => //This is just a hack to remove all Univ quantifiers
+   	  		  			//Imp is replaced with Prop because Prop will be removed in UnnecessarySubboxRemovingBoxerExpressionInterpreter
+   	  		  BoxerProp(discId, indices, BoxerVariable("v"), BoxerDrs(changedFirst.refs ++ changedSecond.refs, changedFirst.conds ++ changedSecond.conds)) 
+   	  		}
+   		  }  
         case BoxerVariable(name) => {
           if (conflicts.contains((TOrH, name)))
             BoxerVariable("x" + name.substring(1))
@@ -118,45 +130,47 @@ class FindEventsProbabilisticTheoremProver(
     }
 
     val newAssumptions = List(HardWeightedExpression(newAssumption))
-    val newConstants =
+    var newConstants =
       Map(
         "indv_h" -> Set("default_indv_h_variable"),
         "evnt_h" -> Set("default_evnt_h_variable"),
-        "prop_h" -> Set("default_prop_h_variable"),
+        "prop_h" -> Set("default_prop_h_variable")) ;
+    
+    if (Sts.opts.task == "sts")
+      newConstants = newConstants ++ Map(
         "indv_t" -> Set("default_indv_t_variable"),
         "evnt_t" -> Set("default_evnt_t_variable"),
         "prop_t" -> Set("default_prop_t_variable")) ;
+    
     val newDeclarations = newDeclarationsDetailed.flatMap(d => {
-      val declaration1 = 
-	      (d._1/*expression*/, /*args types*/d._2.map(t=>
+      List((d._1/*expression*/, /*args types*/d._2.map(t=>
 	      t._1 match
 	      {
 			case "x"=>"indv_h";
 			case "e"=>"evnt_h";
 			case "p"=>"prop_h";
 			case "d"=>"indv_h";//conflict
-	      }))
-	  val declaration2 = (d._1/*expression*/ match {
-	        case BoxerPred(discId, indices, variable, name, pos, sense) => BoxerPred("t", indices, variable, name, pos, sense) 
-	
-	        case BoxerNamed(discId, indices, variable, name, typ, sense) => BoxerNamed("t", indices, variable, name, typ, sense)
-	          
-	        case BoxerRel(discId, indices, event, variable, name, sense) => BoxerRel("t", indices, event, variable, name, sense)
-	          
-	        case BoxerCard(discId, indices, variable, num, typ) => BoxerCard("t", indices, variable, num, typ)
-	          
-	        case BoxerTimex(discId, indices, variable, timeExp) => BoxerTimex("t", indices, variable, timeExp)
-	    
-	  	  }, /*args types*/d._2.map(t=>
-	      t._1 match
-	      {
-			case "x"=>"indv_t";
-			case "e"=>"evnt_t";
-			case "p"=>"prop_t";
-			case "d"=>"indv_t";//conflict
-	      }))
-      List(declaration1, declaration2)
+	      }))) ++
+	     (if (Sts.opts.task == "sts")
+		      List((d._1/*expression*/ match {
+		        case BoxerPred(discId, indices, variable, name, pos, sense) => BoxerPred("t", indices, variable, name, pos, sense) 
+		        case BoxerNamed(discId, indices, variable, name, typ, sense) => BoxerNamed("t", indices, variable, name, typ, sense)
+		        case BoxerRel(discId, indices, event, variable, name, sense) => BoxerRel("t", indices, event, variable, name, sense)
+		        case BoxerCard(discId, indices, variable, num, typ) => BoxerCard("t", indices, variable, num, typ)
+		        case BoxerTimex(discId, indices, variable, timeExp) => BoxerTimex("t", indices, variable, timeExp)
+		  	  }, /*args types*/d._2.map(t=>
+		      t._1 match
+		      {
+				case "x"=>"indv_t";
+				case "e"=>"evnt_t";
+				case "p"=>"prop_t";
+				case "d"=>"indv_t";//conflict
+		      })))
+		  else
+		    List[(BoxerExpression, Seq[String])]()
+		  )
       })
+      
     delegate.prove(newConstants, newDeclarations, evidence, newAssumptions, newGoal)
   }
 

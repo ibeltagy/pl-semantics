@@ -376,20 +376,15 @@ class AlchemyTheoremProver(
     }*/
     val tempFile = FileUtils.mktemp(suffix = ".mln")
     FileUtils.writeUsing(tempFile) { f =>
-/*      reducedConstants.foreach {
-        case (name, tokens) => f.write("%s = {%s}\n".format(name, tokens.map(quote).mkString(",")))
-      }
-      f.write("\n")
-*/	
+   reducedConstants.foreach {
+    case (name, tokens) => f.write("%s = {%s}\n".format(name, tokens.map(quote).mkString(",")))
+   }
+   f.write("\n")
 
-	f.write("indv = {\"default_indv_const\"}\n")
-	f.write("evnt = {\"default_evnt_const\"}\n")
-	f.write("prop = {\"default_prop_const\"}\n\n")
-
-	if(hasText)
-	{
+   if(hasText)
+   {
 		declarationNames.foreach {
-        		case (pred, varTypes) => f.write("%s(%s)\n".format(pred, varTypes.mkString(",").replaceAll("_[t|h]", "")))
+        		case (pred, varTypes) => f.write("%s(%s)\n".format(pred, varTypes.mkString(",")))
       		}
 	
 		f.write("\n")
@@ -405,7 +400,7 @@ class AlchemyTheoremProver(
 	{
 		declarationNames.foreach {
 			case (pred, varTypes) if(pred.endsWith("_dh") || pred == "entailment") => 
-				f.write("%s(%s)\n".format(pred, varTypes.mkString(",").replaceAll("_[t|h]", "")))
+				f.write("%s(%s)\n".format(pred, varTypes.mkString(",")))
 			case _ => 
 		}
 
