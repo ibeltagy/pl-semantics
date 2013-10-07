@@ -70,7 +70,12 @@ class FindEventsProbabilisticTheoremProver(
     		newDeclarationsDetailed += (exp -> existingTypes);
     	}catch {
     	  case e:NoSuchElementException =>
-    	    newDeclarationsDetailed += (exp -> (types.map(t=>(t.name.charAt(0).toString, Set((discId, t.name))))))
+    	    newDeclarationsDetailed += (exp -> (types.map(t=>{
+      		  val changedType =	if (eventVars.contains((discId, t.name))) "e"
+	  				else if (propVars.contains((discId, t.name))) "p"
+	  				else "x"    	      
+    	      (changedType, Set((discId, t.name)))
+    	    })))
     	}
     }
     
@@ -127,7 +132,7 @@ class FindEventsProbabilisticTheoremProver(
 	      t._1 match
 	      {
 			case "x"=>"indv_h";
-			case "e"=>"event_h";
+			case "e"=>"evnt_h";
 			case "p"=>"prop_h";
 			case "d"=>"indv_h";//conflict
 	      }))
@@ -146,7 +151,7 @@ class FindEventsProbabilisticTheoremProver(
 	      t._1 match
 	      {
 			case "x"=>"indv_t";
-			case "e"=>"event_t";
+			case "e"=>"evnt_t";
 			case "p"=>"prop_t";
 			case "d"=>"indv_t";//conflict
 	      }))
