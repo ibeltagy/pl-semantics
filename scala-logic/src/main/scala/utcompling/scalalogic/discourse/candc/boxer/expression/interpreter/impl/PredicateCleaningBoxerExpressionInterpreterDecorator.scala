@@ -14,6 +14,8 @@ class PredicateCleaningBoxerExpressionInterpreterDecorator extends BoxerExpressi
         if (c.toShort > 127) 'X' //remove non-ascii characters 
         else c;
       })
+      if(mlnId.charAt(0).isDigit)// ID can not start with digit
+        mlnId = "_" + mlnId
       return mlnId;
     }
 

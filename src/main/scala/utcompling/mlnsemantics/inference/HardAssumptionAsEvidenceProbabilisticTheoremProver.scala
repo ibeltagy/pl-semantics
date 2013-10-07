@@ -24,7 +24,8 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 
     def go(e: FolExpression): List[FolExpression] = {
       e match {
-        case FolAndExpression(first, second) => go(first) ++ go(second)
+      	case FolExistsExpression(v, term) => go(term)
+      	case FolAndExpression(first, second) => go(first) ++ go(second)
         case FolNegatedExpression(term) => List(); //because of the prior, everything is already negated 
         case FolEqualityExpression(first, second) => List();  //do not add equality constrains in any evidences. It is already handeled by variable renaming
         case FolAllExpression(v, term) => {

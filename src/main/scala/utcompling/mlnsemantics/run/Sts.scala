@@ -356,13 +356,13 @@ object Sts {
             //new MergeSameVarPredProbabilisticTheoremProver(  //This is completely wrong. Do not merge predicates of same variable
 	      	 //new PositiveEqEliminatingProbabilisticTheoremProver(  //Replacing equalities with variable renaming is wrong. For example, if the equality is negated, or in the RHS of an implication	      
 	      	 //new GetPredicatesDeclarationsProbabilisticTheoremProver(  // 4<==Generate predicates declarations. I believe this should be moved closer to the inference
-	    		new FindEventsProbabilisticTheoremProver(   //3,4<== Find event variables and prop variables. This is important to reduce domain size. 
+             new HandleSpecialCharProbabilisticTheoremProver( // 2<== class name is misleading. Just remove the surrounding quotes if the predicate name is quoted. 
+	            		  											//This is necessary before generating inference rules, because generating inference rules searches vector space
+            	new FindEventsProbabilisticTheoremProver(   //3,4<== Find event variables and prop variables. This is important to reduce domain size. 
 	      													   //However, InferenceRuleInjectingProbabilisticTheoremProver breaks because of it. 
 	      														//Fix InferenceRuleInjectingProbabilisticTheoremProver before uncomment this
 	      														//Anyway, variables types is not supported in PSL
 	    														//Keeping or removing Universal quantifiers is here too. 
-                    new HandleSpecialCharProbabilisticTheoremProver( // 5<== class name is misleading. Just remove the surrounding quotes if the predicate name is quoted. 
-	            		  											//This is necessary before generating inference rules, because generating inference rules searches vector space 
                       new InferenceRuleInjectingProbabilisticTheoremProver( // 6<== Generate Inference rules on the fly + convert the other rules to FOL then add them to the inference problem.
 		            		  												// This file need significant rewriting 
 		                words => BowVectorSpace(vsFileMod, x => words(x) && allLemmas(x)),

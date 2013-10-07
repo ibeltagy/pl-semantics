@@ -1,6 +1,13 @@
+Inprogress:
+-reorganizing InferenceRuleInjectingProbabilisticTheoremProver with Lucene
+-simplify PSLTheoremProver and AlchemyTheoremProver. Group common code
+-HardAssumptionAsEvidenceProbabilisticTheoremProver is totally wrong
+
+parsing error in 
+Chirac also called on rich nations to raise donations to the 2 1/2-year-old U.N. Global Fund -- aimed primarily at fighting AIDS -- by $3 billion per year.	Chirac believes that rich nations should donate more to the fight against AIDS.
+
 Suggestions: 
 * Weighted universal rule to simulate generalized quantifiers.
-
 
 //==========================================
 Merging Cuong's fork with main(ToDo)
