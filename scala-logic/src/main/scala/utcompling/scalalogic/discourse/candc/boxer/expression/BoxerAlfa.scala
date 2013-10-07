@@ -6,7 +6,7 @@ case class BoxerAlfa(variable: BoxerVariable, first: BoxerExpression, second: Bo
     combinator(List(function(first), function(second)))
 
   def visitConstruct(function: BoxerExpression => BoxerExpression): BoxerExpression =
-    BoxerAlfa(function(variable).asInstanceOf[BoxerVariable], function(first), function(second))
+    BoxerAlfa(variable, function(first), function(second)) //The first parameter is not really a BoxerVariable
 
   override def toString(): String =
     "alfa(%s,%s,%s)".format(variable.name, first, second)

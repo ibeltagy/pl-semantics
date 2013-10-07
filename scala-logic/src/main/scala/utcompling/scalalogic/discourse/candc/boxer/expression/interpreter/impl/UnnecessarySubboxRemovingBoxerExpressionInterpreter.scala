@@ -42,16 +42,25 @@ class UnnecessarySubboxRemovingBoxerExpressionInterpreter extends BoxerExpressio
 
       case BoxerDrs(refs, conds) =>
         val refVars = refs.map(_._2).toSet
-        val (resultConds, resultVars) = conds.map(e => this.crush(e, propVarsInScope | refVars)).unzip
+        //val (resultConds, resultVars) = conds.map(e => this.crush(e, propVarsInScope | refVars)).unzip
+        val crushes = conds.map(e => e match {
+          case BoxerProp(discId, indices, variable, drs) => (this.crush(e, propVarsInScope | refVars), "p")
+          case _ => (this.crush(e, propVarsInScope | refVars), "o")
+        })
+        val (result, expType) = crushes.unzip;
+        val (resultConds, resultVars) = result.unzip;
+        val resultVarsType = resultVars zip expType 
+        val unprunableVars = resultVarsType.filterNot(_._2 == "p").map(_._1).flatten
         val allResultVars = resultVars.fold(Set())(_ | _)
         val (additionalRefs, crushedConds, prunedPropVars) =
           resultConds.map {
             case BoxerProp(discId, indices, variable, drs) if allResultVars(variable) && indices.isEmpty =>
               (drs.refs, drs.conds, Set[BoxerVariable](variable))
+              //(drs.refs, drs.conds, Set[BoxerVariable]())
             case e =>
               (List[(List[BoxerIndex], BoxerVariable)](), List(e), Set[BoxerVariable]())
           }.unzip3
-        val prunedPropVarsFlat = prunedPropVars.flatten.toSet
+        val prunedPropVarsFlat = prunedPropVars.flatten.toSet -- unprunableVars.toSet
         val filteredRefs = refs.filterNot(r => prunedPropVarsFlat(r._2))
         (BoxerDrs(filteredRefs ++ additionalRefs.flatten, crushedConds.flatten), allResultVars -- refVars)
 
@@ -82,8 +91,11 @@ class UnnecessarySubboxRemovingBoxerExpressionInterpreter extends BoxerExpressio
       case BoxerPred(discId, indices, variable, name, pos, sense) =>
         (BoxerPred(discId, indices, variable, name, pos, sense), Set(variable))
 
-      case BoxerProp(discId, indices, variable, drs) =>
-        (BoxerProp(discId, indices, variable, drs), Set(variable))
+      case BoxerProp(discId, indices, variable, drs) =>{
+        val (drsCrushed, drsVars) = crush(drs, propVarsInScope)//This has to be changed if we want to support
+        														//embedded propositions 
+        (BoxerProp(discId, indices, variable, drsCrushed), drsVars|Set(variable))
+      }
 
       case BoxerRel(discId, indices, event, variable, name, sense) =>
         (BoxerRel(discId, indices, event, variable, name, sense), Set(variable))
