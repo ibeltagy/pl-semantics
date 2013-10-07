@@ -355,13 +355,15 @@ object Sts {
 	     new DoMultipleParsesTheoremProver( // 2<==
             //new MergeSameVarPredProbabilisticTheoremProver(  //This is completely wrong. Do not merge predicates of same variable
 	      	 //new PositiveEqEliminatingProbabilisticTheoremProver(  //Replacing equalities with variable renaming is wrong. For example, if the equality is negated, or in the RHS of an implication	      
-                new FindEventsProbabilisticTheoremProver(   //3<== Find event variables and prop variables. This is important to reduce domain size. 
+	      	 //new GetPredicatesDeclarationsProbabilisticTheoremProver(  // 4<==Generate predicates declarations. I believe this should be moved closer to the inference
+	         
+	    		new FindEventsProbabilisticTheoremProver(   //3,4<== Find event variables and prop variables. This is important to reduce domain size. 
 	      													   //However, InferenceRuleInjectingProbabilisticTheoremProver breaks because of it. 
 	      														//Fix InferenceRuleInjectingProbabilisticTheoremProver before uncomment this
 	      														//Anyway, variables types is not supported in PSL
-	              new HandleSpecialCharProbabilisticTheoremProver( // 4<== class name is misleading. Just remove the surrounding quotes if the predicate name is quoted. 
+
+                    new HandleSpecialCharProbabilisticTheoremProver( // 5<== class name is misleading. Just remove the surrounding quotes if the predicate name is quoted. 
 	            		  											//This is necessary before generating inference rules, because generating inference rules searches vector space 
-	                new GetPredicatesDeclarationsProbabilisticTheoremProver(  // 5<==Generate predicates declarations. I believe this should be moved closer to the inference
 	                  new InferenceRuleInjectingProbabilisticTheoremProver( // 6<== Generate Inference rules on the fly + convert the other rules to FOL then add them to the inference problem.
 		            		  												// This file need significant rewriting 
 		                words => BowVectorSpace(vsFileMod, x => words(x) && allLemmas(x)),
@@ -378,7 +380,7 @@ object Sts {
 		                            																	//Removing unnecessary sub-boxes is correct as long as we are NOT doing embedded propositions.
 		                              new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))); // 8<== replace all remaining special characters with _
 		                      if (!drt.isInstanceOf[DrtApplicationExpression])//for debugging, print the DRT Boxes before convert to FOL
-		                    	  LOG.trace("\n" + drt.pretty);        
+		                    	  LOG.trace("\n" + drt.pretty);
 		                      drt.fol  // 12<== convert DRT to FOL. My question is, why move from Boxer to DRT to FOL. Why not directly to FOL ???
 		                    }
 		                  },
@@ -386,7 +388,7 @@ object Sts {
 		                    		  //new ExistentialEliminatingProbabilisticTheoremProver( // 14<== WHat ?? More wrong code.
 		                    				  new HardAssumptionAsEvidenceProbabilisticTheoremProver( // 15<== Generate evidence from premise. 
 	                    						  									//I believe this should be moved to before convert to FOL
-		                    						  softLogicTool))))))))) // 16<== run Alchemy or PSL
+		                    						  softLogicTool)))))))) // 16<== run Alchemy or PSL
 
           val p = ttp.prove(Tokenize(txt).mkString(" "), Tokenize(hyp).mkString(" "))
           println("Some(%.2f) [actual: %.2f, gold: %s]".format(p.get, probOfEnt2simScore(p.get), goldSim))

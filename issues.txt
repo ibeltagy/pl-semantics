@@ -57,6 +57,8 @@ In all cases, candc gets somehow confused when parsing special characters.
 -I mistakenly removed the code for KeepUniv. Here is it 
 https://github.com/islambeltagy/mln-semantics/blob/dbf28d782e3603855c33990ea3f9b2100755fc7f/src/main/scala/utcompling/mlnsemantics/inference/PositiveEqEliminatingProbabilisticTheoremProver.scala
 
+-crush is wrong. Try this "There are really ambitious tenors who are Italian."
+
 //==========================================DONE
 
 //==========================================
