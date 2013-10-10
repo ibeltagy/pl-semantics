@@ -29,7 +29,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
         case FolNegatedExpression(term) => List(); //because of the prior, everything is already negated 
         case FolEqualityExpression(first, second) => List();  //do not add equality constrains in any evidences. It is already handeled by variable renaming
         case FolAllExpression(v, term) => {
-          val newV = v.name.toUpperCase
+          val newV = v.name//.toUpperCase
 
           term match {
             case FolIfExpression (first, second) => go(first.replace(v, FolVariableExpression(Variable(newV)))) ++ List(renameVars(e))

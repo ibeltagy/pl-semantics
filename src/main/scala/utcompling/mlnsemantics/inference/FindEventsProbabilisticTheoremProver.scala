@@ -47,10 +47,46 @@ class FindEventsProbabilisticTheoremProver(
     
     findDeclarations(newAssumption);//fill in newDeclarationsDetailed and conflicts
     findDeclarations(newGoal);//fill in newDeclarationsDetailed and conflicts
+    
+    propagateConflicts();
 
     newAssumption = convertToEvntPropVar(newAssumption);//use conflicts, eventVars and propVars to rename variables
     TOrH = "h";
     newGoal = convertToEvntPropVar(newGoal); //use conflicts, eventVars and propVars to rename variables
+    
+
+    object AllDone extends Exception { }
+    def propagateConflicts() = 
+    {
+      var changed = true;
+      while (changed)
+      {
+    	  changed = false;
+    	  try
+    	  {
+	    	  newDeclarationsDetailed.foreach(declaration => 
+	    	  {
+	    		  var types = declaration._2
+	    	      for(i<-0 to types.length - 1)
+	    		  {
+	    			  	val conf = types.get(i)
+		    		    if (conf._1 == "e" || conf._1 == "p") 
+			    		{
+			    			  if (!(conflicts & conf._2).isEmpty)
+			    			  {
+			    				  conflicts = conflicts  ++ conf._2;
+			    				  changed = true;
+			    				  types = types.updated(i, ("c", conf._2))
+			    				  newDeclarationsDetailed += (declaration._1 -> types);
+			    				  //change entry in declarations
+			    				  throw AllDone;
+			    			  }
+			    		}
+	    		  }
+	    	  })
+    	  }catch {case AllDone =>} //simulating break;
+      }
+    }
     
     def addDeclaration(exp: BoxerExpression, types: Seq[BoxerVariable], discId: String) = {
     	try{
@@ -58,16 +94,23 @@ class FindEventsProbabilisticTheoremProver(
     		assert(existingTypes.length == types.length)
     		for(i<-0 to existingTypes.length - 1)
     		{
-    		  val changedType =	if (eventVars.contains((discId, types.get(i).name))) "e"
+    		  var changedType =	if (eventVars.contains((discId, types.get(i).name))) "e"
     			  				else if (propVars.contains((discId, types.get(i).name))) "p"
     			  				else "x"
     		  
-    		  if (existingTypes.get(i)._1 != changedType)
+    		  val existingType = existingTypes.get(i)._1
+    		  var conformings = existingTypes.get(i)._2
+
+    		  if (existingType != changedType)
     		  {
-    			  conflicts = conflicts  ++ existingTypes.get(i)._2;
+    			  conflicts = conflicts  ++ conformings
     			  conflicts += ((discId, types.get(i).name));
-    			  existingTypes = existingTypes.updated(i, ("d", Set[(String, String)]()))
+    			  changedType = "c";
+    			  //existingTypes = existingTypes.updated(i, ("c", Set[(String, String)]()))
     		  }
+    		  conformings += ((discId, types.get(i).name));
+    		  existingTypes = existingTypes.updated(i, (changedType, conformings))
+    		    
     		}
     		newDeclarationsDetailed += (exp -> existingTypes);
     	}catch {
@@ -149,7 +192,7 @@ class FindEventsProbabilisticTheoremProver(
 			case "x"=>"indv_h";
 			case "e"=>"evnt_h";
 			case "p"=>"prop_h";
-			case "d"=>"indv_h";//conflict
+			case "c"=>"indv_h";//conflict
 	      }))) ++
 	     (if (Sts.opts.task == "sts")
 		      List((d._1/*expression*/ match {
@@ -164,7 +207,7 @@ class FindEventsProbabilisticTheoremProver(
 				case "x"=>"indv_t";
 				case "e"=>"evnt_t";
 				case "p"=>"prop_t";
-				case "d"=>"indv_t";//conflict
+				case "c"=>"indv_t";//conflict
 		      })))
 		  else
 		    List[(BoxerExpression, Seq[String])]()
