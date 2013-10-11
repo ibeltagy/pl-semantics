@@ -113,15 +113,19 @@ object Sts {
   private val LOG = LogFactory.getLog(classOf[Sts])
 
   val Range(defaultRange) = "1-2000"
-    
-  //var opts:Map[String, String] = Map(); //additional parameters passed from command line
-  var opts:Config = null;
-  
+ 
   val SomeRe = """Some\((.*)\)""".r
 
-  val wordnet = new WordnetImpl()
-  
-  var pairIndex = 0;
+  //Global variables used by other classes
+  val wordnet = new WordnetImpl()  //wordnet
+  var opts:Config = null;	//command line arugments
+  var text = "";			//Text
+  var textLemma = "";		//Text lemmatized 
+  var hypothesis = "";		//Hypothesis
+  var hypothesisLemma = "";	//Hypothesis lemmatized
+  var pairIndex = 0;		//Pair index
+  var luceneDistPhrases:Lucene = null;	// Lucene repository of precompiled distributional phrases 
+  var luceneParaphrases:Lucene = null;	// Lucene repository of precompiled paraphrases
 
   def main(args: Array[String]) {
     val (newArgs, optPairs) =
@@ -196,11 +200,6 @@ object Sts {
       case Seq("run", stsFile, boxFile, lemFile, stsVsFile, goldSimFile, outputSimFile, Range(range)) =>
         run(stsFile, boxFile, lemFile, stsVsFile, goldSimFile, outputSimFile, UniversalSet(), range.toSet)
 
-      //      case Seq("full", stsFile, fullVsFile) =>
-      //        val sentences = readLines(stsFile).flatMap(_.split("\t")).toVector
-      //        val lemmatized = new CncLemmatizeCorpusMapper().parseToLemmas(sentences)
-      //        val allLemmas = lemmatized.flatten.flatMap(_.map(_._2)).toSet
-      //        run(stsFile, fullVsFile, _ => true)
     }
     
     def run(stsFile: String, boxFile: String, lemFile: String, vsFile: String, goldSimFile: String, outputSimFile: String, allLemmas: String => Boolean, includedPairs: Int => Boolean) {
@@ -224,17 +223,23 @@ object Sts {
 				p * 5;
 			else p;
 		}
-		// Index phrases into Lucene repository
-		val luceneForPhrases = new Lucene(opts.phrasesFile )
+		// Index distributional phrases into Lucene repository
+		luceneDistPhrases = new Lucene(opts.phrasesFile )
 	
 		// Index paraphrase rules into Lucene repository
-		val lucene = new Lucene (opts.rulesFile)
+		luceneParaphrases = new Lucene (opts.rulesFile)
 	
 		def depParser = DepParser.load();
+		
 		val results =
 	    for ((((((txt, hyp), boxPair), goldSim), (lemTxt, lemHyp)), i) <- (pairs zipSafe boxPairs zipSafe goldSims zipSafe lemPairs).zipWithIndex if includedPairs(i + 1)) yield {
 	
 			Sts.pairIndex = i+1;
+			Sts.text = txt;
+			Sts.hypothesis = hyp;
+			Sts.textLemma = lemTxt;
+			Sts.hypothesisLemma = lemHyp;
+			
 			println("=============\n  Pair %s\n=============".format(i + 1))
 			println(txt)
 			println(hyp)
@@ -252,65 +257,10 @@ object Sts {
 				case "none" => new NoneTheoremProver()
 				case "mln" => AlchemyTheoremProver.findBinary(wordnet);
 			}		
-			// Search phrases in Text-Hypothesis pair
-			val ignoredTokens = List("an", "the", "be", "is", "are", "to", "in", "on", "at", "of", "for")
 			
 			//=========================The following code should be moved somewhere else. It is related to Lucene========================== 
-			// Search phrases in Text
-			val txtQuery = SimpleTokenizer(txt + " " + lemTxt)
-				.filter(token => token.length > 1 && !ignoredTokens.contains(token))
-				.distinct
-				.mkString(" ")
-			
-			val txtPhrases = luceneForPhrases.read(txtQuery)
-				.filter { phrase =>
 
-				val Array(id, content) = phrase.split("\t")
-				val str = " " + content + " "
-	
-				val simpleTxt = (" " + SimpleTokenizer(txt).mkString(" ") + " ")
-				val simpleLemTxt = (" " + SimpleTokenizer(lemTxt).mkString(" ") + " ")
-	
-				val cond = simpleTxt.contains(str) || simpleLemTxt.contains(str)
-	
-				val extraStr = " some" + str
-				val extraCond = !simpleTxt.contains(extraStr) && !simpleLemTxt.contains(extraStr)
-	
-				cond && extraCond
-			}.toList
-
-			// Search phrases in Hypothesis
-			val hypQuery = SimpleTokenizer(hyp + " " + lemHyp)
-				.filter(token => token.length > 1 && !ignoredTokens.contains(token))
-				.distinct
-				.mkString(" ")
-			
-			val hypPhrases = luceneForPhrases.read(hypQuery)
-				.filter { phrase =>
-		
-					val Array(id, content) = phrase.split("\t")
-					val str = " " + content + " "
-		
-					val simpleHyp =  (" " + SimpleTokenizer(hyp).mkString(" ") + " ")
-					val simpleLemHyp = (" " + SimpleTokenizer(lemHyp).mkString(" ") + " ")
-		
-					val cond = simpleHyp.contains(str) || simpleLemHyp.contains(str)
-		
-					val extraStr = " some" + str
-					val extraCond = !simpleHyp.contains(extraStr) && !simpleLemHyp.contains(extraStr)
-		
-					cond && extraCond
-				}.toList
-
-			// Compute similaritis between phrases and generate corresponding rules in the following format: 
-			// <id> TAB <text_phrase> TAB <hypo_phrase> TAB <sim_score>
-			val distRules = if(opts.phraseVecsFile != "")
-								DistRules(opts.phraseVecsFile, txtPhrases, hypPhrases);
-							else List[String]();
-         LOG.trace ("Distributional rules: ");
-         distRules.foreach(rule => LOG.trace(rule))
-
-	
+			val distRules = DistRules();
 
 			// Search rules in Text-Hypothesis pair
 			val start = System.nanoTime
@@ -319,7 +269,7 @@ object Sts {
 				.distinct
 				.mkString(" ")
 		
-			val returnedRules = lucene.read(query)
+			val returnedRules = luceneParaphrases.read(query)
 			val end = System.nanoTime
 			LOG.debug("Searching time: " + (end - start) / 1e9 + " s")       
 			LOG.debug("# returned rules: " + returnedRules.size)

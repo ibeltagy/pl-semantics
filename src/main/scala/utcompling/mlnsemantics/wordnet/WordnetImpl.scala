@@ -59,5 +59,36 @@ class WordnetImpl(dict: IDictionary) extends Wordnet {
         case _ => thisLevel.flatMap(allHyponyms(_, searchLevels - 1))
       })
   }
+  
+  def getSynonyms(name: String, pos: String): Set[String] =
+    (for (
+      p <- getPos(pos);
+      s <- this.synsets(name, p);
+      w <- s.getWords
+    ) yield w.getLemma).toSet + name -- Set("POS", "NEG") //TODO: REMOVE THE "+ name".  WE ONLY WANT NEED THIS FOR WHEN THE WORD ISN'T IN WORDNET.
+
+  def getHypernyms(name: String, pos: String): Set[String] =
+    (for (
+      p <- getPos(pos);
+      s <- this.synsets(name, p);
+      h <- this.allHypernyms(s, 20);
+      w <- h.getWords
+    ) yield w.getLemma).toSet
+
+  def getHyponyms(name: String, pos: String): Set[String] =
+    (for (
+      p <- getPos(pos);
+      s <- this.synsets(name, p);
+      h <- this.allHyponyms(s, 20);
+      w <- h.getWords
+    ) yield w.getLemma).toSet
+
+  def getPos(s: String) =
+    s match {
+      case "n" => List(POS.NOUN)
+      case "v" => List(POS.VERB)
+      case "a" => List(POS.ADJECTIVE)
+      case _ => Nil
+    }
 
 }

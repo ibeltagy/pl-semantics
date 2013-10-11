@@ -724,36 +724,4 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
       case VariableRe("e") => "e"
       case _ => "x"
     }
-
-  private def getSynonyms(name: String, pos: String): Set[String] =
-    (for (
-      p <- getPos(pos);
-      s <- wordnet.synsets(name, p);
-      w <- s.getWords
-    ) yield w.getLemma).toSet + name -- Set("POS", "NEG") //TODO: REMOVE THE "+ name".  WE ONLY WANT NEED THIS FOR WHEN THE WORD ISN'T IN WORDNET.
-
-  private def getHypernyms(name: String, pos: String): Set[String] =
-    (for (
-      p <- getPos(pos);
-      s <- wordnet.synsets(name, p);
-      h <- wordnet.allHypernyms(s, 20);
-      w <- h.getWords
-    ) yield w.getLemma).toSet
-
-  private def getHyponyms(name: String, pos: String): Set[String] =
-    (for (
-      p <- getPos(pos);
-      s <- wordnet.synsets(name, p);
-      h <- wordnet.allHyponyms(s, 20);
-      w <- h.getWords
-    ) yield w.getLemma).toSet
-
-  private def getPos(s: String) =
-    s match {
-      case "n" => List(POS.NOUN)
-      case "v" => List(POS.VERB)
-      case "a" => List(POS.ADJECTIVE)
-      case _ => Nil
-    }
-
 }

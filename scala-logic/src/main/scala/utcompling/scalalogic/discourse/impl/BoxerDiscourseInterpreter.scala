@@ -35,8 +35,8 @@ class BoxerDiscourseInterpreter[T](
 
     val candcArgs = Map[String, String](
       "--candc-printer" -> "boxer",	
-      "--candc-parser-kbest" -> kbest.toString())
-//    "--candc-int-betas" -> "0.00075 0.0003 0.0001 0.00005 0.00001")
+      "--candc-parser-kbest" -> kbest.toString(),
+      "--candc-int-betas" -> "0.00075 0.0003 0.0001 0.00005 0.00001")
     val candcOut = this.candc.batchParseMultisentence(inputs, candcArgs.toMap, Some(newDiscourseIds), Some(if (question) "questions" else "boxer"), verbose = verbose)
     //println(candcOut)
     
