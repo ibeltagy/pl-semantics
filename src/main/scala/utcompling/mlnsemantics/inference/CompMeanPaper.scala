@@ -100,7 +100,6 @@ object CompMeanPaper {
               new RankingRuleWeighter(
                 new AwithCtxCwithCtxVecspaceRuleWeighter(
                   new SimpleCompositeVectorMaker()))),
-	    List[String](),
         new TypeConvertingPTP(
           new BoxerExpressionInterpreter[FolExpression] {
             def interpret(x: BoxerExpression): FolExpression =

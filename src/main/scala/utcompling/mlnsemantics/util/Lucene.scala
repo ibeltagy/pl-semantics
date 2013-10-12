@@ -11,6 +11,7 @@ import org.apache.lucene.analysis.core.SimpleAnalyzer
 import java.io.File
 import org.apache.commons.logging.LogFactory
 import scala.io.Source
+import utcompling.mlnsemantics.datagen.SimpleTokenizer
 
 /**
  * A companion object handles reading and writing to Lucene.
@@ -90,6 +91,7 @@ class Lucene(rulesFileName: String) {
 
   /**
    * Read paraphrase rules satisfying the query from Lucene database
+   * This function returns entries exactly matching the query string
    */
   def read(query: String): Seq[String] = {
     val reader = DirectoryReader.open(index)
@@ -99,6 +101,23 @@ class Lucene(rulesFileName: String) {
     searcher.search(parser.parse(query), collector)
     collector.topDocs().scoreDocs.toSeq.map(_.doc).map(searcher.doc(_).get(fieldName))
   }
+  
+  
+  val ignoredTokens = List("an", "the", "be", "is", "are", "to", "in", "on", "at", "of", "for")
+  //This function is like "read(query)" but it cleanups the query string before querying Lucene 
+  def query(q: String): Seq[String] = 
+  {
+	val start = System.nanoTime    
+	val query = SimpleTokenizer(q)
+	.filter(token => token.length > 1 && !ignoredTokens.contains(token))
+	.distinct
+	.mkString(" ")
+	val r = this.read(q);
+	val end = System.nanoTime
+	LOG.debug("Searching time: " + (end - start) / 1e9 + " s")       
+	LOG.debug("# returned rules: " + r.size)	
+	r;
+  }  
 
   /**
    * Read paraphrase rules satisfying the phrase query from Lucene database

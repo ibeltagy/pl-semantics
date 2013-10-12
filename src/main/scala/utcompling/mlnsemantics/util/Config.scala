@@ -83,11 +83,12 @@ class Config(opts: Map[String, String] = Map()) {
     case _ => false;
   }
    
-  //generate distributional phrasel inference rules for phrases including ones with agent and patient relations= 
-  val withPatientAgentInferenceRules = opts.get("-peInf") match {
-    case Some(vst) => vst.toBoolean;
-    case _ => true;
-  }
+  //generate distributional phrasel inference rules for phrases including ones with agent and patient relations=
+  //Not used anymore. Always include agent/patient rules
+  //val withPatientAgentInferenceRules = opts.get("-peInf") match {
+  //  case Some(vst) => vst.toBoolean;
+  //  case _ => true;
+  //}
 
   //Generate phrasal and lexical rules for the same predicate.  
   val duplicatePhraselAndLexicalRule = opts.get("-dupPhraseLexical") match {
