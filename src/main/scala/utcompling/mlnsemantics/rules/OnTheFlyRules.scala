@@ -43,9 +43,9 @@ class OnTheFlyRules extends Rules {
       // Use this map to check variable types in inference rules
       var predTypeMap = Map[String, String]()
       for (assumPredsAndContext <- assumPredsAndContexts)
-        predTypeMap += ((assumPredsAndContext._1.name ++ "_t") -> variableType(assumPredsAndContext._1))
+        predTypeMap += ((assumPredsAndContext._1.name) -> variableType(assumPredsAndContext._1))
       for (goalPredsAndContext <- goalPredsAndContexts)
-        predTypeMap += ((goalPredsAndContext._1.name ++ "_h") -> variableType(goalPredsAndContext._1))
+        predTypeMap += ((goalPredsAndContext._1.name) -> variableType(goalPredsAndContext._1))
 
       //create rules
       var rules = List[(BoxerDrs, BoxerDrs, Double)]() ;
@@ -67,14 +67,10 @@ class OnTheFlyRules extends Rules {
 							//no need to check for the variable anymore before all of them are INDV now. 
 							//assumPred._1.variable.name.charAt(0) == goalPred._1.variable.name.charAt(0))
 					  {
-						 val rw = ruleWeighter.weightForRules(assumEntry._3, assumEntry._2, Seq((goalEntry._3 , goalEntry._2)).toMap, vectorspace);
+						val rw = ruleWeighter.weightForRules(assumEntry._3, assumEntry._2, Seq((goalEntry._3 , goalEntry._2)).toMap, vectorspace);
 	
-						 val assumeVarTypeMap = 
-							if(true) assumEntry._1.getPredicates().map(pred => (pred.variable.name, predTypeMap(pred.name ++ "_t"))).toMap
-							else assumEntry._1.getPredicates().map(pred => (pred.variable.name, predTypeMap(pred.name ++ "_h"))).toMap
-						val goalVarTypeMap = 
-							if(true) goalEntry._1.getPredicates().map(pred => (pred.variable.name, predTypeMap(pred.name ++ "_h"))).toMap
-							else goalEntry._1.getPredicates().map(pred => (pred.variable.name, predTypeMap(pred.name ++ "_t"))).toMap
+						val assumeVarTypeMap = assumEntry._1.getPredicates().map(pred => (pred.variable.name, predTypeMap(pred.name))).toMap
+						val goalVarTypeMap = goalEntry._1.getPredicates().map(pred => (pred.variable.name, predTypeMap(pred.name))).toMap
 					
 					    if (rw.head._2.get <=0 || !checkCompatibleType(assumeVarTypeMap, goalVarTypeMap))
 					    	return List();

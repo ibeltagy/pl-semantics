@@ -75,6 +75,6 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 		case _ => (precompiledRules ++  onthefulyRules).flatMap(r=>Rules.createWeightedExpression(r._1, r._2, r._3));
 	 } 
   
-    delegate.prove(constants, declarations, evidence, (assumptions ++ rules).toSet.toList, goal)
+    delegate.prove(constants, declarations, evidence, assumptions ++ (rules.toSet.toList), goal)
   }
 }

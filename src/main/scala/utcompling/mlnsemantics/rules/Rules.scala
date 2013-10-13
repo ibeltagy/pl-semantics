@@ -28,7 +28,7 @@ object Rules {
       val assumeRelsList = text.getRelations
       val goalRelsList = hypothesis.getRelations
 
-      val folRules = rules.map { rule =>
+      val folRules = rules.flatMap { rule =>
         val Array(id, left, right, score) = rule.split("\t")
 
         val leftTokens = left.split(" ").flatMap(token => Array(token, Lemmatize(token, "")))
@@ -142,10 +142,15 @@ object Rules {
         //val leftFOL = changedMatchAssumPreds ++ changedMatchAssumRels
         //val rightFOL = changedMatchGoalPreds ++ changedMatchGoalRels
 
-        val lhsDrs = BoxerDrs((matchAssumePredVars ++ matchGoalPredVars).map(v => (List() -> BoxerVariable(v))).toList, leftFOL.toList);
-        val rhsDrs = BoxerDrs((matchAssumePredVars ++ matchGoalPredVars).map(v => (List() -> BoxerVariable(v))).toList, rightFOL.toList);
+        if (leftFOL.isEmpty || rightFOL.isEmpty)
+          None
+        else {
 
-        (lhsDrs, rhsDrs, score.toDouble)
+          val lhsDrs = BoxerDrs((matchAssumePredVars ++ matchGoalPredVars).map(v => (List() -> BoxerVariable(v))).toList, leftFOL.toList);
+          val rhsDrs = BoxerDrs((matchAssumePredVars ++ matchGoalPredVars).map(v => (List() -> BoxerVariable(v))).toList, rightFOL.toList);
+          
+          List((lhsDrs, rhsDrs, score.toDouble))
+        }
       }
       return folRules;
     }
@@ -160,18 +165,17 @@ object Rules {
       }
     }
 
-  def createWeightedExpression(leftFOL: BoxerDrs, rightFOL: BoxerDrs, score: Double): List[WeightedExpression[BoxerExpression]] = 
-  {
-	 List(createWeightedExpression(leftFOL, rightFOL, "h", score)) ++ 
-	 (
-	     if(Sts.opts.task == "sts")
-	    	 List(createWeightedExpression(rightFOL, leftFOL, "t", score))
-		 else List()
-	 )
-  }
+  def createWeightedExpression(leftFOL: BoxerDrs, rightFOL: BoxerDrs, score: Double): List[WeightedExpression[BoxerExpression]] =
+    {
+      List(createWeightedExpression(leftFOL, rightFOL, "h", score)) ++
+        (
+          if (Sts.opts.task == "sts")
+            List(createWeightedExpression(rightFOL, leftFOL, "t", score))
+          else List())
+    }
 
   private def createWeightedExpression(leftFOL: BoxerDrs, rightFOL: BoxerDrs, discId: String, score: Double): WeightedExpression[BoxerExpression] =
-  {
+    {
       val changedLHS = changeExpDirection(leftFOL);
       var rhs = rightFOL
       rhs = BoxerDrs(List(), rhs.conds);
@@ -179,5 +183,5 @@ object Rules {
       lhs = BoxerDrs((lhs.refs ++ rhs.refs).toSet.toList, lhs.conds);
       val unweightedRule = BoxerImp(discId, List(), lhs, rhs)
       return SoftWeightedExpression(unweightedRule, score)
-  }
+    }
 }

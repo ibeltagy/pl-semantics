@@ -103,7 +103,7 @@ class Lucene(rulesFileName: String) {
   }
   
   
-  val ignoredTokens = List("an", "the", "be", "is", "are", "to", "in", "on", "at", "of", "for")
+  val ignoredTokens = List("a", "an", "the", "be", "is", "are", "to", "in", "on", "at", "of", "for")
   //This function is like "read(query)" but it cleanups the query string before querying Lucene 
   def query(q: String): Seq[String] = 
   {
@@ -112,7 +112,7 @@ class Lucene(rulesFileName: String) {
 	.filter(token => token.length > 1 && !ignoredTokens.contains(token))
 	.distinct
 	.mkString(" ")
-	val r = this.read(q);
+	val r = this.read(query);
 	val end = System.nanoTime
 	LOG.debug("Searching time: " + (end - start) / 1e9 + " s")       
 	LOG.debug("# returned rules: " + r.size)	
