@@ -169,7 +169,9 @@ abstract class LogicParser[T] {
                             case `escape` | `end` =>
                                 token += c
                             case _ =>
-                                throw new UnexpectedTokenException(getCurrentIndex + token.length, Some(c.toString), List(end.toString, escape.toString), Some("Escape character not followed by end quote or escape."))
+                                token += escape;
+                                token += c;
+                                //throw new UnexpectedTokenException(getCurrentIndex + token.length, Some(c.toString), List(end.toString, escape.toString), Some("Escape character not followed by end quote or escape."))
                         }
                     } else
                         token += c
