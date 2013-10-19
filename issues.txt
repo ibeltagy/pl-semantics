@@ -1,11 +1,11 @@
+SUggestion: 
+-STS is running RTE twice then average. Do not do both of them in one big MLN
+
 Inprogress:
--reorganizing InferenceRuleInjectingProbabilisticTheoremProver with Lucene
 -simplify PSLTheoremProver and AlchemyTheoremProver. Group common code
 -HardAssumptionAsEvidenceProbabilisticTheoremProver is totally wrong
 
 how to parse multi-sentences T or H
-parsing error in 
-Chirac also called on rich nations to raise donations to the 2 1/2-year-old U.N. Global Fund -- aimed primarily at fighting AIDS -- by $3 billion per year.	Chirac believes that rich nations should donate more to the fight against AIDS.
 
 Suggestions: 
 * Weighted universal rule to simulate generalized quantifiers.
@@ -15,10 +15,11 @@ Merging Cuong's fork with main(ToDo)
 ------------------------------
 * Code of running condor is replaced with my scripts for condor. What is still missing is organizging the output and running the scripts on it. 
 -Different sets of scripts are required for different data sets, STS, RTE, and Baroni
-* Changes in GetPredicatesDeclarationsProbabilisticTheoremProver.scala, HardAssumptionAsEvidenceProbabilisticTheoremProver.scala, InferenceRuleInjectingProbabilisticTheoremProver.scala, AlchemyTheoremProver.scala related to predicates naming _dh, _dt are reverted. Still, it is necessary to declare all predicates as open-world because now evidence predicates are close-world. 
+
+* It is necessary to declare all predicates as open-world because now evidence predicates are close-world. 
+
 * In AlchemyTheoremProver.scala, there is a function to generate rules based on wordnet, it is commented for now but it should not
-* Changes in MergeSameVarPredProbabilisticTheoremProver.scala are reverted. I need to reimplmenet them by, 1)commenting MergeSameVarPredProbabilisticTheoremProver in STS. 2)replace BoxerName with BoxerPred, make sure this applied to Text, Hypothesis and Inference rules as well
-* I have no idea what this file does ExistentialEliminatingProbabilisticTheoremProver.scala
+
 * Run the system on Torrento's dataset with their phrases.
 //==========================================
 
@@ -52,22 +53,11 @@ In all cases, candc gets somehow confused when parsing special characters.
 
 -Why Coung is doing all this ReplaceAll in AlchmeyThearomProver ?
 
--Check the pipeline. Why am I remvoing the existentials ?
-
 -When parsing, WH questions are removed. This can be fixed here: BoxerExpressionParser
 
 -Choung removes "theme" predicates in AlchmeyThearomProver. I have undone that. I am trying to make sure that anything that applies to both MLN and PSL be in a common place.
 
--Predicates declarations and types has a lot of redundunt code and unused code. The whole thing needs re-coding.
-
--Finding variables types is disabled because the generation of inference rules does not respect them. Enabling it again requires careful coding for the inference rules generation. In all cases, PSL does not have variables types. 
-
--I mistakenly removed the code for KeepUniv. Here is it 
-https://github.com/islambeltagy/mln-semantics/blob/dbf28d782e3603855c33990ea3f9b2100755fc7f/src/main/scala/utcompling/mlnsemantics/inference/PositiveEqEliminatingProbabilisticTheoremProver.scala
-
 -When supporting embeded proposition, UnnecessarySubboxRemovingBoxerExpressionInterpreter has to change
-
-However, this should change if you want to suppor
 
 -Locking in Lucene will prevent parallalization in condor. 
 

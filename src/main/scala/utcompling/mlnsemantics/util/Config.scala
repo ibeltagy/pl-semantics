@@ -118,6 +118,12 @@ class Config(opts: Map[String, String] = Map()) {
     case _ => "box";
   }
 
+  //do all the changes required to fix the problems resulting from the Domain Closure Assumption
+  val fixDCA = opts.get("-fixDCA") match {
+    case Some("true") => true;
+    case _ => false;
+  }
+  
   //keep universal quantifiers or replace them with existentials
   val keepUniv = opts.get("-keepUniv") match {
     case Some("false") => false;
@@ -147,8 +153,8 @@ class Config(opts: Map[String, String] = Map()) {
 
   //variable binding (only on sts with mln)
   val varBind = opts.get("-varBind") match {
-    case Some("true") => Some(true);
-    case _ => Some(false);
+    case Some("true") => true;
+    case _ => false;
   }
 
   //Chopping levels: type of mini-clauses (only on sts with mln)

@@ -59,7 +59,7 @@ class PSLTheoremProver(
     goal: FolExpression): Option[Double] = {
 
     if (varBind == None)
-    	varBind  = Sts.opts.varBind
+    	varBind  = Some(Sts.opts.varBind)
     else varBind  = Some(false); //second call
        
     declarations.foreach { dec =>

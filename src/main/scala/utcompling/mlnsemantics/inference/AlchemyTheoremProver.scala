@@ -36,22 +36,7 @@ class AlchemyTheoremProver(
 
   private val LOG = LogFactory.getLog(classOf[AlchemyTheoremProver])
 
-  //private val entailedConst_h = ("entail" -> Set("ent1", "ent2"))
-  //private var entailedDec_h = FolVariableExpression(Variable("entailment_h")) -> Seq()
-  private var entailmentConsequent_h:FolExpression = FolVariableExpression(Variable("entailment_h")); 
-  //private var ResultsRE_h = """entailment_h\("entailed"\) (\d*\.\d*)""".r
-  
-  
-  //private var entailedDec_t = FolVariableExpression(Variable("entailment_t")) -> Seq()
-  private var entailmentConsequent_t:FolExpression = FolVariableExpression(Variable("entailment_t"));
-  //private var ResultsRE_t = """entailment_t\("entailed"\) (\d*\.\d*)""".r
-  
-  private val entailedConst = ("ent" -> Set("ent_h", "ent_t"))
-
-  private var entailmentConsequent:FolExpression = FolAtom(Variable("entailment_h"), Variable("ent_h"));
-  
-  private var varBind: Option[Boolean] = None;
-   
+  private var entPred:FolExpression = null;
   override def prove(
     constants: Map[String, Set[String]],
     declarations: Map[FolExpression, Seq[String]],
@@ -59,10 +44,10 @@ class AlchemyTheoremProver(
     assumptions: List[WeightedFolEx],
     goal: FolExpression): Option[Double] = {
 
-    if (varBind == None)
-    	varBind  = Sts.opts.varBind;
+    /*if (varBind == None)
+    	varBind  = Some(Sts.opts.varBind);
     else varBind  = Some(false); //second call
-    
+    */
     declarations.foreach { dec =>
       dec match {
         case (FolAtom(Variable(pred), args @ _*), argTypes) =>
@@ -71,55 +56,9 @@ class AlchemyTheoremProver(
         case d => throw new RuntimeException("Only atoms may be declared.  '%s' is not an atom.".format(d))
       }
     }
-    
-    
-  // This block to add all variables to the entailment clause. I may need it back one day
-    val variables: Set[Variable] = findAllVars(goal);
-    //var queryParam : String = """entailment\("entailed",""";
-    var typeParam_h : List[String]= List();
-    var typeParam_t : List[String]= List();
-        
-    if(!varBind.get){
-	    typeParam_h = List("ent");
-	    typeParam_t = List("ent");
-	    
-	    entailmentConsequent_t = FolAtom(Variable("entailment_t"), Variable("ent_t")); 
-	    entailmentConsequent_h = FolAtom(Variable("entailment_h"), Variable("ent_h"));
-    }
-    else
-    {
-	    for (v <- variables )
-	    {
-	    	  //println(v+"\n")
-	    	  //queryParam += """""""+v.name.toUpperCase() + """",""";
-	     	  
-	     	  v.name.charAt(0) match {
-	     	    case 't' => entailmentConsequent_t = FolApplicationExpression(entailmentConsequent_t, FolVariableExpression(Variable(v.name))); 
-	     	    case 'h' => entailmentConsequent_h = FolApplicationExpression(entailmentConsequent_h, FolVariableExpression(Variable(v.name)));
-	     	    case _ => throw new RuntimeException ("unsupported type");
-	     	  }
-	     	  
-	     	  v.name.substring(0, 2) match {
-	     	    case "tx" => typeParam_t ::= "indv_t";
-	     	    case "te" => typeParam_t ::= "evnt_t";
-	     	    case "tp" => typeParam_t ::= "prop_t";
-	     	    case "hx" => typeParam_h ::= "indv_h";
-	     	    case "he" => typeParam_h ::= "evnt_h";
-	     	    case "hp" => typeParam_h ::= "prop_h";
-	     	    case _ => throw new RuntimeException ("unsupported type");
-	     	  } 
-	    }
-    }
-    //queryParam = queryParam.substring(0, queryParam.length()-1)+"""\) (\d*\.\d*)""";
-    //ResultsRE = queryParam.r;
-    typeParam_h = typeParam_h.reverse;
-    typeParam_t = typeParam_t.reverse;
-    val entailedDec_h = FolVariableExpression(Variable("entailment_h")) -> typeParam_h;
-    val entailedDec_t = FolVariableExpression(Variable("entailment_t")) -> typeParam_t;
- 
-    
+
     val declarationNames =
-      (declarations + entailedDec_h + entailedDec_t).mapKeys {
+      declarations.mapKeys {
         case FolAtom(Variable(pred), _*) => pred
         case FolVariableExpression(Variable(pred)) => pred
       }
@@ -140,7 +79,7 @@ class AlchemyTheoremProver(
 	//if(samePredRule != "") predsInRules :+= samePredRule
 
     val mlnFile = makeMlnFile(
-      constants + entailedConst,
+      constants,
       declarationNames,
       assumptions,
       evidence,
@@ -176,7 +115,10 @@ class AlchemyTheoremProver(
     //val args = List( "-q", declarationNames.keys.mkString(","))
     
     //all evd are in the mln file
-    val args = List( "-q", "entailment_h,entailment_t")
+    val args = Sts.opts.task match {
+      case "sts" => List("-q", "entailment_h,entailment_t")
+      case "rte" => List("-q", "entailment_h")
+    }
     try 
     {
          //old call for alchemy.
@@ -243,12 +185,14 @@ class AlchemyTheoremProver(
     {
     	case e: Exception =>{
     	  System.err.println (e);
-    	  if (varBind.get) //try again 
+    	  return None;
+    	 /*if (varBind.get) //try again 
     	  {
-			 println("backoff to dependency parse")
-    	    return this.prove(constants, declarations, evidence, assumptions, goal);
+			 //println("backoff to dependency parse")
+    	    //return this.prove(constants, declarations, evidence, assumptions, goal);
+    		  return None
     	  }
-    	  else return Some(-1.0);
+    	  else return Some(-1.0);*/
     	}   				 
     }
     
@@ -542,7 +486,7 @@ class AlchemyTheoremProver(
 			    	  if ((nonRelationExpr._2 & relationExpr._2).size != 0)
 			    	  {
 			    	      if (doPrint)
-			    	    	  f.write(entWeight + "  " + convert((nonRelationExpr._1 & relationExpr._1) -> entailmentConsequent, allGoalVariables) + "\n");
+			    	    	  f.write(entWeight + "  " + convert((nonRelationExpr._1 & relationExpr._1) -> entPred, allGoalVariables) + "\n");
 			    		  printedAtLeastOnce = true;
 			    		  n = n +1 ;
 			    	  }
@@ -550,7 +494,7 @@ class AlchemyTheoremProver(
 			      if (!printedAtLeastOnce)
 			      {
 			        if (doPrint)
-			        	f.write(entWeight + "  " + convert(nonRelationExpr._1 -> entailmentConsequent, allGoalVariables) + "\n");
+			        	f.write(entWeight + "  " + convert(nonRelationExpr._1 -> entPred, allGoalVariables) + "\n");
 			        n = n +1 ;
 			      }
 		      }
@@ -568,7 +512,7 @@ class AlchemyTheoremProver(
 		        args1.foreach(arg1 =>
 		            args2.foreach(arg2 => {
 			              if (doPrint)
-			            	  f.write(entWeight + "  " + convert(((arg1._1 & rel._1 & arg2._1) -> entailmentConsequent), allGoalVariables) + "\n");
+			            	  f.write(entWeight + "  " + convert(((arg1._1 & rel._1 & arg2._1) -> entPred), allGoalVariables) + "\n");
 			              n = n + 1;
 			          }
 		            ) 
@@ -576,7 +520,7 @@ class AlchemyTheoremProver(
 		        if (args1.size == 0 || args2.size == 0){
 		        	(args1 ++ args2).foreach(arg => {
 			              if (doPrint)
-			            	  f.write(entWeight + "  " + convert(((arg._1 & rel._1) -> entailmentConsequent), allGoalVariables) + "\n");
+			            	  f.write(entWeight + "  " + convert(((arg._1 & rel._1) -> entPred), allGoalVariables) + "\n");
 			              n = n + 1;
 			          }
 		            ) 
@@ -584,7 +528,7 @@ class AlchemyTheoremProver(
 		    })
 		    notUsedNonRelations.foreach(pred => {
 		    	if (doPrint)
-		    		f.write(entWeight + "  " + convert(pred._1 -> entailmentConsequent, allGoalVariables) + "\n");
+		    		f.write(entWeight + "  " + convert(pred._1 -> entPred, allGoalVariables) + "\n");
 			    n = n + 1;
 		    })
                  ////////////////////// man(x) ^ agent(x, y) ^ drive(y)            
@@ -610,14 +554,14 @@ class AlchemyTheoremProver(
 		      }
 		      if (foundOne)
 		        if (doPrint)
-		    	  f.write(entWeight + "  " + convert(oneLine -> entailmentConsequent, allGoalVariables) + "\n");
+		    	  f.write(entWeight + "  " + convert(oneLine -> entPred, allGoalVariables) + "\n");
 	      }
 	      
 	      //write imp expressions 
 	      for(impExpr <- impMap )
 	      {
 	    	  if (doPrint)
-	    		  f.write(entWeight + "  " + convert(impExpr._1 -> entailmentConsequent, allGoalVariables) + "\n");
+	    		  f.write(entWeight + "  " + convert(impExpr._1 -> entPred, allGoalVariables) + "\n");
 	      }
 	      return n;
 	  }
@@ -660,13 +604,13 @@ class AlchemyTheoremProver(
 		        extractPartsOfExpression(first);
 		        var n_t = writeMiniClauses (false);
 		        mapNtoW(n_t)
-		        entailmentConsequent = entailmentConsequent_t;
+		        entPred = SetVarBindPTP.entPred_t;
 		        writeMiniClauses(true)
 		        
 		        extractPartsOfExpression(second);
 		        var n_h = writeMiniClauses (false);
 		        mapNtoW(n_h)
-		        entailmentConsequent = entailmentConsequent_h;
+		        entPred = SetVarBindPTP.entPred_h;
 		        writeMiniClauses(true)
             
 		      }
@@ -678,9 +622,10 @@ class AlchemyTheoremProver(
       
       Sts.opts.task match {
       	case "rte" => 
-				  var queryString = convert(universalifyGoalFormula(goal -> entailmentConsequent))
+      	  		  entPred = SetVarBindPTP.entPred_h;
+				  var queryString = convert(universalifyGoalFormula(goal -> entPred))
 						  //.replaceAll("\"", "")
-						  .replaceAll("""\(entailed\)""", "(\"entailed\")")
+						  //.replaceAll("""\(entailed\)""", "(\"entailed\")")
 						  // remove FolEqualityExpression
 						  //.replaceAll("""\^[^\(]+\([^=\(]*=[^>\)]+\)|\([^=\(\)]+=[^>\^\)]+\)[^\^\)]\^""", "")
 
@@ -768,10 +713,12 @@ class AlchemyTheoremProver(
 	val out = new StringBuilder
 	val err = new StringBuilder
  
-    var command = (Sts.opts.task == "sts" && varBind.get) match {
+    /*var command = (Sts.opts.task == "sts" && varBind.get) match {
 			case true =>  "grep entailment_h "+result+" | awk '{print $2}'| sort -n -r  | head -n 1";
 			case false => "grep \"entailment_h(\\\"ent_h\" "+result+" | awk '{print $2}'| sort -n -r  | head -n 1"
-	 }
+	 }*/
+	var command = "grep entailment_h "+result+" | awk '{print $2}'| sort -n -r  | head -n 1";
+	
     Process("/bin/sh", Seq("-c", command)) ! (ProcessLogger(out.append(_).append("\n"), System.err.println(_)))
     
     val score1 = out.mkString("").trim().toDouble;
@@ -780,10 +727,11 @@ class AlchemyTheoremProver(
 	 var score2 = 0.0;
 	 if (Sts.opts.task == "sts")
 	 {
-				command = varBind.get match {
+				/*command = varBind.get match {
 					  case true =>  "grep entailment_t "+result+" | awk '{print $2}'| sort -n -r  | head -n 1";
 					  case false => "grep \"entailment_t(\\\"ent_t\" "+result+" | awk '{print $2}'| sort -n -r  | head -n 1"
-				}
+				}*/
+	   			command = "grep entailment_t "+result+" | awk '{print $2}'| sort -n -r  | head -n 1";
 
 				Process("/bin/sh", Seq("-c", command)) ! (ProcessLogger(out.append(_).append("\n"), System.err.println(_)))
 				
@@ -880,7 +828,7 @@ class AlchemyTheoremProver(
     input match {
       case FolAndExpression(first, second) => _average(first, bound) +  _average(second, bound)
       //case _ => entWeight + "  " + _convert(input -> entailmentConsequent, bound) + "\n"
-      case _ => entWeight + "  " + convert(universalifyGoalFormula(input -> entailmentConsequent), bound) + "\n"
+      case _ => entWeight + "  " + convert(universalifyGoalFormula(input -> entPred), bound) + "\n"
       
       /*case FolExistsExpression(variable, term) => "exist " + variable.name + " (" + _convert(term, bound + variable) + ")"
       case FolAllExpression(variable, term) => "forall " + variable.name + " (" + _convert(term, bound + variable) + ")"

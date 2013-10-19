@@ -203,9 +203,11 @@ object Sts {
 		                    	  LOG.trace("\n" + drt.pretty);
 		                      drt.fol  // 12<== convert DRT to FOL. My question is, why move from Boxer to DRT to FOL. Why not directly to FOL ???
 		                    }
-		                  },
-		                  		new HardAssumptionAsEvidenceProbabilisticTheoremProver( // 15<== Generate evidence from premise. 
-		                    		softLogicTool)))))))) // 16<== run Alchemy or PSL
+		                  }, 
+		                  new SetVarBindPTP( // 		
+		                   new SetGoalPTP( //
+		                	new HardAssumptionAsEvidenceProbabilisticTheoremProver( // 15<== Generate evidence from premise. 
+		                    		softLogicTool)))))))))) // 16<== run Alchemy or PSL
 
           val p = ttp.prove(Tokenize(txt).mkString(" "), Tokenize(hyp).mkString(" "))
           println("Some(%.2f) [actual: %.2f, gold: %s]".format(p.get, probOfEnt2simScore(p.get), goldSim))
