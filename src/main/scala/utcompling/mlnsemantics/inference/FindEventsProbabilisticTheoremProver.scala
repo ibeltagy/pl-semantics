@@ -186,7 +186,11 @@ class FindEventsProbabilisticTheoremProver(
         "prop_t" -> Set("default_prop_t_variable")) ;
     
     val newDeclarations = newDeclarationsDetailed.flatMap(d => {
-      List((d._1/*expression*/, /*args types*/d._2.map(t=>
+      List((d._1/*expression*/ match {
+                case BoxerRel(discId, indices, event, variable, name, sense) => 
+                		BoxerRel(discId, indices, BoxerVariable(event.name+"0"), BoxerVariable(variable.name+"1"), name, sense)
+                case _ => d._1
+      		}, /*args types*/d._2.map(t=>
 	      t._1 match
 	      {
 			case "x"=>"indv_h";
@@ -198,7 +202,8 @@ class FindEventsProbabilisticTheoremProver(
 		      List((d._1/*expression*/ match {
 		        case BoxerPred(discId, indices, variable, name, pos, sense) => BoxerPred("t", indices, variable, name, pos, sense) 
 		        case BoxerNamed(discId, indices, variable, name, typ, sense) => BoxerNamed("t", indices, variable, name, typ, sense)
-		        case BoxerRel(discId, indices, event, variable, name, sense) => BoxerRel("t", indices, event, variable, name, sense)
+		        case BoxerRel(discId, indices, event, variable, name, sense) => 
+		          		BoxerRel("t", indices, BoxerVariable(event.name+"0"), BoxerVariable(variable.name+"1"), name, sense)
 		        case BoxerCard(discId, indices, variable, num, typ) => BoxerCard("t", indices, variable, num, typ)
 		        case BoxerTimex(discId, indices, variable, timeExp) => BoxerTimex("t", indices, variable, timeExp)
 		  	  }, /*args types*/d._2.map(t=>

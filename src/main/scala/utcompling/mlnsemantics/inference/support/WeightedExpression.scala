@@ -4,6 +4,10 @@ sealed trait WeightedExpression[T] {
   val expression: T
 }
 
+case class PriorExpression[T](override val expression: T, weight: Double) extends WeightedExpression[T] {
+
+}
+
 case class SoftWeightedExpression[T](override val expression: T, weight: Double) extends WeightedExpression[T] {
 
 }

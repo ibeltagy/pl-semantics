@@ -7,9 +7,9 @@ import scala.collection.mutable.Buffer
 import opennlp.scalabha.util.CollectionUtils._
 import support.HardWeightedExpression
 import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
-import utcompling.mlnsemantics.inference.support.PriorExpression
+import utcompling.mlnsemantics.run.Sts
 
-class HardAssumptionAsEvidenceProbabilisticTheoremProver(
+class SetGoalPTP(
   delegate: ProbabilisticTheoremProver[FolExpression])
   extends ProbabilisticTheoremProver[FolExpression] {
 
@@ -22,6 +22,21 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
     evidence: List[FolExpression],
     assumptions: List[WeightedExpression[FolExpression]],
     goal: FolExpression): Option[Double] = {
+      
+    delegate.prove( constants, declarations, evidence, assumptions, goal)
+    
+  }
+  
+
+  
+  /*if (Sts.opts.fixDCA && Sts.opts.task == "rte")
+  {
+	  val hMinus =0;
+  }*/
+   
+    /*
+    val result = delegate.prove( constants, declarations, evidence, assumptions, goal);
+    if (Sts.opts.fixDCA)
 
     def go(e: FolExpression): List[FolExpression] = {
       e match {
@@ -51,7 +66,6 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
         	  go(e).map(HardWeightedExpression(_))
           }
           case a @ SoftWeightedExpression(e, w) => List(a)
-          case a @ PriorExpression(e, w) => List(a)
         }
         .partition {
           case HardWeightedExpression(e @ FolAtom(_, _*)) => true
@@ -97,5 +111,5 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
         }
     }
     }        
-  }
+  }*/
 }

@@ -26,8 +26,6 @@ import utcompling.mlnsemantics.wordnet.Wordnet
 class AlchemyTheoremProver(
   wordnet: Wordnet,
   override val binary: String,
-  prior: Double = -1,
-  var entWeight: Double = 1,
   logBase: Double = E)
   extends SubprocessCallable(binary)
   with ProbabilisticTheoremProver[FolExpression] {
@@ -35,7 +33,8 @@ class AlchemyTheoremProver(
   type WeightedFolEx = WeightedExpression[FolExpression]
 
   private val LOG = LogFactory.getLog(classOf[AlchemyTheoremProver])
-
+  
+  private var entWeight = 0.0
   private var entPred:FolExpression = null;
   override def prove(
     constants: Map[String, Set[String]],
@@ -63,7 +62,7 @@ class AlchemyTheoremProver(
         case FolVariableExpression(Variable(pred)) => pred
       }
 
-	var predsInRules = assumptions.map{
+	/*var predsInRules = assumptions.map{
 				case SoftWeightedExpression(folEx, weight) => 
 				{
 					if(weight.isNaN) ""
@@ -71,7 +70,10 @@ class AlchemyTheoremProver(
 				}
           			case HardWeightedExpression(folEx) => folEx.pretty
         		}
-	
+	*/
+    
+    
+    
 	//We do not generate rules between predicates having the same name
 	//This function generate rules using WordNet. This is removed for now
 	//val samePredRule = createSamePredRule(declarationNames)
@@ -104,7 +106,8 @@ class AlchemyTheoremProver(
 	"",
 	false)
 */					
-    val evidenceFile = makeEvidenceFile(evidence, predsInRules)
+    //val evidenceFile = makeEvidenceFile(evidence, predsInRules)
+    val evidenceFile = makeEvidenceFile(evidence, List())
     val emptyEvidenceFile = makeEvidenceFile(List[FolExpression](), List[String]())
     val resultFile = FileUtils.mktemp(suffix = ".res")
 
@@ -333,12 +336,12 @@ class AlchemyTheoremProver(
 	
 		f.write("\n")
 
-		declarationNames.foreach {
+		/*declarationNames.foreach {
         	//different priors for ent and other predicates 
         		case ("entailment", varTypes) => f.write("%s !%s(%s)\n"
 							.format(-prior, "entailment", varTypes.indices.map("z" + _).mkString(",")))
         		case (pred, varTypes) => f.write("%s !%s(%s)\n".format(-prior, pred, varTypes.indices.map("z" + _).mkString(",")))
-      		}
+      		}*/
 	}
 	else	// without Text
 	{
@@ -350,7 +353,7 @@ class AlchemyTheoremProver(
 
 		f.write("\n")
 
-		declarationNames.foreach {
+		/*declarationNames.foreach {
         	//different priors for ent and other predicates 
         		case ("entailment", varTypes) => f.write("%s !%s(%s)\n"
 							.format(-prior, "entailment", varTypes.indices.map("z" + _).mkString(",")))
@@ -359,7 +362,7 @@ class AlchemyTheoremProver(
 				f.write("%s !%s(%s)\n".format(-prior, pred, varTypes.indices.map("z" + _).mkString(",")))
 
 			case _ =>
-      		}
+      		}*/
 	}
 
       f.write("\n//begin assumptions\n")
@@ -373,28 +376,29 @@ class AlchemyTheoremProver(
               case _ if weight < Sts.opts.weightThreshold => None
               case _ => Some(e)
             }
-          case e @ HardWeightedExpression(folEx) => Some(e)
+          case e @ _ => Some(e)
         }.foreach { e => 
           e match {
+	          case PriorExpression(folExp, weight) => 
+	            	f.write("%.5f %s\n".format(weight, convert(folExp)))
 	          case SoftWeightedExpression(folExp, weight) =>
 	            // DONE: Convert [0,1] weight into alchemy weight
 	            //            val usedWeight = log(weight / (1 - weight)) / log(logBase) // treat 'weight' as a prob and find the log-odds
 	            //            f.write(usedWeight + " " + convert(folEx) + "\n")
-	            var usedWeight = min(weight, 0.999);
+	            val folExpString = convert(folExp);
+            	var usedWeight = min(weight, 0.999);
 	            usedWeight = max(usedWeight, 0.001);
-	            usedWeight = -prior + log(usedWeight) - log(1-usedWeight);
+	            usedWeight = SetPriorPTP.predPrior + log(usedWeight) - log(1-usedWeight);
 	            if (usedWeight  > 0)
 	            {
-	              val folExpString = convert(folExp);
 	              //This is a nasty hack to inverse what alchamy does when it splits a formula into smaller formulas
 	              var count = folExpString.split("=>").apply(1).count(_ == '^') + 1;
-				  
 	              if (!Sts.opts.scaleW) 
 				    count = 1;
-				  
-	              usedWeight = usedWeight * count; 
-	              f.write("%.15f %s\n".format(usedWeight, folExpString))
+	              usedWeight = usedWeight * count;
+	              f.write("%.5f %s\n".format(usedWeight, folExpString))
 	            }
+
 	            //val usedWeight = 10 * weight // 5 * (pow(weight, 10)) //DONE: Set these parameters!!
 	            // DONE: we want to design a function `f` such that, for the simplest examples (only one weighted clause), mln(f(s)) == s
 	            //   meaning that the probability of entailment (`mln`) using a weight `f(s)` based on similarity score `s <- [0,1]` will be
@@ -573,12 +577,12 @@ class AlchemyTheoremProver(
 	      //if n is not in the list of weights, set it to 1
 	
 	      if (n >= entWeights.size)
-	    	  entWeight = (-prior + log(Sts.opts.maxProb) - log(1-Sts.opts.maxProb))/n;
+	    	  entWeight = (SetPriorPTP.entPrior + log(Sts.opts.maxProb) - log(1-Sts.opts.maxProb))/n;
 	      else
 	    	  entWeight = entWeights(n);
 	      
 	      if (entWeight == 0)
-	      	  entWeight = (-prior + log(Sts.opts.maxProb) - log(1-Sts.opts.maxProb))/n;
+	      	  entWeight = (SetPriorPTP.entPrior + log(Sts.opts.maxProb) - log(1-Sts.opts.maxProb))/n;
       }
       
 
