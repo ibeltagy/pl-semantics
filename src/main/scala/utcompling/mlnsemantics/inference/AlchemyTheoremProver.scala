@@ -21,8 +21,6 @@ import edu.mit.jwi.item.POS
 import scala.collection.JavaConversions._
 import utcompling.mlnsemantics.wordnet.Wordnet
 
-//import aima.core.logic.fol.CNFConverter
-
 class AlchemyTheoremProver(
   wordnet: Wordnet,
   override val binary: String,
@@ -34,8 +32,6 @@ class AlchemyTheoremProver(
 
   private val LOG = LogFactory.getLog(classOf[AlchemyTheoremProver])
   
-  private var entWeight = 0.0
-  private var entPred:FolExpression = null;
   override def prove(
     constants: Map[String, Set[String]],
     declarations: Map[FolExpression, Seq[String]],
@@ -43,10 +39,6 @@ class AlchemyTheoremProver(
     assumptions: List[WeightedFolEx],
     goal: FolExpression): Option[Double] = {
 
-    /*if (varBind == None)
-    	varBind  = Some(Sts.opts.varBind);
-    else varBind  = Some(false); //second call
-    */
     declarations.foreach { dec =>
       dec match {
         case (FolAtom(Variable(pred), args @ _*), argTypes) =>
@@ -71,13 +63,10 @@ class AlchemyTheoremProver(
           			case HardWeightedExpression(folEx) => folEx.pretty
         		}
 	*/
-    
-    
-    
 	//We do not generate rules between predicates having the same name
 	//This function generate rules using WordNet. This is removed for now
 	//val samePredRule = createSamePredRule(declarationNames)
-   val samePredRule = "";
+    val samePredRule = "";
 	//if(samePredRule != "") predsInRules :+= samePredRule
 
     val mlnFile = makeMlnFile(
@@ -87,25 +76,7 @@ class AlchemyTheoremProver(
       evidence,
       goal,
       samePredRule)
-
-/*
-      val mlnNoInferRuleFile = makeMlnFile(
-      constants + entailedConst,
-      declarationNames,
-      List[WeightedFolEx](),
-      evidence,
-      goal,
-	"")
-     
-	val mlnNoTextFile = makeMlnFile(
-      constants + entailedConst,
-      declarationNames,
-      List[WeightedFolEx](),
-      evidence,
-      goal,
-	"",
-	false)
-*/					
+					
     //val evidenceFile = makeEvidenceFile(evidence, predsInRules)
     val evidenceFile = makeEvidenceFile(evidence, List())
     val emptyEvidenceFile = makeEvidenceFile(List[FolExpression](), List[String]())
@@ -123,79 +94,17 @@ class AlchemyTheoremProver(
       case "rte" => List("-q", "entailment_h")
     }
     try 
-    {
-         //old call for alchemy.
-	    /*callAlchemy(mlnFile, evidenceFile, resultFile, args) map {
-	      case ResultsRE(score) => score.toDouble
-	      case err => sys.error(err)
-	    }*/
-      
+    {      
     	callAlchemy(mlnFile, evidenceFile, resultFile, args) match {
 	      case Some(t) => Some(t.toDouble)
 	      case _ => throw new RuntimeException("no valid output in the result file");
     	}
-    	//Output has many lines
-      /*
-	    val result = callAlchemy(mlnFile, evidenceFile, resultFile, args);
-	    //val resultNoInferRule = callAlchemy(mlnNoInferRuleFile, evidenceFile, resultFile, args);
-	    //val resultNoText = callAlchemy(mlnNoTextFile, emptyEvidenceFile, resultFile, args);
 
-	    result match 
-	    {
-	      case Some(x) =>
-	      {
-	        val outputLines =  x.split("\n");
-	        var maxScore_h: Double = -1;
-	        var bestWorld_h: String = "";
-	        var maxScore_t: Double = -1;
-	        var bestWorld_t: String = "";
-	        for (line <- outputLines)
-	        {
-	         val lineSplits = line.split(" ");
-	          if (lineSplits.length == 2)
-	          {
-		          val score = lineSplits(1).toDouble;
-		          if (lineSplits(0).startsWith("entailment_h"))
-		          {
-		            if (score > maxScore_h)
-		        	{
-		              maxScore_h = score;
-		              bestWorld_h = lineSplits(0);
-		        	}
-		        	 
-		          }
-		          
-		          else if (lineSplits(0).startsWith("entailment_t"))
-		          {
-		            if (score > maxScore_t)
-		        	{
-		              maxScore_t = score;
-		              bestWorld_t = lineSplits(0);
-		        	}
-		        	 
-		          }		          
-	          }
-	        }
-	        if (maxScore_h == -1 || maxScore_t == -1)
-	          throw new RuntimeException("no valid output in the result file");
-	        else
-	        	return Some((maxScore_h + maxScore_t)/2);
-	      }      
-	      case _ => throw new RuntimeException("empty result file");
-	    }
-	    */
     }catch 
     {
     	case e: Exception =>{
     	  System.err.println (e);
     	  return None;
-    	 /*if (varBind.get) //try again 
-    	  {
-			 //println("backoff to dependency parse")
-    	    //return this.prove(constants, declarations, evidence, assumptions, goal);
-    		  return None
-    	  }
-    	  else return Some(-1.0);*/
     	}   				 
     }
     
@@ -304,68 +213,21 @@ class AlchemyTheoremProver(
     assumptions: List[WeightedFolEx],
     evidence: List[FolExpression],
     goal: FolExpression,
-    samePredRule: String,
-    hasText: Boolean = true) = {
+    samePredRule: String) = {
     
-    var reducedConstants = constants;
-    /*for (s <- constants)
-    {
-      if (s._2.size > 1 && !s._1.equals("ent"))
-		{
-			var constsList: Set[String] =Set();
-			/*for(c<- s._2)
-			{
-				if(!c.startsWith("default"))
-					constsList = constsList + c;
-			}*/
-         reducedConstants = reducedConstants + (s._1 -> constsList); 
-		}
-    }*/
     val tempFile = FileUtils.mktemp(suffix = ".mln")
     FileUtils.writeUsing(tempFile) { f =>
-   reducedConstants.foreach {
+    constants.foreach {
     case (name, tokens) => f.write("%s = {%s}\n".format(name, tokens.map(quote).mkString(",")))
-   }
-   f.write("\n")
+    }
+    f.write("\n")
 
-   if(hasText)
-   {
-		declarationNames.foreach {
-        		case (pred, varTypes) => f.write("%s(%s)\n".format(pred, varTypes.mkString(",")))
-      		}
-	
-		f.write("\n")
+	declarationNames.foreach {
+    		case (pred, varTypes) => f.write("%s(%s)\n".format(pred, varTypes.mkString(",")))
+    }
+    f.write("\n")
 
-		/*declarationNames.foreach {
-        	//different priors for ent and other predicates 
-        		case ("entailment", varTypes) => f.write("%s !%s(%s)\n"
-							.format(-prior, "entailment", varTypes.indices.map("z" + _).mkString(",")))
-        		case (pred, varTypes) => f.write("%s !%s(%s)\n".format(-prior, pred, varTypes.indices.map("z" + _).mkString(",")))
-      		}*/
-	}
-	else	// without Text
-	{
-		declarationNames.foreach {
-			case (pred, varTypes) if(pred.endsWith("_dh") || pred == "entailment") => 
-				f.write("%s(%s)\n".format(pred, varTypes.mkString(",")))
-			case _ => 
-		}
-
-		f.write("\n")
-
-		/*declarationNames.foreach {
-        	//different priors for ent and other predicates 
-        		case ("entailment", varTypes) => f.write("%s !%s(%s)\n"
-							.format(-prior, "entailment", varTypes.indices.map("z" + _).mkString(",")))
-
-			case (pred, varTypes) if(pred.endsWith("_dh")) => 
-				f.write("%s !%s(%s)\n".format(-prior, pred, varTypes.indices.map("z" + _).mkString(",")))
-
-			case _ =>
-      		}*/
-	}
-
-      f.write("\n//begin assumptions\n")
+    f.write("\n//begin assumptions\n")
 
 		assumptions
         .flatMap {
@@ -381,6 +243,13 @@ class AlchemyTheoremProver(
           e match {
 	          case PriorExpression(folExp, weight) => 
 	            	f.write("%.5f %s\n".format(weight, convert(folExp)))
+	          case GoalExpression(folExp, weight) =>
+	          {
+	        	  if(weight == Double.PositiveInfinity)
+	        		  f.write("%s .\n".format(convert(folExp)))
+	        	  else
+	        	      f.write("%.5f %s\n".format(weight, convert(folExp)))  
+	          }
 	          case SoftWeightedExpression(folExp, weight) =>
 	            // DONE: Convert [0,1] weight into alchemy weight
 	            //            val usedWeight = log(weight / (1 - weight)) / log(logBase) // treat 'weight' as a prob and find the log-odds
@@ -404,255 +273,17 @@ class AlchemyTheoremProver(
 	            //   meaning that the probability of entailment (`mln`) using a weight `f(s)` based on similarity score `s <- [0,1]` will be
 	            //   roughly equal to the similarity score itself.
 	            
-          case HardWeightedExpression(folEx) => f.write(insertExistQuant(convert(folEx)
-						// remove FolEqualityExpression
-						//.replaceAll("""\^[^\(]+\([^=\(]*=[^>\)]+\)|\([^=\(\)]+=[^>\^\)]+\)[^\^\)]\^""", "")
-						// replace constants with variables
-						//.replaceAll("\"", "")		
-						+ ".\n"))
+          case HardWeightedExpression(folEx) => f.write(insertExistQuant(convert(folEx)+ ".\n"))
         }
-	// Add same name predicates inference rules
-	if(samePredRule != "") f.write(samePredRule)
+          
+	    // Add same name predicates inference rules
+	    if(samePredRule != "")
+	    	f.write(samePredRule)
        }
 
       f.write("\n")
-	
-
       //f.write(handwrittenRules);
-      
-      val entWeights = Array(0.0); 
 
-      f.write("//begin combination function\n");
-
-      var ands :List[FolExpression] = List();//get a list of the anded predicates
-      var nonRelationsMap : List[(FolExpression, Set[Variable])] = List();
-      var relationsMap : List[(FolExpression, Set[Variable])] = List();//relation predicates are 2 valued and start with r_. 
-      															//e.g: agent, patient, in, ...
-      var notEqMap : List[(FolExpression, Set[Variable])] = List();//expressions of the form !(x1=x2)
-      var impMap : List[(FolExpression, Set[Variable])] = List();//expressions of the form a->(b^c^...)
-      
-      def extractPartsOfExpression (expr: FolExpression) = {
-	      ands = getAnds(expr);
-	      nonRelationsMap = List();
-	      relationsMap = List();
-	      notEqMap = List();
-	      impMap = List();
-	      for(expr <- ands )
-	      {
-	        val allVars = findAllVars(expr); 
-	        expr match
-	        {
-		      case FolApplicationExpression(fun, arg) =>{
-			        fun match {
-			          case FolApplicationExpression (fun2, arg2) =>
-			            fun2 match {
-			              case FolVariableExpression(v) =>{
-			            	  if (v.name.startsWith("r_"))
-			            	    relationsMap = (expr, allVars) :: relationsMap  ;
-			            	  else
-			            	    nonRelationsMap = (expr, allVars) :: nonRelationsMap;
-			              }		                
-			              case _ => nonRelationsMap = (expr, allVars) :: nonRelationsMap;
-			            }
-			          case FolVariableExpression(v) =>{
-			        	  if (!v.name.startsWith("topic_"))
-			        		  nonRelationsMap = (expr, allVars) :: nonRelationsMap;
-			          }
-			          case _=>  nonRelationsMap = (expr, allVars) :: nonRelationsMap;
-			        }
-		        }
-		      case FolEqualityExpression(first, second)=>; //delete equality expressions because it is already handeled by renaming variables
-		      case FolAllExpression(first, second)=>  impMap  = (expr, allVars) :: impMap;
-		      case FolNegatedExpression(term)=> {
-		        term match {
-		          case FolEqualityExpression(first, second) => notEqMap  = (expr, allVars) :: notEqMap;
-		          case _ => nonRelationsMap = (expr, allVars) :: nonRelationsMap; //this case will be changed later
-		        }
-		      };
-		      case _ => nonRelationsMap = (expr, allVars) :: nonRelationsMap;
-	        }
-	      }
-      }
-
-      val allGoalVariables: Set[Variable] = findAllVars(goal);      
-       
-      //count and print mini-clauses according to the chopLvl
-      def writeMiniClauses (doPrint : Boolean): Integer = {
-           var n = 0;
-	      //write relation predicates
-          if (Sts.opts.chopLvl == "rp"){
-            ////////////////////// man(x) ^ agent(x, y)
-		      for(nonRelationExpr<- nonRelationsMap )
-		      {
-		    	  var printedAtLeastOnce = false;
-			      for(relationExpr<- relationsMap )
-			      {
-			    	  if ((nonRelationExpr._2 & relationExpr._2).size != 0)
-			    	  {
-			    	      if (doPrint)
-			    	    	  f.write(entWeight + "  " + convert((nonRelationExpr._1 & relationExpr._1) -> entPred, allGoalVariables) + "\n");
-			    		  printedAtLeastOnce = true;
-			    		  n = n +1 ;
-			    	  }
-			      }
-			      if (!printedAtLeastOnce)
-			      {
-			        if (doPrint)
-			        	f.write(entWeight + "  " + convert(nonRelationExpr._1 -> entPred, allGoalVariables) + "\n");
-			        n = n +1 ;
-			      }
-		      }
-		   ////////////////////// man(x) ^ agent(x, y)
-          } else if (Sts.opts.chopLvl == "prp") {
-                 ////////////////////// man(x) ^ agent(x, y) ^ drive(y)
-		    var notUsedNonRelations = nonRelationsMap;
-		    
-		    relationsMap.foreach(rel => {
-		    	val args1 = nonRelationsMap.filter(p => p._2.contains(rel._2.head))
-		        val args2 = nonRelationsMap.filter(p => p._2.contains(rel._2.last))
-		        
-		        notUsedNonRelations = notUsedNonRelations -- (args1++args2);
-		        
-		        args1.foreach(arg1 =>
-		            args2.foreach(arg2 => {
-			              if (doPrint)
-			            	  f.write(entWeight + "  " + convert(((arg1._1 & rel._1 & arg2._1) -> entPred), allGoalVariables) + "\n");
-			              n = n + 1;
-			          }
-		            ) 
-		        )
-		        if (args1.size == 0 || args2.size == 0){
-		        	(args1 ++ args2).foreach(arg => {
-			              if (doPrint)
-			            	  f.write(entWeight + "  " + convert(((arg._1 & rel._1) -> entPred), allGoalVariables) + "\n");
-			              n = n + 1;
-			          }
-		            ) 
-		        }
-		    })
-		    notUsedNonRelations.foreach(pred => {
-		    	if (doPrint)
-		    		f.write(entWeight + "  " + convert(pred._1 -> entPred, allGoalVariables) + "\n");
-			    n = n + 1;
-		    })
-                 ////////////////////// man(x) ^ agent(x, y) ^ drive(y)            
-          }		    
-
-	      n += notEqMap.size;   //Each notEqual expression corresponds to an extra line in the combination function
-	      n += impMap.size;   //Each imp expression corresponds to an extra line in the combination function
-      						//THis may change
-	      //println("//n: " + n +"\n");
-      
-	      //write notEqual predicates
-	      for(notEqExpr <- notEqMap )
-	      {
-	          var oneLine = notEqExpr._1;
-	          var foundOne = false;
-		      for(nonRelationExpr <- nonRelationsMap )
-		      {
-		    	  if ((notEqExpr._2 & nonRelationExpr._2).size != 0)
-		    	  {
-		    		  oneLine = oneLine & nonRelationExpr._1;
-		    		  foundOne = true;
-		    	  }
-		      }
-		      if (foundOne)
-		        if (doPrint)
-		    	  f.write(entWeight + "  " + convert(oneLine -> entPred, allGoalVariables) + "\n");
-	      }
-	      
-	      //write imp expressions 
-	      for(impExpr <- impMap )
-	      {
-	    	  if (doPrint)
-	    		  f.write(entWeight + "  " + convert(impExpr._1 -> entPred, allGoalVariables) + "\n");
-	      }
-	      return n;
-	  }
-      
-      def mapNtoW (n:Int) = {
-        
-	      //AlchemyTheoremProver.pairIndx
-	      //entWeight  = entWeights(AlchemyTheoremProver.pairIndx)
-	      //if n is not in the list of weights, set it to 1
-	
-	      if (n >= entWeights.size)
-	    	  entWeight = (SetPriorPTP.entPrior + log(Sts.opts.maxProb) - log(1-Sts.opts.maxProb))/n;
-	      else
-	    	  entWeight = entWeights(n);
-	      
-	      if (entWeight == 0)
-	      	  entWeight = (SetPriorPTP.entPrior + log(Sts.opts.maxProb) - log(1-Sts.opts.maxProb))/n;
-      }
-      
-
-      /*extractPartsOfExpression(goal);
-      //Get number of mini-clauses 
-      var n = writeMiniClauses (false);
-
-      //set entWeight
-      mapNtoW(n)
-      
-      //print mini-clauses
-      writeMiniClauses(true)
-      */
-
-
-	  //write two lines 
-      def writeTwoGoals(input: FolExpression):Unit = {
-			input match {
-		      case FolExistsExpression(variable, term) => writeTwoGoals(term)
-		      case FolAndExpression(first, second) => {
-	            //f.write(entWeight + "  " + convert(first -> entailmentConsequent, allGoalVariables) + "\n");
-                //f.write(entWeight + "  " + convert(second -> entailmentConsequent, allGoalVariables) + "\n");
-		        extractPartsOfExpression(first);
-		        var n_t = writeMiniClauses (false);
-		        mapNtoW(n_t)
-		        entPred = SetVarBindPTP.entPred_t;
-		        writeMiniClauses(true)
-		        
-		        extractPartsOfExpression(second);
-		        var n_h = writeMiniClauses (false);
-		        mapNtoW(n_h)
-		        entPred = SetVarBindPTP.entPred_h;
-		        writeMiniClauses(true)
-            
-		      }
-			}
-		}
-
-
-
-      
-      Sts.opts.task match {
-      	case "rte" => 
-      	  		  entPred = SetVarBindPTP.entPred_h;
-				  var queryString = convert(universalifyGoalFormula(goal -> entPred))
-						  //.replaceAll("\"", "")
-						  //.replaceAll("""\(entailed\)""", "(\"entailed\")")
-						  // remove FolEqualityExpression
-						  //.replaceAll("""\^[^\(]+\([^=\(]*=[^>\)]+\)|\([^=\(\)]+=[^>\^\)]+\)[^\^\)]\^""", "")
-
-						  // remove theme relation predicates
-						  //.replaceAll("""\^[^\(]+(theme)[^\)]+\)""", "")
-						  //.replaceAll("""\([^\(]+(theme)[^\^]+\^""", "(")
-				
-              	f.write(queryString + ".\n");
-				  //f.write(convert(universalifyGoalFormula(goal -> entailmentConsequent)) + ". //(ditAnd)\n") //normal anding
-      	case "sts" => writeTwoGoals(goal);
-      }
-      
-      //f.write(average(goal));  a->ent, where a is one of the anded formulas
-
-      f.write("//end combination function\n");
-      /*
-      f.write("//begin evd part\n");
-      evidence.foreach {
-        case e @ FolAtom(pred, args @ _*) => f.write(convert(e) + ".\n")
-        case e => throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
-      }   
-      f.write("//end evd part\n");
-      */
     }
     tempFile
   }
@@ -768,85 +399,6 @@ class AlchemyTheoremProver(
 	  case _ => bound
   }
   
-  //find all variables used in the clause
-  private def findAllVars(input: FolExpression): Set[Variable] =
-  {
-	input match {
-      case FolExistsExpression(variable, term) => findAllVars(term) + variable;
-      case FolAllExpression(variable, term) => findAllVars(term) + variable;
-      case FolNegatedExpression(term) => findAllVars(term);
-      case FolAndExpression(first, second) => findAllVars(first) ++ findAllVars(second);
-      case FolOrExpression(first, second) => findAllVars(first) ++ findAllVars(second);
-      case FolIfExpression(first, second) => findAllVars(first) ++ findAllVars(second);
-      case FolIffExpression(first, second) => findAllVars(first) ++ findAllVars(second);
-      case FolEqualityExpression(first, second) => findAllVars(first) ++ findAllVars(second);
-      case FolApplicationExpression(fun, arg) =>{
-        fun match {
-          case FolVariableExpression (v) => findAllVars(arg);
-          case _=> findAllVars(arg) ++ findAllVars(fun);
-        }
-      }
-      //case FolAtom(pred, args) =>  
-      case FolVariableExpression(v) => Set(v);
-      case _ => {
-    	  println(input.toString());
-    	  Set();
-      } 
-    }
-  }
-  
-  //count the anded predicates
-  private def coundAnd(input: FolExpression): Int =
-	input match {
-	  case FolExistsExpression(variable, term) => coundAnd(term)
-	  case _ => _coundAnd(input)
-  }  
-  private def _coundAnd(input: FolExpression ): Int =
-	input match {
-	  case FolAndExpression(first, second) => _coundAnd(first) +  _coundAnd(second) 
-      case _ => 1
-  }
-
-  //get a list of the anded predicates
-  private def getAnds(input: FolExpression): List[FolExpression] =
-    input match {
-      case FolExistsExpression(variable, term) => getAnds(term) // don't add outermost 'exist'
-      case _ => _getAnds(input)
-    }
-
-  private def _getAnds(input: FolExpression): List[FolExpression] =
-    input match {
-      case FolAndExpression(first, second) => _getAnds(first) ++  _getAnds(second) 
-      case _ => List(input);
-    }
-  
-  
-  //average instead of anding 
-  private def average(input: FolExpression, bound: Set[Variable] = Set()): String =
-    input match {
-      case FolExistsExpression(variable, term) => average(term, bound + variable) // don't add outermost 'exist'
-      case _ => _average(input, bound)
-    }
-
-  private def _average(input: FolExpression, bound: Set[Variable]): String =
-    input match {
-      case FolAndExpression(first, second) => _average(first, bound) +  _average(second, bound)
-      //case _ => entWeight + "  " + _convert(input -> entailmentConsequent, bound) + "\n"
-      case _ => entWeight + "  " + convert(universalifyGoalFormula(input -> entPred), bound) + "\n"
-      
-      /*case FolExistsExpression(variable, term) => "exist " + variable.name + " (" + _convert(term, bound + variable) + ")"
-      case FolAllExpression(variable, term) => "forall " + variable.name + " (" + _convert(term, bound + variable) + ")"
-      case FolNegatedExpression(term) => "!(" + _convert(term, bound) + ")"
-      case FolAndExpression(first, second) => "(" + _convert(first, bound) + " ^ " + _convert(second, bound) + ")"
-      case FolOrExpression(first, second) => "(" + _convert(first, bound) + " v " + _convert(second, bound) + ")"
-      case FolIfExpression(first, second) => "(" + _convert(first, bound) + " => " + _convert(second, bound) + ")"
-      case FolIffExpression(first, second) => "(" + _convert(first, bound) + " <=> " + _convert(second, bound) + ")"
-      case FolEqualityExpression(first, second) => "(" + _convert(first, bound) + " = " + _convert(second, bound) + ")"
-      case FolAtom(pred, args @ _*) => pred.name.replace("'", "") + "(" + args.map(v => if (bound(v)) v.name else quote(v.name)).mkString(",") + ")"
-      case FolVariableExpression(v) => if (bound(v)) v.name else quote(v.name)
-      */
-    }
-
   //convert a FOLExpression to an Alchemy string 
   private def convert(input: FolExpression, bound: Set[Variable] = Set()): String =
     input match {

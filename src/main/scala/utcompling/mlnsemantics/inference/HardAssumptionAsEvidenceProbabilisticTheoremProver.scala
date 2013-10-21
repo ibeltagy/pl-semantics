@@ -50,8 +50,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
           case HardWeightedExpression(e) => {
         	  go(e).map(HardWeightedExpression(_))
           }
-          case a @ SoftWeightedExpression(e, w) => List(a)
-          case a @ PriorExpression(e, w) => List(a)
+          case a @ _ => List(a)
         }
         .partition {
           case HardWeightedExpression(e @ FolAtom(_, _*)) => true

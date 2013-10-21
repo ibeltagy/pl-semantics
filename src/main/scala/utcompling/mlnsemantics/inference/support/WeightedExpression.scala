@@ -8,6 +8,10 @@ case class PriorExpression[T](override val expression: T, weight: Double) extend
 
 }
 
+case class GoalExpression[T](override val expression: T, weight: Double) extends WeightedExpression[T] {
+  
+}
+
 case class SoftWeightedExpression[T](override val expression: T, weight: Double) extends WeightedExpression[T] {
 
 }
