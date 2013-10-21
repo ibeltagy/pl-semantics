@@ -10,6 +10,7 @@ import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 import utcompling.mlnsemantics.run.Sts
 import scala.collection.mutable.MutableList
 import utcompling.mlnsemantics.inference.support.GoalExpression
+import utcompling.mlnsemantics.inference.support.GoalExpression
 
 class SetGoalPTP(
   delegate: ProbabilisticTheoremProver[FolExpression])
@@ -41,8 +42,7 @@ class SetGoalPTP(
       {
         //simple conjunction, two goals
         val expr_t = GoalExpression((first -> SetVarBindPTP.entPred_t).asInstanceOf[FolExpression], Double.PositiveInfinity);
-        val expr_h = GoalExpression((second -> SetVarBindPTP.entPred_h).asInstanceOf[FolExpression], Double.PositiveInfinity);
-        //TODO: fix bug. Handle Existential quatifiers under negation         
+        val expr_h = GoalExpression((second -> SetVarBindPTP.entPred_h).asInstanceOf[FolExpression], Double.PositiveInfinity);         
         extraExpressions = List(expr_h, expr_t);
       }
 
@@ -51,7 +51,7 @@ class SetGoalPTP(
       {
         //mini clauses
     	extraExpressions = getMiniClausesWeightedExpressions(first, SetVarBindPTP.entPred_t) ++ 
-    							getMiniClausesWeightedExpressions(second, SetVarBindPTP.entPred_h)    							
+    							getMiniClausesWeightedExpressions(second, SetVarBindPTP.entPred_h)
       }
     }
     //=====================Start RTE=============================
@@ -60,7 +60,6 @@ class SetGoalPTP(
     {
       //simple conjunction, one goal
       val expr = goal -> SetVarBindPTP.entPred_h;
-      //TODO: fix bug. MLN does not handle Existential quantifier under negation right
       extraExpressions = List(GoalExpression(expr.asInstanceOf[FolExpression], Double.PositiveInfinity));
     }
 
@@ -68,7 +67,9 @@ class SetGoalPTP(
     else if (Sts.opts.task == "rte" && Sts.opts.fixDCA == true)
     {
       //H+, H-
-      //TODO: implement
+      val hPlus = GoalExpression(skolemNew(goal -> SetVarBindPTP.entPred_h), Double.PositiveInfinity)
+      val hMinus = GoalExpression((SetVarBindPTP.entPred_h -> goal).asInstanceOf[FolExpression], Double.PositiveInfinity)
+      extraExpressions = List(hPlus, hMinus);
     } 
 
     //===================== ERROR =============================
@@ -77,6 +78,41 @@ class SetGoalPTP(
 
     delegate.prove(constants, declarations, evidence, assumptions ++ extraExpressions, null)
 
+  }
+
+  //****************************** Helpers **************************  
+  private def skolemNew(expr: FolExpression, skolemVars: List[Variable] = List(), isNegated:Boolean = false): FolExpression = 
+  {
+	expr match {
+      case FolExistsExpression(variable, term) => {
+    	  if (isNegated)
+    		  FolExistsExpression(variable, skolemNew(term, skolemVars, isNegated))
+    	  else
+    		  skolemNew(term, skolemVars++List(variable), isNegated)
+      }
+      case FolAllExpression(variable, term) => {
+          if (!isNegated)
+        	  FolAllExpression(variable, skolemNew(term, skolemVars, isNegated))
+    	  else
+    		  skolemNew(term, skolemVars++List(variable), isNegated)
+      }
+      case FolNegatedExpression(term) => FolNegatedExpression (skolemNew(term, skolemVars, !isNegated))
+      case FolAndExpression(first, second) => FolAndExpression(skolemNew(first, skolemVars, isNegated), skolemNew(second, skolemVars, isNegated))
+      case FolOrExpression(first, second) => FolOrExpression(skolemNew(first, skolemVars, isNegated), skolemNew(second, skolemVars, isNegated))
+      case FolIfExpression(first, second) => FolIfExpression(skolemNew(first, skolemVars, !isNegated), skolemNew(second, skolemVars, isNegated))
+      case FolIffExpression(first, second) => throw new RuntimeException("FolIffExpression is not a valid expression")
+      case FolEqualityExpression(first, second) => FolEqualityExpression(skolemNew(first, skolemVars, isNegated), skolemNew(second, skolemVars, isNegated))	
+      case FolAtom(pred, args @ _*) => FolAtom.apply(pred, args.map(arg => skolemNew(arg, skolemVars)):_*);
+	  case FolVariableExpression(v) => FolVariableExpression(skolemNew(v, skolemVars));
+	  case _ => throw new RuntimeException(expr + " is not a valid expression")
+	}
+  }
+  private def skolemNew(v: Variable, skolemVars: List[Variable] ): Variable =
+  {
+    if(skolemVars.contains(v))
+    	Variable(v.name+"_hPlus")
+    else 
+    	v
   }
 
   //****************************** Mini-clauses functions ************************** 
@@ -228,8 +264,5 @@ class SetGoalPTP(
       case FolAndExpression(first, second) => _getAnds(first) ++  _getAnds(second) 
       case _ => List(input);
     }
-  
-
-  
-  
+  //****************************** END Mini-clauses functions **************************
 }

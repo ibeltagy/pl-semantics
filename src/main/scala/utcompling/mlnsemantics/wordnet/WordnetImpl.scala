@@ -83,7 +83,7 @@ class WordnetImpl(dict: IDictionary) extends Wordnet {
       w <- h.getWords
     ) yield w.getLemma).toSet
 
-  def getPos(s: String) =
+  def getPos(s: String): List[POS] =
     s match {
       case "n" => List(POS.NOUN)
       case "v" => List(POS.VERB)

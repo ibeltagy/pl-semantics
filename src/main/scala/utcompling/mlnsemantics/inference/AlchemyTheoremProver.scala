@@ -54,32 +54,14 @@ class AlchemyTheoremProver(
         case FolVariableExpression(Variable(pred)) => pred
       }
 
-	/*var predsInRules = assumptions.map{
-				case SoftWeightedExpression(folEx, weight) => 
-				{
-					if(weight.isNaN) ""
-					else folEx.pretty
-				}
-          			case HardWeightedExpression(folEx) => folEx.pretty
-        		}
-	*/
-	//We do not generate rules between predicates having the same name
-	//This function generate rules using WordNet. This is removed for now
-	//val samePredRule = createSamePredRule(declarationNames)
-    val samePredRule = "";
-	//if(samePredRule != "") predsInRules :+= samePredRule
-
     val mlnFile = makeMlnFile(
       constants,
       declarationNames,
       assumptions,
       evidence,
-      goal,
-      samePredRule)
+      goal)
 					
-    //val evidenceFile = makeEvidenceFile(evidence, predsInRules)
-    val evidenceFile = makeEvidenceFile(evidence, List())
-    val emptyEvidenceFile = makeEvidenceFile(List[FolExpression](), List[String]())
+    val evidenceFile = makeEvidenceFile(evidence)
     val resultFile = FileUtils.mktemp(suffix = ".res")
 
     //Adding all predicates to the query force them to be open world
@@ -110,110 +92,12 @@ class AlchemyTheoremProver(
     
   }
 
-	/**
- 	 * Generate inference rules for each pair of predicates having the same name. 
- 	 * E.g., man_dt(indv0) => man_dh(indv0).
- 	 */
-	private def createSamePredRule(declarationNames: Map[String, Seq[String]]): String =
-	{
-		var rules = ""
-		val (predsInText, predsInHypo) = declarationNames.partition
-		{
-			case (pred, _) =>
-				if (pred.contains("_dt")) true
-				else false
-		}
-	
-		predsInHypo.foreach
-		{
-			case (pred_dh, varTypes_dh) =>
-			{
-				if(varTypes_dh.size == 1)
-				{
-					val varTypesH = varTypes_dh.mkString("").replaceAll("_[t|h]", "0")
-					predsInText.foreach
-					{
-						case (pred_dt, varTypes_dt) if (varTypes_dt.size == 1) =>
-						{
-							val varTypesT = varTypes_dt.mkString("").replaceAll("_[t|h]", "0")
-
-							val assumePred = "_" + pred_dt
-							val goalPred = "_" + pred_dh
-
-							var isValidRule = false
-						
-							if((assumePred.contains("_card_") || assumePred.contains("_time_") )
-								&& varTypesT == varTypesH)
-							{
-								if(pred_dt.replaceAll("_dt", "") == pred_dh.replaceAll("_dh", ""))
-									isValidRule = true
-							}
-
-							//else if(pred_dt.replaceAll("_[^_]*_dt", "") == pred_dh.replaceAll("_[^_]*_dh", ""))
-							//	isValidRule = true
-
-							else if (assumePred.contains("_" + pred_dh.replaceAll("_[^_]*_dh", "")) )
-								isValidRule = true
-
-							// Check if two words are similar via WordNet
-							else
-							{
-								val assumeWord = pred_dt.replaceAll("_[^_]*_dt", "")
-								val goalWord = pred_dh.replaceAll("_[^_]*_dh", "")
-								val pos = if (pred_dt.contains("_v_")) "v"
-									else if (pred_dt.contains("_a_")) "a"
-									else "n"
-								val similarWords = getSynonyms(assumeWord, pos) ++
-											 getHypernyms(assumeWord, pos) ++
-											getHyponyms(assumeWord, pos)
-
-								if(similarWords.contains(goalWord)) isValidRule = true
-									
-							}
-
-							if(isValidRule && varTypesH != "entail")
-								rules += pred_dt + "(" + varTypesT + ") => " + 
-									pred_dh + "(" + varTypesH + ").\n"
-						}
-						case _ =>
-					}
-				}
-				
-				// relation predicates
-				else if(varTypes_dh.size == 2)
-				{
-					val varTypesH = varTypes_dh(0).mkString("").replaceAll("_[t|h]", "0") +
-							"," +
-							varTypes_dh(1).mkString("").replaceAll("_[t|h]", "1")
-
-					predsInText.foreach
-					{
-						case (pred_dt, varTypes_dt) if (varTypes_dt.size == 2)  =>
-						{
-							val varTypesT = varTypes_dt(0).mkString("").replaceAll("_[t|h]", "0") +
-									"," +
-									varTypes_dt(1).mkString("").replaceAll("_[t|h]", "1")
-						
-							if (pred_dh.replaceAll("_[^_]*_dh", "") == pred_dt.replaceAll("_[^_]*_dt", "") )
-								rules += pred_dt + "(" + varTypesT + ") => " + 
-									pred_dh + "(" + varTypesH + ").\n"
-						}
-						case _ =>
-					}
-				}
-			}
-		}
-
-		rules
-	}
-
   private def makeMlnFile(
     constants: Map[String, Set[String]],
     declarationNames: Map[String, Seq[String]],
     assumptions: List[WeightedFolEx],
     evidence: List[FolExpression],
-    goal: FolExpression,
-    samePredRule: String) = {
+    goal: FolExpression) = {
     
     val tempFile = FileUtils.mktemp(suffix = ".mln")
     FileUtils.writeUsing(tempFile) { f =>
@@ -273,62 +157,23 @@ class AlchemyTheoremProver(
 	            //   meaning that the probability of entailment (`mln`) using a weight `f(s)` based on similarity score `s <- [0,1]` will be
 	            //   roughly equal to the similarity score itself.
 	            
-          case HardWeightedExpression(folEx) => f.write(insertExistQuant(convert(folEx)+ ".\n"))
+          case HardWeightedExpression(folEx) => f.write(convert(folEx)+ ".\n")
         }
           
-	    // Add same name predicates inference rules
-	    if(samePredRule != "")
-	    	f.write(samePredRule)
        }
-
-      f.write("\n")
-      //f.write(handwrittenRules);
-
     }
     tempFile
   }
 
-  private def universalifyGoalFormula(goalFormula: FolIfExpression) = {
-    val FolIfExpression(goal, consequent) = goalFormula
-
-    def isConjoinedAtoms(e: FolExpression): Boolean = {
-      e match {
-        case FolAtom(_, _*) => true
-        case FolAndExpression(a, b) => isConjoinedAtoms(a) && isConjoinedAtoms(b)
-        case _ => false
-      }
-    }
-
-    def universalify(e: FolExpression): FolExpression = {
-      e match {
-        case FolExistsExpression(v, term) => FolAllExpression(v, universalify(term))
-        case _ if isConjoinedAtoms(e) => e -> consequent
-        case _ => e -> consequent // sys.error(e.toString)
-      }
-    }
-
-    universalify(goal)
-  }
-
-  private def makeEvidenceFile(evidence: List[FolExpression], predsInRules: List[String]) = {
+  private def makeEvidenceFile(evidence: List[FolExpression]) = {
     val tempFile = FileUtils.mktemp(suffix = ".db")
     FileUtils.writeUsing(tempFile) { f =>
       f.write("//\n");
       evidence.foreach {
-        case e @ FolAtom(pred, args @ _*) => { 
-						// Remove all evidence predicates that don't appear in inference rules.
-						// This can help to reduce domain size.
-						//val predName = pred.name.replace("'", "")
-						//var isUsedAsEvidence = false
-						//predsInRules.foreach(x => if (x.contains(predName)) isUsedAsEvidence = true)
-						//if(isUsedAsEvidence) f.write(convert(e) + "\n")
-						//else f.write("")
-						f.write (convert(e) + "\n");
-					}
+        case e @ FolAtom(pred, args @ _*) => f.write (convert(e) + "\n");
         case e => throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
       }
     }
-
     tempFile
   }
 
@@ -378,8 +223,7 @@ class AlchemyTheoremProver(
       case "sts" => (score1 + score2) / 2.0;
       case "rte" => score1;
     }  
-    
-    //println(out);
+
     if (LOG.isDebugEnabled())
     {
     	val results = readLines(result).mkString("\n").trim
@@ -392,13 +236,6 @@ class AlchemyTheoremProver(
     }
   }
   
-  //find outer most variables in the exist clauses
-  private def findVars(input: FolExpression, bound: Set[Variable] = Set()): Set[Variable] =
-	input match {
-	  case FolExistsExpression(variable, term) => findVars(term, bound+variable)
-	  case _ => bound
-  }
-  
   //convert a FOLExpression to an Alchemy string 
   private def convert(input: FolExpression, bound: Set[Variable] = Set()): String =
     input match {
@@ -406,10 +243,20 @@ class AlchemyTheoremProver(
       case _ => _convert(input, bound)
     }
 
-  private def _convert(input: FolExpression, bound: Set[Variable]): String =
+  private def _convert(input: FolExpression, bound: Set[Variable], outer:FolExpression = null): String =
     input match {
-      case FolExistsExpression(variable, term) => "exist " + variable.name + " (" + _convert(term, bound + variable) + ")"
-      case FolAllExpression(variable, term) => "(forall " + variable.name + " (" + _convert(term, bound + variable) + "))"
+      case FolExistsExpression(variable, term) => {
+    	  if (outer != null && outer.isInstanceOf[FolExistsExpression])
+    	    ", " + variable.name + _convert(term, bound + variable, input)
+    	  else
+    		 "(exist " + variable.name + _convert(term, bound + variable, input) + ")" 
+      }
+      case FolAllExpression(variable, term) => {
+       	  if (outer != null && outer.isInstanceOf[FolAllExpression])
+    	    ", " + variable.name + _convert(term, bound + variable, input)
+    	  else
+    		 "(forall " + variable.name + _convert(term, bound + variable, input) + ")" 
+      }
       case FolNegatedExpression(term) => "!(" + _convert(term, bound) + ")"
       case FolAndExpression(first, second) => "(" + _convert(first, bound) + " ^ " + _convert(second, bound) + ")"
       case FolOrExpression(first, second) => "(" + _convert(first, bound) + " v " + _convert(second, bound) + ")"
@@ -432,53 +279,6 @@ class AlchemyTheoremProver(
     }
 
   private def quote(s: String) = '"' + s + '"'
-
-  // Find and insert existential quantifiers in the inference rule
-  private def insertExistQuant(strFomular: String): String =
-  {
-	val rhsVars = strFomular.replaceAll(",", """\)\(""")
-		.split("\\(")
-		.filter(_.startsWith("rhs_"))
-		.map(_.split("\\)")(0))
-		.distinct
-
-	strFomular // We have problems with existential quantifiers. So, using universal quantifiers instead.
-
-	//if (!rhsVars.isEmpty) "exist " + rhsVars.mkString(",") + " " + strFomular
-	//else strFomular
-  }
-
-  private def getSynonyms(name: String, pos: String): Set[String] =
-    (for (
-      p <- getPos(pos);
-      s <- wordnet.synsets(name, p);
-      w <- s.getWords
-    ) yield w.getLemma).toSet + name -- Set("POS", "NEG") //TODO: REMOVE THE "+ name".  WE ONLY WANT NEED THIS FOR WHEN THE WORD ISN'T IN WORDNET.
-
-  private def getHypernyms(name: String, pos: String): Set[String] =
-    (for (
-      p <- getPos(pos);
-      s <- wordnet.synsets(name, p);
-      h <- wordnet.allHypernyms(s, 20);
-      w <- h.getWords
-    ) yield w.getLemma).toSet
-
-  private def getHyponyms(name: String, pos: String): Set[String] =
-    (for (
-      p <- getPos(pos);
-      s <- wordnet.synsets(name, p);
-      h <- wordnet.allHyponyms(s, 20);
-      w <- h.getWords
-    ) yield w.getLemma).toSet
-
-  private def getPos(s: String) =
-    s match {
-      case "n" => List(POS.NOUN)
-      case "v" => List(POS.VERB)
-      case "a" => List(POS.ADJECTIVE)
-      case _ => Nil
-    }
-
 }
 
 object AlchemyTheoremProver {

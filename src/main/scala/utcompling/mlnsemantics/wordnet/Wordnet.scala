@@ -14,5 +14,9 @@ trait Wordnet {
   def hyponyms(synset: ISynset): List[ISynset]
   def allHyponyms(synset: ISynset): Set[ISynset]
   def allHyponyms(synset: ISynset, searchLevels: Int): Set[ISynset]
-
+  
+  def getSynonyms(name: String, pos: String): Set[String]
+  def getHypernyms(name: String, pos: String): Set[String]
+  def getHyponyms(name: String, pos: String): Set[String]
+  def getPos(s: String): List[POS]
 }
