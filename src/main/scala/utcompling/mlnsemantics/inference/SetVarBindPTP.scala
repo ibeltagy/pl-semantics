@@ -48,15 +48,7 @@ class SetVarBindPTP(
               case _ => throw new RuntimeException("unsupported type");
             }
 
-            v.name.substring(0, 2) match {
-              case "tx" => typeParam_t ::= "indv_t";
-              case "te" => typeParam_t ::= "evnt_t";
-              case "tp" => typeParam_t ::= "prop_t";
-              case "hx" => typeParam_h ::= "indv_h";
-              case "he" => typeParam_h ::= "evnt_h";
-              case "hp" => typeParam_h ::= "prop_h";
-              case _ => throw new RuntimeException("unsupported type");
-            }
+            typeParam_t ::= v.name.substring(0, 2)
           }
         }
 

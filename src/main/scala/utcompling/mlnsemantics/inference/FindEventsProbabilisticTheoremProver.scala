@@ -175,15 +175,15 @@ class FindEventsProbabilisticTheoremProver(
     val newAssumptions = List(HardWeightedExpression(newAssumption))
     var newConstants =
       Map(
-        "indv_h" -> Set("default_indv_h_variable"),
-        "evnt_h" -> Set("default_evnt_h_variable"),
-        "prop_h" -> Set("default_prop_h_variable")) ;
+        "hx" -> Set[String](),
+        "he" -> Set[String](),
+        "hp" -> Set[String]()) ;
     
     if (Sts.opts.task == "sts")
       newConstants = newConstants ++ Map(
-        "indv_t" -> Set("default_indv_t_variable"),
-        "evnt_t" -> Set("default_evnt_t_variable"),
-        "prop_t" -> Set("default_prop_t_variable")) ;
+        "tx" -> Set[String](),
+        "te" -> Set[String](),
+        "tp" -> Set[String]()) ;
     
     val newDeclarations = newDeclarationsDetailed.flatMap(d => {
       List((d._1/*expression*/ match {
@@ -193,10 +193,10 @@ class FindEventsProbabilisticTheoremProver(
       		}, /*args types*/d._2.map(t=>
 	      t._1 match
 	      {
-			case "x"=>"indv_h";
-			case "e"=>"evnt_h";
-			case "p"=>"prop_h";
-			case "c"=>"indv_h";//conflict
+			case "x"=>"hx";
+			case "e"=>"he";
+			case "p"=>"hp";
+			case "c"=>"hx";//conflict
 	      }))) ++
 	     (if (Sts.opts.task == "sts")
 		      List((d._1/*expression*/ match {
@@ -209,10 +209,10 @@ class FindEventsProbabilisticTheoremProver(
 		  	  }, /*args types*/d._2.map(t=>
 		      t._1 match
 		      {
-				case "x"=>"indv_t";
-				case "e"=>"evnt_t";
-				case "p"=>"prop_t";
-				case "c"=>"indv_t";//conflict
+				case "x"=>"tx";
+				case "e"=>"te";
+				case "p"=>"tp";
+				case "c"=>"tx";//conflict
 		      })))
 		  else
 		    List[(BoxerExpression, Seq[String])]()

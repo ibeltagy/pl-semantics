@@ -17,5 +17,6 @@ case class SoftWeightedExpression[T](override val expression: T, weight: Double)
 }
 
 case class HardWeightedExpression[T](override val expression: T) extends WeightedExpression[T] {
+//case class TextExpression[T](override val expression: T) extends WeightedExpression[T] {
 
 }

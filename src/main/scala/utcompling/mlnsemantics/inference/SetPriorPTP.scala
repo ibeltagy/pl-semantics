@@ -37,9 +37,16 @@ class SetPriorPTP(
     
     var priorExpressions:List[WeightedExpression[FolExpression]] = List();
     
+    SetPriorPTP.predPrior = Sts.opts.task match //prior of the negated predicate 
+    {
+        case "sts" => 3; //prior in case of STS
+        case "rte" => 1; //prior in case of RTE
+    }
+    SetPriorPTP.entPrior = SetPriorPTP.predPrior //entailment prior equals the other predicates priors
+
     //Only prior on Entailment. It is a function of another Infernece Step   
-    if (Sts.opts.fixDCA == true && Sts.opts.task == "rte") {
-      
+    if (Sts.opts.fixDCA == true && Sts.opts.task == "rte") 
+    {
       //Run inference for the first time to get the "default probability"
       SetPriorPTP.withText = false;
       val result = delegate.prove(constants, declarations, evidence, assumptions, goal);
@@ -56,13 +63,6 @@ class SetPriorPTP(
     }
     else  //Prior on all predicates
     {
-      SetPriorPTP.predPrior = Sts.opts.task match //prior of the negated predicate 
-      {
-        case "sts" => 3; //prior in case of STS
-        case "rte" => 1; //prior in case of RTE
-      }
-      SetPriorPTP.entPrior = SetPriorPTP.predPrior //entailment prior equals the other predicates priors
-      
       //for all declarations, generate prior expressions
       priorExpressions = declarations.map {
       	case (expr, varTypes) => {

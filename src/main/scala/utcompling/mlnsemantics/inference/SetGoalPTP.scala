@@ -27,6 +27,7 @@ class SetGoalPTP(
     goal: FolExpression): Option[Double] = {
 
     var extraExpressions: List[WeightedExpression[FolExpression]] = List();
+    newConstants = constants;//extra constants are added by skolemNew
 
   	//=====================Start STS=============================    
     if (Sts.opts.task == "sts")
@@ -69,18 +70,19 @@ class SetGoalPTP(
       //H+, H-
       val hPlus = GoalExpression(skolemNew(goal -> SetVarBindPTP.entPred_h), Double.PositiveInfinity)
       val hMinus = GoalExpression((SetVarBindPTP.entPred_h -> goal).asInstanceOf[FolExpression], Double.PositiveInfinity)
-      extraExpressions = List(hPlus, hMinus);
+      extraExpressions = List(hPlus/*, hMinus*/);//TODO: hMinus is disabled because of the computational overhead. 
     } 
 
     //===================== ERROR =============================
     else
       throw new RuntimeException("Not possible to reach this point")
 
-    delegate.prove(constants, declarations, evidence, assumptions ++ extraExpressions, null)
+    delegate.prove(newConstants, declarations, evidence, assumptions ++ extraExpressions, null)
 
   }
 
-  //****************************** Helpers **************************  
+  //****************************** fixDCA functions **************************  
+  private var newConstants: Map[String, Set[String]] = null;
   private def skolemNew(expr: FolExpression, skolemVars: List[Variable] = List(), isNegated:Boolean = false): FolExpression = 
   {
 	expr match {
@@ -110,7 +112,12 @@ class SetGoalPTP(
   private def skolemNew(v: Variable, skolemVars: List[Variable] ): Variable =
   {
     if(skolemVars.contains(v))
-    	Variable(v.name+"_hPlus")
+    {
+    	val newVarName = v.name+"_hPlus"
+    	val varType = v.name.substring(0, 2);
+    	newConstants += (varType -> (newConstants.apply(varType) + newVarName))
+    	Variable(newVarName)
+    }
     else 
     	v
   }

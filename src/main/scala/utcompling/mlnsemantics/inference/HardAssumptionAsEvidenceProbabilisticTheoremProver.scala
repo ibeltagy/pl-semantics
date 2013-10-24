@@ -13,6 +13,8 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
   delegate: ProbabilisticTheoremProver[FolExpression])
   extends ProbabilisticTheoremProver[FolExpression] {
 
+  private var newConstants: Map[String, Set[String]] = null;
+  
   /**
    * Return the proof, or None if the proof failed
    */
@@ -22,8 +24,19 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
     evidence: List[FolExpression],
     assumptions: List[WeightedExpression[FolExpression]],
     goal: FolExpression): Option[Double] = {
+    
+    newConstants = constants;//extra constants are added by skolemNew
+    
+    
+    delegate.prove(
+      constants,
+      declarations,
+      evidence,
+      assumptions,
+      goal)
+  }
 
-    def go(e: FolExpression): List[FolExpression] = {
+    /*def go(e: FolExpression): List[FolExpression] = {
       e match {
       	case FolExistsExpression(v, term) => go(term)
       	case FolAndExpression(first, second) => go(first) ++ go(second)
@@ -96,5 +109,5 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
         }
     }
     }        
-  }
+  }*/
 }

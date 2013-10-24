@@ -102,7 +102,12 @@ class AlchemyTheoremProver(
     val tempFile = FileUtils.mktemp(suffix = ".mln")
     FileUtils.writeUsing(tempFile) { f =>
     constants.foreach {
-    case (name, tokens) => f.write("%s = {%s}\n".format(name, tokens.map(quote).mkString(",")))
+    	case (name, tokens) => {
+    	  if (tokens.size == 0)
+    		  f.write("%s = {%s}\n".format(name, quote(name+"_default")))
+    	  else
+    		  f.write("%s = {%s}\n".format(name, tokens.map(quote).mkString(",")))
+    	}
     }
     f.write("\n")
 
