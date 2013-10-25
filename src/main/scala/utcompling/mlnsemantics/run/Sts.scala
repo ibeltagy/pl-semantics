@@ -191,8 +191,9 @@ object Sts {
 		                words => BowVectorSpace(vsFileMod, x => words(x) && allLemmas(x)),
 		                new SameLemmaHardClauseRuleWeighter(
 		                  new AwithCvecspaceWithSpellingSimilarityRuleWeighter(compositeVectorMaker)),
-		              new FromEntToEqvProbabilisticTheoremProver( // 6.5<== goal =  premise ^  hypothesis. This is for STS  
-		                new TypeConvertingPTP( // 7<== Entry point for final modifications on Boxer's representation before converting to FOL
+		              new FromEntToEqvProbabilisticTheoremProver( // 6.5<== goal =  premise ^  hypothesis. This is for STS
+		               new PositiveEqEliminatingProbabilisticTheoremProver(
+		                 new TypeConvertingPTP( // 7<== Entry point for final modifications on Boxer's representation before converting to FOL
 		                  new BoxerExpressionInterpreter[FolExpression] {
 		                    def interpret(x: BoxerExpression): FolExpression = {
 		                      val drt = new Boxer2DrtExpressionInterpreter().interpret( // 11<== Convert from Boxer to DRT 
@@ -208,7 +209,7 @@ object Sts {
 		                   new SetPriorPTP( //
 		                    new SetGoalPTP( //
 		                	 new HardAssumptionAsEvidenceProbabilisticTheoremProver( // 15<== Generate evidence from premise. 
-		                    		softLogicTool))))))))))) // 16<== run Alchemy or PSL
+		                    		softLogicTool)))))))))))) // 16<== run Alchemy or PSL
 
           val p = ttp.prove(Tokenize(txt).mkString(" "), Tokenize(hyp).mkString(" "))
           println("Some(%.2f) [actual: %.2f, gold: %s]".format(p.get, probOfEnt2simScore(p.get), goldSim))

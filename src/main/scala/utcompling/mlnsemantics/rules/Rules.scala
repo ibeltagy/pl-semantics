@@ -160,7 +160,6 @@ object Rules {
       e match {
         case BoxerRel(discId, indices, event, variable, name, sense) => BoxerRel(discId match { case "h" => "t"; case "t" => "h"; }, indices, event, variable, name, sense);
         case BoxerPred(discId, indices, variable, name, pos, sense) => BoxerPred(discId match { case "h" => "t"; case "t" => "h"; }, indices, variable, name, pos, sense);
-        case BoxerDrs(refs, conds) => BoxerDrs(refs, conds.map(changeExpDirection))
         case _ => e.visitConstruct(changeExpDirection);
       }
     }

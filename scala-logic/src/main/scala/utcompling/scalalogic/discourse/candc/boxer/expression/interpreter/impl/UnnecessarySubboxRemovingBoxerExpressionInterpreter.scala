@@ -8,24 +8,12 @@ class UnnecessarySubboxRemovingBoxerExpressionInterpreter extends BoxerExpressio
   private var PropVar = """^(p\d*)$""".r
 
   override def interpret(e: BoxerExpression) =
-    e match {
-      case BoxerDrs(refs, conds) =>
-        val (crushedE, eVars) = crush(e, Set())
-        crushedE
-      case BoxerAlfa(_variable, first, second) =>
-        val (crushedE, eVars) = crush(e, Set())
-        crushedE
-      case BoxerMerge(_pred, first, second) =>
-        val (crushedE, eVars) = crush(e, Set())
-        crushedE        
-      case _ =>
-        e.visitConstruct(this.interpret)
-    }
-
+    crush(e, Set())._1.get
   /**
    * @return a pair: (crushed expression, free variables found below)
    */
-  private def crush(e: BoxerExpression, propVarsInScope: Set[BoxerVariable]): (BoxerExpression, Set[BoxerVariable]) =
+  private def crush(e: BoxerExpression, propVarsInScope: Set[BoxerVariable]): (Option[BoxerExpression], Set[BoxerVariable]) =
+  {
     e match {
       case BoxerAlfa(variable, first, second) =>
         val thisVars = Set[BoxerVariable]()
@@ -33,12 +21,20 @@ class UnnecessarySubboxRemovingBoxerExpressionInterpreter extends BoxerExpressio
         val (secondCrushed, secondVars) = crush(second, propVarsInScope | thisVars)
         //(BoxerAlfa(variable, firstCrushed, secondCrushed), thisVars | firstVars | secondVars)
         //Merge the two boxes of Alfa in one DRS BOX
-        (BoxerDrs(firstCrushed.refs ++ secondCrushed.refs, firstCrushed.conds ++ secondCrushed.conds), firstVars | secondVars)
+        (merge(firstCrushed, secondCrushed), firstVars | secondVars)
+
        
       case BoxerApp(function, argument) =>
         val (functionCrushed, functionVars) = crush(function, propVarsInScope)
         val (argumentCrushed, argumentVars) = crush(argument, propVarsInScope)
-        (BoxerApp(functionCrushed, argumentCrushed), functionVars | argumentVars)
+        if(functionCrushed.isDefined && argumentCrushed.isDefined)
+        	(Some(BoxerApp(functionCrushed.get, argumentCrushed.get)), functionVars | argumentVars)
+        else if(functionCrushed.isDefined)
+        	(functionCrushed, functionVars | argumentVars)
+        else if(argumentCrushed.isDefined)
+        	(argumentCrushed, functionVars | argumentVars)
+        else
+            (None, functionVars | argumentVars)
 
       case BoxerDrs(refs, conds) =>
         val refVars = refs.map(_._2).toSet
@@ -54,51 +50,84 @@ class UnnecessarySubboxRemovingBoxerExpressionInterpreter extends BoxerExpressio
         val allResultVars = resultVars.fold(Set())(_ | _)
         val (additionalRefs, crushedConds, prunedPropVars) =
           resultConds.map {
-            case BoxerProp(discId, indices, variable, drs) if allResultVars(variable) && indices.isEmpty =>
+            case Some(BoxerProp(discId, indices, variable, drs)) if allResultVars(variable) && indices.isEmpty =>
               (drs.refs, drs.conds, Set[BoxerVariable](variable))
+            case None =>
+              (List[(List[BoxerIndex], BoxerVariable)](), List(), Set[BoxerVariable]())
             case e =>
-              (List[(List[BoxerIndex], BoxerVariable)](), List(e), Set[BoxerVariable]())
+              (List[(List[BoxerIndex], BoxerVariable)](), List(e.get), Set[BoxerVariable]())
           }.unzip3
         val prunedPropVarsFlat = prunedPropVars.flatten.toSet -- unprunableVars.toSet
         val filteredRefs = refs.filterNot(r => prunedPropVarsFlat(r._2))
-        (BoxerDrs(filteredRefs ++ additionalRefs.flatten, crushedConds.flatten), allResultVars -- refVars)
+        val flattenConds = crushedConds.flatten
+        if(!flattenConds.isEmpty)
+        	(Some(BoxerDrs(filteredRefs ++ additionalRefs.flatten, flattenConds)), allResultVars -- refVars)
+        else (None, allResultVars -- refVars)
 
       case BoxerEq(discId, indices, first, second) =>
-        (BoxerEq(discId, indices, first, second), Set(first, second))
+        (Some(BoxerEq(discId, indices, first, second)), Set(first, second))
 
       case BoxerImp(discId, indices, first, second) =>
         val (firstCrushed, firstVars) = crush(first, propVarsInScope)
         val (secondCrushed, secondVars) = crush(second, propVarsInScope)
-        (BoxerImp(discId, indices, firstCrushed, secondCrushed), firstVars | secondVars)
+        if(firstCrushed.isDefined && secondCrushed.isDefined)
+        	(Some(BoxerImp(discId, indices, firstCrushed.get, secondCrushed.get)), firstVars | secondVars)
+	    else if(firstCrushed.isDefined)
+	    	//(Some(BoxerNot(discId, indices, firstCrushed.get)), firstVars | secondVars)
+	    	(Some(BoxerImp(discId, indices, firstCrushed.get, firstCrushed.get)), firstVars | secondVars)
+	    else if(secondCrushed.isDefined)
+	    	(secondCrushed, firstVars | secondVars)
+	    else
+	    	(None, firstVars | secondVars)
 
       case BoxerMerge(pred, first, second) =>
         val (firstCrushed, firstVars) = crush(first, propVarsInScope)
         val (secondCrushed, secondVars) = crush(second, propVarsInScope)
         //(BoxerMerge(pred, firstCrushed, secondCrushed), firstVars | secondVars)
         //Merge the two boxes of Merge in one DRS BOX        
-        (BoxerDrs(firstCrushed.refs ++ secondCrushed.refs, firstCrushed.conds ++ secondCrushed.conds), firstVars | secondVars)
+        //(BoxerDrs(firstCrushed.refs ++ secondCrushed.refs, firstCrushed.conds ++ secondCrushed.conds), firstVars | secondVars)
+        (merge(firstCrushed, secondCrushed), firstVars | secondVars)
 
       case BoxerNamed(discId, indices, variable, name, typ, sense) =>
-        (BoxerNamed(discId, indices, variable, name, typ, sense), Set(variable))
+        (Some(BoxerNamed(discId, indices, variable, name, typ, sense)), Set(variable))
 
       case BoxerNot(discId, indices, drs) =>
         val (drsCrushed, drsVars) = crush(drs, propVarsInScope)
-        (BoxerNot(discId, indices, drsCrushed), drsVars)
+        if(drsCrushed.isDefined)
+        	(Some(BoxerNot(discId, indices, drsCrushed.get)), drsVars)
+        else
+        	(None, drsVars)
 
       case BoxerPred(discId, indices, variable, name, pos, sense) =>
-        (BoxerPred(discId, indices, variable, name, pos, sense), Set(variable))
+        (Some(BoxerPred(discId, indices, variable, name, pos, sense)), Set(variable))
 
       case BoxerProp(discId, indices, variable, drs) =>{
         val (drsCrushed, drsVars) = crush(drs, propVarsInScope)//This has to be changed if we want to support
-        														//embedded propositions 
-        (BoxerProp(discId, indices, variable, drsCrushed), drsVars|Set(variable))
+        														//embedded propositions
+        if(drsCrushed.isDefined)
+        	(Some(BoxerProp(discId, indices, variable, drsCrushed.get)), drsVars|Set(variable))
+        else
+        	(None, drsVars)
       }
 
       case BoxerRel(discId, indices, event, variable, name, sense) =>
-        (BoxerRel(discId, indices, event, variable, name, sense), Set(variable))
+        (Some(BoxerRel(discId, indices, event, variable, name, sense)), Set(variable))
         
       case BoxerCard(discId, indices, variable, num, typ) =>
-        (BoxerCard(discId, indices, variable, num, typ), Set(variable))
-      case _ => (e, Set());
+        (Some(BoxerCard(discId, indices, variable, num, typ)), Set(variable))
+      case _ => (Some(e), Set());
     }
+  }
+  
+  private def merge(firstCrushed:Option[BoxerExpression], secondCrushed:Option[BoxerExpression]): Option[BoxerExpression] = 
+  {
+	if(firstCrushed.isDefined && secondCrushed.isDefined)
+		Some(BoxerDrs(firstCrushed.get.refs ++ secondCrushed.get.refs, firstCrushed.get.conds ++ secondCrushed.get.conds))
+    else if(firstCrushed.isDefined)
+    	firstCrushed
+    else if(secondCrushed.isDefined)
+    	secondCrushed
+    else
+    	None
+  }
 }
