@@ -2,13 +2,18 @@ package utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl
 
 import utcompling.scalalogic.discourse.candc.boxer.expression._
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.BoxerExpressionInterpreter
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerVariable
 
 class UnnecessarySubboxRemovingBoxerExpressionInterpreter extends BoxerExpressionInterpreter[BoxerExpression] {
 
   private var PropVar = """^(p\d*)$""".r
 
-  override def interpret(e: BoxerExpression) =
-    crush(e, Set())._1.get
+  override def interpret(e: BoxerExpression) = {
+    val crushed = crush(e, Set())._1
+    if(crushed.isDefined)
+      crushed.get
+    else BoxerDrs(List(), List())
+  }
   /**
    * @return a pair: (crushed expression, free variables found below)
    */

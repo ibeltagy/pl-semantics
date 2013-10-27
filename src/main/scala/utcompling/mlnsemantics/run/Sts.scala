@@ -192,7 +192,7 @@ object Sts {
 		                new SameLemmaHardClauseRuleWeighter(
 		                  new AwithCvecspaceWithSpellingSimilarityRuleWeighter(compositeVectorMaker)),
 		              new FromEntToEqvProbabilisticTheoremProver( // 6.5<== goal =  premise ^  hypothesis. This is for STS
-		               new PositiveEqEliminatingProbabilisticTheoremProver(
+		               new PositiveEqEliminatingProbabilisticTheoremProver( //remove positive equalities from Text. This helps evidence generation 
 		                 new TypeConvertingPTP( // 7<== Entry point for final modifications on Boxer's representation before converting to FOL
 		                  new BoxerExpressionInterpreter[FolExpression] {
 		                    def interpret(x: BoxerExpression): FolExpression = {
@@ -208,8 +208,8 @@ object Sts {
 		                  new SetVarBindPTP( //with or without Variable Binding 		
 		                   new SetPriorPTP( //
 		                    new SetGoalPTP( //
-		                	 new HardAssumptionAsEvidenceProbabilisticTheoremProver( // 15<== Generate evidence from premise. 
-		                    		softLogicTool)))))))))))) // 16<== run Alchemy or PSL
+		                      new HardAssumptionAsEvidenceProbabilisticTheoremProver( // 15<== Generate evidence from premise.
+		                        softLogicTool)))))))))))) // 16<== run Alchemy or PSL
 
           val p = ttp.prove(Tokenize(txt).mkString(" "), Tokenize(hyp).mkString(" "))
           println("Some(%.2f) [actual: %.2f, gold: %s]".format(p.get, probOfEnt2simScore(p.get), goldSim))

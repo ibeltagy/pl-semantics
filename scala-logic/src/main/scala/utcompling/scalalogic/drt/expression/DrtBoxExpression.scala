@@ -5,6 +5,8 @@ import utcompling.scalalogic.top.expression.Variable
 import utcompling.scalalogic.fol.expression.FolExpression
 import scala.collection.mutable.ListBuffer
 import utcompling.scalalogic.util.StringUtils
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerVariable
+import utcompling.scalalogic.fol.expression.FolVariableExpression
 
 case class DrtBoxExpression(refs: List[Variable], conds: List[DrtExpression], consequent: Option[DrtExpression] = None, isEqv: Option[Boolean] = Some(false))
     extends DrtExpression {
@@ -116,7 +118,9 @@ case class DrtBoxExpression(refs: List[Variable], conds: List[DrtExpression], co
         this.consequent match {
             case None => {
                 if (this.conds.isEmpty)
-                    throw new RuntimeException("Cannot convert DRS with no conditions to FOL: "+this)
+                	//Return a variable "true" indicating that the expression is empty
+                	return FolVariableExpression(Variable("true"))  
+                    //throw new RuntimeException("Cannot convert DRS with no conditions to FOL: "+this)
                 var accum = this.conds.map(_.fol).reduceLeft(_ & _)
                 for (ref <- this._order_ref_strings(this.refs).reverse.map(Variable(_)))
                     accum = accum exists ref
