@@ -27,6 +27,8 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
     assumptions: List[WeightedExpression[BoxerExpression]],
     goal: BoxerExpression): Option[Double] = {
 
+    newConstants = constants;//extra constants are added by skolemConstAsEvd
+    
     //Remove it only from the Text because that help generating the evidence.
     //No need to do it for the hypothesis 
     val newAssumptions:List[WeightedExpression[BoxerExpression]] = assumptions.map
@@ -35,7 +37,7 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
 	        	inNot = false;
 	        	equalities = List();
 	        	evdBeforeEqRemove = List()
-				var newExpr = skolemConstAsEvd(e, true, true)
+	        	var newExpr = skolemConstAsEvd(e, true, true, false)
 				equalities = groupEqvClasses(equalities);
 				LOG.trace(equalities)
 				extraEvd = extraEvd ++ evdBeforeEqRemove.map(applyEq);
@@ -46,7 +48,7 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
     }
     
     delegate.prove(
-      constants,
+      newConstants,
       declarations,
       evidence ++ extraEvd,
       newAssumptions,
@@ -57,38 +59,40 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
   private var equalities:List[Set[String]] = List();
   private var inNot = false;
   private var negatedConstCount = 0;
+  private var newConstants: Map[String, Set[String]] = null;
   
-  private def skolemConstAsEvd(e: BoxerExpression, outer: Boolean, remove: Boolean): BoxerExpression = 
+  def addConst(varName: String) =
+		newConstants += (varName.substring(0, 2) -> (newConstants.apply(varName.substring(0, 2)) + varName))
+    	
+  private def skolemConstAsEvd(e: BoxerExpression, outer: Boolean, remove: Boolean, isNegated: Boolean): BoxerExpression = 
   {
     if(!outer) //no need to continue if not in the outer most existentially quantified variables 
-    			//nor the LHS of a the outer most Implication 
+    			//nor the LHS of an outer most Implication 
       return e;
 
     e match {
-      case BoxerAlfa(variable, first, second) => BoxerAlfa(variable, skolemConstAsEvd(first, outer, remove),
-    		  														skolemConstAsEvd(second, outer, remove));
-      case BoxerMerge(pred, first, second) => BoxerMerge(pred, skolemConstAsEvd(first, outer, remove), 
-    		  													skolemConstAsEvd(second, outer, remove));
-      case BoxerApp(function, argument) => BoxerApp(skolemConstAsEvd(function, outer, remove), 
-    		  										skolemConstAsEvd(argument, outer, remove));      
-      case BoxerProp(discId, indices, variable, drs) => BoxerProp(discId, indices, variable, skolemConstAsEvd(drs, outer, remove));
+      case BoxerAlfa(variable, first, second) => BoxerAlfa(variable, skolemConstAsEvd(first, outer, remove, isNegated),
+    		  														skolemConstAsEvd(second, outer, remove, isNegated));
+      case BoxerMerge(pred, first, second) => BoxerMerge(pred, skolemConstAsEvd(first, outer, remove, isNegated), 
+    		  													skolemConstAsEvd(second, outer, remove, isNegated));
+      case BoxerApp(function, argument) => BoxerApp(skolemConstAsEvd(function, outer, remove, isNegated), 
+    		  										skolemConstAsEvd(argument, outer, remove, isNegated));      
+      case BoxerProp(discId, indices, variable, drs) => BoxerProp(discId, indices, variable, skolemConstAsEvd(drs, outer, remove, isNegated));
       
-      case BoxerImp(discId, indices, first, second) => BoxerImp(discId, indices, skolemConstAsEvd(first, true, false), 
-    		  																	 skolemConstAsEvd(second, false, false));
+      case BoxerImp(discId, indices, first, second) => BoxerImp(discId, indices, skolemConstAsEvd(first, true, false, isNegated), 
+    		  																	 skolemConstAsEvd(second, false, false, isNegated));      
+      case BoxerNot(discId, indices, drs) =>  BoxerNot(discId, indices, skolemConstAsEvd(drs, outer, false, !isNegated))
       
-      case BoxerNot(discId, indices, drs) => {
-        inNot = true;
-        val exp = BoxerNot(discId, indices, skolemConstAsEvd(drs, outer, false))
-        inNot = false;
-        exp;
-      }
+      //TODO: I am not sure this is right
+      case BoxerOr(discId, indices, first, second) => BoxerOr(discId, indices, skolemConstAsEvd(first, true, false, isNegated), 
+    		  																	 skolemConstAsEvd(second, false, false, isNegated));
       case BoxerDrs(refs, conds) => 
       {
         var conditions:List[BoxerExpression] = List();
-        if (inNot)
+        if (isNegated)
           	conditions = conds.flatMap(c=> //change variables names, but do no remove them
 	        {
-	        	negatedConstCount = negatedConstCount + 2;	          
+	        	/*negatedConstCount = negatedConstCount + 2;	          
 	        	c match
 	            {
 	        	  case BoxerEq(discId, indices, first, second) => None
@@ -102,28 +106,82 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
 	        	  case BoxerCard(discId, indices, variable, num, typ) => evdBeforeEqRemove = evdBeforeEqRemove :+
 	        			  			BoxerCard(discId, indices, BoxerVariable(variable.name + "_not"+negatedConstCount), num, typ); List(c);
 	        	  					//TODO: are you sure this is correct ???
-	        	  case BoxerOr(discId, indices, first, second) => List(BoxerOr(discId, indices, skolemConstAsEvd(first, outer, remove), skolemConstAsEvd(second, outer, remove)))
-	        	  case _ => List(skolemConstAsEvd(c, outer, remove)) 
-	            } 
+	        	  case BoxerOr(discId, indices, first, second) => List(BoxerOr(discId, indices, skolemConstAsEvd(first, outer, remove, isNegated), skolemConstAsEvd(second, outer, remove, isNegated)))
+	        	  case _ => List(skolemConstAsEvd(c, outer, remove, isNegated)) 
+	            }*/
+	          	c match
+	            {
+	        	  case BoxerEq(discId, indices, first, second) =>  None;
+	        	  case BoxerPred(discId, indices, variable, name, pos, sense) => 
+	        	    		evdBeforeEqRemove = evdBeforeEqRemove :+ BoxerNot(discId, indices, c);
+	        	    		addConst(variable.name)
+	        	    		None;
+	        	  case BoxerNamed(discId, indices, variable, name, typ, sense) => 
+	        	    		evdBeforeEqRemove = evdBeforeEqRemove :+ BoxerNot(discId, indices, c);
+	        	    		addConst(variable.name)
+	        	    		None;
+	        	  case BoxerRel(discId, indices, event, variable, name, sense) => 
+	        	    		evdBeforeEqRemove = evdBeforeEqRemove :+ BoxerNot(discId, indices, c);
+	        	    		addConst(variable.name)
+	        	    		addConst(event.name)
+	        	    		None;
+	        	  case BoxerCard(discId, indices, variable, num, typ) => 
+	        	    		evdBeforeEqRemove = evdBeforeEqRemove :+ BoxerNot(discId, indices, c);
+	        	    		addConst(variable.name)
+	        	    		None;
+	        	  case BoxerTimex(discId, indices, variable, timeExp) =>
+	        	    		evdBeforeEqRemove = evdBeforeEqRemove :+ BoxerNot(discId, indices, c);
+	        	    		addConst(variable.name)
+	        	    		None;
+	        	  //TODO: Are you sure OR is correct ? 
+	        	  //I think yes, it is right
+	        	  case BoxerOr(discId, indices, first, second) => skolemConstAsEvd(first, outer, remove, isNegated);
+	        	  												skolemConstAsEvd(second, outer, remove, isNegated);
+	        	  												None;
+	        	  case _ => List(skolemConstAsEvd(c, outer, remove, isNegated)) 
+	            }
 	        })
         else 
 	        conditions = conds.flatMap(c=> 
 	        {
 	        	c match
 	            {
-	        	  case BoxerEq(discId, indices, first, second) => equalities = equalities ++ List(Set(first.name, second.name)); None;
-	        	  case BoxerPred(discId, indices, variable, name, pos, sense) => evdBeforeEqRemove = evdBeforeEqRemove :+ c; None;
-	        	  case BoxerNamed(discId, indices, variable, name, typ, sense) => evdBeforeEqRemove = evdBeforeEqRemove :+ c; None;
-	        	  case BoxerRel(discId, indices, event, variable, name, sense) => evdBeforeEqRemove = evdBeforeEqRemove :+ c; None;
-	        	  case BoxerCard(discId, indices, variable, num, typ) => evdBeforeEqRemove = evdBeforeEqRemove :+ c; None;
-	        	  case BoxerOr(discId, indices, first, second) => evdBeforeEqRemove = evdBeforeEqRemove :+ c; None;
-	        	  case _ => List(skolemConstAsEvd(c, outer, remove)) 
+	        	  case BoxerEq(discId, indices, first, second) => 
+	        	    		equalities = equalities ++ List(Set(first.name, second.name)); 
+	        	    		addConst(first.name); 
+	        	    		addConst(second.name); 
+	        	    		None;
+	        	  case BoxerPred(discId, indices, variable, name, pos, sense) => 
+	        	    		evdBeforeEqRemove = evdBeforeEqRemove :+ c;
+	        	    		addConst(variable.name)
+	        	    		None;
+	        	  case BoxerNamed(discId, indices, variable, name, typ, sense) => 
+	        	    		evdBeforeEqRemove = evdBeforeEqRemove :+ c;
+	        	    		addConst(variable.name)
+	        	    		None;
+	        	  case BoxerRel(discId, indices, event, variable, name, sense) => 
+	        	    		evdBeforeEqRemove = evdBeforeEqRemove :+ c;
+	        	    		addConst(variable.name)
+	        	    		addConst(event.name)
+	        	    		None;
+	        	  case BoxerCard(discId, indices, variable, num, typ) =>
+	        	    		evdBeforeEqRemove = evdBeforeEqRemove :+ c;
+	        	    		addConst(variable.name)
+	        	    		None;
+	        	  case BoxerTimex(discId, indices, variable, timeExp) =>
+	        	    		evdBeforeEqRemove = evdBeforeEqRemove :+ c;
+	        	    		addConst(variable.name)
+	        	    		None;
+	        	  //TODO: I am not sure the way OR is handled is correct 
+	        	  //Probably it is not.
+	        	  //case BoxerOr(discId, indices, first, second) => evdBeforeEqRemove = evdBeforeEqRemove :+ c; None;
+	        	  case _ => List(skolemConstAsEvd(c, outer, remove, isNegated)) 
 	            } 
 	        })
 	    
-	    if(inNot)
+	    /*if(inNot)
 	    	BoxerDrs(refs, conditions)
-        else if(remove)
+        else*/ if(remove)
         	BoxerDrs(List(), conditions)
         else
         	BoxerDrs(refs, conds)
@@ -132,7 +190,7 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
     }
   }
   
-  private def findRemoveEq(e: BoxerExpression): BoxerExpression = 
+  /*private def findRemoveEq(e: BoxerExpression): BoxerExpression = 
   {
     e match {
 
@@ -164,7 +222,7 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
       case _ => e.visitConstruct(findRemoveEq)
     }
   }
-
+*/
   object AllDone extends Exception { }
   
   private def groupEqvClasses(eq: List[Set[String]]): List[Set[String]] =

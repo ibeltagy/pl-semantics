@@ -37,6 +37,7 @@ class FromEntToEqvProbabilisticTheoremProver(
 	      case BoxerProp(discId, indices, variable, drs) => BoxerProp(prefix, indices, renameVar(variable), drs.visitConstruct(renameVars))
 	      case BoxerRel(discId, indices, event, variable, name, sense) => BoxerRel(prefix, indices, renameVar(event), renameVar(variable), name, sense)
 	      case BoxerCard(discId, indices, variable, num, typ) => BoxerCard(prefix, indices, renameVar(variable), num, typ)
+	      case BoxerTimex(discId, indices, variable, timeExp) => BoxerTimex(prefix, indices, renameVar(variable), timeExp)
 	      case BoxerVariable(name) =>BoxerVariable(prefix + name)
 	      case _ => e.visitConstruct(renameVars)
       }

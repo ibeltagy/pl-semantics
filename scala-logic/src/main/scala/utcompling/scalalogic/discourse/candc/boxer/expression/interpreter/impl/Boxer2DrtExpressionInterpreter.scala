@@ -54,7 +54,7 @@ class Boxer2DrtExpressionInterpreter extends BaseBoxerExpressionInterpreter[DrtE
         DrtAtom(Variable("card_%s_d%s".format(num, discId)), Variable(variable.name))
         
     override protected def interpretBoxerOr(discId: String, indices: List[BoxerIndex], first: BoxerExpression, second: BoxerExpression): DrtExpression =
-        this.interpret(first) -> this.interpret(second)
+        this.interpret(first) | this.interpret(second)
         
     override protected def interpretBoxerTimex(discId: String, index: List[BoxerIndex], variable: BoxerVariable, timeExp: BoxerExpression): DrtExpression =
         //this.interpret(timeExp)

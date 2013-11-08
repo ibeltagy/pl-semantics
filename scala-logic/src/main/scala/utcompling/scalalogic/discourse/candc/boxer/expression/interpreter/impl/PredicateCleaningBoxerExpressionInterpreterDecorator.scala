@@ -27,6 +27,8 @@ class PredicateCleaningBoxerExpressionInterpreterDecorator extends BoxerExpressi
         BoxerRel(discId, indices, event, variable, clearName(name), sense)
       case BoxerNamed(discId, indices, variable, name, typ, sense) =>
         BoxerNamed(discId, indices, variable, clearName(name), typ, sense)
+      case BoxerCard(discId, indices, variable, num, typ) =>
+        BoxerCard(discId, indices, variable, clearName(num), typ)        
       case _ =>
         e.visitConstruct(this.interpret)
     }

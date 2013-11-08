@@ -1,9 +1,11 @@
+1-Naming of HardAssumptionAsEvidence and PositiveEqEliminating is not decriptive
+2-OR and Negation in PositiveEqEliminating could be wrong
+
+5-fixDCA or noFixDCA is not implemented in PositiveEqEliminating and HardAssumptionAsEvidence
+
+3-Existance is done for the outer most group of universals, not for embeded univs under exists
 SUggestion: 
 -STS is running RTE twice then average. Do not do both of them in one big MLN
-
-Inprogress:
--simplify PSLTheoremProver and AlchemyTheoremProver. Group common code
--HardAssumptionAsEvidenceProbabilisticTheoremProver is totally wrong
 
 how to parse multi-sentences T or H
 
@@ -50,8 +52,6 @@ Tokenization details and different modes of tokenization are in utcompling/mlnse
 (b) replace special characters with _ before convert to FOL in PredicateCleaningBoxerExpressionInterpreterDecorator
 Is this the right place ? Should not it be right before calling MLN/PSL ? would it be better NOT to remove special characters. Instead, replace them with some other characters ?  I will keep it like this for now until I find an example where this needs to be changed. 
 In all cases, candc gets somehow confused when parsing special characters. 
-
--Why Coung is doing all this ReplaceAll in AlchmeyThearomProver ?
 
 -When parsing, WH questions are removed. This can be fixed here: BoxerExpressionParser
 

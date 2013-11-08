@@ -16,8 +16,9 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
   extends ProbabilisticTheoremProver[FolExpression] {
 
   private var newConstants: Map[String, Set[String]] = null;
+  private var newDeclarations: Map[FolExpression, Seq[String]] = null;
   private var extraEvid: List[FolExpression] = List();
-  private var quantifiers: List[(String, Set[String])] = List();
+  private var skolemFunctionsCounter:Int = 0;
 
   
   /**
@@ -30,29 +31,32 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
     assumptions: List[WeightedExpression[FolExpression]],
     goal: FolExpression): Option[Double] = {
     
-    newConstants = constants;//extra constants are added by skolemNew
+    newConstants = constants;
+    newDeclarations = declarations;
     
     val newAssumptions:List[WeightedExpression[FolExpression]] = 
       assumptions
         .flatMap {
           case HardWeightedExpression(e) => {
-        	  //outerExist = true;
-              //val modifiedExp = getEvidTillFirstUniv(e, true);
-        	  //quantifiers = List()        	  
-        	  List(HardWeightedExpression(e))
+        	  extraUnivVars = Set();
+        	  var exp = goUniv(e, List())
+        	  extraUnivVars.foreach(univVar =>{
+        	    exp = FolAllExpression(Variable(univVar), exp);
+        	  })
+        	  List(HardWeightedExpression(exp))
           }
           case a @ _ => List(a)
         }
     
     delegate.prove(
       newConstants,
-      declarations,
+      newDeclarations,
       evidence ++ extraEvid,  //toSet to remove duplicate evidences
       newAssumptions,
       goal)
     
   }
-  private def addQuantifier(q:String, v:String) = 
+  /*private def addQuantifier(q:String, v:String) = 
   {
       if(quantifiers.size == 0)
   		  quantifiers :+ ((q, v));
@@ -66,34 +70,52 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
   	    	lastQuant = (q, Set(v));
   	    quantifiers :+ lastQuant
   	  }
+  }*/
+  private var extraUnivVars: Set[String] = null;
+  private def goExist(e: FolExpression, univVars: List[String], existVars:List[String] ): FolExpression =
+  {
+	  e match 
+      {
+      	case FolExistsExpression(v, term) => goExist(term, univVars, existVars ++ List(v.name))
+        case _ => {
+          var skolemPred : FolExpression = FolVariableExpression(Variable("skolem_"+skolemFunctionsCounter));
+          var skolemPredVarTypes:List[String] = List();
+          skolemFunctionsCounter = skolemFunctionsCounter + 1;
+          univVars.foreach(univVar =>{
+            skolemPred = FolApplicationExpression(skolemPred, FolVariableExpression(Variable(univVar)));
+            skolemPredVarTypes = skolemPredVarTypes  ++ List((univVar.substring(0, 2))) 
+          })
+          existVars.foreach(existVar =>{
+            skolemPred = FolApplicationExpression(skolemPred, FolVariableExpression(Variable(existVar)));
+            skolemPredVarTypes = skolemPredVarTypes  ++ List((existVar.substring(0, 2)))
+          })
+          extraUnivVars = extraUnivVars ++ existVars;  
+          newDeclarations = newDeclarations  ++ Map(skolemPred->skolemPredVarTypes) 
+          //generate evidence                     
+          goUniv(skolemPred->e, univVars)
+        }
+      }
   }
-  private def go(e: FolExpression): FolExpression = 
+    
+    
+  private def goUniv(e: FolExpression, univVars: List[String]): FolExpression = 
   {
       e match 
       {
-      	case FolExistsExpression(v, term) => {
-      	  addQuantifier("exist", v.name)
-      	  if (quantifiers.size == 1)
-      		  term //remove the outer existential quantifiers
-      	  else
-      		  FolExistsExpression(v, term);  //TODO: change it to univ and add the skolem term 
-      	}
-        case FolAllExpression(v, term) => {
-          addQuantifier("univ", v.name)
-          FolAllExpression(v, go(term)) //add the skolem predicate
-        }
-        case FolNegatedExpression(term) => throw new RuntimeException("TODO: not implemented yet")//TODO: FolNegatedExpression(term)
-        case FolAndExpression(first, second) => FolAndExpression(go(first), go(second))
-      	case FolOrExpression(first, second) => FolOrExpression(first, second)
-      	case FolIfExpression(first, second) => FolIfExpression(first, second)
-      	case FolIffExpression(first, second) => throw new RuntimeException("not reachable")      	
+      	case FolExistsExpression(v, term) => goExist(e, univVars, List()) 
+        case FolAllExpression(v, term) => FolAllExpression(v, goUniv(term, univVars ++ List((v.name)))) 
+        case FolNegatedExpression(term) => throw new RuntimeException("TODO: not implemented yet")//TODO: FolNegatedExpression(goUniv(term, univVars))
+        case FolAndExpression(first, second) => FolAndExpression(goUniv(first, univVars), goUniv(second, univVars))
+      	case FolOrExpression(first, second) => FolOrExpression(goUniv(first, univVars), goUniv(second, univVars))
+      	case FolIfExpression(first, second) => FolIfExpression(goUniv(first, univVars), goUniv(second, univVars))
+      	case FolIffExpression(first, second) => throw new RuntimeException("not reachable")
         case FolEqualityExpression(first, second) => FolEqualityExpression(first, second)
         case FolAtom(pred, args @ _*) => FolAtom(pred, args:_*)
 		case FolVariableExpression(v) => throw new RuntimeException("not reachable")
         case _ => throw new RuntimeException("not reachable")
       }
   }
-  private def getEvidTillFirstUniv(e: FolExpression, getEvid: Boolean): FolExpression = 
+  /*private def getEvidTillFirstUniv(e: FolExpression, getEvid: Boolean): FolExpression = 
   {
 	  if(!getEvid)
 	    return e
@@ -151,7 +173,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 	    else 
 	    	v
 	}
-  
+  */
   
   /*
   private def renameVars(input: FolExpression): FolExpression = {

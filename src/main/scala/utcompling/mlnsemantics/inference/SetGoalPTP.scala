@@ -67,9 +67,11 @@ class SetGoalPTP(
     else if (Sts.opts.task == "rte" && Sts.opts.fixDCA == true)
     {
       //H+, H-
+      flipQ = false;
       val hPlus = GoalExpression(skolemNew(goal -> SetVarBindPTP.entPred_h), Double.PositiveInfinity)
-      val hMinus = GoalExpression((SetVarBindPTP.entPred_h -> goal).asInstanceOf[FolExpression], Double.PositiveInfinity)
-      extraExpressions = List(hPlus/*, hMinus*/);//TODO: hMinus is disabled because of the computational overhead. 
+      flipQ = true;
+      val hMinus = GoalExpression(skolemNew(SetVarBindPTP.entPred_h -> goal, List(), true), Double.PositiveInfinity)
+      extraExpressions = List(hPlus, hMinus);//TODO: hMinus is disabled because of the computational overhead. 
     } 
 
     //===================== ERROR =============================
@@ -81,19 +83,30 @@ class SetGoalPTP(
   }
 
   //****************************** fixDCA functions **************************  
-  private var newConstants: Map[String, Set[String]] = null;
+  private var newConstants: Map[String, Set[String]] = null; 
+  private var flipQ = false;
   private def skolemNew(expr: FolExpression, skolemVars: List[Variable] = List(), isNegated:Boolean = false): FolExpression = 
   {
 	expr match {
       case FolExistsExpression(variable, term) => {
     	  if (isNegated)
-    		  FolExistsExpression(variable, skolemNew(term, skolemVars, isNegated))
+    	  {
+    	    if(!flipQ)
+    	    	FolExistsExpression(variable, skolemNew(term, skolemVars, isNegated))
+    	    else 
+    	    	FolAllExpression(variable, skolemNew(term, skolemVars, isNegated))
+    	  }
     	  else
     		  skolemNew(term, skolemVars++List(variable), isNegated)
       }
       case FolAllExpression(variable, term) => {
           if (!isNegated)
-        	  FolAllExpression(variable, skolemNew(term, skolemVars, isNegated))
+          {
+        	  if(!flipQ)
+        		  FolAllExpression(variable, skolemNew(term, skolemVars, isNegated))
+        	  else
+        		  FolExistsExpression(variable, skolemNew(term, skolemVars, isNegated))
+          }
     	  else
     		  skolemNew(term, skolemVars++List(variable), isNegated)
       }
