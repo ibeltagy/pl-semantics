@@ -1,7 +1,10 @@
-1-Naming of HardAssumptionAsEvidence and PositiveEqEliminating is not decriptive
-2-OR and Negation in PositiveEqEliminating could be wrong
+-Can we use !H instead of H<->ent  to avoid the problem of H- ?
+-H- now is bad bad bad.
+-OR in PositiveEqEliminating could be wrong
+-Negation in PositiveEqEliminating and HardAssumptionAsEvidence is absolutely wrong.
 
-5-fixDCA or noFixDCA is not implemented in PositiveEqEliminating and HardAssumptionAsEvidence
+1-Naming of HardAssumptionAsEvidence and PositiveEqEliminating is not decriptive
+5-fixDCA or noFixDCA is not implemented in PositiveEqEliminating (well, it automatically works if "-keepUniv false")
 
 3-Existance is done for the outer most group of universals, not for embeded univs under exists
 SUggestion: 

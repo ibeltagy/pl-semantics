@@ -117,7 +117,8 @@ class AlchemyTheoremProver(
     f.write("\n")
 
     evidence.foreach {
-        case e @ FolAtom(pred, args @ _*) => f.write (convert(e) + ".\n");
+        case e @ FolAtom(pred, args @ _*) if (!pred.name.startsWith("skolem_")) => f.write (convert(e) + ".\n");
+        case e @ FolAtom(pred, args @ _*) => ;
         case e @ FolNegatedExpression(FolAtom(pred, args @ _*)) => f.write (convert(e) + ".\n");
         case e => throw new RuntimeException("Only atoms or negated atoms may be evidence.  '%s' is not an atom.".format(e))
       }
@@ -180,10 +181,10 @@ class AlchemyTheoremProver(
     val tempFile = FileUtils.mktemp(suffix = ".db")
     FileUtils.writeUsing(tempFile) { f =>
       f.write("//\n");
-      /*evidence.foreach {
-        case e @ FolAtom(pred, args @ _*) => f.write (convert(e) + "\n");
-        case e => throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
-      }*/
+      evidence.foreach {
+        case e @ FolAtom(pred, args @ _*) if (pred.name.startsWith("skolem_"))=> f.write (convert(e) + "\n");
+        case e => //throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
+      }
     }
     tempFile
   }
