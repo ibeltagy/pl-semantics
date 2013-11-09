@@ -85,6 +85,19 @@ class UnnecessarySubboxRemovingBoxerExpressionInterpreter extends BoxerExpressio
 	    else
 	    	(None, firstVars | secondVars)
 
+      case BoxerOr(discId, indices, first, second) =>
+        val (firstCrushed, firstVars) = crush(first, propVarsInScope)
+        val (secondCrushed, secondVars) = crush(second, propVarsInScope)
+        if(firstCrushed.isDefined && secondCrushed.isDefined)
+        	(Some(BoxerOr(discId, indices, firstCrushed.get, secondCrushed.get)), firstVars | secondVars)
+	    else if(firstCrushed.isDefined)
+	    	//(Some(BoxerNot(discId, indices, firstCrushed.get)), firstVars | secondVars)
+	    	(firstCrushed, firstVars | secondVars)
+	    else if(secondCrushed.isDefined)
+	    	(secondCrushed, firstVars | secondVars)
+	    else
+	    	(None, firstVars | secondVars)
+
       case BoxerMerge(pred, first, second) =>
         val (firstCrushed, firstVars) = crush(first, propVarsInScope)
         val (secondCrushed, secondVars) = crush(second, propVarsInScope)

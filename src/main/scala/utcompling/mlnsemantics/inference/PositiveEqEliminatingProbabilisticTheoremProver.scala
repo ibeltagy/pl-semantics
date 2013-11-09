@@ -81,7 +81,7 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
       
       case BoxerImp(discId, indices, first, second) => BoxerImp(discId, indices, skolemConstAsEvd(first, true, false, isNegated), 
     		  																	 skolemConstAsEvd(second, false, false, isNegated));      
-      case BoxerNot(discId, indices, drs) =>  BoxerNot(discId, indices, skolemConstAsEvd(drs, outer, false, !isNegated))
+      case BoxerNot(discId, indices, drs) =>  BoxerNot(discId, indices, skolemConstAsEvd(drs, outer, true, !isNegated))
       
       //TODO: I am not sure this is right
       case BoxerOr(discId, indices, first, second) => BoxerOr(discId, indices, skolemConstAsEvd(first, true, false, isNegated), 
