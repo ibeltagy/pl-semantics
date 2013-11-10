@@ -46,9 +46,11 @@ class SubprocessCallable(val binary: String) {
                         val t = new Thread { override def run() { exitcode = proc.exitValue() } }
                         t.start()
                         t.join(time)
+                        if( t.getState() != Thread.State.TERMINATED) 
+                          exitcode = -3; //timeout
                         proc.destroy();
                       }
-                      case _ => exitcode = proc.exitValue()
+                      case _ => exitcode = proc.exitValue()	
                     }
                     (exitcode, out.result, err.result)
                 }
@@ -61,9 +63,10 @@ class SubprocessCallable(val binary: String) {
             }
 
         if (verbose) {
-            println("Return code: " + exitcode)
+            println("Exit code: " + exitcode)
             if (stdout.nonEmpty) println("stdout:\n" + stdout + "\n")
             if (stderr.nonEmpty) println("stderr:\n" + stderr + "\n")
+            println("Exit code: " + exitcode)
         }
 
         return (exitcode, stdout, stderr)

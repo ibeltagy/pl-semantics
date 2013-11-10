@@ -44,7 +44,7 @@ class DoMultipleParsesTheoremProver(
 			  index += 1
 			  val outFile = Sts.opts.multipleOutputFiles + "." + Sts.pairIndex + "." + index
 			  val result = delegate.prove(constants, declarations, evidence, List(HardWeightedExpression(assumptionParse._1)), goalParse._1)
-			  val oneScore = result match { case Some(s) => s; case None => 0.5};
+			  val oneScore = result match { case Some(s) => s; case None => -Sts.opts.kbest};
 			  Sts.opts.task match {
 					//case "sts" => score += oneScore*(assumptionParse._2+goalParse._2); scoreDenum +=(assumptionParse._2+goalParse._2 ); //weighted average 
 					case "sts" => 

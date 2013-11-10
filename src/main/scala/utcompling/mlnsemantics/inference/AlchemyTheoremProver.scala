@@ -202,49 +202,54 @@ class AlchemyTheoremProver(
     val allArgs = "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
 
     val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, LOG.isTraceEnabled, Sts.opts.timeout);
-	val out = new StringBuilder
-	val err = new StringBuilder
- 
-    /*var command = (Sts.opts.task == "sts" && varBind.get) match {
-			case true =>  "grep entailment_h "+result+" | awk '{print $2}'| sort -n -r  | head -n 1";
-			case false => "grep \"entailment_h(\\\"ent_h\" "+result+" | awk '{print $2}'| sort -n -r  | head -n 1"
-	 }*/
-	var command = "grep entailment_h "+result+" | awk '{print $2}'| sort -n -r  | head -n 1";
-	
-    Process("/bin/sh", Seq("-c", command)) ! (ProcessLogger(out.append(_).append("\n"), System.err.println(_)))
-    
-    val score1 = out.mkString("").trim().toDouble;
-    out.clear();
-    
-	 var score2 = 0.0;
-	 if (Sts.opts.task == "sts")
-	 {
-				/*command = varBind.get match {
-					  case true =>  "grep entailment_t "+result+" | awk '{print $2}'| sort -n -r  | head -n 1";
-					  case false => "grep \"entailment_t(\\\"ent_t\" "+result+" | awk '{print $2}'| sort -n -r  | head -n 1"
-				}*/
-	   			command = "grep entailment_t "+result+" | awk '{print $2}'| sort -n -r  | head -n 1";
-
-				Process("/bin/sh", Seq("-c", command)) ! (ProcessLogger(out.append(_).append("\n"), System.err.println(_)))
-				
-				score2 = out.mkString("").trim().toDouble;
-				out.clear();
-	 }
-    
-    val score  = Sts.opts.task match {
-      case "sts" => (score1 + score2) / 2.0;
-      case "rte" => score1;
-    }  
-
-    if (LOG.isDebugEnabled())
-    {
-    	val results = readLines(result).mkString("\n").trim
-    	LOG.debug("results file:\n" + results)
-    }
 
     exitcode match {
-      case 0 => Some(score.toString())
-      case _ => throw new RuntimeException("Failed with exitcode=%s.\n%s\n%s".format(exitcode, stdout, stderr))
+      case 0 => 
+      {
+		    val out = new StringBuilder
+			val err = new StringBuilder
+		 
+		    /*var command = (Sts.opts.task == "sts" && varBind.get) match {
+					case true =>  "grep entailment_h "+result+" | awk '{print $2}'| sort -n -r  | head -n 1";
+					case false => "grep \"entailment_h(\\\"ent_h\" "+result+" | awk '{print $2}'| sort -n -r  | head -n 1"
+			 }*/
+			var command = "grep entailment_h "+result+" | awk '{print $2}'| sort -n -r  | head -n 1";
+			
+		    Process("/bin/sh", Seq("-c", command)) ! (ProcessLogger(out.append(_).append("\n"), System.err.println(_)))
+		    
+		    val score1 = out.mkString("").trim().toDouble;
+		    out.clear();
+		    
+			 var score2 = 0.0;
+			 if (Sts.opts.task == "sts")
+			 {
+						/*command = varBind.get match {
+							  case true =>  "grep entailment_t "+result+" | awk '{print $2}'| sort -n -r  | head -n 1";
+							  case false => "grep \"entailment_t(\\\"ent_t\" "+result+" | awk '{print $2}'| sort -n -r  | head -n 1"
+						}*/
+			   			command = "grep entailment_t "+result+" | awk '{print $2}'| sort -n -r  | head -n 1";
+		
+						Process("/bin/sh", Seq("-c", command)) ! (ProcessLogger(out.append(_).append("\n"), System.err.println(_)))
+						
+						score2 = out.mkString("").trim().toDouble;
+						out.clear();
+			 }
+		    
+		    val score  = Sts.opts.task match {
+		      case "sts" => (score1 + score2) / 2.0;
+		      case "rte" => score1;
+		    }  
+		
+		    if (LOG.isDebugEnabled())
+		    {
+		    	val results = readLines(result).mkString("\n").trim
+		    	LOG.debug("results file:\n" + results)
+		    }
+		    Some(score.toString())
+      }
+      //case _ => throw new RuntimeException("Failed with exitcode=%s.\n%s\n%s".format(exitcode, stdout, stderr))
+      case -3 /*timeout*/ => Some("-3")
+      case _ => throw new RuntimeException("Failed with exitcode=%s.".format(exitcode))
     }
   }
   
