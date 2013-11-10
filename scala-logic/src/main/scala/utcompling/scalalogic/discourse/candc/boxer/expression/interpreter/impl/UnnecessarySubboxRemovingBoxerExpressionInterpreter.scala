@@ -57,6 +57,8 @@ class UnnecessarySubboxRemovingBoxerExpressionInterpreter extends BoxerExpressio
           resultConds.map {
             case Some(BoxerProp(discId, indices, variable, drs)) if allResultVars(variable) && indices.isEmpty =>
               (drs.refs, drs.conds, Set[BoxerVariable](variable))
+            case Some(BoxerDrs(r, c)) =>
+              (r, c, Set[BoxerVariable]())
             case None =>
               (List[(List[BoxerIndex], BoxerVariable)](), List(), Set[BoxerVariable]())
             case e =>
