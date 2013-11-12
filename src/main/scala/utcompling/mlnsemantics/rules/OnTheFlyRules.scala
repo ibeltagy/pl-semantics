@@ -68,13 +68,33 @@ class OnTheFlyRules extends Rules {
 							//assumPred._1.variable.name.charAt(0) == goalPred._1.variable.name.charAt(0))
 					  {
 						val rw = ruleWeighter.weightForRules(assumEntry._3, assumEntry._2, Seq((goalEntry._3 , goalEntry._2)).toMap, vectorspace);
-	
-						val assumeVarTypeMap = assumEntry._1.getPredicates().map(pred => (pred.variable.name, predTypeMap(pred.name))).toMap
-						val goalVarTypeMap = goalEntry._1.getPredicates().map(pred => (pred.variable.name, predTypeMap(pred.name))).toMap
+						
+						var assumEntryExp = assumEntry._1
+						var goalEntryExp = goalEntry._1
+						
+						val assumEntryPreds = assumEntryExp.getPredicates()
+						val goalEntryPreds = goalEntryExp.getPredicates()
+						
+						//If LHS and RHS are both single predicates, use the same variable name for both of them
+						if(assumEntryPreds.length == 1 && goalEntryPreds.length == 1)
+						{
+						  val assumPred = assumEntryPreds.head match {
+						  	case BoxerPred(discId, indices, variable, name, pos, sense)=>
+						  	  BoxerPred(discId, indices, BoxerVariable("x0"), name, pos, sense)
+						  }
+						  val goalPred = goalEntryPreds.head match {
+						  	case BoxerPred(discId, indices, variable, name, pos, sense)=>
+						  	  BoxerPred(discId, indices, BoxerVariable("x0"), name, pos, sense)
+						  }
+						  assumEntryExp = BoxerDrs(List(List() -> BoxerVariable("x0")), List(assumPred));
+						  goalEntryExp = BoxerDrs(List(List() -> BoxerVariable("x0")), List(goalPred));
+						}
+						
+						val assumeVarTypeMap = assumEntryExp.getPredicates().map(pred => (pred.variable.name, predTypeMap(pred.name))).toMap
+						val goalVarTypeMap = goalEntryExp.getPredicates().map(pred => (pred.variable.name, predTypeMap(pred.name))).toMap
 					
-					    if (rw.head._2.get <=0 || !checkCompatibleType(assumeVarTypeMap, goalVarTypeMap))
-					    	return List();
-					    else rules = rules ++ List((assumEntry._1, goalEntry._1, rw.head._2.get))
+					    if (rw.head._2.get > 0 && checkCompatibleType(assumeVarTypeMap, goalVarTypeMap))
+					    	rules = rules ++ List((assumEntryExp, goalEntryExp, rw.head._2.get))
 						  
 					  }
 				  }
