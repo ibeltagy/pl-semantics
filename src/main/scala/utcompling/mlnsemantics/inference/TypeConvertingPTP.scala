@@ -29,8 +29,16 @@ class TypeConvertingPTP(
     goal: BoxerExpression): Option[Double] = {
 
     //val newConstants = constants.mapVals(_.map(converter.interpret))
-    val newDeclarations = declarations.mapKeys(converter.interpret)
-    val newEvidence = evidence.map(converter.interpret)
+    val newDeclarations = declarations.mapKeys(converter.interpret).flatMap{
+    	//Empty expressions become the single variable "true"  
+    	case (FolVariableExpression(Variable("true")), t) => None 
+    	case e @ _ => List(e)
+    }
+    val newEvidence = evidence.map(converter.interpret).flatMap{
+    	//Empty expressions become the single variable "true"  
+    	case FolVariableExpression(Variable("true")) => None 
+    	case e @ _ => List(e)
+    }
     val newGoal = converter.interpret(goal)
     val newAssumptions = assumptions.map ({
       case HardWeightedExpression(e) => HardWeightedExpression(converter.interpret(e))
