@@ -19,13 +19,15 @@ varBind=false #true
 #fi
 rangeVals="1-5 6-10 11-15 16-20 21-25 26-30 31-35 36-40 41-45 46-50 51-55 56-60 61-65 66-70 71-75 76-80 81-85 86-90 91-95 96-100 101-105 106-110 111-115 116-120 121-125 126-130 131-135 136-140 141-145 146-150 151-155 156-160 161-165 166-170 171-175 176-180 181-185 186-190 191-195 196-200 201-205 206-210 211-215 216-220 221-225 226-230 231-235 236-240 241-245 246-250 251-255 256-260 261-265 266-270 271-275 276-280 281-285 286-290 291-295 296-300 301-305 306-310 311-315 316-320 321-325 326-330 331-335 336-340 341-345 346-350 351-355 356-360 361-365 366-370 371-375 376-380 381-385 386-390 391-395 396-400 401-405 406-410 411-415 416-420 421-425 426-430 431-435 436-440 441-445 446-450 451-455 456-460 461-465 466-470 471-475 476-480 481-485 486-490 491-495 496-500 501-505 506-510 511-515 516-520 521-525 526-530 531-535 536-540 541-545 546-550 551-555 556-560 561-565 566-570 571-575 576-580 581-585 586-590 591-595 596-600 601-605 606-610 611-615 616-620 621-625 626-630 631-635 636-640 641-645 646-650 651-655 656-660 661-665 666-670 671-675 676-680 681-685 686-690 691-695 696-700 701-705 706-710 711-715 716-720 721-725 726-730 731-735 736-740 741-745 746-750 751-755 756-760 761-765 766-770 771-775 776-780 781-785 786-790 791-795 796-800"
 
+#rangeVals="1-3 10-13 799-800"
+
 #changing the parameters change the final result. 
 #From my previous experiment, usually one of the following 8 combinations has the best score. 
 for ds in rte
 do
 for rteCnt in  1 #2 3
  do
-  for rteMode in train #test
+  for rteMode in  test  train
   do
    for vectorMaker in add # mul
    do
@@ -35,12 +37,12 @@ for rteCnt in  1 #2 3
 		do
 			for maxProb in 0.93 #  0.75
 			do
-			  for wThr in 0.35
+			  for wThr in 0.2
 			  do
-				a="["
+				a=""
 				#File name is a concatination of the configuration. 
 				#outputFileConfig="$ds-irLvl$irLvl-peInf$peInf-vectorMaker$vectorMaker-noDup$noDup-scaleW$scaleW-maxProb$maxProb-wThr$wThr"
-				outputFileConfig="rte-$rteCnt-$rteMode"
+				outputFileConfig="rte-$rteCnt-$rteMode-wThr$wThr"
 #				echo $outputFileConfig
 #   				continue
 
@@ -59,7 +61,7 @@ for rteCnt in  1 #2 3
 #END of rerun-failed-experiments block
 
 					#make sure to create the folder "out"
-					outputFile="condor/out/$outputFile"
+					outputFile="condor/rte-$rteCnt-$rteMode/$outputFile"
 
 #This line is to print the experiments, just to count them before actually scheduling them into condor.      
 					echo $cnt $outputFile
@@ -67,21 +69,31 @@ for rteCnt in  1 #2 3
 #This line schedule the condor job. Make sure what you are going to run is correct before you actually schedule them.
 #./condor/condorizer.py bin/mlnsem $ds $range -timeout 1000000 -varBind $varBind -vectorMaker $vectorMaker -log OFF -noDup $noDup -scaleW $scaleW -maxProb $maxProb -wThr $wThr -peInf $peInf -irLvl $irLvl $outputFile
 
-./condor/condorizer.py bin/mlnsem $ds $rteCnt $rteMode $range -timeout 60000 -log OFF $outputFile
+	case $1 in 
+		submit)
+./condor/condorizer.py bin/mlnsem run $ds $rteCnt $rteMode $range -timeout 300000 -wThr $wThr -log OFF -fixDCA true -noHMinus true $outputFile
+		;;
+		
+		collect)
+      	#The next block is to collect results of many output files
+			b=$(tail $outputFile.out -n 2 | head -n 1)
+         len=$(expr length "$b")
+         len=$(expr $len - 2);
+         b=$(expr substr "$b" 2 $len)
+	 echo $b
+         a="$a $b"
+		;;
+	esac
 
-
-#The next block is to collect results of many output files
-#					b=$(tail $outputFile.out -n 2 | head -n 1)
-#					len=$(expr length "$b")
-#					len=$(expr $len - 2);
-#					b=$(expr substr "$b" 2 $len)
-#					a="$a $b"
-#End part 1 of  collecting-results block
 				done
-#Continue of the collecting-results block
-#				a="$a]"
-#				echo $a
-#End of collecting-results block 
+
+	case $1 in      
+      collect)
+           echo $a |sed  's/ /\n/g'  > results/RTE$rteCnt.$rteMode.res
+           a="[$a]"
+           echo $a
+      ;;
+   esac
 			  done
 			done
 		done

@@ -123,6 +123,12 @@ class Config(opts: Map[String, String] = Map()) {
     case Some("true") => true;
     case _ => false;
   }
+
+  //if fixDCA is true, noHMinus ignores H- and set negative prior on all predicates
+  val noHMinus = opts.get("-noHMinus") match {
+    case Some("true") => true;
+    case _ => false;
+  }
   
   //keep universal quantifiers or replace them with existentials
   val keepUniv = opts.get("-keepUniv") match {

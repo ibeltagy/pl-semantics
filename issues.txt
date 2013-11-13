@@ -1,3 +1,9 @@
+-paraphrase to logic
+-prenex normal form 
+-multiparses and svm
+-get latest candc and boxer
+-try to tune candc parameters to reduce no-parse 
+
 -Can we use !H instead of H<->ent  to avoid the problem of H- ?
 -H- now is bad bad bad.
 -OR in PositiveEqEliminating could be wrong

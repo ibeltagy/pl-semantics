@@ -71,7 +71,10 @@ class SetGoalPTP(
       val hPlus = GoalExpression(skolemNew(goal -> SetVarBindPTP.entPred_h), Double.PositiveInfinity)
       flipQ = true;
       val hMinus = GoalExpression(skolemNew(SetVarBindPTP.entPred_h -> goal, List(), true), Double.PositiveInfinity)
-      extraExpressions = List(hPlus, hMinus);//TODO: hMinus is disabled because of the computational overhead. 
+		if(Sts.opts.noHMinus)
+	      extraExpressions = List(hPlus); // hMinus is disabled because of the computational overhead. 
+		else 
+			extraExpressions = List(hPlus, hMinus);
     } 
 
     //===================== ERROR =============================
