@@ -37,10 +37,10 @@ case $DS in
 	rte_ver=$1	#rte 1, 2, 3, 4, 5, 6, 7
 	shift
 
-	rte_mode=$1    #test or train
-	shift
+#	rte_mode=$1    #test or train
+#	shift
 
-	dsPath="$RES/rte$rte_ver/RTE$rte_ver.$rte_mode"
+	dsPath="$RES/rte$rte_ver/RTE$rte_ver" #.$rte_mode"
   ;;
 esac
 
