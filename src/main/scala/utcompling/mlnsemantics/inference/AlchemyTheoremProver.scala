@@ -19,10 +19,8 @@ import scala.sys.process.Process
 import scala.sys.process.ProcessLogger
 import edu.mit.jwi.item.POS
 import scala.collection.JavaConversions._
-import utcompling.mlnsemantics.wordnet.Wordnet
 
 class AlchemyTheoremProver(
-  wordnet: Wordnet,
   override val binary: String,
   logBase: Double = E)
   extends SubprocessCallable(binary)
@@ -302,22 +300,16 @@ object AlchemyTheoremProver {
 
   private var pairIndx = 0;
 
-  def findBinary(wordnet: Wordnet, binDir: Option[String] = None, envar: Option[String] = Some("ALCHEMYHOME"), verbose: Boolean = false) =
+  def findBinary(binDir: Option[String] = None, envar: Option[String] = Some("ALCHEMYHOME"), verbose: Boolean = false) =
   {    //new AlchemyTheoremProver(FileUtils.findBinary("liftedinfer", binDir, envar, verbose))
 	pairIndx = pairIndx+1;
 	//println("pairIndx: " + pairIndx);
-    new AlchemyTheoremProver(wordnet, FileUtils.findBinary("infer", binDir, envar, verbose))
+    new AlchemyTheoremProver(FileUtils.findBinary("infer", binDir, envar, verbose))
   }
 
   def main(args: Array[String]) {
-	import utcompling.mlnsemantics.wordnet.WordnetImpl
-
     val parse = new FolLogicParser().parse(_)
-
-	val wordnet = new WordnetImpl()
-
-    val atp = new AlchemyTheoremProver(wordnet, pathjoin(System.getenv("HOME"), "bin/alchemy/bin/infer"))
-
+    val atp = new AlchemyTheoremProver(pathjoin(System.getenv("HOME"), "bin/alchemy/bin/infer"))
     val constants = Map("ind" -> Set("Socrates"))
     val declarations = Map[FolExpression, Seq[String]](FolAtom(Variable("man")) -> Seq("ind"), FolAtom(Variable("mortal")) -> Seq("ind"))
     val evidence = List("man(Socrates)").map(parse)

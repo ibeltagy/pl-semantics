@@ -8,7 +8,6 @@ import opennlp.scalabha.util.CollectionUtil._
 import opennlp.scalabha.util.Pattern.Range
 import utcompling.scalalogic.fol.expression.FolExpression
 import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
-import utcompling.mlnsemantics.wordnet.WordnetImpl
 import utcompling.mlnsemantics.vecspace.BowVectorSpace
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.BoxerExpressionInterpreter
 import org.apache.log4j.Logger
@@ -42,7 +41,6 @@ object Sts {
   val SomeRe = """Some\((.*)\)""".r
 
   //Global variables used by other classes
-  val wordnet = new WordnetImpl()  //wordnet
   var opts:Config = null;	//command line arugments
   var text = "";			//Text
   var textLemma = "";		//Text lemmatized 
@@ -177,7 +175,7 @@ object Sts {
 			val softLogicTool: ProbabilisticTheoremProver[FolExpression] = opts.softLogicTool match {
 				case "psl" => new PSLTheoremProver()
 				case "none" => new NoneTheoremProver()
-				case "mln" => AlchemyTheoremProver.findBinary(wordnet);
+				case "mln" => AlchemyTheoremProver.findBinary();
 			}		
 			 
           val ttp =

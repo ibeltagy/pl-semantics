@@ -21,10 +21,8 @@ do
 	echo "@data" >> tmp-test.arff
 	paste -d , tmp-act $rteGt | tail -n 800  >> tmp-test.arff
 
-	mln=$(java -Xmx1024m -cp ../../weka/weka.jar weka.classifiers.meta.AdaBoostM1 -i -t tmp-train.arff -T tmp-test.arff -- )
+	mln=$(java -Xmx1024m -cp ../weka/weka.jar weka.classifiers.meta.AdaBoostM1 -i -t tmp-train.arff -T tmp-test.arff -- )
 	
-	echo "=================================================MLN"
-	echo -n "$mln "
-	echo "-"
-	echo "-------------------------------------------------"
+	echo "$mln "
+	echo "----------------------------------------------------------------------------------------------------------"
 done

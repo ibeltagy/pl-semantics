@@ -4,13 +4,10 @@ import utcompling.mlnsemantics.vecspace.BowVector
 import utcompling.mlnsemantics.vecspace.BowVectorSpace
 import utcompling.scalalogic.drt.expression.DrtExpression
 import edu.mit.jwi.item.POS
-import utcompling.mlnsemantics.wordnet.Wordnet
-import utcompling.mlnsemantics.wordnet.WordnetImpl
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
 
 class InferenceRuleGenerator(
-  vecspace: Map[String, BowVector],
-  wordnet: Wordnet) {
+  vecspace: Map[String, BowVector]) {
 
   def generate(from: Set[(String, String)], to: Set[(String, String)]): Iterable[DrtExpression] = {
 
@@ -19,7 +16,6 @@ class InferenceRuleGenerator(
     //      (t, tPos) <- to
     //    ) yield {
     //
-    //      wordnet.synsets(f, fPos)
     //
     //    }
 
@@ -42,8 +38,7 @@ object InferenceRuleGenerator {
 
     val words = Set("baseball", "hockey", "outfield", "puck")
     val vs = BowVectorSpace("resources/nytgiga.lem.1m.vc.f2000.m50.wInf", words)
-    val wn = new WordnetImpl
-    val irg = new InferenceRuleGenerator(vs, wn)
+    val irg = new InferenceRuleGenerator(vs)
 
     val from = Set(("architect", "n"), ("buy", "v"), ("red", "a"), ("car", "n"))
     val to = Set(("person", "n"), ("purchase", "v"), ("vehicle", "n"))

@@ -6,7 +6,6 @@ import scala.collection.mutable.SetBuilder
 import utcompling.mlnsemantics.inference.support.HardWeightedExpression
 import utcompling.mlnsemantics.inference.support.WeightedExpression
 import utcompling.mlnsemantics.vecspace.BowVector
-import utcompling.mlnsemantics.wordnet.Wordnet
 import utcompling.scalalogic.discourse.candc.boxer.expression._
 import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 import opennlp.scalabha.util.CollectionUtils._

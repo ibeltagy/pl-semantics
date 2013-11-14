@@ -7,7 +7,6 @@ import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
 import opennlp.scalabha.util.FileUtils
 import utcompling.scalalogic.fol.expression.FolExpression
 import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
-import utcompling.mlnsemantics.wordnet.WordnetImpl
 import utcompling.mlnsemantics.vecspace.BowVectorSpace
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.MergingBoxerExpressionInterpreterDecorator
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.UnnecessarySubboxRemovingBoxerExpressionInterpreter

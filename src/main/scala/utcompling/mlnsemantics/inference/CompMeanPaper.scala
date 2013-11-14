@@ -3,7 +3,6 @@ package utcompling.mlnsemantics.inference
 import scala.io.Source
 import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
 import utcompling.mlnsemantics.vecspace.BowVectorSpace
-import utcompling.mlnsemantics.wordnet.WordnetImpl
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.Boxer2DrtExpressionInterpreter
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.MergingBoxerExpressionInterpreterDecorator
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.OccurrenceMarkingBoxerExpressionInterpreterDecorator

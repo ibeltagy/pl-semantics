@@ -5,7 +5,6 @@ import scala.collection.JavaConversions._
 import utcompling.mlnsemantics.inference.support.HardWeightedExpression
 import utcompling.mlnsemantics.inference.support.WeightedExpression
 import utcompling.mlnsemantics.vecspace.BowVector
-import utcompling.mlnsemantics.wordnet.Wordnet
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.Boxer2DrtExpressionInterpreter
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerDrs
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
@@ -39,7 +38,6 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 
   private val LOG = LogFactory.getLog(classOf[InferenceRuleInjectingProbabilisticTheoremProver])
   
-  private val wordnet = Sts.wordnet;
   private val distWeight = Sts.opts.distWeight;
   private val resourceWeight = Sts.opts.rulesWeight;
 

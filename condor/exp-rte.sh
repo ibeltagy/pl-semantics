@@ -23,7 +23,13 @@ for ds in rte
 do
  for rteCnt in  1 #2 3
  do
-  for fixDCA in  false #true
+	case $1 in      
+		collect)
+		   collectFile=condor/rte-$rteCnt.res
+		   rm $collectFile
+	      	;;
+	esac
+  for fixDCA in  false true
   do
    for vectorMaker in add # mul
    do
@@ -67,14 +73,27 @@ do
 
         	case $1 in 
 		submit)
-./condor/condorizer.py bin/mlnsem run $ds $rteCnt $range -timeout 1800000 -wThr $wThr -fixDCA $fixDCA -noHMinus true -log OFF $outputFile
+          
+			 if [[ "$fixDCA" == "false" ]]; then
+            keepUniv="false"
+          else
+            keepUniv="true"
+          fi
+
+
+./condor/condorizer.py bin/mlnsem run $ds $rteCnt $range -timeout 60000 -wThr $wThr -fixDCA $fixDCA -noHMinus true -keepUniv $keepUniv -withEventProp false -log OFF $outputFile
 		;;
 		collect)
 		       	 #The next block is to collect results of many output files
 			 b=$(tail $outputFile.out -n 2 | head -n 1)
 			 len=$(expr length "$b")
 			 len=$(expr $len - 2);
-			 b=$(expr substr "$b" 2 $len)
+			 firstChar=$(expr substr "$b" 1 1)
+          if [[ "$firstChar" == "[" ]]; then
+          	b=$(expr substr "$b" 2 $len)
+          else
+          	b="XXXXXXXXXX"
+          fi
 			 echo $b
 			 a="$a $b"
 		;;
@@ -84,9 +103,10 @@ do
 	
 	case $1 in      
 		collect)
-		   echo $a |sed  's/ /\n/g'  > condor/outputFileConfig.res
+		   #echo $a |sed  's/ /\n/g'  >> condor/rte-$rteCnt.res
 		   a="[$a]"
 		   echo $a
+		   echo $a >> $collectFile
 	      	;;
    	esac
 
