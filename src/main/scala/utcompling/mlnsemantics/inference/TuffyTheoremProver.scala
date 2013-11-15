@@ -37,7 +37,7 @@ class TuffyTheoremProver(
     declarations: Map[FolExpression, Seq[String]],
     evidence: List[FolExpression],
     assumptions: List[WeightedFolEx],
-    goal: FolExpression): Option[Double] = {
+    goal: FolExpression): Seq[Double] = {
 
     declarations.foreach { dec =>
       dec match {
@@ -126,7 +126,7 @@ class TuffyTheoremProver(
         {
             println("" + maxScore + "-->" + bestWorld);
         }
-        return Some(maxScore);
+        return Seq(maxScore);
         /*var mtch = ResultsRE.findFirstIn(x);
         println(mtch);
         mtch map

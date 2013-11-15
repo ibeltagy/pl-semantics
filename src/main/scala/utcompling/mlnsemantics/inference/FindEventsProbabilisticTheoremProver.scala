@@ -25,7 +25,7 @@ class FindEventsProbabilisticTheoremProver(
     declarations: Map[BoxerExpression, Seq[String]],
     evidence: List[BoxerExpression],
     assumptions: List[WeightedExpression[BoxerExpression]],
-    goal: BoxerExpression): Option[Double] = {
+    goal: BoxerExpression): Seq[Double] = {
 
     var newAssumption = assumptions.head.expression;
     var newGoal = goal;

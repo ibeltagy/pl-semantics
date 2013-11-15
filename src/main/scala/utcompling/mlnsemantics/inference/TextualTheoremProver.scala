@@ -34,10 +34,10 @@ class TextualTheoremProver(
 
   private val LOG = LogFactory.getLog(classOf[TextualTheoremProver])
   
-  def prove(text: String, hyp: String): Option[Double] =
+  def prove(text: String, hyp: String): Seq[Double] =
     prove(List(text), List(hyp))
 
-  def prove(text: List[String], hyp: List[String]): Option[Double] = {
+  def prove(text: List[String], hyp: List[String]): Seq[Double] = {
 
     LOG.trace(text)
     LOG.trace(hyp)
@@ -47,7 +47,7 @@ class TextualTheoremProver(
       case Some(txt) => txt;
       case _ => {
         println ("Parsing text failed. Return -2");
-        return Some (-2);
+        return Seq(-2);
       }
     })
     
@@ -55,7 +55,7 @@ class TextualTheoremProver(
       case Some(txt) => txt;
       case _ => {
         println ("Parsing hypothesis failed. Return -2");
-        return Some (-2);
+        return Seq(-2);
       }
     })
     

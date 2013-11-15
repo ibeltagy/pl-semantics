@@ -25,7 +25,7 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
     declarations: Map[BoxerExpression, Seq[String]],
     evidence: List[BoxerExpression],
     assumptions: List[WeightedExpression[BoxerExpression]],
-    goal: BoxerExpression): Option[Double] = {
+    goal: BoxerExpression): Seq[Double] = {
 
     newConstants = constants;//extra constants are added by skolemConstAsEvd
     

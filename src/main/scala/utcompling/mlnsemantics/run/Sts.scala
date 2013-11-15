@@ -210,12 +210,12 @@ object Sts {
 		                        softLogicTool)))))))))))) // 16<== run Alchemy or PSL
 
           val p = ttp.prove(Tokenize(txt).mkString(" "), Tokenize(hyp).mkString(" "))
-          println("Some(%.2f) [actual: %.2f, gold: %s]".format(p.get, probOfEnt2simScore(p.get), goldSim))
-          i -> (probOfEnt2simScore(p.get), goldSim)
+          println("Some(%s) [actual: %s, gold: %s]".format(p.mkString(":"), p.map(probOfEnt2simScore).mkString(":"), goldSim))
+          i -> (p.map(probOfEnt2simScore), goldSim)
         }
 
       val (ps, golds) = results.map(_._2).unzip
-      println(ps.mkString("["," ","]"))
+      println("[" + ps.map(_.mkString(",")).mkString(" ") + "]")
       println(golds.mkString("["," ","]"))
 	  FileUtils.writeUsing(outputSimFile) { f =>
            f.write(ps.mkString(" ") + "\n")

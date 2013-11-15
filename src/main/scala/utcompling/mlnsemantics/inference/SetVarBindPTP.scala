@@ -23,7 +23,7 @@ class SetVarBindPTP(
     declarations: Map[FolExpression, Seq[String]], // predicate -> seq[type] 
     evidence: List[FolExpression],
     assumptions: List[WeightedExpression[FolExpression]],
-    goal: FolExpression): Option[Double] = {
+    goal: FolExpression): Seq[Double] = {
 
     //Construct the entailment predicate and its declaration. It depends on if we are doing variable binding or not. 
     def getEntDeclar(varBind: Boolean): Map[FolExpression, Seq[String]] =
@@ -64,7 +64,7 @@ class SetVarBindPTP(
 
       }
 
-    var result: Option[Double] = Some(0.0);
+    var result: Seq[Double] = Seq();
 
     //first run with variable binding   
     if (Sts.opts.varBind == true && Sts.opts.task == "sts") {
@@ -73,7 +73,7 @@ class SetVarBindPTP(
     }
     
     //second run without variable binding. (could be the first if variable binding is disabled or task ir RTE)
-    if(result.isEmpty || Sts.opts.varBind == false || Sts.opts.task == "rte")
+    if(result.isEmpty || result.head < 0 || Sts.opts.varBind == false || Sts.opts.task == "rte")
     {
     	val entDeclar = getEntDeclar(false);
    	    val entConst = Sts.opts.task match {

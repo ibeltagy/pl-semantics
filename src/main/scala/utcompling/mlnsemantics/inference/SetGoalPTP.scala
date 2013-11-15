@@ -23,7 +23,7 @@ class SetGoalPTP(
     declarations: Map[FolExpression, Seq[String]], // predicate -> seq[type] 
     evidence: List[FolExpression],
     assumptions: List[WeightedExpression[FolExpression]],
-    goal: FolExpression): Option[Double] = {
+    goal: FolExpression): Seq[Double] = {
 
     var extraExpressions: List[WeightedExpression[FolExpression]] = List();
     newConstants = constants;//extra constants are added by skolemNew

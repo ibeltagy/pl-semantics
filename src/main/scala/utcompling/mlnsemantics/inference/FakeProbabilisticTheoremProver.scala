@@ -32,11 +32,11 @@ class FakeProbabilisticTheoremProver[T, R](
     declarations: Map[T, Seq[String]],
     evidence: List[T],
     assumptions: List[WeightedExpression[T]],
-    goal: T): Option[Double] = {
+    goal: T): Seq[Double] = {
 
     // TODO: Add closed-word assumption using constants and declarations 
 
-    discreteTheoremProver.prove(evidence ++ assumptions.map(_.expression), goal, LOG.isDebugEnabled)
+    Seq(discreteTheoremProver.prove(evidence ++ assumptions.map(_.expression), goal, LOG.isDebugEnabled).get)
       .map {
         case _ => 1. // if Some is returned 
       }

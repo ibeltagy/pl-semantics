@@ -13,6 +13,6 @@ trait ProbabilisticTheoremProver[T] {
     declarations: Map[T, Seq[String]], // predicate -> seq[type] 
     evidence: List[T],
     assumptions: List[WeightedExpression[T]],
-    goal: T): Option[Double]
+    goal: T): Seq[Double]
 
 }

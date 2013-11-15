@@ -35,7 +35,7 @@ class AlchemyTheoremProver(
     declarations: Map[FolExpression, Seq[String]],
     evidence: List[FolExpression],
     assumptions: List[WeightedFolEx],
-    goal: FolExpression): Option[Double] = {
+    goal: FolExpression): Seq[Double] = {
 
     declarations.foreach { dec =>
       dec match {
@@ -76,7 +76,7 @@ class AlchemyTheoremProver(
     try 
     {      
     	callAlchemy(mlnFile, evidenceFile, resultFile, args) match {
-	      case Some(t) => Some(t.toDouble)
+	      case Some(t) => Seq(t.toDouble)
 	      case _ => throw new RuntimeException("no valid output in the result file");
     	}
 
@@ -84,7 +84,7 @@ class AlchemyTheoremProver(
     {
     	case e: Exception =>{
     	  System.err.println (e);
-    	  return None;
+    	  return Seq();
     	}   				 
     }
     

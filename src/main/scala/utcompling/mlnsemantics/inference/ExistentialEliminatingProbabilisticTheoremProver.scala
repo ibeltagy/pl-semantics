@@ -21,7 +21,7 @@ class ExistentialEliminatingProbabilisticTheoremProver(
     declarations: Map[FolExpression, Seq[String]], // predicate -> seq[type] 
     evidence: List[FolExpression],
     assumptions: List[WeightedExpression[FolExpression]],
-    goal: FolExpression): Option[Double] = {
+    goal: FolExpression): Seq[Double] = {
 
     val b = Buffer[(String, String)]()
 

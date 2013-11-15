@@ -24,7 +24,7 @@ class GetPredicatesDeclarationsProbabilisticTheoremProver(
     declarations: Map[BoxerExpression, Seq[String]],
     evidence: List[BoxerExpression],
     assumptions: List[WeightedExpression[BoxerExpression]],
-    goal: BoxerExpression): Option[Double] = {
+    goal: BoxerExpression): Seq[Double] = {
   
     val IndvVar = """^(x\d*)$""".r
     val EvntVar = """^(e\d*)$""".r

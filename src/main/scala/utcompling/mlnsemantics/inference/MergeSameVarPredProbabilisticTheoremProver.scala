@@ -23,7 +23,7 @@ class MergeSameVarPredProbabilisticTheoremProver(
     declarations: Map[BoxerExpression, Seq[String]],
     evidence: List[BoxerExpression],
     assumptions: List[WeightedExpression[BoxerExpression]],
-    goal: BoxerExpression): Option[Double] = {
+    goal: BoxerExpression): Seq[Double] = {
 
 
     val newGoal = mergePred(goal);

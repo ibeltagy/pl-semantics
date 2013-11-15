@@ -26,48 +26,45 @@ class DoMultipleParsesTheoremProver(
     declarations: Map[BoxerExpression, Seq[String]],
     evidence: List[BoxerExpression],
     assumptions: List[WeightedExpression[BoxerExpression]],
-    goal: BoxerExpression): Option[Double] = {
+    goal: BoxerExpression): Seq[Double] = {
 
-    var score: Double = Sts.opts.task match {
+    var score: List[Double] = List();/* = Sts.opts.task match {
       case "sts" => 0;
       case "rte" => -10;
-    }
-    var scoreDenum: Double = 0;
+    }*/
+    //var scoreDenum: Double = 0;
     var index = 0;
 
-    goal match {
-      case BoxerPrs(goalParses) => goalParses.slice(0, Sts.opts.kbest).foreach(goalParse=>{  
-    	assumptions.head.expression match{
-    	  case BoxerPrs(assumptionParses) => assumptionParses.slice(0, Sts.opts.kbest).foreach(assumptionParse=>{
-    	  //---------------------------given goalParse and assumptionParse, calculate one score then add it to total score
-			  index += 1
-			  val outFile = Sts.opts.multipleOutputFiles + "." + Sts.pairIndex + "." + index
-			  val result = delegate.prove(constants, declarations, evidence, List(HardWeightedExpression(assumptionParse._1)), goalParse._1)
-			  val oneScore = result match { case Some(s) => s; case None => -Sts.opts.kbest};
-			  Sts.opts.task match {
-					//case "sts" => score += oneScore*(assumptionParse._2+goalParse._2); scoreDenum +=(assumptionParse._2+goalParse._2 ); //weighted average 
-					case "sts" => 
-					{
-					  score += oneScore; scoreDenum += 1; // average
-					  //FileUtils.writeUsing(outFile) { f =>
-					  //	f.write(assumptionParse._2 + " " + goalParse._2 + " " + oneScore + " " + score + "\n")	
-					  //}	
-					}
-					case "rte" => 
-					{
-					  score = Math.max(score, oneScore); scoreDenum = 1; // max
-					  //FileUtils.writeUsing(outFile) { f =>
-					  //	f.write(assumptionParse._2 + " " + goalParse._2 + " " + oneScore + " " + score + "\n")	
-					  //}	
-					}
-			  }
-    	 //------------------------------  
-    	 })
-    	  case _ =>  throw new RuntimeException ("Premise and Hypothesis both should start with BoxerPrs")
-    	}
-      })
+    goal match
+    {
+      case BoxerPrs(goalParses) => 
+      {
+        assumptions.head.expression match
+        {
+	    	case BoxerPrs(assumptionParses) =>
+	    	{
+	    		for(i <- 0 to Sts.opts.kbest-1)
+	    		{
+	    			for(j <- 0 to Sts.opts.kbest-1)
+		    		{
+	    				if (goalParses.length <= i)
+	    				  score = score ++ List(-2.0)
+	    				else if (assumptionParses.length <= j)
+	    				  score = score ++ List(-2.0)
+	    				else
+	    				{
+							val result = delegate.prove(constants, declarations, evidence, List(HardWeightedExpression(assumptionParses.apply(j)._1)), goalParses.apply(i)._1)
+							val oneScore = result match { case Seq(s) => s; case Seq() => -1 /* unknown error*/};
+							score = score ++ List(oneScore)	    					
+	    				}
+		    		} 
+	    		}
+			}//end case BoxerPrs(assumptionParses)
+	    	case _ =>  throw new RuntimeException ("Premise and Hypothesis both should start with BoxerPrs")
+	    }//end assumptions.head.expression match
+      }//end of case BoxerPrs(goalParses)
       case _ => return delegate.prove(constants, declarations, evidence, assumptions, goal)
-    }
-     return Some(score/scoreDenum);
+     } //eng goal match 
+     return score;
   }  
 }

@@ -13,9 +13,9 @@ class NoneTheoremProver
     declarations: Map[FolExpression, Seq[String]],
     evidence: List[FolExpression],
     assumptions: List[WeightedExpression[FolExpression]],
-    goal: FolExpression): Option[Double] = {
+    goal: FolExpression): Seq[Double] = {
     
-    return Some(0.0)
+    return Seq(0.0)
     
   }
 

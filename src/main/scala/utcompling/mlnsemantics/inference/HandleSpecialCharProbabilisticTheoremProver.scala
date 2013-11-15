@@ -24,7 +24,7 @@ class HandleSpecialCharProbabilisticTheoremProver(
     declarations: Map[BoxerExpression, Seq[String]],
     evidence: List[BoxerExpression],
     assumptions: List[WeightedExpression[BoxerExpression]],
-    goal: BoxerExpression): Option[Double] = {
+    goal: BoxerExpression): Seq[Double] = {
 
     def clearName(name: String): String = //remove surrounding quotes -if any-
     {

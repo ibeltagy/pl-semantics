@@ -26,7 +26,7 @@ class SetPriorPTP(
     declarations: Map[FolExpression, Seq[String]], // predicate -> seq[type] 
     evidence: List[FolExpression],
     assumptions: List[WeightedExpression[FolExpression]],
-    goal: FolExpression): Option[Double] = {
+    goal: FolExpression): Seq[Double] = {
 		  
     def predicateToPrior(expr: FolExpression):FolExpression =  //something like: forall x0...xn !pred(x0, ...., xn) 
     {
@@ -52,10 +52,10 @@ class SetPriorPTP(
       val result = delegate.prove(constants, declarations, evidence, assumptions, goal);
       
       //if it works, generate the prior on entailment and run again.
-      if (!result.isEmpty && result.get > 0)
+      if (!result.isEmpty && result.head > 0)
       {
         val priorExp = predicateToPrior(SetVarBindPTP.entPred_h);
-        val priorWeight = scala.math.log(result.get) - scala.math.log(1-result.get); //proof will be in the paper (isA) 
+        val priorWeight = scala.math.log(result.head) - scala.math.log(1-result.head); //proof will be in the paper (isA) 
         priorExpressions = List(PriorExpression(priorExp.asInstanceOf[FolExpression], priorWeight));  
       }
       else return result;//if it does not work, return the result as it is. 

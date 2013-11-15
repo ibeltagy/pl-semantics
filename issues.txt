@@ -1,3 +1,4 @@
+-still, there are types problems in inference rules. I will disable recovering types for the current experiments
 -paraphrase to logic
 -prenex normal form 
 -multiparses and svm

@@ -56,7 +56,7 @@ class PSLTheoremProver(
     declarations: Map[FolExpression, Seq[String]],
     evidence: List[FolExpression],
     assumptions: List[WeightedFolEx],
-    goal: FolExpression): Option[Double] = {
+    goal: FolExpression): Seq[Double] = {
 
     if (varBind == None)
     	varBind  = Some(Sts.opts.varBind)
@@ -142,7 +142,7 @@ class PSLTheoremProver(
     	//if (resultScore == 0 )
     	// resultScore = callPSL(mlnFile, "OuterJoinWithDummy", timeout);    	
     	  
-    	return Some(resultScore);
+    	return Seq(resultScore);
     	//Process("mvn", Seq("compile", "-f", "psl/pom.xml")) ! (ProcessLogger(System.err.println(_), System.err.println(_)))
     	//Process("mvn", Seq("exec:java", "-Dexec.mainClass=psl.TextInterface", "-f", "psl/pom.xml")) ! (ProcessLogger(System.err.println(_), System.err.println(_)))
     	//println (PSLTheoremProver.cp);
@@ -160,7 +160,7 @@ class PSLTheoremProver(
     	   // return this.prove(constants, declarations, evidence, assumptions, goal);
     	  //}
     	  //else
-    	  return Some(-2.0);
+    	  return Seq(-2.0);
     	}   				 
     }
     

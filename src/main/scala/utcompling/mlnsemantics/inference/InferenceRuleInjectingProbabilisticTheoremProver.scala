@@ -50,7 +50,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     declarations: Map[BoxerExpression, Seq[String]],
     evidence: List[BoxerExpression],
     assumptions: List[WeightedExpression[BoxerExpression]],
-    goal: BoxerExpression): Option[Double] = {
+    goal: BoxerExpression): Seq[Double] = {
     
     assumptions.foreach(x => LOG.info("\n" + d(x.expression).pretty))
     LOG.info("\n" + d(goal).pretty)

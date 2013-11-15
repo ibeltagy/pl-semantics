@@ -21,7 +21,7 @@ class FromEntToEqvProbabilisticTheoremProver(
     declarations: Map[BoxerExpression, Seq[String]], // predicate -> seq[type] 
     evidence: List[BoxerExpression],
     assumptions: List[WeightedExpression[BoxerExpression]],
-    goal: BoxerExpression): Option[Double] = {
+    goal: BoxerExpression): Seq[Double] = {
 
 	var prefix = "t";
     def renameVar(e: BoxerVariable): BoxerVariable = {
