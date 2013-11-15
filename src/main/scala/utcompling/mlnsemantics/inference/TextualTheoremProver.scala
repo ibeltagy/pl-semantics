@@ -27,6 +27,7 @@ import org.apache.log4j.Level
 import utcompling.mlnsemantics.inference.support._
 import utcompling.scalalogic.discourse.DiscourseInterpreter
 import org.apache.commons.logging.LogFactory
+import utcompling.mlnsemantics.run.Sts
 
 class TextualTheoremProver(
   discourseIterpreter: DiscourseInterpreter[BoxerExpression],
@@ -47,7 +48,7 @@ class TextualTheoremProver(
       case Some(txt) => txt;
       case _ => {
         println ("Parsing text failed. Return -2");
-        return Seq(-2);
+        return Seq.fill(Sts.opts.kbest * Sts.opts.kbest)(-2);
       }
     })
     
@@ -55,7 +56,7 @@ class TextualTheoremProver(
       case Some(txt) => txt;
       case _ => {
         println ("Parsing hypothesis failed. Return -2");
-        return Seq(-2);
+        return Seq.fill(Sts.opts.kbest * Sts.opts.kbest)(-2);
       }
     })
     
