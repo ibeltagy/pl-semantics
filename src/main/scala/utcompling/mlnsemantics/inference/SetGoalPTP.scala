@@ -55,6 +55,10 @@ class SetGoalPTP(
       }
     }
     //=====================Start RTE=============================
+    else if (Sts.opts.task == "rte" && Sts.opts.softLogicTool == "psl")
+    {
+      throw new RuntimeException("RTE is not supported on PSL");
+    }
     //---------------------RTE - no Fix DCA--------------------------
     else if (Sts.opts.task == "rte" && Sts.opts.fixDCA == false)
     {

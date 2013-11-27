@@ -37,37 +37,17 @@ class AlchemyTheoremProver(
     assumptions: List[WeightedFolEx],
     goal: FolExpression): Seq[Double] = {
 
-    declarations.foreach { dec =>
-      dec match {
-        case (FolAtom(Variable(pred), args @ _*), argTypes) =>
-          for (a <- argTypes)
-            require(constants.contains(a), "No contants were found for type '%s' of declared predicate '%s'.".format(a, pred))
-        case d => throw new RuntimeException("Only atoms may be declared.  '%s' is not an atom.".format(d))
-      }
-    }
-
-    val declarationNames =
-      declarations.mapKeys {
-        case FolAtom(Variable(pred), _*) => pred
-        case FolVariableExpression(Variable(pred)) => pred
-      }
 
     val mlnFile = makeMlnFile(
       constants,
-      declarationNames,
+      declarations,
       assumptions,
       evidence,
       goal)
 					
     val evidenceFile = makeEvidenceFile(evidence)
     val resultFile = FileUtils.mktemp(suffix = ".res")
-
-    //Adding all predicates to the query force them to be open world
-    //This could be slower but, this is the only way to set the predicates to open-world in 
-    //Alchemy 2.0 because they removed this option
-    //val args = List("-ow", declarationNames.keys.mkString(","), "-q", "entailment")
-    //val args = List( "-q", declarationNames.keys.mkString(","))
-    
+   
     //all evd are in the mln file
     val args = Sts.opts.task match {
       case "sts" => List("-q", "entailment_h,entailment_t")
@@ -92,11 +72,26 @@ class AlchemyTheoremProver(
 
   private def makeMlnFile(
     constants: Map[String, Set[String]],
-    declarationNames: Map[String, Seq[String]],
+    declarations: Map[FolExpression, Seq[String]],
     assumptions: List[WeightedFolEx],
     evidence: List[FolExpression],
     goal: FolExpression) = {
     
+    declarations.foreach { dec =>
+      dec match {
+        case (FolAtom(Variable(pred), args @ _*), argTypes) =>
+          for (a <- argTypes)
+            require(constants.contains(a), "No contants were found for type '%s' of declared predicate '%s'.".format(a, pred))
+        case d => throw new RuntimeException("Only atoms may be declared.  '%s' is not an atom.".format(d))
+      }
+    }
+
+    val declarationNames =
+      declarations.mapKeys {
+        case FolAtom(Variable(pred), _*) => pred
+        case FolVariableExpression(Variable(pred)) => pred
+      }
+
     val tempFile = FileUtils.mktemp(suffix = ".mln")
     FileUtils.writeUsing(tempFile) { f =>
     constants.foreach {
@@ -129,7 +124,6 @@ class AlchemyTheoremProver(
             weight match {
               case Double.PositiveInfinity => Some(HardWeightedExpression(folEx))
               case Double.NegativeInfinity => None ;//Some(HardWeightedExpression(-folEx))
-              case _ if weight < Sts.opts.weightThreshold => None
               case _ => Some(e)
             }
           case e @ _ => Some(e)

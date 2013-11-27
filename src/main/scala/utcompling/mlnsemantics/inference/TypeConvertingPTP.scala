@@ -15,6 +15,8 @@ import utcompling.mlnsemantics.inference.support._
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.BoxerExpressionInterpreter
 import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.CollectionUtil._
+import utcompling.mlnsemantics.run.Sts
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerDrs
 
 class TypeConvertingPTP(
   converter: BoxerExpressionInterpreter[FolExpression],
@@ -39,7 +41,15 @@ class TypeConvertingPTP(
     	case FolVariableExpression(Variable("true")) => None 
     	case e @ _ => List(e)
     }
-    val newGoal = converter.interpret(goal)
+    val newGoal = goal match 
+    {
+      case BoxerDrs(indx, cond) if(Sts.opts.task == "sts")=> 
+      	val list = cond.map(converter.interpret)
+      	assert(list.length == 2);
+      	FolAndExpression(list.head, list.last);      	
+      	
+      case _ => converter.interpret(goal)
+    } 
     val newAssumptions = assumptions.map ({
       case HardWeightedExpression(e) => HardWeightedExpression(converter.interpret(e))
       case SoftWeightedExpression(e, w) => SoftWeightedExpression(converter.interpret(e), w)

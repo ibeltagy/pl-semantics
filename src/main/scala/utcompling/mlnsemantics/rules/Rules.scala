@@ -165,13 +165,16 @@ object Rules {
     }
 
   def createWeightedExpression(leftFOL: BoxerDrs, rightFOL: BoxerDrs, score: Double): List[WeightedExpression[BoxerExpression]] =
-    {
-      List(createWeightedExpression(leftFOL, rightFOL, "h", score)) ++
-        (
-          if (Sts.opts.task == "sts")
-            List(createWeightedExpression(rightFOL, leftFOL, "t", score))
-          else List())
-    }
+  {
+    if(score < Sts.opts.weightThreshold )
+      return List();
+  
+    List(createWeightedExpression(leftFOL, rightFOL, "h", score)) ++
+    (
+      if (Sts.opts.task == "sts")
+        List(createWeightedExpression(rightFOL, leftFOL, "t", score))
+      else List())
+  }
 
   private def createWeightedExpression(leftFOL: BoxerDrs, rightFOL: BoxerDrs, discId: String, score: Double): WeightedExpression[BoxerExpression] =
     {

@@ -33,6 +33,8 @@ case $DS in
   vid) dsPath="$RES/sts/STS.MSRvid" ;;
   par) dsPath="$RES/sts/STS.MSRpar" ;;
   frc) dsPath="$RES/fracas/fracas" ;;
+  sick-rte) dsPath="$RES/sick/sick-rte" ;;
+  sick-sts) dsPath="$RES/sick/sick-sts" ;;
   rte) 
 	rte_ver=$1	#rte 1, 2, 3, 4, 5, 6, 7
 	shift
