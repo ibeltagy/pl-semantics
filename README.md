@@ -35,8 +35,9 @@ I will add RTE4-RTE7 and Trento dataset soon. Each dataset has an apprevition (l
 	* FraCas: frc
 	* MsrVid: vid
 	* MsrPar: par
-	* RTEi training set: rte i train
-	* RTEi training set: rte i test
+	* RTEi: rte i 
+	* SICK as an RTE task: sick-rte
+	* SICK as an STS task: sick-sts
 	* Prob: prb		#This dataset contains few examples I selected. Each example represents one specific Problem. 
 
 - First, some helping files need to be generated for each dataset using:
@@ -45,7 +46,7 @@ I will add RTE4-RTE7 and Trento dataset soon. Each dataset has an apprevition (l
 
 For example:
 
-	~/mln-semantics$ bin/mlnsem gen rte 2 test
+	~/mln-semantics$ bin/mlnsem gen rte 2
 
 - Then, run the system for this dataset: 
 
