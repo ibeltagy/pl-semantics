@@ -14,7 +14,7 @@ tmp/
 *.o
 candc/bin/
 candc/models
-alchemy
+alchemy/bin/
 *.db
 psl/run
 *.class
