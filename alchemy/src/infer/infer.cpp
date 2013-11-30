@@ -111,6 +111,9 @@ ARGS ARGS::Args[] =
        "Run inference using MCMC (Gibbs sampling) and return probabilities "
        "for all query atoms."),
   
+  ARGS("ss", ARGS::Tog, asamplesearchInfer,
+       "Run inference using SampleSearch and estimate partition function Z"),
+
   ARGS("ms", ARGS::Tog, amcsatInfer,
        "Run inference using MC-SAT and return probabilities "
        "for all query atoms"),

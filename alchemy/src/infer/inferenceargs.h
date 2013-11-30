@@ -94,6 +94,8 @@ bool  amapPos = false;
 bool  amapAll = false;
   // Gibbs Sampling
 bool  agibbsInfer = false;
+  // SampleSearch
+bool  asamplesearchInfer = false;
   // MC-SAT
 bool  amcsatInfer = false;
   // Simulated Tempering

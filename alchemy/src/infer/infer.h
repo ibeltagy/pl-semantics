@@ -85,6 +85,7 @@
 #include "hvariablestate.h"
 #include "hmcsat.h"
 #include "lbfgsp.h"
+#include "ss.h"
 
 // Variables for holding inference command line args are in inferenceargs.h
 
@@ -1045,7 +1046,7 @@ int buildInference(Inference*& inference, Domain*& domain,
   }
   else if (!asimtpInfer && !amapPos && !amapAll && !agibbsInfer &&
            !amcsatInfer && !aHybrid && !aSA && !abpInfer && !aefbpInfer &&
-           !aoutputNetwork)
+           !aoutputNetwork && ! asamplesearchInfer)
   {
       // If nothing specified, use MC-SAT
     amcsatInfer = true;
@@ -1364,9 +1365,9 @@ int buildInference(Inference*& inference, Domain*& domain,
       hstate->setInitFromEvi(true);
     }
 
-      // MAP inference, MC-SAT, Gibbs or Sim. Temp.
+      // MAP inference, MC-SAT, Gibbs, Sim. Temp or SampleSearch
     if (amapPos || amapAll || amcsatInfer || agibbsInfer || asimtpInfer ||
-        aHybrid || aSA)
+        aHybrid || aSA || asamplesearchInfer)
     {
       if ((amapPos || amapAll) && !aHybrid)
       { // MaxWalkSat
@@ -1433,6 +1434,10 @@ int buildInference(Inference*& inference, Domain*& domain,
       { // MC-SAT
         inference = new MCSAT(state, aSeed, trackClauseTrueCnts, msparams,
                               queryFormulas);
+      }
+      else if (asamplesearchInfer && !aHybrid)
+      { // SampleSearch
+        inference = new SampleSearch(state, aSeed, trackClauseTrueCnts, msparams, queryFormulas);
       }
       else if (asimtpInfer && !aHybrid)
       { // Simulated Tempering
