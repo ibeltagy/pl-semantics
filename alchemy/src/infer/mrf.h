@@ -75,7 +75,7 @@
 #include "mln.h"
 #include "groundpredicate.h"
 
-const bool mrfdebug = false;
+const bool mrfdebug = true;
 
 ///////////////////////////////////////////////////////////////////////////
 
