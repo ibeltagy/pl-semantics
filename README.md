@@ -9,9 +9,9 @@ Set up workspace (without PSL)
     ~/mln-semantics$ chmod u+x bin/mlnsem
 
     ~/mln-semantics$ bin/mlnsem compile
+    ~/mln-semantics/alchemy/src$ make
 
     ~/mln-semantics$ ln -s  /u/beltagy/workspace/deft/mln-semantics/candc candc
-    ~/mln-semantics$ ln -s  /u/beltagy/workspace/deft/mln-semantics/alchemy alchemy
     
     ~/mln-semantics$ cd resources
     ~/mln-semantics/resources$ ln -s /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt full.vs
