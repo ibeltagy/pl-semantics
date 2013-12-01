@@ -1112,6 +1112,10 @@ int buildInference(Inference*& inference, Domain*& domain,
   mwsparams->lazyLowState = amwsLazyLowState;
 
     // Set MC-SAT parameters
+  SampleSearchParams* samplesearchparams = new SampleSearchParams;
+  samplesearchparams->maxSeconds         = amcmcMaxSeconds;
+
+    // Set MC-SAT parameters
   MCSatParams* msparams = new MCSatParams;
   msparams->mwsParams = mwsparams;
     // MC-SAT needs only one chain
@@ -1437,7 +1441,7 @@ int buildInference(Inference*& inference, Domain*& domain,
       }
       else if (asamplesearchInfer && !aHybrid)
       { // SampleSearch
-        inference = new SampleSearch(state, aSeed, trackClauseTrueCnts, msparams, queryFormulas);
+        inference = new SampleSearch(state, aSeed, trackClauseTrueCnts, samplesearchparams, queryFormulas);
       }
       else if (asimtpInfer && !aHybrid)
       { // Simulated Tempering
