@@ -49,10 +49,16 @@ class AlchemyTheoremProver(
     val resultFile = FileUtils.mktemp(suffix = ".res")
    
     //all evd are in the mln file
-    val args = Sts.opts.task match {
-      case "sts" => List("-q", "entailment_h,entailment_t")
-      case "rte" => List("-q", "entailment_h")
-    }
+    val openWorldPreds =
+      declarations.keys.map{
+        case FolAtom(Variable(pred), _*) => pred
+        case FolVariableExpression(Variable(pred)) => pred
+    }.mkString(",")
+    
+    val args = /*List("-ow", openWorldPreds) ++ */(Sts.opts.task match {
+      case "sts" => List("-q", openWorldPreds)
+      case "rte" => List("-q", openWorldPreds)
+    })
     try 
     {      
     	callAlchemy(mlnFile, evidenceFile, resultFile, args) match {

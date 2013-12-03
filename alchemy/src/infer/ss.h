@@ -70,6 +70,8 @@ class SampleSearch: public Inference
 	unsigned long long int tableSize = (1LL<<numGndPred) ;
 	double weight = gndClause->getWt();
 	double expNegWeight = exp(-weight);
+	if(gndClause->isHardClause())
+		expNegWeight = 0;
 	outFile <<tableSize<<endl;
 	for (int j = 0; j < tableSize; j++)
 	{
