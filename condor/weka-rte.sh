@@ -1,6 +1,8 @@
 rteAct=$1
 rteGt=$2
+kbest=$3
 count=0
+let kbestSqr=kbest*kbest
 cat $rteAct | while read act
 do
 	len=$(expr length "$act")
@@ -10,13 +12,19 @@ do
 
 	#MLN
 	echo "@relation sts" > tmp-train.arff
-	echo "@attribute act1 real" >> tmp-train.arff
+	for (( i=1; i<=$kbestSqr; i++ ))
+	do
+	   echo "@attribute act$i real" >> tmp-train.arff
+	done	
 	echo "@attribute gt {0,1}" >> tmp-train.arff
 	echo "@data" >> tmp-train.arff
 	paste -d , tmp-act $rteGt | head -n 567  >> tmp-train.arff
 
 	echo "@relation sts" > tmp-test.arff
-	echo "@attribute act1 real" >> tmp-test.arff
+   for (( i=1; i<=$kbestSqr; i++ ))
+   do
+      echo "@attribute act$i real" >> tmp-test.arff
+   done
 	echo "@attribute gt {0,1}" >> tmp-test.arff
 	echo "@data" >> tmp-test.arff
 	paste -d , tmp-act $rteGt | tail -n 800  >> tmp-test.arff

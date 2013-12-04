@@ -1,3 +1,5 @@
+GOOGLESPACEHASH=/u/beltagy/workspace/deft/mln-semantics/bin/sparsehash/include
+
 INLINE_LIMIT=-finline-limit=100000
 #INLINE_WARN=-Winline
 STATIC=-static
@@ -47,16 +49,19 @@ LIFTEDINFERIS=$(LIFTEDINFER)/liftedimportancesampling
 LIFTEDINFERWM=$(LIFTEDINFER)/liftedweightedmodelcounting
 LIFTEDINFERTEST=$(LIFTEDINFER)/tests
 
+#SampleSearch
+SAMPLESEARCH=$(INFER)/ijgp-samplesearch
+
 REPLACEFOLY=$(PARSER)/replacefoly.pl
 REPLACEFOLCPP=$(PARSER)/replacefolcpp.pl
 
 LIBCINC= -I. -I$(UTIL) -I$(LOGIC) -I$(PARSER) -I$(LEARNWTS) -I$(LEARNSTRUCT) \
 	-I$(INFER) -I$(LIFTEDINFERBRIDGE)$(INCLUDESUFFIX) -I$(LIFTEDINFERCOMMON)$(INCLUDESUFFIX) \
 	-I$(LIFTEDINFERBG)$(INCLUDESUFFIX) -I$(LIFTEDINFERIS)$(INCLUDESUFFIX) -I$(LIFTEDINFERWM)$(INCLUDESUFFIX) \
-	-I$(LIFTEDINFERTEST)
+	-I$(LIFTEDINFERTEST) -I$(GOOGLESPACEHASH)
 LIBLINC= -L. -L$(UTIL) -L$(LOGIC) -L$(PARSER) -L$(LEARNWTS) -L$(LEARNSTRUCT) \
 	-L$(INFER)
-LIBLINK= -ldl
+LIBLINK= -ldl -lz -lgmp -lgmpxx
 
 #CFLAGS=$(CLFLAGS) -Wno-deprecated -Wall $(LIBCINC)
 CFLAGS=$(CLFLAGS) -w -Wno-deprecated -Wall $(LIBCINC)
@@ -114,7 +119,46 @@ OBJS=$(OBJDIR)/arguments.o $(OBJDIR)/powerset.o \
 	$(OBJDIR)/randomgenutil.o \
 	$(OBJDIR)/testformulainfer.o \
 	$(OBJDIR)/lvrptptreesampling.o \
-	$(OBJDIR)/lvrptpsearchtree.o
+	$(OBJDIR)/lvrptpsearchtree.o \
+	$(OBJDIR)/AOGraph.o \
+	$(OBJDIR)/AOIJGPSamplingHelper.o \
+	$(OBJDIR)/AOTree.o \
+	$(OBJDIR)/AO_IJGP_Sampler.o \
+	$(OBJDIR)/Agressive_AO_Sampling.o \
+	$(OBJDIR)/BE.o \
+	$(OBJDIR)/Clause.o \
+	$(OBJDIR)/ClauseList.o \
+	$(OBJDIR)/DRC.o \
+	$(OBJDIR)/Debug.o \
+	$(OBJDIR)/Function.o \
+	$(OBJDIR)/GM.o \
+	$(OBJDIR)/Graph.o \
+	$(OBJDIR)/GrayCode.o \
+	$(OBJDIR)/HashFunction.o \
+	$(OBJDIR)/HyperGraph.o \
+	$(OBJDIR)/IJGPSamplingHelper.o \
+	$(OBJDIR)/JG.o \
+	$(OBJDIR)/JGHSS.o \
+	$(OBJDIR)/JGLS.o \
+	$(OBJDIR)/JGLSS.o \
+	$(OBJDIR)/JGSS.o \
+	$(OBJDIR)/JT.o \
+	$(OBJDIR)/LogFunction.o \
+	$(OBJDIR)/ORStore.o \
+	$(OBJDIR)/PseudoTree.o \
+	$(OBJDIR)/Random.o \
+	$(OBJDIR)/ReduceDomain.o \
+	$(OBJDIR)/SATInstance.o \
+	$(OBJDIR)/SATPreprocessor.o \
+	$(OBJDIR)/SATSolver.o \
+	$(OBJDIR)/SF.o \
+	$(OBJDIR)/SampleSearch.o \
+	$(OBJDIR)/Solver.o \
+	$(OBJDIR)/Variable.o \
+	$(OBJDIR)/VariableList.o \
+	$(OBJDIR)/mersenne.o \
+	$(OBJDIR)/randgen.o \
+	$(OBJDIR)/userintf.o 
 
 	
 #add .cpp files (including executables') to CPPFILES.
@@ -168,7 +212,47 @@ CPPFILES=$(UTIL)/arguments.cpp $(UTIL)/powerset.cpp $(UTIL)/random.cpp\
 	$(LIFTEDINFERWM)$(SRCSUFFIX)/wmconvertor.cpp \
 	$(LIFTEDINFERTEST)/parser.cpp \
 	$(LIFTEDINFERTEST)/testmodelcount.cpp \
-	$(LIFTEDINFERTEST)/testformulainfer.cpp
+	$(LIFTEDINFERTEST)/testformulainfer.cpp \
+	$(SAMPLESEARCH)/AOGraph.cpp \
+	$(SAMPLESEARCH)/AOIJGPSamplingHelper.cpp \
+	$(SAMPLESEARCH)/AOTree.cpp \
+	$(SAMPLESEARCH)/AO_IJGP_Sampler.cpp \
+	$(SAMPLESEARCH)/Agressive_AO_Sampling.cpp \
+	$(SAMPLESEARCH)/BE.cpp \
+	$(SAMPLESEARCH)/Clause.cpp \
+	$(SAMPLESEARCH)/ClauseList.cpp \
+	$(SAMPLESEARCH)/DRC.cpp \
+	$(SAMPLESEARCH)/Debug.cpp \
+	$(SAMPLESEARCH)/Function.cpp \
+	$(SAMPLESEARCH)/GM.cpp \
+	$(SAMPLESEARCH)/Graph.cpp \
+	$(SAMPLESEARCH)/GrayCode.cpp \
+	$(SAMPLESEARCH)/HashFunction.cpp \
+	$(SAMPLESEARCH)/HyperGraph.cpp \
+	$(SAMPLESEARCH)/IJGPSamplingHelper.cpp \
+	$(SAMPLESEARCH)/JG.cpp \
+	$(SAMPLESEARCH)/JGHSS.cpp \
+	$(SAMPLESEARCH)/JGLS.cpp \
+	$(SAMPLESEARCH)/JGLSS.cpp \
+	$(SAMPLESEARCH)/JGSS.cpp \
+	$(SAMPLESEARCH)/JT.cpp \
+	$(SAMPLESEARCH)/LogFunction.cpp \
+	$(SAMPLESEARCH)/MAIN.cpp \
+	$(SAMPLESEARCH)/ORStore.cpp \
+	$(SAMPLESEARCH)/PseudoTree.cpp \
+	$(SAMPLESEARCH)/Random.cpp \
+	$(SAMPLESEARCH)/ReduceDomain.cpp \
+	$(SAMPLESEARCH)/SATInstance.cpp \
+	$(SAMPLESEARCH)/SATPreprocessor.cpp \
+	$(SAMPLESEARCH)/SATSolver.cpp \
+	$(SAMPLESEARCH)/SF.cpp \
+	$(SAMPLESEARCH)/SampleSearch.cpp \
+	$(SAMPLESEARCH)/Variable.cpp \
+	$(SAMPLESEARCH)/VariableList.cpp \
+	$(SAMPLESEARCH)/mersenne.cpp \
+	$(SAMPLESEARCH)/randgen.cpp \
+	$(SAMPLESEARCH)/userintf.cpp \
+	$(SAMPLESEARCH)/Solver.cpp
 	
 ##############################################################################
 #EXECUTABLES: add executables rules here
@@ -190,6 +274,9 @@ learnstruct: $(OBJDIR)/learnstruct.oo
 runliftedinfertests:$(OBJDIR)/runtestsmain.oo
 	cp $(OBJDIR)/runtestsmain.oo $(BIN)/runliftedinfertests
 
+ijgp-samplesearch: $(OBJDIR)/ijgp-samplesearch.oo
+	cp $(OBJDIR)/ijgp-samplesearch.oo $(BIN)/ijgp-samplesearch
+
 $(OBJDIR)/learnwts.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/learnwts.o -c $(LEARNWTS)/learnwts.cpp
 
@@ -199,11 +286,14 @@ $(OBJDIR)/infer.o:
 $(OBJDIR)/liftedinfer.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/liftedinfer.o -c $(LIFTEDINFER)/liftedinfer.cpp
 	
+$(OBJDIR)/learnstruct.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/learnstruct.o -c $(LEARNSTRUCT)/learnstruct.cpp
+
 $(OBJDIR)/runtestsmain.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/runtestsmain.o -c $(LIFTEDINFERTEST)/runtestsmain.cpp
 
-$(OBJDIR)/learnstruct.o:
-	$(GPP) $(CFLAGS) -o $(OBJDIR)/learnstruct.o -c $(LEARNSTRUCT)/learnstruct.cpp
+$(OBJDIR)/ijgp-samplesearch.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/ijgp-samplesearch.o -c $(SAMPLESEARCH)/MAIN.cpp
 
 %.oo: %.o $(OBJS) $(LIBS)
 	echo $<
@@ -371,6 +461,85 @@ $(OBJDIR)/wmconvertor.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/wmconvertor.o -c $(LIFTEDINFERWM)$(SRCSUFFIX)/wmconvertor.cpp
 $(OBJDIR)/testformulainfer.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/testformulainfer.o -c $(LIFTEDINFERTEST)/testformulainfer.cpp
+
+$(OBJDIR)/AOGraph.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/AOGraph.o -c $(SAMPLESEARCH)/AOGraph.cpp
+$(OBJDIR)/AOIJGPSamplingHelper.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/AOIJGPSamplingHelper.o -c $(SAMPLESEARCH)/AOIJGPSamplingHelper.cpp
+$(OBJDIR)/AOTree.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/AOTree.o -c $(SAMPLESEARCH)/AOTree.cpp
+$(OBJDIR)/AO_IJGP_Sampler.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/AO_IJGP_Sampler.o -c $(SAMPLESEARCH)/AO_IJGP_Sampler.cpp
+$(OBJDIR)/Agressive_AO_Sampling.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/Agressive_AO_Sampling.o -c $(SAMPLESEARCH)/Agressive_AO_Sampling.cpp
+$(OBJDIR)/BE.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/BE.o -c $(SAMPLESEARCH)/BE.cpp
+$(OBJDIR)/Clause.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/Clause.o -c $(SAMPLESEARCH)/Clause.cpp
+$(OBJDIR)/ClauseList.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/ClauseList.o -c $(SAMPLESEARCH)/ClauseList.cpp
+$(OBJDIR)/DRC.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/DRC.o -c $(SAMPLESEARCH)/DRC.cpp
+$(OBJDIR)/Debug.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/Debug.o -c $(SAMPLESEARCH)/Debug.cpp
+$(OBJDIR)/Function.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/Function.o -c $(SAMPLESEARCH)/Function.cpp
+$(OBJDIR)/GM.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/GM.o -c $(SAMPLESEARCH)/GM.cpp
+$(OBJDIR)/Graph.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/Graph.o -c $(SAMPLESEARCH)/Graph.cpp
+$(OBJDIR)/GrayCode.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/GrayCode.o -c $(SAMPLESEARCH)/GrayCode.cpp
+$(OBJDIR)/HashFunction.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/HashFunction.o -c $(SAMPLESEARCH)/HashFunction.cpp
+$(OBJDIR)/HyperGraph.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/HyperGraph.o -c $(SAMPLESEARCH)/HyperGraph.cpp
+$(OBJDIR)/IJGPSamplingHelper.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/IJGPSamplingHelper.o -c $(SAMPLESEARCH)/IJGPSamplingHelper.cpp
+$(OBJDIR)/JG.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/JG.o -c $(SAMPLESEARCH)/JG.cpp
+$(OBJDIR)/JGHSS.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/JGHSS.o -c $(SAMPLESEARCH)/JGHSS.cpp
+$(OBJDIR)/JGLS.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/JGLS.o -c $(SAMPLESEARCH)/JGLS.cpp
+$(OBJDIR)/JGLSS.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/JGLSS.o -c $(SAMPLESEARCH)/JGLSS.cpp
+$(OBJDIR)/JGSS.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/JGSS.o -c $(SAMPLESEARCH)/JGSS.cpp
+$(OBJDIR)/JT.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/JT.o -c $(SAMPLESEARCH)/JT.cpp
+$(OBJDIR)/LogFunction.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/LogFunction.o -c $(SAMPLESEARCH)/LogFunction.cpp
+$(OBJDIR)/ORStore.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/ORStore.o -c $(SAMPLESEARCH)/ORStore.cpp
+$(OBJDIR)/PseudoTree.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/PseudoTree.o -c $(SAMPLESEARCH)/PseudoTree.cpp
+$(OBJDIR)/Random.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/Random.o -c $(SAMPLESEARCH)/Random.cpp
+$(OBJDIR)/ReduceDomain.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/ReduceDomain.o -c $(SAMPLESEARCH)/ReduceDomain.cpp
+$(OBJDIR)/SATInstance.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/SATInstance.o -c $(SAMPLESEARCH)/SATInstance.cpp
+$(OBJDIR)/SATPreprocessor.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/SATPreprocessor.o -c $(SAMPLESEARCH)/SATPreprocessor.cpp
+$(OBJDIR)/SATSolver.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/SATSolver.o -c $(SAMPLESEARCH)/SATSolver.cpp
+$(OBJDIR)/SF.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/SF.o -c $(SAMPLESEARCH)/SF.cpp
+$(OBJDIR)/SampleSearch.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/SampleSearch.o -c $(SAMPLESEARCH)/SampleSearch.cpp
+$(OBJDIR)/Solver.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/Solver.o -c $(SAMPLESEARCH)/Solver.cpp
+$(OBJDIR)/Variable.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/Variable.o -c $(SAMPLESEARCH)/Variable.cpp
+$(OBJDIR)/VariableList.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/VariableList.o -c $(SAMPLESEARCH)/VariableList.cpp
+$(OBJDIR)/mersenne.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/mersenne.o -c $(SAMPLESEARCH)/mersenne.cpp
+$(OBJDIR)/randgen.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/randgen.o -c $(SAMPLESEARCH)/randgen.cpp
+$(OBJDIR)/userintf.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/userintf.o -c $(SAMPLESEARCH)/userintf.cpp
 
 ###############################################################################
 

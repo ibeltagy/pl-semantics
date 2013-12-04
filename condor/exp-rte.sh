@@ -81,7 +81,7 @@ do
           fi
 
 
-./condor/condorizer.py bin/mlnsem run $ds $rteCnt $range -timeout 60000 -wThr $wThr -fixDCA $fixDCA -noHMinus true -keepUniv $keepUniv -withEventProp false -log OFF $outputFile
+./condor/condorizer.py bin/mlnsem run $ds $rteCnt $range -timeout 60000 -wThr $wThr -fixDCA $fixDCA -noHMinus true -keepUniv $keepUniv -withEventProp false -log OFF -kbest 3 $outputFile
 		;;
 		collect)
 		       	 #The next block is to collect results of many output files
