@@ -1,6 +1,6 @@
 
-#ifndef SampleSearch_H_
-#define SampleSearch_H_
+#ifndef SS_H_
+#define SS_H_
 
 const int ssdebug = true;
 
@@ -13,11 +13,11 @@ struct SampleSearchParams
  * Calling SampleSearch
  */
 
-class SampleSearch: public Inference
+class SampleSearchProxy: public Inference
 {
  public:
 
-  SampleSearch(VariableState* state, long int seed, const bool& trackClauseTrueCnts,
+ SampleSearchProxy(VariableState* state, long int seed, const bool& trackClauseTrueCnts,
         SampleSearchParams* sampleSearchParams,
         Array<Array<Predicate* >* >* queryFormulas = NULL)
     : Inference(state, seed, trackClauseTrueCnts, queryFormulas)
@@ -25,7 +25,7 @@ class SampleSearch: public Inference
 	maxSeconds_ = sampleSearchParams->maxSeconds;
   }
 
-  ~SampleSearch()
+  ~SampleSearchProxy()
   {
   }
   
@@ -122,4 +122,4 @@ private:
   int maxSeconds_;
 };
 
-#endif /*SampleSearch_H_*/
+#endif /*SS_H_*/

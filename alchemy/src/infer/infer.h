@@ -1441,7 +1441,7 @@ int buildInference(Inference*& inference, Domain*& domain,
       }
       else if (asamplesearchInfer && !aHybrid)
       { // SampleSearch
-        inference = new SampleSearch(state, aSeed, trackClauseTrueCnts, samplesearchparams, queryFormulas);
+        inference = new SampleSearchProxy(state, aSeed, trackClauseTrueCnts, samplesearchparams, queryFormulas);
       }
       else if (asimtpInfer && !aHybrid)
       { // Simulated Tempering

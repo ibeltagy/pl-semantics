@@ -73,7 +73,7 @@ Import the project on Eclipse:
 
 - Use sbt to generate eclipse project files: 
 
-* java -jar bin/sbt-launch-0.11.2.jar
+* java -jar bin/sbt-launch*.jar
 
 * When it starts, type: `eclipse`
 
