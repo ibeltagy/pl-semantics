@@ -6,12 +6,21 @@ Set up workspace (without PSL)
 
     ~$ git clone git@github.com:islambeltagy/mln-semantics.git
     ~/mln-semantics$ cd mln-semantics
-    ~/mln-semantics$ chmod u+x bin/mlnsem
+
+    ~/mln-semantics$ cd lib
+    ~/mln-semantics/lib$ ln -s /u/beltagy/workspace/deft/mln-semantics/lib/ws4j-1.0.1.jar ws4j-1.0.1.jar
+    ~/mln-semantics/lib$ cd ..
 
     ~/mln-semantics$ bin/mlnsem compile
+    
+    ~/mln-semantics$ cd alchemy/src
     ~/mln-semantics/alchemy/src$ make
+    ~/mln-semantics/lib$ cd ../..
 
-    ~/mln-semantics$ ln -s  /u/beltagy/workspace/deft/mln-semantics/candc candc
+    ~/mln-semantics$ cd candc
+    ~/mln-semantics/candc$ ln -s /u/beltagy/workspace/deft/mln-semantics/candc/models models
+    ~/mln-semantics/candc$ make
+    ~/mln-semantics/candc$ cd ..
     
     ~/mln-semantics$ cd resources
     ~/mln-semantics/resources$ ln -s /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt full.vs
@@ -20,10 +29,8 @@ Set up workspace (without PSL)
     ~/mln-semantics/resources$ ln -s /u/beltagy/workspace/deft/mln-semantics/resources/rules rules
     ~/mln-semantics/resources$ ln -s /u/beltagy/workspace/deft/mln-semantics/resources/phrase-vectors phrase-vectors
     ~/mln-semantics/resources$ cd ..
-    ~/mln-semantics$ cd lib
-    ~/mln-semantics/lib$ ln -s /u/beltagy/workspace/deft/mln-semantics/lib/ws4j-1.0.1.jar ws4j-1.0.1.jar
-    ~/mln-semantics/lib$ cd ..
-    ~/mln-semantics$ bin/mlnsem gen prb		#Generate helping the files for a toy dataset I call it prb
+    
+    ~/mln-semantics$ bin/mlnsem gen prb		#Generate helping files for a toy dataset I call it prb
     ~/mln-semantics$ bin/mlnsem run prb		#Run the toy examples of prb
 
 
@@ -66,7 +73,7 @@ Let's say you want to run the 4th, 5th, 6th, and 9th pairs of FraCas. Command is
 
 	~/mln-semantics$ bin/mlnsem run frc 4-6,9
 
-Import the project on Eclipse: 
+Import the project into Eclipse: 
 --------------------
 
 - Install Scala's plugin on your eclipse.
