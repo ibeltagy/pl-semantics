@@ -23,7 +23,7 @@
 *******************************************************************************/
 
 #include "randomc.h"
-
+namespace ss{
 void CRandomMersenne::Init0(int seed) {
    // Seed generator
    const uint32_t factor = 1812433253UL;
@@ -180,4 +180,5 @@ int CRandomMersenne::IRandomX(int min, int max) {
    return (int32_t)remainder + min;
 
 #endif
+}
 }

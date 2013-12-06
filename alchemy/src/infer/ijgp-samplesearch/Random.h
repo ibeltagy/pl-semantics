@@ -1,5 +1,5 @@
-#ifndef Random_h
-#define Random_h
+#ifndef SS_Random_h
+#define SS_Random_h
 
 ///////////////////////////////////////////////////////////////////////////////
 // Initializes random number generation
@@ -11,6 +11,8 @@
 //////////////
 // Includes
 #include "LightweightTypes.h"
+
+namespace ss{
 
 /////////////
 // Defines
@@ -36,6 +38,6 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////
 // Inlines
-
+}
 #endif // Random_h
 

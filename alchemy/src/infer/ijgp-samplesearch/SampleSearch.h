@@ -1,5 +1,5 @@
-#ifndef SAMPLESEARCH_H_
-#define SAMPLESEARCH_H_
+#ifndef SS_SAMPLESEARCH_H_
+#define SS_SAMPLESEARCH_H_
 
 #include "GM.h"
 #include "JG.h"
@@ -10,6 +10,9 @@
 #include "Alg.h"
 #include "SolverTypes.h"
 #include "Timer.h"
+
+namespace ss{
+
 class SampleSearch
 {
 private:
@@ -58,4 +61,5 @@ class RBSampleSearchSAT
 	double runBE(GM& gm, vector<int>& order, char* infile);	
 	void generateSamples(GM& gm, JG& jg, const char* satfile, int p_bound, vector<int>& order,vector<int>& sampling_order, int num_samples, int max_restarts);
 };
+}
 #endif

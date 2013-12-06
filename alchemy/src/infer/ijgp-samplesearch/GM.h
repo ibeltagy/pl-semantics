@@ -1,5 +1,5 @@
-#ifndef GM_H_
-#define GM_H_
+#ifndef SS_GM_H_
+#define SS_GM_H_
 
 #include <iostream>
 #include <fstream>
@@ -15,6 +15,8 @@ using namespace std;
 #include "Alg.h"
 #include "SolverTypes.h"
 #include "SATInstance.h"
+
+namespace ss{
 
 #define INVALID_VALUE -1
 
@@ -127,5 +129,6 @@ struct GM {
 
 	// End: New functions added by Andrew
 };
-
+}
 #endif
+

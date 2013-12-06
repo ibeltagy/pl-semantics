@@ -1,5 +1,5 @@
-#ifndef SATSolver_h
-#define SATSolver_h
+#ifndef SS_SATSolver_h
+#define SS_SATSolver_h
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // SATSolver
@@ -18,6 +18,8 @@
 
 #include "ClauseList.h"
 #include "BigNum.h"
+
+namespace ss{
 
 /////////////
 // Defines
@@ -247,6 +249,6 @@ inline double SATSolver::_iCombineScores(double i1_, double i2_)
 {
   return (2 * i1_ * i2_) + i1_ + i2_ + 1;
 }
-
+}
 #endif // SATSolver_h
 

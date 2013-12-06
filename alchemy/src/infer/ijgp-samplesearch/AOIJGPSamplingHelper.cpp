@@ -1,4 +1,7 @@
 #include "AOIJGPSamplingHelper.h"
+
+namespace ss{
+
 AO_POS::AO_POS(GM* gm, vector<int>& order,JG* jg, vector<vector<Variable*> >& ancestors)
 {
 	//vector<Variable*> all_variables;
@@ -428,4 +431,5 @@ p(p_)
 		}
 		break;
 	}
+}
 }

@@ -1,5 +1,5 @@
 #include "ORStore.h"
-
+namespace ss{
 // Effects :	
 //	(a) Next pointer is incremented
 //	(b) the assignment is added to the store				
@@ -55,4 +55,5 @@ ORSTORENODE_VAL ORStore::check(int var, int val,bool to_increment)
 		next_pointer=storage[next_pointer+val].child_loc;
 	}
 	return ret_value;
+}
 }

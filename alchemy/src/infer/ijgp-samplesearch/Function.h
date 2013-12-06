@@ -1,5 +1,5 @@
-#ifndef FUNCTION_H_
-#define FUNCTION_H_
+#ifndef SS_FUNCTION_H_
+#define SS_FUNCTION_H_
 
 #include <vector>
 #include "Variable.h"
@@ -7,9 +7,10 @@
 #include "Heap.h"
 #include "Alg.h"
 #include "SolverTypes.h"
-
-
 using namespace std;
+
+namespace ss{
+
 struct Function
 {
 protected:
@@ -61,5 +62,6 @@ public:
 	
 };
 
-
+}
 #endif
+

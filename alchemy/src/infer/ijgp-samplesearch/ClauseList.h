@@ -1,5 +1,5 @@
-#ifndef ClauseList_h
-#define ClauseList_h
+#ifndef SS_ClauseList_h
+#define SS_ClauseList_h
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // ClauseList
@@ -11,6 +11,8 @@
 //////////////
 // Includes
 #include "LightweightTypes.h"
+
+namespace ss{
 
 /////////////
 // Defines
@@ -86,7 +88,7 @@ inline void ClauseList::vDeleteClause(RClause* pDeleteMe_)
     }
   }
 }
-
+}
 #endif // ClauseList_h
 
 

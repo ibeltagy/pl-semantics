@@ -1,5 +1,5 @@
-#ifndef BE_H_
-#define BE_H_
+#ifndef SS_BE_H_
+#define SS_BE_H_
 
 #include <vector>
 #include "GM.h"
@@ -10,6 +10,9 @@
 #include "Alg.h"
 #include "SolverTypes.h"
 #include "myRandom.h"
+
+namespace ss{
+
 struct BE
 {
 	LogDouble log_pe;
@@ -40,4 +43,5 @@ struct BucketProp
 	vector<Function> marginals;
 	BucketProp(vector<Variable*>& variables, vector<Function*>& functions, vector<int>& order);
 };
+}
 #endif

@@ -1114,6 +1114,9 @@ int buildInference(Inference*& inference, Domain*& domain,
     // Set MC-SAT parameters
   SampleSearchParams* samplesearchparams = new SampleSearchParams;
   samplesearchparams->maxSeconds         = amcmcMaxSeconds;
+  samplesearchparams->iBound         	 = asamplesearchIBound;
+  samplesearchparams->rbBound         	 = asamplesearchRbBound;
+  samplesearchparams->numItr         	 = asamplesearchNumItr;
 
     // Set MC-SAT parameters
   MCSatParams* msparams = new MCSatParams;

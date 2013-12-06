@@ -1,11 +1,14 @@
-#ifndef GRAY_CODE_H_
-#define GRAY_CODE_H
+#ifndef SS_GRAY_CODE_H_
+#define SS_GRAY_CODE_H
 
 #include "Variable.h"
 #include "Function.h"
 #include <iostream>
 #include <vector>
 using namespace std;
+
+namespace ss{
+
 // Gray Code for storing product of functions
 struct GrayCode
 {
@@ -79,5 +82,5 @@ public:
 	GrayCodeD(const vector<Variable*>& variables_,const vector<Function*>& functions_, Function* function_);
 	void moveForward();
 };
-
+}
 #endif

@@ -8,6 +8,8 @@
 #include "ClauseList.h"
 #include "Clause.h"
 
+namespace ss{
+
 /////////////
 // Defines
 
@@ -103,4 +105,5 @@ void ClauseList::_vExpand()
   memcpy(_aNewList, _aClause, _iClauseCount*sizeof(RClause*));
   delete [] _aClause;
   _aClause = _aNewList;
+}
 }

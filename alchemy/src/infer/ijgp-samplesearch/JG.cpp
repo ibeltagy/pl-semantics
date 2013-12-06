@@ -1,6 +1,6 @@
 #include "JG.h"
 #include "myRandom.h"
-
+namespace ss{
 JGNode* JG::addNode(JG_TYPE type) {
 	switch (type) {
 	case SS:
@@ -551,4 +551,5 @@ bool JG::convergence_test()
 		return true;
 	}
 	return false;
+}
 }

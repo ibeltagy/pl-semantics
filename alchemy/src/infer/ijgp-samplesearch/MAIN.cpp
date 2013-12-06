@@ -1,3 +1,6 @@
+
+#include "MAIN.h"
+
 #include <iostream>
 #include <fstream>
 #include "BE.h"
@@ -8,7 +11,8 @@
 #include "Solver.h"
 #include "Parameters.h"
 #include "VEC.h"
-using namespace std;
+
+namespace ss{
 
 string getOutFilename(string& str)
 {
@@ -48,7 +52,7 @@ int UAI2010Parameters::I_BOUND_=-1;
 int UAI2010Parameters::RB_BOUND_=-1;
 int UAI2010Parameters::NUM_ITERATIONS_=-1;
 clock_t total_time = 100;//atoi(argv[3]);
-void readParameters(int argc, char* argv[])
+void readParameters(int argc, const char* argv[])
 {
 	if (argc < 4) {
 		help();
@@ -124,7 +128,7 @@ void readEvidence(GM& gm, vector<int>& evidence)
 	in.close();
 }
 
-int main(int argc, char* argv[])
+int MAIN(int argc, const char* argv[])
 {
 	Timer timer;
 	timer.start();
@@ -232,4 +236,5 @@ int main(int argc, char* argv[])
 		}
 	}
 	out.close();
+}
 }

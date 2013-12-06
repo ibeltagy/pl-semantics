@@ -1,8 +1,11 @@
-#ifndef SF_H_
-#define SF_H_
+#ifndef SS_SF_H_
+#define SS_SF_H_
 
 #include "CPT.h"
 #include "myRandom.h"
+
+namespace ss{
+
 class SF: public CPT
 {
 protected:
@@ -28,4 +31,5 @@ public:
 	}
 	
 };
+}
 #endif

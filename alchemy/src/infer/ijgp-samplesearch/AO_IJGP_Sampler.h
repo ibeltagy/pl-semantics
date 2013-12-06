@@ -1,5 +1,5 @@
-#ifndef AO_IJGP_SAMPLER_H_
-#define AO_IJGP_SAMPLER_H_
+#ifndef SS_AO_IJGP_SAMPLER_H_
+#define SS_AO_IJGP_SAMPLER_H_
 
 #include "GM.h"
 #include "JG.h"
@@ -7,6 +7,9 @@
 #include "myRandom.h"
 #include "AOTree.h"
 #include "SampleSearch.h"
+
+namespace ss{
+
 struct AOSTATS
 {
 	Double or_num_samples;
@@ -311,4 +314,5 @@ public:
 		return out_val;
 	}
 };
+}
 #endif

@@ -3,6 +3,9 @@
 #include "myRandom.h"
 
 #include <cassert>
+
+namespace ss{
+
 void Function::reduceDomains()
 {
 	int new_num_values=Variable::getDomainSize(variables_);
@@ -425,4 +428,5 @@ double Function::MSE(Function* f1, Function* f2)
 		error+=((f1->table()[i].value()-f2->table()[i].value())*(f1->table()[i].value()-f2->table()[i].value()));
 	}
 	return error;
+}
 }

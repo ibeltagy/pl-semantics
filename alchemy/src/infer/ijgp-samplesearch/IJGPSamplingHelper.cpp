@@ -1,5 +1,5 @@
 #include "IJGPSamplingHelper.h"
-
+namespace ss{
 POS::POS(GM* gm, vector<int>& order,JG* jg)
 {
   cerr<<"Initing POS\n";
@@ -433,4 +433,5 @@ p(p_)
 		}
 		break;
 	}
+}
 }

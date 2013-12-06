@@ -93,8 +93,8 @@
  * GNU General Public License http://www.gnu.org/licenses/gpl.html
  *******************************************************************************/
 
-#ifndef RANDOMC_H
-#define RANDOMC_H
+#ifndef SS_RANDOMC_H
+#define SS_RANDOMC_H
 
 // Define integer types with known size: int32_t, uint32_t, int64_t, uint64_t.
 // If this doesn't work then insert compiler-specific definitions here:
@@ -105,6 +105,9 @@
 #define INT64_SUPPORTED // Remove this if the compiler doesn't support 64-bit integers
 
 using namespace std;
+
+namespace ss{
+
 /***********************************************************************
  System-specific user interface functions
  ***********************************************************************/
@@ -183,5 +186,5 @@ protected:
 	uint32_t x[5]; // History buffer
 };
 
-
+}
 #endif // RANDOMC_H

@@ -1,5 +1,5 @@
 #include "JT.h"
-
+namespace ss{
 
 JT::JT(vector<Variable*>& variables_, vector<Function*>& functions, vector<set<int> >& clusters, vector<int>& order): variables(variables_)
 {
@@ -90,4 +90,5 @@ void JT::propagate()
 		marg_variables.push_back(variables[i]);
 		var_to_node[i]->getMarginal(marg_variables,marginals[i]);
 	}
+}
 }

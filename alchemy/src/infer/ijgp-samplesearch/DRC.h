@@ -1,7 +1,10 @@
-#ifndef DRC_H_
-#define DRC_H_
+#ifndef SS_DRC_H_
+#define SS_DRC_H_
 
 #include "GM.h"
+
+namespace ss{
+
 class DRC
 {
 protected:
@@ -14,4 +17,5 @@ public:
 	void reduceFunction(Function* function);
 
 };
+}
 #endif

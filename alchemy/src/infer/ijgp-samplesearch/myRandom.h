@@ -1,8 +1,11 @@
-#ifndef MY_RANDOM_H_
-#define MY_RANDOM_H_
+#ifndef SS_MY_RANDOM_H_
+#define SS_MY_RANDOM_H_
 
 #include "randomc.h"
 using namespace std;
+
+namespace ss{
+
 struct myRandom {
 	int seed;
 	CRandomMersenne RanGen;
@@ -30,4 +33,5 @@ struct myRandom {
 		RanGen.IRandomX(0,max_value-1);
 	}
 };
+}
 #endif

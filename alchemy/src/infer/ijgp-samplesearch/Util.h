@@ -17,8 +17,8 @@
 *   Free Software Foundation, Inc.,                                       *
 *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
 **************************************************************************/
-#ifndef UTIL_HPP
-#define UTIL_HPP
+#ifndef SS_UTIL_HPP
+#define SS_UTIL_HPP
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -32,10 +32,13 @@
 #define CLK_TCK 60
 #endif
 
-double elapsed_seconds(void);
-
-#define INVALID_VALUE -1
 using namespace std;
+
+namespace ss{
+
+double elapsed_seconds(void);
+#define INVALID_VALUE -1
+
 
 template<typename _Classname>
 void do_set_union(const vector<_Classname> &a, const vector<_Classname> &b, vector<_Classname> &c_)
@@ -139,6 +142,6 @@ void do_set_difference(const vector<_Classname> &a, const vector<_Classname> &b,
 	c_=c;
 }
 
-
+}
 
 #endif

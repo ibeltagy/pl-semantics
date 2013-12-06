@@ -1,5 +1,5 @@
-#ifndef VariableSet_h
-#define VariableSet_h
+#ifndef SS_VariableSet_h
+#define SS_VariableSet_h
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // This class allows us to manipulate a set of VariableID's. 
@@ -14,6 +14,8 @@
 
 /////////////
 // Defines
+
+namespace ss{
 
 ////////////////////////
 // Class Declarations
@@ -118,6 +120,6 @@ inline boolean VariableSet::bAddVariable(VariableID eID_)
   }
   return 0;
 }
-
+}
 #endif // VariableSet_h
 

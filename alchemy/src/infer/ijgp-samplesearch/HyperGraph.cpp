@@ -3,6 +3,8 @@
 #include <queue>
 #include <cstdlib>
 #include <algorithm>
+namespace ss{
+
 struct HGTree
 {
 	HyperGraph* hg;
@@ -18,7 +20,8 @@ void HyperGraph::readErgo(char* infilename)
   char check_char,buffer[1000];
   int num_variables;
   // Read num variables
-  while(!infile.eof()){
+  while(!infile.eof())
+{
     infile>>check_char;
     if(check_char == '/')
       {
@@ -283,3 +286,4 @@ int main (int argc, char* argv[])
   cerr<<endl;
 }
 */
+}

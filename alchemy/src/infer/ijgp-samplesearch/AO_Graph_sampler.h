@@ -1,5 +1,5 @@
-#ifndef AO_Graph_SAMPLER_H_
-#define AO_Graph_SAMPLER_H_
+#ifndef SS_AO_Graph_SAMPLER_H_
+#define SS_AO_Graph_SAMPLER_H_
 
 #include "GM.h"
 #include "JG.h"
@@ -9,6 +9,8 @@
 #include "SampleSearch.h"
 #include "AO_IJGP_Sampler.h"
 #include "AOGraph_BigInt.h"
+
+namespace ss{
 
 //struct AOSTATS
 //{
@@ -322,4 +324,5 @@ public:
 		return out_val;
 	}
 };
+}
 #endif

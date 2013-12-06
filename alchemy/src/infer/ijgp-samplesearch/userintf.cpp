@@ -20,7 +20,7 @@
 
 #include <stdio.h>                     // define printf() function
 #include <stdlib.h>                    // define exit() function
-
+namespace ss{
 #if (defined (__BORLANDC__) || defined (_MSC_VER)) && ! defined(_WINDOWS_)
   #include <conio.h>                   // define getch() function
   #define _GETCH_DEFINED_
@@ -78,4 +78,5 @@ void FatalError(const char * ErrorText) {
 
   // Terminate program with error code
   exit(1);
+}
 }

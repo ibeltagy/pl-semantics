@@ -114,6 +114,15 @@ ARGS ARGS::Args[] =
   ARGS("ss", ARGS::Tog, asamplesearchInfer,
        "Run inference using SampleSearch and estimate partition function Z"),
 
+  ARGS("ibound", ARGS::Opt, asamplesearchIBound,
+       "SampleSearch's I-Bound of IJGP"),
+
+  ARGS("rbbound", ARGS::Opt, asamplesearchRbBound,
+       "SampleSearch's RB-Bound: w-cutset bound"),
+
+  ARGS("numItr", ARGS::Opt, asamplesearchNumItr,
+       "SampleSearch's number of iterations of IJGP"),
+
   ARGS("ms", ARGS::Tog, amcsatInfer,
        "Run inference using MC-SAT and return probabilities "
        "for all query atoms"),

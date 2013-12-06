@@ -1,5 +1,5 @@
-#ifndef JG_H_
-#define JG_H_
+#ifndef SS_JG_H_
+#define SS_JG_H_
 
 #include <iostream>
 #include <fstream>
@@ -13,6 +13,8 @@
 #include "Graph.h"
 
 using namespace std;
+
+namespace ss{
 
 struct JGNode;
 struct JGEdge;
@@ -341,5 +343,5 @@ public:
 	bool convergence_test();
 	void updateMarginals(bool recompute=false);
 };
-
+}
 #endif

@@ -17,12 +17,14 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 **************************************************************************************************/
 
-#ifndef BoxedVec_h
-#define BoxedVec_h
+#ifndef SS_BoxedVec_h
+#define SS_BoxedVec_h
 
 #include <cstdlib>
 #include <cassert>
 #include <new>
+
+namespace ss{
 
 //=================================================================================================
 // Automatically resizable arrays
@@ -143,5 +145,5 @@ public:
 
 };
 
-
+}
 #endif

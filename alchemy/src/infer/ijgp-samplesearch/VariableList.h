@@ -1,5 +1,5 @@
-#ifndef VariableList_h
-#define VariableList_h
+#ifndef SS_VariableList_h
+#define SS_VariableList_h
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // A simple array of VariableID's
@@ -13,6 +13,8 @@
 
 /////////////
 // Defines
+
+namespace ss{
 
 ////////////////////////
 // Class Declarations
@@ -58,6 +60,7 @@ inline void VariableList::vAppend(const VariableList& xMe_)
   for (int i=0; i<xMe_.iCount(); i++) {
     vAdd(xMe_.iVariable(i));
   }
+}
 }
 #endif // VariableList_h
 

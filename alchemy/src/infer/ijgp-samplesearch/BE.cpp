@@ -1,5 +1,5 @@
 #include "BE.h"
-
+namespace ss{
 
 BE::BE(std::vector<Variable*> &variables, std::vector<Function*> &functions, std::vector<int> &order)
 {
@@ -972,4 +972,5 @@ BucketProp::BucketProp(std::vector<Variable*> &variables, std::vector<Function*>
 		}
 	}
 	buckets.clear();
+}
 }

@@ -1,6 +1,6 @@
 #include "JG.h"
 #include "myRandom.h"
-
+namespace ss{
 void JGNodeLSS::initialize()
 {
 	for(int i=0;i<functions.size();i++)
@@ -180,4 +180,4 @@ void JGEdgeLSS::sendMessage2to1()
 	LogFunction::multiplyAndMarginalize(this->variables(),all_functions,*m);
 	//Function::dummy_multiplyMarginalize(this->variables(),all_functions,this->message2());
 }
-
+}

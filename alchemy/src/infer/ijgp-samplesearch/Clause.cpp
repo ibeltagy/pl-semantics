@@ -8,6 +8,8 @@
 
 #include <iostream>
 using namespace std;
+
+namespace ss{
 /////////////
 // Defines
 
@@ -83,4 +85,5 @@ void RClause::vSortVariableList()
       }
     }
   }
+}
 }

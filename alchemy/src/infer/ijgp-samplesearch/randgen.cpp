@@ -34,6 +34,8 @@
 
 #include<stdio.h>
 
+namespace ss{
+
 /* Period parameters */  
 #define N 624
 #define M 397
@@ -114,3 +116,4 @@ main()
     printf("\n");
 }
 */
+}

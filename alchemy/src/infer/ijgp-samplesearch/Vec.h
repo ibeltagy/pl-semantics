@@ -17,8 +17,8 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 **************************************************************************************************/
 
-#ifndef Vec_h
-#define Vec_h
+#ifndef SS_Vec_2_h
+#define SS_Vec_2_h
 
 #include <cstdlib>
 #include <cassert>
@@ -28,6 +28,8 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 // Automatically resizable arrays
 //
 // NOTE! Don't use this vector on datatypes that cannot be re-located in memory (with realloc)
+
+namespace ss{
 
 template<class T>
 class vec {
@@ -128,6 +130,6 @@ void vec<T>::clear(bool dealloc) {
         for (int i = 0; i < sz; i++) data[i].~T();
         sz = 0;
         if (dealloc) free(data), data = NULL, cap = 0; } }
-
+}
 
 #endif

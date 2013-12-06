@@ -1,9 +1,11 @@
-#ifndef AOTREE_H_
-#define AOTREE_H_
+#ifndef SS_AOTREE_H_
+#define SS_AOTREE_H_
 
 #include "GM.h"
 #include "Graph.h"
 #include <map>
+
+namespace ss{
 
 struct PseudoTreeNode
 {
@@ -56,5 +58,5 @@ public:
 	void addAssignment(vector<Double>& Q);
 	Double computeWeight();
 };
-
+}
 #endif

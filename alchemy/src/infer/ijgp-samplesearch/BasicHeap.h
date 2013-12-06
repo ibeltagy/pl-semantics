@@ -17,10 +17,12 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 **************************************************************************************************/
 
-#ifndef BasicHeap_h
-#define BasicHeap_h
+#ifndef SS_BasicHeap_h
+#define SS_BasicHeap_h
 
 #include "Vec.h"
+
+namespace ss{
 
 //=================================================================================================
 // A heap implementation with support for decrease/increase key.
@@ -95,4 +97,5 @@ class BasicHeap {
 
 
 //=================================================================================================
+}
 #endif

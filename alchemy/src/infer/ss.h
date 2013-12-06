@@ -2,11 +2,16 @@
 #ifndef SS_H_
 #define SS_H_
 
+#include "MAIN.h"
+
 const int ssdebug = true;
 
 struct SampleSearchParams
 {
-    int maxSeconds;
+	int maxSeconds;
+	int iBound;
+	int rbBound;
+	int numItr;
 };
 
 /**
@@ -22,7 +27,9 @@ class SampleSearchProxy: public Inference
         Array<Array<Predicate* >* >* queryFormulas = NULL)
     : Inference(state, seed, trackClauseTrueCnts, queryFormulas)
   {
-	maxSeconds_ = sampleSearchParams->maxSeconds;
+	this->params = (*sampleSearchParams);
+	if(this->params.maxSeconds <=0 )
+		this->params.maxSeconds = 100;
   }
 
   ~SampleSearchProxy()
@@ -37,6 +44,7 @@ class SampleSearchProxy: public Inference
 
   void infer()
   {
+    ////////////////////////////////
     ofstream outFile;
     outFile.open ("mln.uai");
 
@@ -97,9 +105,14 @@ class SampleSearchProxy: public Inference
     outFile.close(); 
 
     std::system("cat mln.uai");
-    std::ostringstream command;
-    command << "./ijgp-samplesearch mln.uai empty.evd " << maxSeconds_ <<" PR";
-    std::system(command.str().c_str());
+    //std::ostringstream command;
+    //command << "./ijgp-samplesearch mln.uai empty.evd " << this->params.maxSeconds <<" PR";
+    //std::system(command.str().c_str());
+    std::ostringstream t;
+    t << this->params.maxSeconds;
+    const char * argv[] = {"./ijgp-samplesearch", "mln.uai", "empty.evd", t.str().c_str(), "PR"};
+    ss::MAIN (5, argv);
+
     std::system("cat mln.uai.PR");
   }
 
@@ -119,7 +132,7 @@ class SampleSearchProxy: public Inference
   {return 0;}
 
 private:
-  int maxSeconds_;
+	SampleSearchParams params;
 };
 
 #endif /*SS_H_*/

@@ -3,6 +3,7 @@
 // Permission granted to copy and distribute provided this
 // comment is retained at the top.
 //
+namespace ss{
 
 template <class TF, class TS> 
 struct my_pair {
@@ -14,3 +15,4 @@ public:
   TF first;
   TS second;
 };
+}

@@ -1,10 +1,13 @@
-#ifndef IJGP_SAMPLER_H_
-#define IJGP_SAMPLER_H_
+#ifndef SS_IJGP_SAMPLER_H_
+#define SS_IJGP_SAMPLER_H_
 
 #include "GM.h"
 #include "JG.h"
 #include "IJGPSamplingHelper.h"
 #include "myRandom.h"
+
+namespace ss{
+
 class IJGP_Sampler
 {
 public:
@@ -156,4 +159,5 @@ public:
 		return weight/Double((double)num_samples);
 	}
 };
+}
 #endif

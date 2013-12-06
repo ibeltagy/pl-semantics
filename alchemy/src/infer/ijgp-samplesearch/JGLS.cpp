@@ -1,6 +1,6 @@
 #include "JG.h"
 #include "myRandom.h"
-
+namespace ss{
 bool isConsistent(Function& function)
 {
 	if(function.table().empty())
@@ -134,4 +134,5 @@ void JGEdgeLS::sendMessage2to1()
 	f3.marginalize(variables(),m2);
 	f2.product(m2);
 	assert(isConsistent(m2));
+}
 }

@@ -1,5 +1,5 @@
-#ifndef SAT_Parser_h
-#define SAT_Parser_h
+#ifndef SS_SAT_Parser_h
+#define SS_SAT_Parser_h
 
 #include "Vec.h"
 #include "Heap.h"
@@ -11,6 +11,7 @@
 
 //=================================================================================================
 // DIMACS Parser:
+namespace ss{
 
 #define CHUNK_LIMIT 1048576
 
@@ -112,4 +113,5 @@ static void parse_DIMACS(gzFile input_stream, Solver& S) {
     StreamBuffer in(input_stream);
     parse_DIMACS_main(in, S); }
 
+}
 #endif

@@ -17,12 +17,14 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 **************************************************************************************************/
 
-#ifndef Map_h
-#define Map_h
+#ifndef SS_Map_h
+#define SS_Map_h
 
 #include <stdint.h>
 
 #include "Vec.h"
+
+namespace ss{
 
 //=================================================================================================
 // Default hash/equals functions
@@ -114,5 +116,5 @@ class Map {
         table = NULL;
     }
 };
-
+}
 #endif

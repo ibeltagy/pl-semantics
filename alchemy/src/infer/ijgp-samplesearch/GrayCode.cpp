@@ -3,6 +3,8 @@
 using namespace std;
 using namespace __gnu_cxx;
 
+namespace ss{
+
 GrayCode::GrayCode(const vector<Variable*>& variables_,const vector<Function*>& functions_): 
 variables(variables_),
 functions(functions_),
@@ -206,4 +208,5 @@ void GrayCodeD::moveForward()
 			f->table()[address_of_f]/=functions[i]->table()[address_of_functions[i]];
 	}
 	variables[j]->addr_value()=A[j];
+}
 }

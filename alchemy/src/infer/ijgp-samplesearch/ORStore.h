@@ -1,9 +1,12 @@
-#ifndef ORSTORE_H_
-#define ORSTORE_H_
+#ifndef SS_ORSTORE_H_
+#define SS_ORSTORE_H_
 
 #include <vector>
 #include "GM.h"
 using namespace std;
+
+namespace ss{
+
 typedef enum {CONSISTENT, INCONSISTENT, DONTKNOW} ORSTORENODE_VAL;
 struct ORStoreNode
 {
@@ -46,4 +49,5 @@ struct ORStore
 private:
 	void resetPointer();
 };
+}
 #endif

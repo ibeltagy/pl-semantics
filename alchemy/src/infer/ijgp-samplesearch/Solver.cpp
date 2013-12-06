@@ -21,7 +21,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include "Sort.h"
 #include <cmath>
 
-
+namespace ss{
 //=================================================================================================
 // Constructor/Destructor:
 
@@ -1129,4 +1129,5 @@ void Solver::checkLiteralCount()
         fprintf(stderr, "literal count: %d, real value = %d\n", (int)clauses_literals, cnt);
         assert((int)clauses_literals == cnt);
     }
+}
 }

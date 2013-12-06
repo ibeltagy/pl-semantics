@@ -1,5 +1,5 @@
-#ifndef LOGFUNCTION_H_
-#define LOGFUNCTION_H_
+#ifndef SS_LOGFUNCTION_H_
+#define SS_LOGFUNCTION_H_
 
 #include <vector>
 #include <cmath>
@@ -8,6 +8,9 @@
 #include "Function.h"
 
 using namespace std;
+
+namespace ss{
+
 struct LogDouble
 {
 	long double val;
@@ -82,4 +85,5 @@ struct LogFunction: public Function
 	static void multiplyAndMarginalize(vector<Variable*>& marg_variables_,vector<LogFunction*>& functions, Function& out_function,bool normalize=true);
 
 };
+}
 #endif

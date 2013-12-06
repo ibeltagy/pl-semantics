@@ -8,8 +8,10 @@
  *      All rights reserved.
  */
 
-#ifndef VEC_H_
-#define VEC_H_
+#ifndef SS_VEC_1_H_
+#define SS_VEC_1_H_
+
+namespace ss{
 
 extern void setupSolver(Solver& S, GM& gm, bool reduce = false);
 struct VEC_NODE
@@ -526,5 +528,6 @@ void VEC_MAR_DET(GM& gm, vector<int>& order, vector<int>& sampling_order, vector
 		gm.printMarginalsUAI10(marginals, out);
 		cerr << "Exact answer\n";
 	}
+}
 }
 #endif /* VEC_H_ */

@@ -14,7 +14,7 @@
 #include "Util.h"
 
 using namespace boost;
-
+namespace ss{
 typedef adjacency_list <vecS, vecS, undirectedS,property<vertex_name_t, int> > BG;
 typedef graph_traits<BG>::vertex_descriptor Vertex;
 typedef graph_traits<BG>::vertices_size_type size_type;
@@ -406,4 +406,5 @@ PseudoTree::PseudoTree(GM& gm,Graph& g ,vector<int>& order)
 	//		exit(1);
 	//	}
 	//}
+}
 }

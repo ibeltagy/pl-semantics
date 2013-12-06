@@ -13,6 +13,7 @@
 #include "VariableList.h"
 #include "VariableSet.h"
 
+namespace ss{
 /////////////
 // Defines
 #define MAX_CLAUSE_LENGTH 3
@@ -1062,4 +1063,5 @@ boolean SATSolver::_bBinaryReduce(VariableID eWith_, DomainValue lWhich_, int& i
   assert(_aAssignment[eWith_] == NON_VALUE);
   assert(_aVariableStruct[eWith_].bBranch  == 0);
   return 0;
+}
 }

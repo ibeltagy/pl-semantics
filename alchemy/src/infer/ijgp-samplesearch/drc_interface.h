@@ -1,5 +1,7 @@
-#ifndef __DRC_INTERFACE_H
-#define __DRC_INTERFACE_H
+#ifndef SS__DRC_INTERFACE_H
+#define SS__DRC_INTERFACE_H
+
+namespace ss{
 
 class DRCInterface
 {
@@ -13,5 +15,5 @@ private:
     void operator = ( const DRCInterface& source );
 };
 
-
+}
 #endif // __DRC_INTERFACE_H

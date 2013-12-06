@@ -1,6 +1,6 @@
 #include "LogFunction.h"
 #include "Function.h"
-
+namespace ss{
 void LogFunction::print(ostream& out)
 {
 	for(int i=0;i<variables_.size();i++)
@@ -355,4 +355,5 @@ void LogFunction::multiplyAndMarginalize(std::vector<Variable*> &marg_variables_
 		out_function.normalize();
 	out_function.toLogTable();
 	//cout<<"mult done\n";
+}
 }

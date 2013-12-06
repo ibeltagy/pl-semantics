@@ -156,6 +156,12 @@ int amcmcMinSteps     = -1;
 int amcmcMaxSteps     = 1000;
 int amcmcMaxSeconds   = -1;
 
+
+  // SampleSearch params
+int asamplesearchIBound		= -1;
+int asamplesearchRbBound 	= -1;
+int asamplesearchNumItr	= -1;
+
   // Gibbs params
 double agibbsDelta           = 0.05;
 double agibbsEpsilonError    = 0.01;

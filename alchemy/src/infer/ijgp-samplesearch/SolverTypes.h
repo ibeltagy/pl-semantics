@@ -18,11 +18,13 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 **************************************************************************************************/
 
 
-#ifndef SolverTypes_h
-#define SolverTypes_h
+#ifndef SS_SolverTypes_h
+#define SS_SolverTypes_h
 
 #include <cassert>
 #include <stdint.h>
+
+namespace ss{
 
 //=================================================================================================
 // Variables, literals, lifted booleans, clauses:
@@ -193,5 +195,5 @@ inline void Clause::strengthen(Lit p)
     remove(*this, p);
     calcAbstraction();
 }
-
+}
 #endif

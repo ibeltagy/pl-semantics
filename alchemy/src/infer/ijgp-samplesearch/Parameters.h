@@ -8,8 +8,10 @@
  *      All rights reserved.
  */
 
-#ifndef PARAMETERS_H_
-#define PARAMETERS_H_
+#ifndef SS_PARAMETERS_H_
+#define SSS_PARAMETERS_H_
+
+namespace ss{
 
 struct UAI2010Parameters
 {
@@ -219,5 +221,5 @@ struct UAI2010Parameters
 		return true;
 	}
 };
-
+}
 #endif /* PARAMETERS_H_ */

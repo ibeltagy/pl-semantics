@@ -1,6 +1,8 @@
 #include "HashFunction.h"
 #include "myRandom.h"
 
+namespace ss{
+
 HashFunction::HashFunction(Function& function)
 {
 	variables()=function.variables();
@@ -358,3 +360,4 @@ void HashFunction::multiplyAndMarginalize(vector<Variable*>& marg_variables,vect
 //	//f4.print();
 //
 //}
+}

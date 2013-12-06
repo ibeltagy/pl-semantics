@@ -2,6 +2,9 @@
 #include "CPT.h"
 // Functions for class Graph
 // The 3 constructors defined in the main class
+
+namespace ss{
+
 Graph::Graph():num_vertices(0),directed(false),num_edges(0)
 {}
 
@@ -1469,4 +1472,5 @@ void Graph::formClique(const vector<int>& nodes)
 	for(i=0;i<nodes.size();i++)
 		for(j=i+1;j<nodes.size();j++)
 			addEdge(nodes[i],nodes[j]);
+}
 }

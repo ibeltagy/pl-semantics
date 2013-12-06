@@ -1,5 +1,5 @@
-#ifndef VARIABLE_H_
-#define VARIABLE_H_
+#ifndef SS_VARIABLE_H_
+#define SS_VARIABLE_H_
 #include <vector>
 #include <cassert>
 #include "Util.h"
@@ -7,6 +7,8 @@
 #include <gmpxx.h>
 #include <map>
 using namespace std;
+
+namespace ss{
 
 typedef mpz_class Int;
 struct Variable
@@ -169,4 +171,5 @@ public:
 	
 };
 bool less_than_comparator_variable(const Variable* a, const Variable* b);
+}
 #endif

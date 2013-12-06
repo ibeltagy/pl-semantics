@@ -1,5 +1,5 @@
-#ifndef AGRESSIVE_AO_SAMPLING_H_
-#define AGRESSIVE_AO_SAMPLING_H_
+#ifndef SS_AGRESSIVE_AO_SAMPLING_H_
+#define SS_AGRESSIVE_AO_SAMPLING_H_
 
 #include "GM.h"
 #include "JG.h"
@@ -9,6 +9,8 @@
 #include "SampleSearch.h"
 #include "AO_IJGP_Sampler.h"
 #include <stack>
+
+namespace ss{
 
 struct SepTreeNode
 {
@@ -359,4 +361,5 @@ struct AGGRRESSIVE_AO_SAMPLING
 		return out_val;
 	}
 };
+}
 #endif

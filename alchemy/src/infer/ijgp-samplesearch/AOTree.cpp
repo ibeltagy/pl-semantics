@@ -4,6 +4,7 @@
 #include <stack>
 #include <queue>
 
+namespace ss{
 //bool checkParent(AOTreeNode* node)
 //{
 //	AOTreeNode* parent=node->parent;
@@ -264,4 +265,5 @@ Double AOTree::computeWeight()
 	//	}
 	//}
 	return root->value;///root->num_samples;
+}
 }

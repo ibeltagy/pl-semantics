@@ -1,11 +1,14 @@
-#ifndef JT_H_
-#define JT_H_
+#ifndef SS_JT_H_
+#define SS_JT_H_
 
 #include <vector>
 #include "GM.h"
 #include "Double.h"
 #include "LogFunction.h"
 #include "JG.h"
+
+namespace ss{
+
 struct JT
 {
 	vector<Function> marginals;
@@ -30,4 +33,5 @@ struct JT
 	void propagate();
 	
 };
+}
 #endif

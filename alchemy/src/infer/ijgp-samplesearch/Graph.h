@@ -1,5 +1,5 @@
-#ifndef GRAPH_H_
-#define GRAPH_H_
+#ifndef SS_GRAPH_H_
+#define SS_GRAPH_H_
 #include "GM.h"
 #include <iostream>
 #include <utility>
@@ -8,6 +8,8 @@
 
 
 using namespace std;
+
+namespace ss{
 const int BigNum=0x7FFFFFFF;
 // We have defined 2 classes of graphs and operations on them
 // 1. Class Graph which stores the graph as a edgelist and adjacency matrix
@@ -146,4 +148,5 @@ class Graph
 	 void print();
 	 void getLeaves(vector<int>& leaves);
 };
-#endif /*GRAPH_H_*/
+}
+#endif /*SS_GRAPH_H_*/

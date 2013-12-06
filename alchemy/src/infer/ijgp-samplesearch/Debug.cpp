@@ -11,7 +11,7 @@ using namespace std;
 
 /////////////
 // Defines
-		    
+namespace ss{		    
 ///////////////////////////
 // Static Initialization
 Debug Debug::xDebugger;
@@ -52,6 +52,4 @@ Debug::~Debug()
 // Private Methods
 
 
-
-
-
+}

@@ -1,5 +1,6 @@
 #include "JG.h"
 #include "myRandom.h"
+namespace ss{
 void JGNodeHSS::addFunction(Function& function)
 {
 	functions.push_back(new HashFunction(function));
@@ -170,4 +171,5 @@ void JGEdgeHSS::sendMessage2to1()
 	//cout<<"Calling multiply and marginalize ";
 	//cout<<hss_node2_->id()<<" to "<<hss_node1_->id()<<endl;
 	HashFunction::multiplyAndMarginalize(this->variables(),all_functions,dynamic_cast<HashFunction*>(node2_to_node1_message_));
+}
 }

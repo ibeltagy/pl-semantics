@@ -1,5 +1,5 @@
-#ifndef AOGRAPH_H_
-#define AOGRAPH_H_
+#ifndef SS_AOGRAPH_H_
+#define SS_AOGRAPH_H_
 #include <iostream>
 #include <vector>
 #include <map>
@@ -7,9 +7,10 @@
 #include "Graph.h"
 #include <gmpxx.h>
 
-
-
 using namespace std;
+
+namespace ss{
+
 struct SparseFunction
 {
 	vector<Variable*> cond_variables;
@@ -256,4 +257,5 @@ public:
 		return func.table[0];
 	}
 };
+}
 #endif

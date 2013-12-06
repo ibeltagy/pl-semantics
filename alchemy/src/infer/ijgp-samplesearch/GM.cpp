@@ -9,6 +9,7 @@
 #include "Random.h"
 #include "SATInstance.h"
 
+namespace ss{
 
 //bool less_than_comparator_variable(const Variable* a, const Variable* b)
 //{
@@ -3287,4 +3288,5 @@ void GM::getLexOrdering(vector<int>& order, vector<set<int> >& clusters, double&
 		estimate+=curr_estimate;
 	}
 
+}
 }

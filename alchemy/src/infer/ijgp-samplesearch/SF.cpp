@@ -1,7 +1,7 @@
 #include "SF.h"
 #include <cassert>
 using namespace std;
-
+namespace ss{
 SF::SF(CPT& cpt)
 {
 	variables_=cpt.variables();
@@ -47,4 +47,5 @@ void SF::getSample(int& value, Double& weight,myRandom& random)
 	marg_variable_->addr_value()=value;
 	weight=table_[Variable::getAddress(variables_)];
 	//cerr<<marg_variable_->id()<<" "<<value<<" "<<weight<<endl;
+}
 }

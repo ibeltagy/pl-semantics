@@ -17,12 +17,13 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 **************************************************************************************************/
 
-#ifndef Alg_h
-#define Alg_h
+#ifndef SS_Alg_h
+#define SS_Alg_h
 
 //=================================================================================================
 // Useful functions on vectors
 
+namespace ss{
 
 #if 1
 template<class V, class T>
@@ -53,5 +54,5 @@ static inline bool find(V& ts, const T& t)
     for (; j < ts.size() && ts[j] != t; j++);
     return j < ts.size();
 }
-
+}
 #endif

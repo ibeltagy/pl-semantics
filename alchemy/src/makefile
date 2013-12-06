@@ -58,7 +58,7 @@ REPLACEFOLCPP=$(PARSER)/replacefolcpp.pl
 LIBCINC= -I. -I$(UTIL) -I$(LOGIC) -I$(PARSER) -I$(LEARNWTS) -I$(LEARNSTRUCT) \
 	-I$(INFER) -I$(LIFTEDINFERBRIDGE)$(INCLUDESUFFIX) -I$(LIFTEDINFERCOMMON)$(INCLUDESUFFIX) \
 	-I$(LIFTEDINFERBG)$(INCLUDESUFFIX) -I$(LIFTEDINFERIS)$(INCLUDESUFFIX) -I$(LIFTEDINFERWM)$(INCLUDESUFFIX) \
-	-I$(LIFTEDINFERTEST) -I$(GOOGLESPACEHASH)
+	-I$(LIFTEDINFERTEST) -I$(GOOGLESPACEHASH) -I$(SAMPLESEARCH)
 LIBLINC= -L. -L$(UTIL) -L$(LOGIC) -L$(PARSER) -L$(LEARNWTS) -L$(LEARNSTRUCT) \
 	-L$(INFER)
 LIBLINK= -ldl -lz -lgmp -lgmpxx
@@ -144,6 +144,7 @@ OBJS=$(OBJDIR)/arguments.o $(OBJDIR)/powerset.o \
 	$(OBJDIR)/JGSS.o \
 	$(OBJDIR)/JT.o \
 	$(OBJDIR)/LogFunction.o \
+	$(OBJDIR)/MAIN.o \
 	$(OBJDIR)/ORStore.o \
 	$(OBJDIR)/PseudoTree.o \
 	$(OBJDIR)/Random.o \
@@ -292,8 +293,8 @@ $(OBJDIR)/learnstruct.o:
 $(OBJDIR)/runtestsmain.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/runtestsmain.o -c $(LIFTEDINFERTEST)/runtestsmain.cpp
 
-$(OBJDIR)/ijgp-samplesearch.o:
-	$(GPP) $(CFLAGS) -o $(OBJDIR)/ijgp-samplesearch.o -c $(SAMPLESEARCH)/MAIN.cpp
+#$(OBJDIR)/ijgp-samplesearch.o:
+#	$(GPP) $(CFLAGS) -o $(OBJDIR)/ijgp-samplesearch.o -c $(SAMPLESEARCH)/MAIN.cpp
 
 %.oo: %.o $(OBJS) $(LIBS)
 	echo $<
@@ -510,6 +511,8 @@ $(OBJDIR)/JT.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/JT.o -c $(SAMPLESEARCH)/JT.cpp
 $(OBJDIR)/LogFunction.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/LogFunction.o -c $(SAMPLESEARCH)/LogFunction.cpp
+$(OBJDIR)/MAIN.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/MAIN.o -c $(SAMPLESEARCH)/MAIN.cpp
 $(OBJDIR)/ORStore.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/ORStore.o -c $(SAMPLESEARCH)/ORStore.cpp
 $(OBJDIR)/PseudoTree.o:

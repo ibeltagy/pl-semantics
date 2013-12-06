@@ -16,8 +16,8 @@ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FO
 DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 **************************************************************************************************/
-#ifndef Solver_h
-#define Solver_h
+#ifndef SS_Solver_h
+#define SS_Solver_h
 
 #include <cstdio>
 
@@ -31,7 +31,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 //=================================================================================================
 // Solver -- the main class:
-
+namespace ss{
 
 class Solver {
 public:
@@ -320,4 +320,5 @@ inline void Solver::printClause(const C& c)
 
 
 //=================================================================================================
+}
 #endif

@@ -1,11 +1,14 @@
-#ifndef IJGPSamplingHelper_H_
-#define IJGPSamplingHelper_H_
+#ifndef SS_IJGPSamplingHelper_H_
+#define SS_IJGPSamplingHelper_H_
 
 #include "GM.h"
 #include "JG.h"
 #include "SF.h"
 #include "CPT.h"
 #include "DRC.h"
+
+namespace ss{
+
 typedef enum { POSITIVE_SAMPLER, ZERO_SAMPLER} SAMPLER_TYPE;
 // Abstract class Ordered Sampler
 class OS
@@ -98,4 +101,5 @@ public:
 		sampler->getSample(variable,value,weight,random);
 	}
 };
+}
 #endif

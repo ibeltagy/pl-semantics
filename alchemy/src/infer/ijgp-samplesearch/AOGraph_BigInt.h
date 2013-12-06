@@ -1,5 +1,5 @@
-#ifndef AOGRAPH_BIG_INT_H_
-#define AOGRAPH_BIG_INT_H_
+#ifndef SS_AOGRAPH_BIG_INT_H_
+#define SS_AOGRAPH_BIG_INT_H_
 #include <iostream>
 #include <vector>
 #include <map>
@@ -9,6 +9,8 @@
 #include <gmpxx.h>
 #include <ext/new_allocator.h>
 #include <ext/hash_map>
+
+namespace ss{
 
 using namespace __gnu_cxx;
 //#include <google/sparse_hash_map>
@@ -425,6 +427,7 @@ public:
 		return func.table[0];
 	}
 };
+}
 #endif
 
 
@@ -1647,3 +1650,4 @@ public:
 //////	}
 //////};
 //////#endif
+

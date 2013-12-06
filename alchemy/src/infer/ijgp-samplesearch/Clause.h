@@ -1,5 +1,5 @@
-#ifndef Clause_h
-#define Clause_h
+#ifndef SS_Clause_h
+#define SS_Clause_h
 
 ///////////////////////////////////////////////////////////////////////////////
 // Clause: Represents an individual SAT clause.
@@ -13,6 +13,8 @@
 #include "LightweightTypes.h"
 #include "VariableSet.h"
 
+
+
 /////////////
 // Defines
 
@@ -21,6 +23,8 @@
 
 //////////////////////
 // Class Definitions
+
+namespace ss{
 
 class RClause {
 public:
@@ -208,5 +212,5 @@ inline void RClause::vMakeUnsatisfied()
   assert(_iSatisfyingCount);
   _iSatisfyingCount--;
 }
-
+}
 #endif // Clause_h

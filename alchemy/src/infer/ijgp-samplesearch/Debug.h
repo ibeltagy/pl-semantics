@@ -1,5 +1,5 @@
-#ifndef Debug_h
-#define Debug_h
+#ifndef SS_Debug_h
+#define SS_Debug_h
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Debug: Functions for debugging programs. Right now relies mostly on the C "assert" macros.
@@ -19,6 +19,10 @@
 ////////////////////////
 // Class Declarations
 
+
+namespace ss{
+
+
 class Debug {
 public:
   Debug();
@@ -34,5 +38,5 @@ public:
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Inlines
-
+}
 #endif // Debug_h

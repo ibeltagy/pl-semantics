@@ -1,5 +1,7 @@
-#ifndef MY_MAP_H_
-#define MY_MAP_H_
+#ifndef SS_MY_MAP_H_
+#define SS_MY_MAP_H_
+
+namespace ss{
 
 template<class I, class J>
 struct TreeNode 
@@ -15,4 +17,5 @@ class Mymap
 {
 	
 };
+}
 #endif

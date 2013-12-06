@@ -1,11 +1,13 @@
-#ifndef DOUBLE_H_
-#define DOUBLE_H_
+#ifndef SS_DOUBLE_H_
+#define SS_DOUBLE_H_
 
 #include <iostream>
 #include <cfloat>
 #include <cmath>
 #include <iomanip>
 using namespace std;
+
+namespace ss{
 
 #define DBL_MIN3 (LDBL_MIN/(double)2.1)
 class Double
@@ -204,6 +206,8 @@ public:
 		return is;
 	}
 };
+
+}
 #endif
 
 

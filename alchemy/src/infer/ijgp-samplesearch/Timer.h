@@ -8,10 +8,12 @@
  *      All rights reserved.
  */
 
-#ifndef TIMER_H_
-#define TIMER_H_
+#ifndef SS_TIMER_H_
+#define SS_TIMER_H_
 #include <ctime>
 using namespace std;
+
+namespace ss{
 
 struct Timer {
 	Timer() {
@@ -28,5 +30,5 @@ struct Timer {
 private:
 	clock_t start_time;
 };
-
+}
 #endif /* TIMER_H_ */

@@ -1,11 +1,14 @@
-#ifndef CPT_H_
-#define CPT_H_
+#ifndef SS_CPT_H_
+#define SS_CPT_H_
 
 #include <vector>
 #include "Function.h"
 #include <cassert>
 
 using namespace std;
+
+namespace ss{
+
 struct CPT: public Function
 {
 protected:
@@ -139,5 +142,5 @@ public:
 
 	}
 };
-
+}
 #endif

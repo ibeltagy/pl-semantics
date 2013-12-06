@@ -9,7 +9,7 @@
 #include "JT.h"
 #include <zlib.h>
 #include "ORStore.h"
-
+namespace ss{
 char satfile[100] = "temp.cnf";
 void setupSolver(Solver& S, GM& gm, bool reduce = false)
 {
@@ -2425,4 +2425,5 @@ Double RBSampleSearchSAT::computePE(GM& gm, JG& jg, const char* satfile, int p_b
 			cout << "z " << log10((sum_weight / Double((long double) i)).value()) << endl;
 		}
 	}
+}
 }

@@ -1,10 +1,14 @@
-#ifndef HASH_FUNCTION_H_
-#define HASH_FUNCTION_H_
+#ifndef SS_HASH_FUNCTION_H_
+#define SS_HASH_FUNCTION_H_
 #include "Function.h"
 #include <google/sparse_hash_map>
 #include <google/sparsetable>
+
+
 using google::sparse_hash_map; 
 using google::sparsetable; 
+
+namespace ss{
 
 class HashFunction: public Function
 {
@@ -23,4 +27,5 @@ public:
 	static void multiplyAndMarginalize(vector<Variable*>& marg_variables,vector<HashFunction*>& functions, HashFunction* out_function);
 	
 };
+}
 #endif

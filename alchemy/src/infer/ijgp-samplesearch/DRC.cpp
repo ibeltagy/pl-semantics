@@ -1,6 +1,8 @@
 #include "DRC.h"
 #include <cassert>
 
+namespace ss{
+
 bool allzeros(Function& func)
 {
 	for(int i=0;i<func.table().size();i++)
@@ -208,4 +210,6 @@ void DRC::reduceFunction(Function* function)
 		}
 	}
 	
+}
+
 }

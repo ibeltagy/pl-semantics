@@ -1,5 +1,5 @@
-#ifndef RB_IJGP_SAMPLER_H_
-#define RB_IJGP_SAMPLER_H_
+#ifndef SS_RB_IJGP_SAMPLER_H_
+#define SS_RB_IJGP_SAMPLER_H_
 
 #include "GM.h"
 #include "JG.h"
@@ -8,6 +8,9 @@
 #include "BE.h"
 #include "JT.h"
 #include "Timer.h"
+
+namespace ss{
+
 class RB_IJGP_Sampler {
 private:
 	void updateWeight(GM& gm, vector<int>& sampled_variables,
@@ -334,4 +337,5 @@ public:
 	}
 
 };
+}
 #endif

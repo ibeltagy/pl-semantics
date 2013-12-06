@@ -1,5 +1,5 @@
-#ifndef HYPERGRAPH_H_
-#define HYPERGRAPH_H_
+#ifndef SS_HYPERGRAPH_H_
+#define SS_HYPERGRAPH_H_
 
 #include <iostream>
 #include <vector>
@@ -8,6 +8,8 @@
 #include <fstream>
 
 using namespace std;
+
+namespace ss{
 
 class HyperGraph
 {
@@ -31,4 +33,5 @@ public:
 
 	void readErgo(char* infilename);
 };
+}
 #endif

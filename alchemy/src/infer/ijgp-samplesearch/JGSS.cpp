@@ -1,6 +1,6 @@
 #include "JG.h"
 #include "myRandom.h"
-
+namespace ss{
 void JGNodeSS::initialize()
 {
 	for(int i=0;i<edges_.size();i++)
@@ -163,4 +163,5 @@ void JGEdgeSS::sendMessage2to1()
 	//cout<<ss_node2_->id()<<" to "<<ss_node1_->id()<<endl;
 	Function::multiplyAndMarginalize(this->variables(),all_functions,this->message2());
 	//Function::dummy_multiplyMarginalize(this->variables(),all_functions,this->message2());
+}
 }
