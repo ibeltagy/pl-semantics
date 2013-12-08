@@ -3,6 +3,9 @@
 #define SS_H_
 
 #include "MAIN.h"
+#include <stdlib.h>
+#include <stdio.h>
+
 
 const int ssdebug = true;
 
@@ -48,7 +51,7 @@ class SampleSearchProxy: public Inference
     ofstream outFile;
     outFile.open ("mln.uai");
 
-    outFile <<"MARKOV"<<endl;
+    //outFile <<"MARKOV"<<endl;
     outFile << state_->getNumAtoms() << endl;
 
     for (int i = 0; i < state_->getNumAtoms(); i++)
@@ -62,13 +65,20 @@ class SampleSearchProxy: public Inference
     for (int i = 0; i < state_->getNumClauses(); i++)
     {
 	GroundClause *gndClause = state_->getGndClause(i);
+	double weight = gndClause->getWt();
+	double expNegWeight = exp(-weight);
+	if(gndClause->isHardClause())
+		expNegWeight = 0;
 	outFile <<gndClause->getNumGroundPredicates()<<" " ;
 	for (int j = 0; j < gndClause->getNumGroundPredicates(); j++)
 	{
-		outFile <<abs(gndClause->getGroundPredicateIndex(j))-1 << " ";
+		//outFile <<abs(gndClause->getGroundPredicateIndex(j))-1 << " ";
+		outFile <<gndClause->getGroundPredicateIndex(j)<< " ";
 	}
-	outFile << endl;
+	outFile <<expNegWeight<<endl;
+	//cout<<endl;
     }
+
 
     for (int i = 0; i < state_->getNumClauses(); i++)
     {
@@ -102,6 +112,7 @@ class SampleSearchProxy: public Inference
 	}
 	outFile << endl;
     }
+
     outFile.close(); 
 
     std::system("cat mln.uai");
@@ -110,7 +121,23 @@ class SampleSearchProxy: public Inference
     //std::system(command.str().c_str());
     std::ostringstream t;
     t << this->params.maxSeconds;
-    const char * argv[] = {"./ijgp-samplesearch", "mln.uai", "empty.evd", t.str().c_str(), "PR"};
+    cout << "calling SS"<<endl;
+    char ** argv  = new char*[5];
+    for(int i = 0;i<5;i++)
+	argv[i] = new char[20];
+
+    strcpy (argv[0],"./ijgp-samplesearch");
+    strcpy (argv[1],"mln.uai");
+    strcpy (argv[2],"empty.evd");
+    strcpy (argv[3],t.str().c_str());
+    strcpy (argv[4],"PR");
+
+    cout <<argv[0]<<endl;
+    cout <<argv[1]<<endl;
+    cout <<argv[2]<<endl;
+    cout <<argv[3]<<endl;
+    cout <<argv[4]<<endl;
+
     ss::MAIN (5, argv);
 
     std::system("cat mln.uai.PR");

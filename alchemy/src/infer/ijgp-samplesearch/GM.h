@@ -87,6 +87,7 @@ struct GM {
 	void readEvidence1(char* evidencefile);
 	void writeConstraintGraph(char* cgraph);
 	void convertToCN(GM& cn);
+	void readMLN(const char* infile);
 	void readUAI08(const char* infile);
 	void readUAIO8Evidence(char* evidencefile);
 	void readErgo(char* infile);

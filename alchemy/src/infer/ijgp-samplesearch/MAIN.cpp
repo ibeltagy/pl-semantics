@@ -52,7 +52,7 @@ int UAI2010Parameters::I_BOUND_=-1;
 int UAI2010Parameters::RB_BOUND_=-1;
 int UAI2010Parameters::NUM_ITERATIONS_=-1;
 clock_t total_time = 100;//atoi(argv[3]);
-void readParameters(int argc, const char* argv[])
+void readParameters(int argc, char* argv[])
 {
 	if (argc < 4) {
 		help();
@@ -75,11 +75,15 @@ void readParameters(int argc, const char* argv[])
 		}
 	}
 	uaifilename = argv[argc - 4];
+	cout <<"UAI: " <<argv[argc-4] << endl;
 	evidfilename = argv[argc - 3];
+	cout <<"EVD: " <<argv[argc-3] << endl;
 	//seed = atoi(argv[argc - 2]);
 	seed = time(NULL);
 	total_time=atoi(argv[argc-2]);
+	cout <<"time: " <<argv[argc-2] << endl;
 	task = argv[argc - 1];
+	cout <<"Task: " <<argv[argc-1] << endl;
 	outfilename = getOutFilename(uaifilename) + "." + task;
 	cout << outfilename << endl;
 	ofstream out(outfilename.c_str());
@@ -128,7 +132,7 @@ void readEvidence(GM& gm, vector<int>& evidence)
 	in.close();
 }
 
-int MAIN(int argc, const char* argv[])
+int MAIN(int argc, char** argv)
 {
 	Timer timer;
 	timer.start();
@@ -144,7 +148,8 @@ int MAIN(int argc, const char* argv[])
 	}
 	readParameters(argc, argv);
 	GM gm;
-	gm.readUAI08(uaifilename.c_str());
+	//gm.readUAI08(uaifilename.c_str());
+	gm.readMLN(uaifilename.c_str());
 
 	// Read Evidence
 	vector<int> evidence;

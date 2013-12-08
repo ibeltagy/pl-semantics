@@ -1,6 +1,7 @@
 #ifndef SS_FUNCTION_H_
 #define SS_FUNCTION_H_
 
+#include <iostream>
 #include <vector>
 #include "Variable.h"
 #include "Double.h"
@@ -17,6 +18,8 @@ protected:
 	int id_;
 	vector<Variable*> variables_;
 	vector<Double> table_;
+	int tableFalseEntry_;
+	Double weightWhenFalse_;
 public:
 	Function():id_(INVALID_VALUE){}
 	Function(const int& id): id_(id),variables_(vector<Variable*>()),table_(vector<Double>())
@@ -25,6 +28,26 @@ public:
 	Function(const int& id, const vector<Variable*>& variables): id_(id),variables_(variables), table_(vector<Double>(Variable::getDomainSize(variables)))
 	{
 	}
+	Function(const int& id, const vector<Variable*>& variables, Double weighWhenFalse, int tableFalseEntry): 
+		id_(id),variables_(variables), table_(NULL), weightWhenFalse_(weighWhenFalse), tableFalseEntry_(tableFalseEntry)
+	{
+
+		int num_values=Variable::getDomainSize(variables);
+		table_=vector<Double> (num_values);
+		for(int j=0;j<num_values;j++)
+		{
+			if(j == tableFalseEntry_)
+				table_[j]=Double(weightWhenFalse_);
+			else
+				table_[j]=Double(1);
+		}
+
+	/*cout <<id_<<": " << weightWhenFalse_ << ", "<< tableFalseEntry_ << "/"<<Variable::getDomainSize(variables_)<<"-->";
+	for(int i = 0; i<variables_.size(); i++)
+		cout <<variables_[i]->id() <<"("<<variables_[i]->addr_value()<<") ";
+	cout <<endl;*/
+	}
+
 	/*
 	Function(const Function& function): id_(function.id()),variables_(function.variables()),table_(function.table())
 	{

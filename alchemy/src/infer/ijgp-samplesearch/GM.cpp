@@ -1109,6 +1109,67 @@ void GM::readUAI08(const char* infilename)
 	}
 }
 
+void GM::readMLN(const char* infilename)
+{
+	type=MARKOV;
+	ifstream infile(infilename);
+	int num_variables;
+	cerr<<"Reading Markov network\n";
+	infile>>num_variables;
+	// Read domains
+	variables=vector<Variable*> (num_variables);
+	for(int i=0;i<num_variables;i++)
+	{
+		int domain_size;
+		infile>>domain_size;
+		vector<int> domain(domain_size);
+		for(int j=0;j<domain_size;j++)
+			domain[j]=j;
+		variables[i]=new Variable(i,domain);
+		variables[i]->orig_id=i;
+	}
+	copy_of_variables=variables;
+	int num_functions;
+	infile>>num_functions;
+	vector<vector<Variable*> > scope (num_functions);
+	functions=vector<Function*> (num_functions);
+	for(int i=0;i<num_functions;i++)
+	{
+		int num_vars_in_func;
+		infile>>num_vars_in_func;
+		scope[i]=vector<Variable*>(num_vars_in_func);
+		for(int j=0;j<num_vars_in_func;j++)
+		{
+			int curr_var;
+			infile>>curr_var;
+			int var_id=((curr_var > 0)? (curr_var-1):(-curr_var-1));
+			scope[i][j]=variables[var_id];
+			if(curr_var>0)
+				variables[var_id]->addr_value()=0;
+			else
+				variables[var_id]->addr_value()=1;
+		}
+		double clauseW;
+		infile>>clauseW;
+		Double whenWhenFalse = Double();
+		if(clauseW > DBL_MIN)
+		{
+			whenWhenFalse = Double(clauseW);
+			addToWCSP(whenWhenFalse);
+		}
+		else
+			mode=DET;
+		//cout << "IsZero(" << whenWhenFalse <<"/"<<clauseW <<") = " <<whenWhenFalse.isZero() << "/" << (clauseW == 0)<<endl;
+		sort(scope[i].begin(),scope[i].end(),less_than_comparator_variable);
+		int tableFalseEntry = Variable::getAddress(scope[i]);
+		functions[i]=new Function(i ,scope[i], whenWhenFalse, tableFalseEntry);
+		//for(int j = 0; j<functions[i]->table().size(); j++)
+		//	cout <<functions[i]->table()[j] <<"("<<functions[i]->table()[j].isZero()<<") ";
+		//cout <<endl;
+
+	}
+}
+
 void GM::readErgo(char* infilename)
 {
 	cerr<<"Reading Bayesnet.."<<flush;

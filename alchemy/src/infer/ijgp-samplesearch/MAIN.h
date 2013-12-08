@@ -8,7 +8,7 @@ using namespace std;
 
 namespace ss{
 
-int MAIN(int argc, const char* argv[]);
+int MAIN(int argc, char** argv);
 
 }
 #endif
