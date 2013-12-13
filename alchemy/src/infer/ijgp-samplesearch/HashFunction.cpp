@@ -1,4 +1,4 @@
-#include "HashFunction.h"
+	#include "HashFunction.h"
 #include "myRandom.h"
 
 namespace ss{
@@ -6,10 +6,10 @@ namespace ss{
 HashFunction::HashFunction(Function& function)
 {
 	variables()=function.variables();
-	sparse_table_=sparsetable<Double> (function.table().size());
-	for(int i=0;i<function.table().size();i++)
+	sparse_table_=sparsetable<Double> (function.tableSize());
+	for(int i=0;i<function.tableSize();i++)
 	{
-		if(function.table()[i].isZero())
+		if(function.tableEntry(i).isZero())
 			continue;
 		Variable::setAddress(function.variables(),i);
 		relations_.push_back(vector<int>());
@@ -17,7 +17,7 @@ HashFunction::HashFunction(Function& function)
 		{
 			relations_[relations_.size()-1].push_back(variables()[j]->addr_value());
 		}
-		sparse_table_[i]=function.table()[i];
+		sparse_table_[i]=function.tableEntry(i);
 	}
 }
 void HashFunction::print(ostream& out)

@@ -5,8 +5,8 @@ namespace ss{
 
 bool allzeros(Function& func)
 {
-	for(int i=0;i<func.table().size();i++)
-		if(!func.table()[i].isZero())
+	for(int i=0;i<func.tableSize();i++)
+		if(!func.tableEntry(i).isZero())
 			return false;
 	return true;
 }
@@ -152,7 +152,7 @@ bool DRC::isConsistent(int var, int value)
 		int entry=Variable::getAddress(buckets[var][i].variables());
 		for(int j=0;j<buckets[var][i].variables().size();j++)
 			assert(buckets[var][i].variables()[j]->value()!=INVALID_VALUE);
-		if(buckets[var][i].table()[entry].isZero())
+		if(buckets[var][i].tableEntry(entry).isZero())
 		{
 			gm.variables[var]->value()=INVALID_VALUE;
 			//ret_val=false;
@@ -174,9 +174,9 @@ void DRC::domainConsistency(int var,vector<bool>& new_domain)
 	{
 		Function function;
 		buckets[var][i].marginalize(marg_variable,function);
-		for(int j=0;j<function.table().size();j++)
+		for(int j=0;j<function.tableSize();j++)
 		{
-			if(function.table()[j].isZero())
+			if(function.tableEntry(j).isZero())
 			{
 				new_domain[j]=false;
 			}

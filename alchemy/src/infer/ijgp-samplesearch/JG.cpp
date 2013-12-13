@@ -522,10 +522,9 @@ void JG::updateMarginals(bool recompute)
 		}
 		else {
 			marginals[i].variables() = curr_variable;
-			marginals[i].table() = vector<Double> (
-					copy_of_gm->variables[i]->domain_size());
+			marginals[i].tableInit(copy_of_gm->variables[i]->domain_size());
 			for (int j = 0; j < copy_of_gm->variables[i]->domain_size(); j++) {
-				marginals[i].table()[j] = Double((double) 1.0
+				marginals[i].tableEntry(j) = Double((double) 1.0
 						/ (double) copy_of_gm->variables[i]->domain_size());
 			}
 		}
@@ -541,8 +540,8 @@ bool JG::convergence_test()
 	assert(marginals.size()==old_marginals.size());
 	long double error=0.0;
 	for(int i=0;i<marginals.size();i++){
-		for(int j=0;j<marginals[i].table().size();j++){
-			error+=fabs(marginals[i].table()[j].value()-old_marginals[i].table()[j].value());
+		for(int j=0;j<marginals[i].tableSize();j++){
+			error+=fabs(marginals[i].tableEntry(j).value()-old_marginals[i].tableEntry(j).value());
 		}
 	}
 	error/=(long double)marginals.size();

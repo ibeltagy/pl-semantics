@@ -78,12 +78,12 @@ void JGNodeSS::getMarginal(vector<Variable*>& marg_variables, Function& function
 	{
 		if(edges_[i]->node1()==this)
 		{
-			if(!edges_[i]->message2().table().empty())
+			if(!edges_[i]->message2().tableSize() == 0)
 				all_functions.push_back(&(edges_[i]->message2()));
 		}
 		else
 		{
-			if(!edges_[i]->message1().table().empty())
+			if(!edges_[i]->message1().tableSize() == 0)
 				all_functions.push_back(&(edges_[i]->message1()));
 		}
 	}
@@ -117,13 +117,13 @@ void JGEdgeSS::sendMessage1to2()
 		}
 		if(curr_edge->node1()->id()==ss_node1_->id())
 		{
-			if(curr_edge->message2().table().empty())
+			if(curr_edge->message2().tableSize() == 0)
 				continue;
 			all_functions.push_back(&curr_edge->message2());
 		}
 		else
 		{
-			if(curr_edge->message1().table().empty())
+			if(curr_edge->message1().tableSize() == 0)
 				continue;
 			all_functions.push_back(&curr_edge->message1());
 		}
@@ -148,13 +148,13 @@ void JGEdgeSS::sendMessage2to1()
 		}
 		if(curr_edge->node1()->id()==ss_node1_->id())
 		{
-			if(curr_edge->message2().table().empty())
+			if(curr_edge->message2().tableSize() == 0)
 				continue;
 			all_functions.push_back(&curr_edge->message2());
 		}
 		else
 		{
-			if(curr_edge->message1().table().empty())
+			if(curr_edge->message1().tableSize() == 0)
 				continue;
 			all_functions.push_back(&curr_edge->message1());
 		}

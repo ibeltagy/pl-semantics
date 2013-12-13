@@ -365,8 +365,8 @@ void VEC_MAR(GM& gm, vector<int>& order, vector<int>& sampling_order, vector<set
 
 				for (int ii = 0; ii < jt.marginals.size(); ii++) {
 					if (!is_sampled[ii]) {
-						for (int jj = 0; jj < jt.marginals[ii].table().size(); jj++) {
-							marginals[ii][jj] += jt.marginals[ii].table()[jj] * Double(exp(be.log_pe.toLongdouble()));
+						for (int jj = 0; jj < jt.marginals[ii].tableSize(); jj++) {
+							marginals[ii][jj] += jt.marginals[ii].tableEntry(jj) * Double(exp(be.log_pe.toLongdouble()));
 							//marginals[ii][jj] += jt.marginals[ii].table()[jj] * Double(exp(jt.log_pe.toLongdouble()));
 						}
 					}
@@ -474,8 +474,8 @@ void VEC_MAR_DET(GM& gm, vector<int>& order, vector<int>& sampling_order, vector
 
 				for (int ii = 0; ii < jt.marginals.size(); ii++) {
 					if (!is_sampled[ii]) {
-						for (int jj = 0; jj < jt.marginals[ii].table().size(); jj++) {
-							marginals[ii][jj] += jt.marginals[ii].table()[jj] * Double(exp(be.log_pe.toLongdouble()));
+						for (int jj = 0; jj < jt.marginals[ii].tableSize(); jj++) {
+							marginals[ii][jj] += jt.marginals[ii].tableEntry(jj) * Double(exp(be.log_pe.toLongdouble()));
 							//marginals[ii][jj] += jt.marginals[ii].table()[jj] * Double(exp(jt.log_pe.toLongdouble()));
 						}
 					}

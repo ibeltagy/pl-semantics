@@ -56,7 +56,12 @@ public:
 	int& id() { return id_;}
 	int id() const {return id_;}
 	vector<Variable*>& variables()  { return variables_;}
-	vector<Double>& table() { return table_;}
+	//vector<Double>& table() { return table_;}
+	Double& tableEntry(int i) { return table_[i];}
+	void tableInit(int size) { table_ = vector<Double> (size);}
+	void tableSet(vector<Double>& table) { table_ = table;}
+	vector<Double>& tableGet() { return table_;}
+	int tableSize() { return table_.size();}
 	double MSE(Function& function);
 	void project(Function& function);
 	void product(Function& function);
@@ -64,14 +69,14 @@ public:
 	void marginalize(vector<Variable*>&marg_variables,Function& function);
 	void normalize();
 	void print(ostream& out=cout);
-  void readCNF(istream& in, vector<Variable*>& all_variables,vector<Lit>& clause, double damp=0.0, int c_bound=15);
-	void readVIB(istream& in,vector<Variable*>& all_variables);
+	//void readCNF(istream& in, vector<Variable*>& all_variables,vector<Lit>& clause, double damp=0.0, int c_bound=15);
+	//void readVIB(istream& in,vector<Variable*>& all_variables);
 	void readCF(istream& in,vector<Variable*>& all_variables);
 	virtual void removeEvidence();
 	virtual void reduceDomains();
 	Double getWeight()
 	{
-		return table()[Variable::getAddress(variables_)];
+		return table_[Variable::getAddress(variables_)];
 	}
 
 	static void dummy_product(Function& f1, Function& f2, Function& f3);

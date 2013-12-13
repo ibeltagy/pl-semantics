@@ -3,11 +3,11 @@
 namespace ss{
 bool isConsistent(Function& function)
 {
-	if(function.table().empty())
+	if(function.tableSize() == 0)
 		return true;
-	for(int i=0;i<function.table().size();i++)
+	for(int i=0;i<function.tableSize();i++)
 	{
-		if(!function.table()[i].isZero())
+		if(!function.tableEntry(i).isZero())
 			return true;
 	}
 	return false;
@@ -40,22 +40,22 @@ void JGNodeLS::initialize()
 	}
 	
 	do_set_difference(function.variables(),removed_variables,function.variables(),less_than_comparator_variable);
-	function.table()=vector<Double> (Variable::getDomainSize(function.variables()));
+	function.tableInit(Variable::getDomainSize(function.variables()));
 	Double norm_const;
 	
-	for(int i=0;i<function.table().size();i++)
+	for(int i=0;i<function.tableSize();i++)
 	{
-		function.table()[i]=Double(1.0);
+		function.tableEntry(i)=Double(1.0);
 		Variable::setAddress(function.variables(),i);
 		for(int j=0;j<original_functions.size();j++)
 		{
 			int entry=Variable::getAddress(original_functions[j]->variables());
-			function.table()[i]*=original_functions[j]->table()[entry];
+			function.tableEntry(i)*=original_functions[j]->tableEntry(entry);
 		}
-		norm_const+=function.table()[i];
+		norm_const+=function.tableEntry(i);
 	}
-	for(int i=0;i<function.table().size();i++)
-		function.table()[i]/=norm_const;
+	for(int i=0;i<function.tableSize();i++)
+		function.tableEntry(i)/=norm_const;
 	
 }
 void JGNodeLS::addFunction(Function& function_)

@@ -85,7 +85,7 @@ GrayCodeP::GrayCodeP(const vector<Variable*>& variables_,const vector<Function*>
 GrayCode(variables_,functions_),f(function),address_of_f(0),vars_to_f_multipliers(vector<int> (variables_.size()))
 {
 	f->variables()=variables;
-	f->table()=vector<Double> (Variable::getDomainSize(f->variables()));
+	f->tableInit(Variable::getDomainSize(f->variables()));
 	int mult=1;
 	for(int i=0;i<variables.size();i++)
 	{
@@ -99,20 +99,20 @@ void GrayCodeP::moveForward()
 	if(first)
 	{
 		incrementAddress();
-		f->table()[address_of_f]=Double(1.0);
+		f->tableEntry(address_of_f)=Double(1.0);
 		for(int i=0;i<functions.size();i++)
 		{
-			f->table()[address_of_f]*=functions[i]->table()[address_of_functions[i]];
+			f->tableEntry(address_of_f)*=functions[i]->tableEntry(address_of_functions[i]);
 		}
 		return;
 	}
 	incrementAddress();
 	address_of_f-=(vars_to_f_multipliers[j]*variables[j]->addr_value());
 	address_of_f+=(vars_to_f_multipliers[j]*A[j]);
-	f->table()[address_of_f]=Double(1.0);
+	f->tableEntry(address_of_f)=Double(1.0);
 	for(int i=0;i<functions.size();i++)
 	{
-		f->table()[address_of_f]*=functions[i]->table()[address_of_functions[i]];
+		f->tableEntry(address_of_f)*=functions[i]->tableEntry(address_of_functions[i]);
 	}
 	variables[j]->addr_value()=A[j];
 }
@@ -125,7 +125,7 @@ GrayCodePM::GrayCodePM(const vector<Variable*>& variables_,const vector<Function
 {
 	//cout<<"\t\t\t initing gray codepm \n";
 	f->variables()=marg_variables;
-	f->table()=vector<Double> (Variable::getDomainSize(f->variables()));
+	f->tableInit(Variable::getDomainSize(f->variables()));
 	hash_map<int,int> co_ordinates;
 	for(int i=0;i<variables.size();i++)
 	{
@@ -150,9 +150,9 @@ void GrayCodePM::moveForward()
 		Double value(1.0);
 		for(int i=0;i<functions.size();i++)
 		{
-			value*=functions[i]->table()[address_of_functions[i]];
+			value*=functions[i]->tableEntry(address_of_functions[i]);
 		}
-		f->table()[address_of_f]+=value;
+		f->tableEntry(address_of_f)+=value;
 		return;
 	}
 	incrementAddress();
@@ -164,16 +164,16 @@ void GrayCodePM::moveForward()
 	Double value(1.0);
 	for(int i=0;i<functions.size();i++)
 	{
-		value*=functions[i]->table()[address_of_functions[i]];
+		value*=functions[i]->tableEntry(address_of_functions[i]);
 	}
-	f->table()[address_of_f]+=value;
+	f->tableEntry(address_of_f)+=value;
 	variables[j]->addr_value()=A[j];
 }
 GrayCodeD::GrayCodeD(const vector<Variable*>& variables_,const vector<Function*>& functions_, Function* function):
 GrayCode(variables_,functions_),f(function),address_of_f(0),vars_to_f_multipliers(vector<int> (variables_.size()))
 {
 	f->variables()=variables;
-	f->table()=vector<Double> (Variable::getDomainSize(f->variables()));
+	f->tableInit(Variable::getDomainSize(f->variables()));
 	int mult=1;
 	for(int i=0;i<variables.size();i++)
 	{
@@ -190,9 +190,9 @@ void GrayCodeD::moveForward()
 		for(int i=0;i<functions.size();i++)
 		{
 			if(i==0)
-				f->table()[address_of_f]=functions[i]->table()[address_of_functions[i]];
+				f->tableEntry(address_of_f)=functions[i]->tableEntry(address_of_functions[i]);
 			else
-				f->table()[address_of_f]/=functions[i]->table()[address_of_functions[i]];
+				f->tableEntry(address_of_f)/=functions[i]->tableEntry(address_of_functions[i]);
 		}
 		return;
 	}
@@ -203,9 +203,9 @@ void GrayCodeD::moveForward()
 	for(int i=0;i<functions.size();i++)
 	{
 		if(i==0)
-			f->table()[address_of_f]=functions[i]->table()[address_of_functions[i]];
+			f->tableEntry(address_of_f)=functions[i]->tableEntry(address_of_functions[i]);
 		else
-			f->table()[address_of_f]/=functions[i]->table()[address_of_functions[i]];
+			f->tableEntry(address_of_f)/=functions[i]->tableEntry(address_of_functions[i]);
 	}
 	variables[j]->addr_value()=A[j];
 }

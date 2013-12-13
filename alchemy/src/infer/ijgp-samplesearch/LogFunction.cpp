@@ -9,7 +9,7 @@ void LogFunction::print(ostream& out)
 }
 LogFunction::LogFunction(Function& function)
 {
-	if(function.variables().empty() && function.table().empty())
+	if(function.variables().empty() && function.tableSize() == 0)
 	{
 		variables_=vector<Variable*>();
 		log_table=vector<LogDouble>(1);
@@ -26,14 +26,14 @@ LogFunction::LogFunction(Function& function)
 	{
 		log_table=vector<LogDouble> (1);
 		Double tab;
-		log_table[0]=LogDouble(function.table()[Variable::getAddress(function.variables())]);
+		log_table[0]=LogDouble(function.tableEntry(Variable::getAddress(function.variables())));
 		return;
 	}
 	if(variables_.size()==function.variables().size())
 	{
-		log_table=vector<LogDouble>(function.table().size());
+		log_table=vector<LogDouble>(function.tableSize());
 		for(int i=0;i<log_table.size();i++)
-			log_table[i]=LogDouble(function.table()[i]);
+			log_table[i]=LogDouble(function.tableEntry(i));
 	}
 	else
 	{
@@ -76,7 +76,7 @@ LogFunction::LogFunction(Function& function)
 		
 		while(1)
 		{
-			log_table[address]=LogDouble(function.table()[func_address]);
+			log_table[address]=LogDouble(function.tableEntry(func_address));
 			int j=f[0];
 			f[0]=0;
 
@@ -174,14 +174,14 @@ void LogFunction::multiplyAndMarginalize(vector<Variable*>& marg_variables_,vect
 	//Gray  code algorithm
 	//Initialize LogFunction
 	out_function.variables()=marg_variables;
-	out_function.table()=vector<Double> (Variable::getDomainSize(marg_variables));
+	out_function.tableInit(Variable::getDomainSize(marg_variables));
 	//out_function.log_table=vector<LogDouble> (out_function.table().size());
 	//cout<<"Log function inited\n";
 	while(1)
 	{
 		//cout<<address<<endl;
 		// Step 1: Visit
-		out_function.table()[address]+=mult.toDouble();
+		out_function.tableEntry(address)+=mult.toDouble();
 		// Step 2: Choose j
 		int j=f[0];
 		f[0]=0;

@@ -39,15 +39,15 @@ void Function::removeEvidence()
 	{
 		Variable::setAddress(other_variables,j);
 		int entry=Variable::getAddress(variables_);
-		new_table[j]=table()[entry];
+		new_table[j]=tableEntry(entry);
 	}
 	variables_=other_variables;
 	table_=new_table;
 }
 void Function::project(Function& function)
 {
-	assert(function.table().size() <= table_.size());
-	if(function.table().empty() || function.variables().empty())
+	assert(function.tableSize() <= table_.size());
+	if(function.tableSize() == 0 || function.variables().empty())
 		return;
 	vector<Variable*> new_variables;
 	do_set_union(variables(),function.variables(),new_variables,less_than_comparator_variable);
@@ -59,9 +59,9 @@ void Function::project(Function& function)
 		{
 			Variable::setAddress(variables(),i);
 			int func_entry=Variable::getAddress(function.variables());
-			if(function.table()[func_entry].isZero())
+			if(function.tableEntry(func_entry).isZero())
 			{
-				table()[i]=Double();
+				tableEntry(i)=Double();
 			}
 		}
 	}
@@ -74,9 +74,9 @@ void Function::project(Function& function)
 		{
 			Variable::setAddress(variables_,i);
 			int func_entry=Variable::getAddress(function.variables());
-			if(function.table()[func_entry].isZero())
+			if(function.tableEntry(func_entry).isZero())
 			{
-				table()[i]=Double();
+				tableEntry(i)=Double();
 			}
 		}
 	}
@@ -84,7 +84,7 @@ void Function::project(Function& function)
 void Function::product(Function& function)
 {
 	
-	if(function.table().empty() || function.variables().empty())
+	if(function.tableSize() == 0 || function.variables().empty())
 		return;
 	vector<Variable*> new_variables;
 	do_set_union(variables(),function.variables(),new_variables,less_than_comparator_variable);
@@ -95,7 +95,7 @@ void Function::product(Function& function)
 		{
 			Variable::setAddress(variables(),i);
 			int func_entry=Variable::getAddress(function.variables());
-			table()[i]*=function.table()[func_entry];
+			tableEntry(i)*=function.tableEntry(func_entry);
 		}
 	}
 	else
@@ -108,7 +108,7 @@ void Function::product(Function& function)
 			Variable::setAddress(new_variables,i);
 			int entry=Variable::getAddress(variables());
 			int func_entry=Variable::getAddress(function.variables());
-			table()[i]=Double(function.table()[func_entry]*old_table[entry]);
+			tableEntry(i)=Double(function.tableEntry(func_entry)*old_table[entry]);
 		}
 		variables_=new_variables;
 	}
@@ -125,7 +125,7 @@ void Function::dummy_divide(Function& f1, Function& f2, Function& f3)
 
 void Function::divide(Function& function)
 {
-	if(function.table().empty() || function.variables().empty())
+	if(function.tableSize() == 0 || function.variables().empty())
 		return;
 	vector<Variable*> new_variables;
 	do_set_union(variables(),function.variables(),new_variables,less_than_comparator_variable);
@@ -133,11 +133,11 @@ void Function::divide(Function& function)
 	{
 		return;
 	}
-	for(int i=0;i<table().size();i++)
+	for(int i=0;i<tableSize();i++)
 	{
 			Variable::setAddress(variables(),i);
 			int func_entry=Variable::getAddress(function.variables());
-			table()[i]/=function.table()[func_entry];
+			tableEntry(i)/=function.tableEntry(func_entry);
 	}
 	normalize();
 }
@@ -148,12 +148,12 @@ void Function::marginalize(vector<Variable*>& marg_variables_,Function& function
 	do_set_intersection(variables_,marg_variables_,function.variables(),less_than_comparator_variable);
 	if(function.variables().empty())
 		return;
-	function.table()=vector<Double> (Variable::getDomainSize(function.variables()));
+	function.tableInit(Variable::getDomainSize(function.variables()));
 	for(int i=0;i<table_.size();i++)
 	{
 		Variable::setAddress(variables_,i);
 		int entry=Variable::getAddress(function.variables());
-		function.table()[entry]+=table_[i];
+		function.tableEntry(entry)+=table_[i];
 	}
 	function.normalize();
 }
@@ -184,7 +184,7 @@ void Function::dummy_multiplyMarginalize(vector<Variable*>& marg_variables_, vec
 	int num_values=Variable::getDomainSize(variables);
 	f=Function();
 	f.variables()=marg_variables;
-	f.table()=vector<Double> (Variable::getDomainSize(marg_variables));
+	f.tableInit(Variable::getDomainSize(marg_variables));
 	for(int i=0;i<num_values;i++)
 	{
 		Variable::setAddress(variables,i);
@@ -193,23 +193,23 @@ void Function::dummy_multiplyMarginalize(vector<Variable*>& marg_variables_, vec
 		{
 			
 			int func_entry=Variable::getAddress(functions[j]->variables());
-			assert(func_entry < (int)functions[j]->table().size());
-			value*=functions[j]->table()[func_entry];
+			assert(func_entry < (int)functions[j]->tableSize());
+			value*=functions[j]->tableEntry(func_entry);
 		}
-		assert(f.table().size() > Variable::getAddress(marg_variables));
+		assert(f.tableSize() > Variable::getAddress(marg_variables));
 		
-		f.table()[Variable::getAddress(marg_variables)]+=value;
+		f.tableEntry(Variable::getAddress(marg_variables))+=value;
 		
 	}
 	
 	Double norm_const;
-	for(int i=0;i<f.table().size();i++)
+	for(int i=0;i<f.tableSize();i++)
 	{
-		norm_const+=f.table()[i];
+		norm_const+=f.tableEntry(i);
 	}
-	for(int i=0;i<f.table().size();i++)
+	for(int i=0;i<f.tableSize();i++)
 	{
-		f.table()[i]/=norm_const;
+		f.tableEntry(i)/=norm_const;
 	}
 }
 
@@ -263,14 +263,14 @@ void Function::multiplyAndMarginalize(vector<Variable*>& marg_variables_, vector
 	}
 	f[num_variables]=num_variables;
 	new_func.variables()=marg_variables;
-	new_func.table()=vector<Double>(Variable::getDomainSize(marg_variables));
+	new_func.tableInit(Variable::getDomainSize(marg_variables));
 	int func_address[num_functions];
 	int marg_address=0;
 	Double mult(1.0);
 	for(int i=0;i<num_functions;i++)
 	{
-		if(!functions[i]->table().empty())
-			mult*=functions[i]->table()[0];
+		if(!functions[i]->tableSize() == 0)
+			mult*=functions[i]->tableEntry(0);
 		func_address[i]=0;
 	}
 	int domain_size=Variable::getDomainSize(variables);
@@ -286,7 +286,7 @@ void Function::multiplyAndMarginalize(vector<Variable*>& marg_variables_, vector
 	}
 	for(int i=0;i<domain_size;i++)
 	{
-		new_func.table()[marg_address]+=mult;
+		new_func.tableEntry(marg_address)+=mult;
 		//cout<<marg_address<<" "<<mult<<" ";
 		int j=f[0];
 		f[0]=0;
@@ -303,16 +303,16 @@ void Function::multiplyAndMarginalize(vector<Variable*>& marg_variables_, vector
 		{
 			int index=gray_index[j][k].first;
 			int addr_multiplier=gray_index[j][k].second;
-			mult/=functions[index]->table()[func_address[index]];
+			mult/=functions[index]->tableEntry(func_address[index]);
 			func_address[index]-=addr_multiplier*old_aj;
 			func_address[index]+=addr_multiplier*a[j];
-			mult*=functions[index]->table()[func_address[index]];
+			mult*=functions[index]->tableEntry(func_address[index]);
 		}
 		// Hack
 		mult=Double(1.0);
 		for(int k=0;k<num_functions;k++)
 		{
-			mult*=functions[k]->table()[func_address[k]];
+			mult*=functions[k]->tableEntry(func_address[k]);
 		}
 		//End Hack
 		if(gray_marg_index[j]>0)
@@ -382,7 +382,7 @@ void Function::dummy_product(Function& f1, Function& f2, Function& f3)
 {
 	do_set_union(f1.variables(),f2.variables(),f3.variables(),less_than_comparator_variable);
 	int num_values=Variable::getDomainSize(f3.variables());
-	f3.table()=vector<Double>(num_values);
+	f3.tableInit(num_values);
 	for(int i=0;i<num_values;i++)
 	{
 		Variable::setAddress(f3.variables(),i);
@@ -391,8 +391,8 @@ void Function::dummy_product(Function& f1, Function& f2, Function& f3)
 		add2=Variable::getAddress(f2.variables());
 		//cout<<add1<<" "<<add2<<" val = ";
 		//cout<<f1.table()[add1]<<" "<<f2.table()[add2]<<" ";
-		f3.table()[i]=f1.table()[add1];
-		f3.table()[i]*=f2.table()[add2];
+		f3.tableEntry(i)=f1.tableEntry(add1);
+		f3.tableEntry(i)*=f2.tableEntry(add2);
 		//cout<<f3.table()[i]<<endl;
 	}
 }
@@ -409,11 +409,11 @@ void Function::print(ostream& out)
 double Function::MSE(Function& function)
 {
 	double error=0.0;
-	if(function.table().size()!=table_.size())
+	if(function.tableSize()!=table_.size())
 		return -1;
 	for(int i=0;i<table_.size();i++)
 	{
-		error+=((function.table()[i].value()-table_[i].value())*(function.table()[i].value()-table_[i].value()));
+		error+=((function.tableEntry(i).value()-table_[i].value())*(function.tableEntry(i).value()-table_[i].value()));
 	}
 	return error;
 
@@ -421,11 +421,11 @@ double Function::MSE(Function& function)
 double Function::MSE(Function* f1, Function* f2)
 {
 	double error=0.0;
-	if(f1->table().size()!=f2->table().size())
+	if(f1->tableSize()!=f2->tableSize())
 		return -1;
-	for(int i=0;i<f1->table().size();i++)
+	for(int i=0;i<f1->tableSize();i++)
 	{
-		error+=((f1->table()[i].value()-f2->table()[i].value())*(f1->table()[i].value()-f2->table()[i].value()));
+		error+=((f1->tableEntry(i).value()-f2->tableEntry(i).value())*(f1->tableEntry(i).value()-f2->tableEntry(i).value()));
 	}
 	return error;
 }

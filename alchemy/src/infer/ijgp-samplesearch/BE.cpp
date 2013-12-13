@@ -481,11 +481,11 @@ double superhack(vector<Variable*>& all_variables,vector<vector<Lit> >& clauses,
 				}
 			}
 			sort(function->variables().begin(),function->variables().end(),less_than_comparator_variable);
-			function->table()=vector<Double> (Variable::getDomainSize(function->variables()));
-			for(int j=0;j<function->table().size();j++){
-				function->table()[j]=Double(1.0);
+			function->tableInit(Variable::getDomainSize(function->variables()));
+			for(int j=0;j<function->tableSize();j++){
+				function->tableEntry(j)=Double(1.0);
 			}
-			function->table()[Variable::getAddress(function->variables())]=Double();
+			function->tableEntry(Variable::getAddress(function->variables()))=Double();
 			functions.push_back(function);
 		}
 	}
@@ -734,7 +734,7 @@ BESampleSAT::BESampleSAT(vector<Variable*>& all_variables, vector<vector<Lit> >&
 		}
 		sort(func.variables().begin(),func.variables().end(),less_than_comparator_variable);
 		int num_values=Variable::getDomainSize(func.variables());
-		func.table()=vector<Double>(num_values);
+		func.tableInit(num_values);
 		for(int j=0;j<num_values;j++){
 			Variable::setAddress(func.variables(),j);
 			bool is_satisfied=true;
@@ -753,7 +753,7 @@ BESampleSAT::BESampleSAT(vector<Variable*>& all_variables, vector<vector<Lit> >&
 				}
 			}
 			if (is_satisfied){
-				func.table()[j]=Double(1.0);
+				func.tableEntry(j)=Double(1.0);
 			}
 		}
 
@@ -819,10 +819,10 @@ BESampleSAT::BESampleSAT(vector<Variable*>& all_variables, vector<vector<Lit> >&
 			int entry;
 			all_variables[curr_var]->addr_value()=0;
 			entry=Variable::getAddress(buckets[i][j].variables());
-			marg1*=buckets[i][j].table()[entry];
+			marg1*=buckets[i][j].tableEntry(entry);
 			all_variables[curr_var]->addr_value()=1;
 			entry=Variable::getAddress(buckets[i][j].variables());
-			marg2*=buckets[i][j].table()[entry];
+			marg2*=buckets[i][j].tableEntry(entry);
 		}
 		Double norm_const;
 		norm_const=marg1+marg2;
@@ -950,16 +950,16 @@ BucketProp::BucketProp(std::vector<Variable*> &variables, std::vector<Function*>
 		marg_variable.push_back(variables[var]);
 		if (variables[order[i]]->value()!=INVALID_VALUE){
 			marginals[var].variables()=marg_variable;
-			marginals[var].table()=vector<Double> (variables[var]->domain_size());
-			marginals[var].table()[variables[var]->value()]=Double(1.0);
+			marginals[var].tableInit(variables[var]->domain_size());
+			marginals[var].tableEntry(variables[var]->value())=Double(1.0);
 		}
 		else{
 			LogFunction::multiplyAndMarginalize(marg_variable,buckets[i],marginals[var],true);
-			if (marginals[var].table().empty()){
+			if (marginals[var].tableSize() == 0){
 				marginals[var].variables()=marg_variable;
-				marginals[var].table()=vector<Double> (variables[var]->domain_size());
+				marginals[var].tableInit(variables[var]->domain_size());
 				for(int j=0;j<variables[var]->domain_size();j++){
-					marginals[var].table()[j]=Double((long double)1.0/(long double)variables[var]->domain_size());
+					marginals[var].tableEntry(j)=Double((long double)1.0/(long double)variables[var]->domain_size());
 				}
 			}
 		}

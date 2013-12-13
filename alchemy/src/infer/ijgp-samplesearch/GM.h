@@ -32,7 +32,7 @@ struct GM {
 	NETWORK_TYPE type;
 	NETWORK_MODE mode;
 
-	void addToWCSP(Double& value);
+	//void addToWCSP(Double& value);
 
 	vector<Double> wcsp_probs;
 	double damp;
@@ -74,31 +74,31 @@ struct GM {
 		var_to_ids.clear();
 		csp_to_sat_variables.clear();
 	}
-	bool readCNF(const char* infile);
+	//bool readCNF(const char* infile);
 	bool readCF(char* infile);
-	bool readVIB(char* infile);
+	//bool readVIB(char* infile);
 	void convertToSAT();
 	void convertToSATUAI10();
-	void writeSAT(char* satfilename);
-	void readEvidenceErgo(char* evidencefile);
+	//void writeSAT(char* satfilename);
+	//void readEvidenceErgo(char* evidencefile);
 	void getIrrelevantNodes(vector<int>& evidence,
 			vector<int>& irrelevant_nodes);
-	void readEvidenceVIB(char* evidencefile);
-	void readEvidence1(char* evidencefile);
-	void writeConstraintGraph(char* cgraph);
+	//void readEvidenceVIB(char* evidencefile);
+	//void readEvidence1(char* evidencefile);
+	//void writeConstraintGraph(char* cgraph);
 	void convertToCN(GM& cn);
 	void readMLN(const char* infile);
-	void readUAI08(const char* infile);
-	void readUAIO8Evidence(char* evidencefile);
-	void readErgo(char* infile);
-	void reduceBN(GM* gm, int i_bound, vector<int>& order);
-	void writeErgo(char* outfile);
+	//void readUAI08(const char* infile);
+	//void readUAIO8Evidence(char* evidencefile);
+	//void readErgo(char* infile);
+	//void reduceBN(GM* gm, int i_bound, vector<int>& order);
+	//void writeErgo(char* outfile);
 	void removeIrrelevantNetwork(vector<int>& evidence);
 	void setEvidenceBeliefsUAI08(vector<int>& evidence);
 	void reduce(int i_bound);
 	void reduceDomains();
-	void reduceSAT(const char* satfilename);
-	void eliminate(int i_bound);
+	//void reduceSAT(const char* satfilename);
+	//void eliminate(int i_bound);
 	void getMinFillOrdering(vector<int>& order, vector<set<int> >& clusters,
 			double& estimate);
 	void getMinDegreeOrdering(vector<int>& order, vector<set<int> >& clusters,
@@ -111,11 +111,11 @@ struct GM {
 	void getClusters(vector<int>& order, vector<set<int> >& clusters);
 	void rearrangeOrdering(vector<int>& order, vector<set<int> >& clusters,
 			vector<int>& new_order, double& limit);
-	void printMarginalsUAI08(vector<vector<Double> >& marginals);
-	void printMarginalsUAI08(vector<Function>& marginals);
+	//void printMarginalsUAI08(vector<vector<Double> >& marginals);
+	//void printMarginalsUAI08(vector<Function>& marginals);
 	void printMarginalsUAI10(vector<vector<Double> >& marginals, ostream& out);
 	void printMarginalsUAI10(vector<Function>& marginals, ostream& out);
-	void deleteEmptyFunctions();
+	//void deleteEmptyFunctions();
 	// Start: New functions added by Andrew
 	void getMinFillOrdering_randomized(vector<int>& order,
 			vector<set<int> >& clusters, double& estimate,

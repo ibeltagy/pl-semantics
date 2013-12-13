@@ -39,9 +39,9 @@ void JGNodeHSS::getCF(vector<Variable*>& cond_variables,Variable* marg_variable,
 	cf.variables()=all_variables;
 	cf.cond_variables()=cond_variables;
 	cf.setMargVariable(marg_variable);
-	cf.table()=vector<Double> (Variable::getDomainSize(all_variables));
-	for(int i=0;i<cf.table().size();i++)
-		cf.table()[i]=temp.stable().get(i);
+	cf.tableInit(Variable::getDomainSize(all_variables));
+	for(int i=0;i<cf.tableSize();i++)
+		cf.tableEntry(i)=temp.stable().get(i);
 	//Normalize the conditional function
 	int multiplier=1;
 	for(int i=0;i<all_variables.size();i++)
@@ -57,12 +57,12 @@ void JGNodeHSS::getCF(vector<Variable*>& cond_variables,Variable* marg_variable,
 		for(int j=0;j<marg_variable->domain_size();j++)
 		{
 			int address=i+multiplier*j;
-			norm_const+=cf.table()[address];
+			norm_const+=cf.tableEntry(address);
 		}
 		for(int j=0;j<marg_variable->domain_size();j++)
 		{
 			int address=i+multiplier*j;
-			cf.table()[address]/=norm_const;
+			cf.tableEntry(address)/=norm_const;
 		}
 	}
 }
@@ -98,9 +98,9 @@ void JGNodeHSS::getMarginal(vector<Variable*>& marg_variables, Function& functio
 	HashFunction temp;
 	HashFunction::multiplyAndMarginalize(all_variables,all_functions,&temp);
 	function.variables()=all_variables;
-	function.table()=vector<Double> (Variable::getDomainSize(all_variables));
-	for(int i=0;i<function.table().size();i++)
-		function.table()[i]=temp.stable().get(i);
+	function.tableInit(Variable::getDomainSize(all_variables));
+	for(int i=0;i<function.tableSize();i++)
+		function.tableEntry(i)=temp.stable().get(i);
 }
 
 

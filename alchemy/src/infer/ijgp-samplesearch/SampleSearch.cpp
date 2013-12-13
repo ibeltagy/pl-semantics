@@ -488,7 +488,7 @@ int SampleSearch::getSample(int& variable, bool& value, vec<char>& assignment)
 		default_value = i;
 		gm.variables[csp_variable]->addr_value() = i;
 		int address = Variable::getAddress(function->variables());
-		func_table[i] = function->table()[address];
+		func_table[i] = function->tableEntry(address);
 		norm_const += func_table[i];
 	}
 	assert(default_value!=INVALID_VALUE);
@@ -536,7 +536,7 @@ void SampleSearch::getWeight(vec<lbool>& assignment, vector<Double>& bf)
 		for (int i = 0; i < gm.csp_to_sat_variables[var].size(); i++) {
 			gm.variables[var]->addr_value() = i;
 			int address = Variable::getAddress(function.variables());
-			func_table[i] = function.table()[address];
+			func_table[i] = function.tableEntry(address);
 		}
 		bool val_set = false;
 
@@ -604,7 +604,7 @@ Double SampleSearch::getWeight(vec<lbool>& assignment)
 		for (int i = 0; i < gm.csp_to_sat_variables[var].size(); i++) {
 			gm.variables[var]->addr_value() = i;
 			int address = Variable::getAddress(function.variables());
-			func_table[i] = function.table()[address];
+			func_table[i] = function.tableEntry(address);
 		}
 		bool val_set = false;
 
@@ -705,12 +705,12 @@ pair<long double, long double> purgeORStore(GM& gm, IJGPSamplingHelper& helper, 
 				if (store.check(var, k, false) != INCONSISTENT) {
 					gm.variables[var]->addr_value() = k;
 					int address = Variable::getAddress(function.variables());
-					func_table_ub[k] = function.table()[address];
+					func_table_ub[k] = function.tableEntry(address);
 				}
 				if (store.check(var, k, false) == CONSISTENT) {
 					gm.variables[var]->addr_value() = k;
 					int address = Variable::getAddress(function.variables());
-					func_table_lb[k] = function.table()[address];
+					func_table_lb[k] = function.tableEntry(address);
 				}
 			}
 			//Advance next_pointer
@@ -761,12 +761,12 @@ void purgeORStoreMarginals(GM& gm, IJGPSamplingHelper& helper, ORStore& store, v
 				if (store.check(var, k, false) != INCONSISTENT) {
 					gm.variables[var]->addr_value() = k;
 					int address = Variable::getAddress(function.variables());
-					func_table_ub[k] = function.table()[address];
+					func_table_ub[k] = function.tableEntry(address);
 				}
 				if (store.check(var, k, false) == CONSISTENT) {
 					gm.variables[var]->addr_value() = k;
 					int address = Variable::getAddress(function.variables());
-					func_table_lb[k] = function.table()[address];
+					func_table_lb[k] = function.tableEntry(address);
 				}
 			}
 			//Advance next_pointer
@@ -839,7 +839,7 @@ void updateMarginals(GM& gm, GM& other_gm, vector<vector<Double> >& marginals, m
 		for (int j = 0; j < gm.functions[i]->variables().size(); j++) {
 			assert(gm.functions[i]->variables()[j]->value()!=INVALID_VALUE);
 		}
-		assert(!gm.functions[i]->table()[Variable::getAddress(gm.functions[i]->variables())].isZero());
+		assert(!gm.functions[i]->tableEntry(Variable::getAddress(gm.functions[i]->variables())).isZero());
 	}
 	//Update the values of variables 
 	for (int i = 0; i < gm.variables.size(); i++) {
@@ -871,7 +871,7 @@ void updateMarginals(GM& gm, GM& other_gm, vector<vector<Double> >& marginals, m
 		for (int j = 0; j < marg.size(); j++) {
 			other_gm.variables[var]->addr_value() = j;
 			int entry = Variable::getAddress(other_gm.functions[var]->variables());
-			marg[j] = other_gm.functions[var]->table()[entry];
+			marg[j] = other_gm.functions[var]->tableEntry(entry);
 		}
 		//generate sample
 		other_gm.variables[var]->value() = generateSample(marg, random);
@@ -883,7 +883,7 @@ void updateMarginals(GM& gm, GM& other_gm, vector<vector<Double> >& marginals, m
 	//Make sure that the sample has weight > 0
 	for (int i = 0; i < other_gm.functions.size(); i++) {
 		int entry = Variable::getAddress(other_gm.functions[i]->variables());
-		mult_value *= other_gm.functions[i]->table()[entry];
+		mult_value *= other_gm.functions[i]->tableEntry(entry);
 	}
 	assert(!mult_value.isZero());
 	// Make sure that all variables are sampled
@@ -975,12 +975,12 @@ void purgeORStoreBayesMarginals(GM& gm, GM& other_gm, IJGPSamplingHelper& helper
 				if (store.check(var, k, false) != INCONSISTENT) {
 					gm.variables[var]->addr_value() = k;
 					int address = Variable::getAddress(function.variables());
-					func_table_ub[k] = function.table()[address];
+					func_table_ub[k] = function.tableEntry(address);
 				}
 				if (store.check(var, k, false) == CONSISTENT) {
 					gm.variables[var]->addr_value() = k;
 					int address = Variable::getAddress(function.variables());
-					func_table_lb[k] = function.table()[address];
+					func_table_lb[k] = function.tableEntry(address);
 				}
 			}
 			//Advance next_pointer
@@ -1071,7 +1071,7 @@ void RBSampleSearch::computePEApp(GM& gm, JG& jg, int p_bound, vector<int>& orde
 			for (int k = 0; k < gm.csp_to_sat_variables[var].size(); k++) {
 				gm.variables[var]->addr_value() = k;
 				int address = Variable::getAddress(function.variables());
-				func_table[k] = function.table()[address];
+				func_table[k] = function.tableEntry(address);
 			}
 
 			// Update the OR store
@@ -1231,7 +1231,7 @@ void RBSampleSearch::computeBeliefsApp(GM& gm, JG& jg, int p_bound, vector<int>&
 			for (int k = 0; k < gm.csp_to_sat_variables[var].size(); k++) {
 				gm.variables[var]->addr_value() = k;
 				int address = Variable::getAddress(function.variables());
-				func_table[k] = function.table()[address];
+				func_table[k] = function.tableEntry(address);
 			}
 
 			// Update the OR store
@@ -1362,7 +1362,7 @@ void RBSampleSearch::computeBeliefsApp_Improved(GM& gm, JG& jg, int p_bound, vec
 			for (int k = 0; k < gm.csp_to_sat_variables[var].size(); k++) {
 				gm.variables[var]->addr_value() = k;
 				int address = Variable::getAddress(function.variables());
-				func_table[k] = function.table()[address];
+				func_table[k] = function.tableEntry(address);
 			}
 
 			// Update the OR store
@@ -1410,7 +1410,7 @@ void RBSampleSearch::computeBeliefsApp_Improved(GM& gm, JG& jg, int p_bound, vec
 			}
 			else {
 				for (int j = 0; j < gm.variables[i]->domain_size(); j++) {
-					marginals[i][j] += jt.marginals[i].table()[j] * weight;
+					marginals[i][j] += jt.marginals[i].tableEntry(j) * weight;
 				}
 			}
 		}
@@ -1512,7 +1512,7 @@ void RBSampleSearch::computeBayesBeliefsApp(GM& gm, GM& other_gm, JG& jg, int p_
 			for (int k = 0; k < gm.csp_to_sat_variables[var].size(); k++) {
 				gm.variables[var]->addr_value() = k;
 				int address = Variable::getAddress(function.variables());
-				func_table[k] = function.table()[address];
+				func_table[k] = function.tableEntry(address);
 			}
 
 			// Update the OR store
@@ -1621,12 +1621,12 @@ pair<double, double> purgeORStoreSAT(GM& gm, IJGPSamplingHelper& helper, ORStore
 				if (store.check(var, k, false) != INCONSISTENT) {
 					gm.variables[var]->addr_value() = k;
 					int address = Variable::getAddress(function.variables());
-					func_table_ub[k] = function.table()[address];
+					func_table_ub[k] = function.tableEntry(address);
 				}
 				if (store.check(var, k, false) == CONSISTENT) {
 					gm.variables[var]->addr_value() = k;
 					int address = Variable::getAddress(function.variables());
-					func_table_lb[k] = function.table()[address];
+					func_table_lb[k] = function.tableEntry(address);
 				}
 			}
 			for (int k = 0; k < 2; k++) {
@@ -1753,7 +1753,7 @@ Double RBSampleSearchSAT::computePEApp(GM&gm, JG& jg, const char* satfile, int p
 			for (int k = 0; k < 2; k++) {
 				gm.variables[var]->addr_value() = k;
 				int address = Variable::getAddress(function.variables());
-				func_table[k] = function.table()[address];
+				func_table[k] = function.tableEntry(address);
 			}
 			//for(int k=0;k<2;k++){
 			//	tmp_table[k]=(func_table[k].value())/(func_table[0].value()+func_table[1].value());
@@ -1944,12 +1944,12 @@ pair<double, double> purgeORStoreSATSampling(GM& gm, IJGPSamplingHelper& helper,
 				if (store.check(var, k, false) != INCONSISTENT) {
 					gm.variables[var]->addr_value() = k;
 					int address = Variable::getAddress(function.variables());
-					func_table_ub[k] = function.table()[address];
+					func_table_ub[k] = function.tableEntry(address);
 				}
 				if (store.check(var, k, false) == CONSISTENT) {
 					gm.variables[var]->addr_value() = k;
 					int address = Variable::getAddress(function.variables());
-					func_table_lb[k] = function.table()[address];
+					func_table_lb[k] = function.tableEntry(address);
 				}
 			}
 			//Advance next_pointer
@@ -2075,7 +2075,7 @@ void RBSampleSearchSAT::generateSamples(GM&gm, JG& jg, const char* satfile, int 
 			for (int k = 0; k < 2; k++) {
 				gm.variables[var]->addr_value() = k;
 				int address = Variable::getAddress(function.variables());
-				func_table[k] = function.table()[address];
+				func_table[k] = function.tableEntry(address);
 			}
 			//for(int k=0;k<2;k++){
 			//	tmp_table[k]=(func_table[k].value())/(func_table[0].value()+func_table[1].value());
@@ -2306,10 +2306,10 @@ Double getSampleSAT(vector<Function>& functions, Variable* variable, myRandom& r
 		Variable::setAddress(other_variables, i);
 		int entry = Variable::getAddress(function.variables());
 		if (variable->addr_value() == 0) {
-			p1 += function.table()[entry];
+			p1 += function.tableEntry(entry);
 		}
 		else {
-			p2 += function.table()[entry];
+			p2 += function.tableEntry(entry);
 		}
 	}
 	long double p = (p1 / (p1 + p2)).value();

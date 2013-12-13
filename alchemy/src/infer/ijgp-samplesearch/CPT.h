@@ -30,7 +30,7 @@ public:
 		cond_variables_=cond_variables__;
 		marg_variable_=marg_variable__;
 		variables_=function.variables();
-		table_=function.table();
+		//table_=function.table();
 		vector<Variable*> test_vars;
 		do_set_intersection(function.variables(),cond_variables_,test_vars,less_than_comparator_variable);
 		assert((int)test_vars.size()==(int)cond_variables_.size());
@@ -38,7 +38,7 @@ public:
 		assert((int) test_vars.size() >0);
 		assert(test_vars[0]->id()==marg_variable_->id());
 		int cond_num_values=Variable::getDomainSize(cond_variables_);
-		table_=vector<Double> (function.table().size());
+		this->tableInit(function.tableSize());
 		for(int i=0;i<cond_num_values;i++)
 		{
 			Variable::setAddress(cond_variables_,i);
@@ -47,13 +47,13 @@ public:
 			{
 				marg_variable_->addr_value()=j;
 				int address=Variable::getAddress(variables_);
-				norm_const+=function.table()[address];
+				norm_const+=function.tableEntry(address);
 			}
 			for(int j=0;j<marg_variable_->domain_size();j++)
 			{
 				marg_variable_->addr_value()=j;
 				int address=Variable::getAddress(variables_);
-				table_[address]=function.table()[address]/norm_const;
+				tableEntry(address)=function.tableEntry(address)/norm_const;
 			}
 		}
 	}
@@ -74,19 +74,19 @@ public:
 			{
 				marg_variable_->addr_value()=j;
 				int address=Variable::getAddress(variables_);
-				if(table()[address].isZero())
+				if(tableEntry(address).isZero())
 					continue;
-				if(table()[address]<epsilon)
+				if(tableEntry(address)<epsilon)
 				{
-					table()[address]=epsilon;
+					tableEntry(address)=epsilon;
 				}
-				norm_const+=table()[address];
+				norm_const+=tableEntry(address);
 			}
 			for(int j=0;j<marg_variable_->domain_size();j++)
 			{
 				marg_variable_->addr_value()=j;
 				int address=Variable::getAddress(variables_);
-				table_[address]/=norm_const;
+				tableEntry(address)/=norm_const;
 			}
 		}
 	}
@@ -125,7 +125,7 @@ public:
 			Variable::setAddress(other_variables,j);
 			int entry=Variable::getAddress(variables_);
 	
-			new_table[j]=table()[entry];
+			new_table[j]=tableEntry(entry);
 		}
 
 		variables_=other_variables;

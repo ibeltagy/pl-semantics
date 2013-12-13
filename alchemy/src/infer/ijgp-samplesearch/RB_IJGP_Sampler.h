@@ -325,7 +325,7 @@ public:
 					}
 					else{
 						for(int j=0;j<gm.variables[i]->domain_size();j++){
-							marginals[i][j]+=jt.marginals[i].table()[j]*weight;
+							marginals[i][j]+=jt.marginals[i].tableEntry(j)*weight;
 						}
 					}
 				}

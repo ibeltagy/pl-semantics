@@ -51,10 +51,10 @@ POS::POS(GM* gm, vector<int>& order,JG* jg)
 			cpt.variables().push_back(gm->variables[var]);
 			cpt.cond_variables()=vector<Variable*>();
 			cpt.setMargVariable(gm->variables[var]);
-			cpt.table()=vector<Double> (cpt.marg_variable()->domain_size());
-			for(int j=0;j<cpt.table().size();j++)
+			cpt.tableInit(cpt.marg_variable()->domain_size());
+			for(int j=0;j<cpt.tableSize();j++)
 			{
-				cpt.table()[j]=Double((double)1.0/(double)cpt.marg_variable()->domain_size());
+				cpt.tableEntry(j)=Double((double)1.0/(double)cpt.marg_variable()->domain_size());
 			}
 			//cpt.epsilonCorrection(epsilon);
 			sampling_functions[var]=SF(cpt);
@@ -141,10 +141,10 @@ COS::COS(GM* gm, vector<int>& order, JG* jg)
 			cpt.variables().push_back(gm->variables[var]);
 			cpt.cond_variables()=vector<Variable*>();
 			cpt.setMargVariable(gm->variables[var]);
-			cpt.table()=vector<Double> (cpt.marg_variable()->domain_size());
-			for(int j=0;j<cpt.table().size();j++)
+			cpt.tableInit(cpt.marg_variable()->domain_size());
+			for(int j=0;j<cpt.tableSize();j++)
 			{
-				cpt.table()[j]=Double((double)1.0/(double)cpt.marg_variable()->domain_size());
+				cpt.tableEntry(j)=Double((double)1.0/(double)cpt.marg_variable()->domain_size());
 			}
 			//cpt.epsilonCorrection();
 	
@@ -182,7 +182,7 @@ void COS::getSample(const int& variable, int& value, Double& weight,myRandom& ra
 			csp->variables[variable]->addr_value()=i;
 			int entry=Variable::getAddress(sampling_functions[variable].variables());
 			
-			dist[i]=sampling_functions[variable].table()[entry];
+			dist[i]=sampling_functions[variable].tableEntry(entry);
 			norm_const+=dist[i];
 			//dist[i]=Double(1.0);
 		}
@@ -283,10 +283,10 @@ void COSP::buildSF(int curr_variable)
 			cpt.variables().push_back(gm->variables[var]);
 			cpt.cond_variables()=vector<Variable*>();
 			cpt.setMargVariable(gm->variables[var]);
-			cpt.table()=vector<Double> (cpt.marg_variable()->domain_size());
-			for(int j=0;j<cpt.table().size();j++)
+			cpt.tableInit(cpt.marg_variable()->domain_size());
+			for(int j=0;j<cpt.tableSize();j++)
 			{
-				cpt.table()[j]=Double((double)1.0/(double)cpt.marg_variable()->domain_size());
+				cpt.tableEntry(j)=Double((double)1.0/(double)cpt.marg_variable()->domain_size());
 			}
 		
 	
@@ -348,7 +348,7 @@ void COSP::getSample(const int& variable, int& value, Double& weight,myRandom& r
 			csp->variables[variable]->addr_value()=i;
 			int entry=Variable::getAddress(sampling_functions[variable].variables());
 			
-			dist[i]=sampling_functions[variable].table()[entry];
+			dist[i]=sampling_functions[variable].tableEntry(entry);
 			norm_const+=dist[i];
 			//dist[i]=Double(1.0);
 		}

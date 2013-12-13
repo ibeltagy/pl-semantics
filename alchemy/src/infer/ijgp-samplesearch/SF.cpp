@@ -7,7 +7,7 @@ SF::SF(CPT& cpt)
 	variables_=cpt.variables();
 	cond_variables_=cpt.cond_variables();
 	marg_variable_=cpt.marg_variable();
-	table_=cpt.table();
+	table_=cpt.tableGet();
 	int cond_num_values=Variable::getDomainSize(cpt.cond_variables());
 	sampling_table=vector<vector<Double> > (cond_num_values);
 	for(int i=0;i<cond_num_values;i++)
@@ -19,7 +19,7 @@ SF::SF(CPT& cpt)
 		{
 			marg_variable()->addr_value()=j;
 			int address=Variable::getAddress(variables_);
-			prev_val+=cpt.table()[address];
+			prev_val+=cpt.tableEntry(address);
 			sampling_table[i][j]=prev_val;
 		}
 	}

@@ -25,7 +25,7 @@ struct less_than_comparator_function
 	}
 };
 
-void GM::deleteEmptyFunctions()
+/*void GM::deleteEmptyFunctions()
 {
 	vector<Function*> new_functions;
 
@@ -150,6 +150,7 @@ bool GM::readCNF(const char* infilename)
 	cout<<"Problem read\n";
 	return true;
 }
+*/
 void GM::convertToSATUAI10()
 {
 	instance.vClear();
@@ -169,9 +170,9 @@ void GM::convertToSATUAI10()
 	VariableList pos(count),neg(count);
 	for (int i = 0; i < functions.size(); i++) {
 		Function* function = functions[i];
-		for (int j = 0; j < function->table().size(); j++) {
+		for (int j = 0; j < function->tableSize(); j++) {
 			Variable::setAddress(function->variables(), j);
-			if (function->table()[j].isZero()) {
+			if (function->tableEntry(j).isZero()) {
 				  pos.vClear();
 				  neg.vClear();
 				for (int k = 0; k < function->variables().size(); k++) {
@@ -254,9 +255,9 @@ void GM::convertToSAT()
 	{
 	  bool is_det=false;
 		Function* function =functions[i];
-		for(int j=0;j<function->table().size();j++)
+		for(int j=0;j<function->tableSize();j++)
 		{
-		  if(function->table()[j].isZero()){
+		  if(function->tableEntry(j).isZero()){
 				num_con++;
 				is_det=true;
 		  }
@@ -294,10 +295,10 @@ void GM::convertToSAT()
 	{
 		Function* function = functions[i];
 
-		for(int j=0;j<function->table().size();j++)
+		for(int j=0;j<function->tableSize();j++)
 		{
 			Variable::setAddress(function->variables(),j);
-			if(function->table()[j].isZero())
+			if(function->tableEntry(j).isZero())
 			{
 
 				for(int k=0;k<function->variables().size();k++)
@@ -344,7 +345,7 @@ void GM::convertToSAT()
 	outfile.close();
 
 }
-
+/*
 bool GM::readVIB(char* bayes_file)
 {
 	cout<<"Reading the Bayesian Network..."<<flush;
@@ -436,20 +437,6 @@ bool GM::readVIB(char* bayes_file)
 			}
 		}
 		sort(cpt->cond_variables().begin(),cpt->cond_variables().end(),less_than_comparator_variable);
-		/*if(i<5)
-		{
-
-		for(int j=0;j<functions[i]->table().size();j++)
-		{
-		Variable::setAddress(functions[i]->variables(),j);
-		cout<<"tab[ ";
-		for(int k=0;k<functions[i]->variables().size();k++)
-		{
-		cout<<functions[i]->variables()[k]->addr_value()<<" ";
-		}
-		cout<<"] = "<<functions[i]->table()[j]<<endl;
-		}
-		}*/
 	}
 
 	// Construct the graph of the bayesian network
@@ -552,12 +539,7 @@ void GM::readUAIO8Evidence(char* evidencefile)
 			int entry=Variable::getAddress(functions[i]->variables());
 			new_table[j]=functions[i]->table()[entry];
 		}
-		/*for(int j=0;j<other_variables.size();j++)
-		{
-		cout<<"Map ="<<variable_mapping[other_variables[j]->id()]<<" \t";
-		other_variables[j]->print();
-		}
-		cout<<"--------\n";*/
+
 		functions[i]->table()=new_table;
 		functions[i]->variables()=other_variables;
 	}
@@ -687,12 +669,7 @@ void GM::readEvidenceErgo(char* evidencefile)
 			int entry=Variable::getAddress(functions[i]->variables());
 			new_table[j]=functions[i]->table()[entry];
 		}
-		/*for(int j=0;j<other_variables.size();j++)
-		{
-		cout<<"Map ="<<variable_mapping[other_variables[j]->id()]<<" \t";
-		other_variables[j]->print();
-		}
-		cout<<"--------\n";*/
+
 		functions[i]->table()=new_table;
 		functions[i]->variables()=other_variables;
 	}
@@ -823,12 +800,7 @@ void GM::readEvidenceVIB(char* evidencefile)
 			int entry=Variable::getAddress(functions[i]->variables());
 			new_table[j]=functions[i]->table()[entry];
 		}
-		/*for(int j=0;j<other_variables.size();j++)
-		{
-		cout<<"Map ="<<variable_mapping[other_variables[j]->id()]<<" \t";
-		other_variables[j]->print();
-		}
-		cout<<"--------\n";*/
+
 		functions[i]->table()=new_table;
 		functions[i]->variables()=other_variables;
 	}
@@ -1074,12 +1046,11 @@ void GM::readUAI08(const char* infilename)
 			Function* cpt=functions[var];
 
 
-			/*
-			cout<<num_probabilities<<": "<<variables[var]->id()<<" |";
-			for(int j=0;j<parents[var].size();j++)
-			cout<<parents[var][j]->id()<<",";
-			cout<<endl;
-			*/
+			
+			//cout<<num_probabilities<<": "<<variables[var]->id()<<" |";
+			//for(int j=0;j<parents[var].size();j++)
+			//cout<<parents[var][j]->id()<<",";
+			//cout<<endl;
 
 			sort(cpt->variables().begin(),cpt->variables().end(),less_than_comparator_variable);
 
@@ -1108,68 +1079,6 @@ void GM::readUAI08(const char* infilename)
 		}
 	}
 }
-
-void GM::readMLN(const char* infilename)
-{
-	type=MARKOV;
-	ifstream infile(infilename);
-	int num_variables;
-	cerr<<"Reading Markov network\n";
-	infile>>num_variables;
-	// Read domains
-	variables=vector<Variable*> (num_variables);
-	for(int i=0;i<num_variables;i++)
-	{
-		int domain_size;
-		infile>>domain_size;
-		vector<int> domain(domain_size);
-		for(int j=0;j<domain_size;j++)
-			domain[j]=j;
-		variables[i]=new Variable(i,domain);
-		variables[i]->orig_id=i;
-	}
-	copy_of_variables=variables;
-	int num_functions;
-	infile>>num_functions;
-	vector<vector<Variable*> > scope (num_functions);
-	functions=vector<Function*> (num_functions);
-	for(int i=0;i<num_functions;i++)
-	{
-		int num_vars_in_func;
-		infile>>num_vars_in_func;
-		scope[i]=vector<Variable*>(num_vars_in_func);
-		for(int j=0;j<num_vars_in_func;j++)
-		{
-			int curr_var;
-			infile>>curr_var;
-			int var_id=((curr_var > 0)? (curr_var-1):(-curr_var-1));
-			scope[i][j]=variables[var_id];
-			if(curr_var>0)
-				variables[var_id]->addr_value()=0;
-			else
-				variables[var_id]->addr_value()=1;
-		}
-		double clauseW;
-		infile>>clauseW;
-		Double whenWhenFalse = Double();
-		if(clauseW > DBL_MIN)
-		{
-			whenWhenFalse = Double(clauseW);
-			addToWCSP(whenWhenFalse);
-		}
-		else
-			mode=DET;
-		//cout << "IsZero(" << whenWhenFalse <<"/"<<clauseW <<") = " <<whenWhenFalse.isZero() << "/" << (clauseW == 0)<<endl;
-		sort(scope[i].begin(),scope[i].end(),less_than_comparator_variable);
-		int tableFalseEntry = Variable::getAddress(scope[i]);
-		functions[i]=new Function(i ,scope[i], whenWhenFalse, tableFalseEntry);
-		//for(int j = 0; j<functions[i]->table().size(); j++)
-		//	cout <<functions[i]->table()[j] <<"("<<functions[i]->table()[j].isZero()<<") ";
-		//cout <<endl;
-
-	}
-}
-
 void GM::readErgo(char* infilename)
 {
 	cerr<<"Reading Bayesnet.."<<flush;
@@ -1301,15 +1210,75 @@ void GM::readErgo(char* infilename)
 	infile.close();
 	cerr<<"Done\n";
 }
+*/
+
+void GM::readMLN(const char* infilename)
+{
+	type=MARKOV;
+	ifstream infile(infilename);
+	int num_variables;
+	cerr<<"Reading Markov network\n";
+	infile>>num_variables;
+	// Read domains
+	variables=vector<Variable*> (num_variables);
+	for(int i=0;i<num_variables;i++)
+	{
+		int domain_size;
+		infile>>domain_size;
+		vector<int> domain(domain_size);
+		for(int j=0;j<domain_size;j++)
+			domain[j]=j;
+		variables[i]=new Variable(i,domain);
+		variables[i]->orig_id=i;
+	}
+	copy_of_variables=variables;
+	int num_functions;
+	infile>>num_functions;
+	vector<vector<Variable*> > scope (num_functions);
+	functions=vector<Function*> (num_functions);
+	for(int i=0;i<num_functions;i++)
+	{
+		int num_vars_in_func;
+		infile>>num_vars_in_func;
+		scope[i]=vector<Variable*>(num_vars_in_func);
+		for(int j=0;j<num_vars_in_func;j++)
+		{
+			int curr_var;
+			infile>>curr_var;
+			int var_id=((curr_var > 0)? (curr_var-1):(-curr_var-1));
+			scope[i][j]=variables[var_id];
+			if(curr_var>0)
+				variables[var_id]->addr_value()=0;
+			else
+				variables[var_id]->addr_value()=1;
+		}
+		double clauseW;
+		infile>>clauseW;
+		Double weightWhenFalse = Double();
+		if(clauseW > DBL_MIN)
+			weightWhenFalse = Double(clauseW);
+		else
+			mode=DET;
+		//cout << "IsZero(" << whenWhenFalse <<"/"<<clauseW <<") = " <<whenWhenFalse.isZero() << "/" << (clauseW == 0)<<endl;
+		sort(scope[i].begin(),scope[i].end(),less_than_comparator_variable);
+		int tableFalseEntry = Variable::getAddress(scope[i]);
+		functions[i]=new Function(i ,scope[i], weightWhenFalse, tableFalseEntry);
+		//for(int j = 0; j<functions[i]->table().size(); j++)
+		//	cout <<functions[i]->table()[j] <<"("<<functions[i]->table()[j].isZero()<<") ";
+		//cout <<endl;
+
+	}
+}
+
 void GM::convertToCN(GM& gm)
 {
 	gm.variables=this->variables;
 	for(int i=0;i<functions.size();i++)
 	{
 		Function* f = functions[i];
-		for(int j=0;j<f->table().size();j++)
+		for(int j=0;j<f->tableSize();j++)
 		{
-			if(f->table()[j].isZero())
+			if(f->tableEntry(j).isZero())
 			{
 				gm.functions.push_back(f);
 				break;
@@ -1318,6 +1287,7 @@ void GM::convertToCN(GM& gm)
 	}
 }
 
+/*
 // Reduce the Bayesian network by constraint processing
 void GM::reduceBN(GM* gm, int i_bound, vector<int>& order)
 {
@@ -1326,19 +1296,13 @@ void GM::reduceBN(GM* gm, int i_bound, vector<int>& order)
 	DRC cp_algo(csp,i_bound,order);
 
 	// Do domain consistency
-	/*
-	for(int i=0;i<variables.size();i++)
-	{
-	vector<bool> domains;
-	cp_algo.domainConsistency(i,domains);
-	}
-	*/
+
 	for(int i=0;i<functions.size();i++)
 	{
 		cp_algo.reduceFunction(functions[i]);
 	}
 }
-
+*/
 void GM::reduce(int i_bound)
 {
 
@@ -1360,10 +1324,10 @@ void GM::reduce(int i_bound)
 	for(int i=0;i<variables.size();i++)
 	{
 		all_functions[i].variables().push_back(variables[i]);
-		all_functions[i].table()=vector<Double>(variables[i]->domain_size());
+		all_functions[i].tableInit(variables[i]->domain_size());
 		for(int j=0;j<variables[i]->domain_size();j++)
 		{
-			all_functions[i].table()[j]=Double(1.0);
+			all_functions[i].tableEntry(j)=Double(1.0);
 		}
 		cout<<variables[i]->domain_size()<<" ";
 	}
@@ -1378,30 +1342,30 @@ void GM::reduce(int i_bound)
 			marg_var.push_back(jg.nodes[i]->variables()[j]);
 			Function function;
 			jg.nodes[i]->getMarginal(marg_var,function);
-			assert(function.table().size() == marg_var[0]->domain_size());
+			assert(function.tableSize() == marg_var[0]->domain_size());
 			bool all_zeros=true;
-			if(all_functions[marg_var[0]->id()].table().empty())
+			if(all_functions[marg_var[0]->id()].tableSize() == 0)
 			{
 				all_functions[marg_var[0]->id()]=function;
-				for(int k=0;k<function.table().size();k++)
+				for(int k=0;k<function.tableSize();k++)
 				{
-					if(!all_functions[marg_var[0]->id()].table()[k].isZero())
+					if(!all_functions[marg_var[0]->id()].tableEntry(k).isZero())
 						all_zeros=false;
 				}
 			}
 			else
 			{
 
-				for(int k=0;k<function.table().size();k++)
+				for(int k=0;k<function.tableSize();k++)
 				{
 					//cout<<function.table()[k]<<"\t"<<all_functions[marg_var[0]->id()].table()[k]<<endl;
-					if(function.table()[k].isZero())
+					if(function.tableEntry(k).isZero())
 					{
-						all_functions[marg_var[0]->id()].table()[k]=Double();
+						all_functions[marg_var[0]->id()].tableEntry(k)=Double();
 					}
 					else
 					{
-						if(!all_functions[marg_var[0]->id()].table()[k].isZero())
+						if(!all_functions[marg_var[0]->id()].tableEntry(k).isZero())
 							all_zeros=false;
 					}
 				}
@@ -1430,9 +1394,9 @@ void GM::reduce(int i_bound)
 	for(int i=0;i<all_functions.size();i++)
 	{
 		new_domain_size[i]=0;
-		for(int j=0;j<all_functions[i].table().size();j++)
+		for(int j=0;j<all_functions[i].tableSize();j++)
 		{
-			if(!all_functions[i].table()[j].isZero())
+			if(!all_functions[i].tableEntry(j).isZero())
 			{
 				map_domains_new2old[i][new_domain_size[i]]=j;
 				new_domain_size[i]++;
@@ -1466,17 +1430,18 @@ void GM::reduce(int i_bound)
 				functions[i]->variables()[k]->addr_value()=map_domains_new2old[id][val];
 			}
 			int entry=Variable::getAddress(functions[i]->variables());
-			new_table[j]=functions[i]->table()[entry];
+			new_table[j]=functions[i]->tableEntry(entry);
 		}
 		delete(functions[i]);
 		functions[i]=new Function(i,new_func_variables);
-		functions[i]->table()=new_table;
+		functions[i]->tableSet(new_table);
 	}
 	for(int i=0;i<variables.size();i++)
 		delete(variables[i]);
 	variables=new_variables;
 }
-void GM::writeErgo(char* outfile)
+
+/*void GM::writeErgo(char* outfile)
 {
 	ofstream out(outfile);
 	assert(functions.size()==variables.size());
@@ -1679,6 +1644,7 @@ void GM::eliminate(int i_bound)
 	}
 	variables=new_variables;
 }
+*/
 //int main(int argc, char* argv[])
 //{
 //	GM gm;
@@ -1782,7 +1748,7 @@ void GM::removeIrrelevantNetwork(vector<int>& evidence)
 		functions[i]->removeEvidence();
 		if(functions[i]->variables().empty())
 		{
-			mult_factor*=functions[i]->table()[0];
+			mult_factor*=functions[i]->tableEntry(0);
 			delete(functions[i]);
 			continue;
 		}
@@ -1816,7 +1782,7 @@ void GM::setEvidenceBeliefsUAI08(vector<int>& evidence)
 		functions[i]->removeEvidence();
 		if(functions[i]->variables().empty())
 		{
-			mult_factor*=functions[i]->table()[0];
+			mult_factor*=functions[i]->tableEntry(0);
 			delete(functions[i]);
 			continue;
 		}
@@ -1890,7 +1856,7 @@ void GM::reduceDomains()
 		continue;
 		}*/
 		//cout<<"Func "<<i<<" Table size = "<<functions[i]->table().size()<<endl;
-		if(functions[i]->table().empty() || functions[i]->variables().empty())
+		if(functions[i]->tableSize() == 0 || functions[i]->variables().empty())
 		{
 			delete(functions[i]);
 			continue;
@@ -1900,9 +1866,9 @@ void GM::reduceDomains()
 		//cout<<"Evidence removed\n";
 		if(functions[i]->variables().empty())
 		{
-			if(!functions[i]->table().empty())
+			if(!functions[i]->tableSize() == 0)
 			{
-				mult_factor*=functions[i]->table()[0];
+				mult_factor*=functions[i]->tableEntry(0);
 			}
 			delete(functions[i]);
 			continue;
@@ -1928,7 +1894,7 @@ void GM::reduceDomains()
 	variables=new_variables;
 	cerr<<"Domains reduced\n";
 }
-void GM::writeSAT(char* satfilename)
+/*void GM::writeSAT(char* satfilename)
 {
 	ofstream out(satfilename);
 	out<<"p cnf "<<variables.size()<<" "<<clauses.size()<<endl;
@@ -2036,7 +2002,7 @@ void GM::reduceSAT(const char* satfilename)
 		functions.push_back(func);
 	}
 }
-
+*/
 void GM::getMinFillOrdering(vector<int>& order, vector<set<int> >& clusters, double& estimate)
 {
 	estimate=0.0;
@@ -2629,7 +2595,7 @@ void GM::rearrangeOrdering(std::vector<int> &order, std::vector<set<int> > &clus
 		}
 	}
 }
-void GM::printMarginalsUAI08(std::vector<Function> &marginals_)
+/*void GM::printMarginalsUAI08(std::vector<Function> &marginals_)
 {
 	vector<vector<Double> > marginals(marginals_.size());
 	for(int i=0;i<marginals_.size();i++)
@@ -2736,7 +2702,7 @@ void GM::printMarginalsUAI08(std::vector<vector<Double> > &marginals_)
 	}
 	cout<<endl;
 }
-
+*/
 void GM::printMarginalsUAI10(std::vector<vector<Double> > &marginals_, ostream& out)
 {
 	vector<vector<Double> > marginals=marginals_;
@@ -2788,11 +2754,11 @@ void GM::printMarginalsUAI10(std::vector<Function> &marginals_, ostream& out)
 {
 	vector<vector<Double> > marginals(marginals_.size());
 	for (int i = 0; i < marginals_.size(); i++) {
-		marginals[i] = vector<Double> (marginals_[i].table().size());
+		marginals[i] = vector<Double> (marginals_[i].tableSize());
 		Double norm_const;
-		for (int j = 0; j < marginals_[i].table().size(); j++) {
-			norm_const += marginals_[i].table()[j];
-			marginals[i][j] = marginals_[i].table()[j];
+		for (int j = 0; j < marginals_[i].tableSize(); j++) {
+			norm_const += marginals_[i].tableEntry(j);
+			marginals[i][j] = marginals_[i].tableEntry(j);
 		}
 		for (int j = 0; j < marginals[i].size(); j++)
 			marginals[i][j] /= norm_const;
@@ -2832,6 +2798,7 @@ void GM::printMarginalsUAI10(std::vector<Function> &marginals_, ostream& out)
 	}
 	out<<endl;
 }
+/*
 void GM::addToWCSP(Double& value)
 {
 	if((int)wcsp_probs.size() >= 10)
@@ -2887,7 +2854,7 @@ void GM::makeCopy(GM& gm)
 			}
 	}
 }
-
+*/
 void GM::getMinFillOrdering_randomized(vector<int>& order,
 		vector<set<int> >& clusters, double& estimate, int& max_cluster_size) {
 	estimate = 0.0;
