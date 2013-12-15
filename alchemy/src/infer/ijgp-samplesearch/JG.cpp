@@ -10,7 +10,8 @@ JGNode* JG::addNode(JG_TYPE type) {
 		return new JGNodeLS();
 		break;
 	case HSS:
-		return new JGNodeHSS();
+		assert(false && "HSS not implemented");
+		//return new JGNodeHSS();
 		break;
 	case LSS:
 		return new JGNodeLSS();
@@ -31,8 +32,9 @@ JGEdge* JG::addEdge(JGNode* s1, JGNode* s2, JG_TYPE type) {
 				dynamic_cast<JGNodeLS*> (s2));
 		break;
 	case HSS:
-		return new JGEdgeHSS(dynamic_cast<JGNodeHSS*> (s1),
-				dynamic_cast<JGNodeHSS*> (s2));
+		assert(false && "HSS not implemented");
+		//return new JGEdgeHSS(dynamic_cast<JGNodeHSS*> (s1),
+		//		dynamic_cast<JGNodeHSS*> (s2));
 		break;
 	case LSS:
 		return new JGEdgeLSS(dynamic_cast<JGNodeLSS*> (s1),

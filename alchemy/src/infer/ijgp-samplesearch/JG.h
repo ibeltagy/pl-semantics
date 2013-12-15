@@ -7,7 +7,7 @@
 #include <list>
 #include "GM.h"
 #include "Util.h"
-#include "HashFunction.h"
+//#include "HashFunction.h"
 #include "LogFunction.h"
 #include "CPT.h"
 #include "Graph.h"
@@ -137,7 +137,7 @@ public:
 };
 
 // Hash function with Shenoy Shafer
-struct JGNodeHSS: public JGNode {
+/*struct JGNodeHSS: public JGNode {
 public:
 	vector<HashFunction*> functions;
 public:
@@ -155,6 +155,7 @@ public:
 			vector<Double>& marg_table);
 	void getMarginal(vector<Variable*>& marg_variables, Function& function);
 };
+*/
 // Base class for Join Graph Edge
 struct JGEdge {
 protected:
@@ -268,6 +269,8 @@ public:
 	void sendMessage1to2();
 	void sendMessage2to1();
 };
+
+/*
 struct JGEdgeHSS: public JGEdge {
 protected:
 	JGNodeHSS* hss_node1_;
@@ -289,6 +292,7 @@ public:
 	void sendMessage1to2();
 	void sendMessage2to1();
 };
+*/
 typedef enum {
 	SS, LS, HSS, LSS, SSC, LSC, HSSC
 } JG_TYPE;
