@@ -30,13 +30,6 @@ JT::JT(vector<Variable*>& variables_, vector<Function*>& functions, vector<set<i
 				pos=var_in_pos[function->variables()[j]->id()];
 		}
 		assert(pos!=(int)order.size());
-		/*{
-			assert((int)function->log_table.size()==1);
-			cerr<<function->log_table[0].toDouble()<<" "<<endl;
-			log_pe+=function->log_table[0];
-			delete(function);
-			continue;
-		}*/
 		nodes[pos]->addFunction(*function);
 	}
 

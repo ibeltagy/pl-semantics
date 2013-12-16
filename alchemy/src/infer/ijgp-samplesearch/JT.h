@@ -4,7 +4,6 @@
 #include <vector>
 #include "GM.h"
 #include "Double.h"
-#include "LogFunction.h"
 #include "JG.h"
 
 namespace ss{

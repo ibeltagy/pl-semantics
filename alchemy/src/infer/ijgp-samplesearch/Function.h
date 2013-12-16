@@ -20,6 +20,7 @@ protected:
 	vector<Double> table_;
 	int tableFalseEntry_;
 	Double weightWhenFalse_;
+	Double weightWhenTrue_;
 public:
 	Function():id_(INVALID_VALUE){}
 	Function(const int& id): id_(id),variables_(vector<Variable*>()),table_(vector<Double>())
@@ -29,7 +30,7 @@ public:
 	{
 	}
 	Function(const int& id, const vector<Variable*>& variables, Double weighWhenFalse, int tableFalseEntry): 
-		id_(id),variables_(variables), table_(NULL), weightWhenFalse_(weighWhenFalse), tableFalseEntry_(tableFalseEntry)
+		id_(id),variables_(variables), table_(NULL), weightWhenFalse_(weighWhenFalse), tableFalseEntry_(tableFalseEntry), weightWhenTrue_(1)
 	{
 
 		int num_values=Variable::getDomainSize(variables);

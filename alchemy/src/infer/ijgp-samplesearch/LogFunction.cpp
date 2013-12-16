@@ -12,8 +12,8 @@ LogFunction::LogFunction(Function& function)
 	if(function.variables().empty() && function.tableSize() == 0)
 	{
 		variables_=vector<Variable*>();
-		log_table=vector<LogDouble>(1);
-		log_table[0]=LogDouble(1.0);
+		log_table_=vector<LogDouble>(1);
+		log_table_[0]=LogDouble(1.0);
 		return;
 	}
 	//Remove all variables that have been assignend
@@ -24,21 +24,21 @@ LogFunction::LogFunction(Function& function)
 	}
 	if(variables_.empty())
 	{
-		log_table=vector<LogDouble> (1);
+		log_table_=vector<LogDouble> (1);
 		Double tab;
-		log_table[0]=LogDouble(function.tableEntry(Variable::getAddress(function.variables())));
+		log_table_[0]=LogDouble(function.tableEntry(Variable::getAddress(function.variables())));
 		return;
 	}
 	if(variables_.size()==function.variables().size())
 	{
-		log_table=vector<LogDouble>(function.tableSize());
-		for(int i=0;i<log_table.size();i++)
-			log_table[i]=LogDouble(function.tableEntry(i));
+		log_table_=vector<LogDouble>(function.tableSize());
+		for(int i=0;i<log_table_.size();i++)
+			log_table_[i]=LogDouble(function.tableEntry(i));
 	}
 	else
 	{
 		int domain_size=Variable::getDomainSize(variables_);
-		log_table=vector<LogDouble>(domain_size);
+		log_table_=vector<LogDouble>(domain_size);
 		int num_variables=variables_.size();
 		int g[num_variables];
 		int a[num_variables];
@@ -76,7 +76,7 @@ LogFunction::LogFunction(Function& function)
 		
 		while(1)
 		{
-			log_table[address]=LogDouble(function.tableEntry(func_address));
+			log_table_[address]=LogDouble(function.tableEntry(func_address));
 			int j=f[0];
 			f[0]=0;
 
@@ -158,9 +158,9 @@ void LogFunction::multiplyAndMarginalize(vector<Variable*>& marg_variables_,vect
 			g[functions[i]->variables()[j]->temp_value].push_back(pair<int,int>(i,multiplier));
 			multiplier*=functions[i]->variables()[j]->domain_size();
 		}
-		if(!functions[i]->log_table.empty())
+		if(!functions[i]->log_table_.empty())
 		{
-			mult+=functions[i]->log_table[0];
+			mult+=functions[i]->log_table_[0];
 		}
 	}
 	int multiplier=1;
@@ -175,7 +175,7 @@ void LogFunction::multiplyAndMarginalize(vector<Variable*>& marg_variables_,vect
 	//Initialize LogFunction
 	out_function.variables()=marg_variables;
 	out_function.tableInit(Variable::getDomainSize(marg_variables));
-	//out_function.log_table=vector<LogDouble> (out_function.table().size());
+	//out_function.log_table_=vector<LogDouble> (out_function.table().size());
 	//cout<<"Log function inited\n";
 	while(1)
 	{
@@ -201,10 +201,10 @@ void LogFunction::multiplyAndMarginalize(vector<Variable*>& marg_variables_,vect
 			{
 				int index=g[j][i].first;
 				int multiplier=g[j][i].second;
-				mult-=functions[index]->log_table[c[index]];
+				mult-=functions[index]->log_table_[c[index]];
 				c[index]-=multiplier*old_aj;
 				c[index]+=multiplier*a[j];
-				mult+=functions[index]->log_table[c[index]];
+				mult+=functions[index]->log_table_[c[index]];
 			}
 		}
 		else
@@ -218,7 +218,7 @@ void LogFunction::multiplyAndMarginalize(vector<Variable*>& marg_variables_,vect
 			}
 			mult=LogDouble(1.0);
 			for(int i=0;i<num_functions;i++)
-				mult+=functions[i]->log_table[c[i]];
+				mult+=functions[i]->log_table_[c[i]];
 		}
 		if(t[j]>0)
 		{
@@ -285,9 +285,9 @@ void LogFunction::multiplyAndMarginalize(std::vector<Variable*> &marg_variables_
 			g[functions[i]->variables()[j]->temp_value].push_back(pair<int,int>(i,multiplier));
 			multiplier*=functions[i]->variables()[j]->domain_size();
 		}
-		if(!functions[i]->log_table.empty())
+		if(!functions[i]->log_table_.empty())
 		{
-			mult+=functions[i]->log_table[0];
+			mult+=functions[i]->log_table_[0];
 		}
 	}
 	int multiplier=1;
@@ -301,14 +301,14 @@ void LogFunction::multiplyAndMarginalize(std::vector<Variable*> &marg_variables_
 	//Gray  code algorithm
 	//Initialize LogFunction
 	out_function.variables()=marg_variables;
-	out_function.table()=vector<Double> (Variable::getDomainSize(marg_variables));
-	out_function.log_table=vector<LogDouble> (out_function.table().size());
+	out_function.tableInit(Variable::getDomainSize(marg_variables));
+	out_function.log_table_=vector<LogDouble> (out_function.tableSize());
 	//cout<<"Log function inited\n";
 	while(1)
 	{
 		//cout<<address<<endl;
 		// Step 1: Visit
-		out_function.table()[address]+=mult.toDouble();
+		out_function.tableEntry(address)+=mult.toDouble();
 		// Step 2: Choose j
 		int j=f[0];
 		f[0]=0;
@@ -327,10 +327,10 @@ void LogFunction::multiplyAndMarginalize(std::vector<Variable*> &marg_variables_
 		{
 			int index=g[j][i].first;
 			int multiplier=g[j][i].second;
-			mult-=functions[index]->log_table[c[index]];
+			mult-=functions[index]->log_table_[c[index]];
 			c[index]-=multiplier*old_aj;
 			c[index]+=multiplier*a[j];
-			mult+=functions[index]->log_table[c[index]];
+			mult+=functions[index]->log_table_[c[index]];
 		}
 		else
 		{
@@ -343,7 +343,7 @@ void LogFunction::multiplyAndMarginalize(std::vector<Variable*> &marg_variables_
 			}
 			mult=LogDouble(1.0);
 			for(int i=0;i<num_functions;i++)
-				mult+=functions[i]->log_table[c[i]];
+				mult+=functions[i]->log_table_[c[i]];
 		}
 		if(t[j]>0)
 		{

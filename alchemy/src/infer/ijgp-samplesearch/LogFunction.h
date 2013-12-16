@@ -61,29 +61,33 @@ struct LogDouble
 };
 struct LogFunction: public Function
 {
+protected:
+	vector<LogDouble> log_table_;
+public:
 	LogFunction():Function(){}
 	//LogFunction(Function& function){variables_=function.variables();table_=function.table(); toLogTable();}
 	LogFunction(Function& function);
 	~LogFunction() {}
 	
 	vector<Variable*>& variables()  { return variables_;}
-	vector<Double>& table() { return table_;}
+	//vector<Double>& table() { return table_;}
 
-	vector<LogDouble> log_table;
+	LogDouble& logTableEntry(int i) { return log_table_[i];}
+	int logTableSize() { return log_table_.size();}
+
 	void product(LogFunction& function);
 	void toLogTable()
 	{
-		log_table=vector<LogDouble>(table_.size());
+		log_table_=vector<LogDouble>(table_.size());
 		for(int i=0;i<table_.size();i++)
 		{
-			log_table[i]=LogDouble(table_[i]);
+			log_table_[i]=LogDouble(table_[i]);
 		}
 		table_.clear();
 	}
 	void print(ostream& out);
 	static void multiplyAndMarginalize(vector<Variable*>& marg_variables_,vector<LogFunction*>& functions, LogFunction& out_function,bool normalize=true);
 	static void multiplyAndMarginalize(vector<Variable*>& marg_variables_,vector<LogFunction*>& functions, Function& out_function,bool normalize=true);
-
 };
 }
 #endif
