@@ -38,7 +38,7 @@ class FakeProbabilisticTheoremProver[T, R](
 
     Seq(discreteTheoremProver.prove(evidence ++ assumptions.map(_.expression), goal, LOG.isDebugEnabled).get)
       .map {
-        case _ => 1. // if Some is returned 
+        case _ => 1.0 // if Some is returned
       }
 
   }

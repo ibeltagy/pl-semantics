@@ -237,7 +237,7 @@ class SetGoalPTP(
 	    	val args1 = nonRelationsMap.filter(p => p._2.contains(rel._2.head))
 	        val args2 = nonRelationsMap.filter(p => p._2.contains(rel._2.last))
 	        
-	        notUsedNonRelations = notUsedNonRelations -- (args1++args2);
+	        notUsedNonRelations = notUsedNonRelations filterNot (args1++args2 contains);
 	        
 	        args1.foreach(arg1 =>
 	            args2.foreach(arg2 =>

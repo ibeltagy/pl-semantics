@@ -110,7 +110,7 @@ class DistributionalRules extends Rules{
         case (x, y) =>
           val v = x * y
           if (v >= 0) v
-          else 0.
+          else 0.0
       }
       val denom1 = math.sqrt(vec1.sumBy { x => x * x })
       val denom2 = math.sqrt(vec2.sumBy { y => y * y })

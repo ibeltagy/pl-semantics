@@ -25,7 +25,7 @@ class BoxerDiscourseInterpreter[T](
   private val boxerExpressionInterpreter: BoxerExpressionInterpreter[T] = new Boxer2DrtExpressionInterpreter(),
   private val candc: Candc = CandcImpl.findBinary(),
   private val boxer: Boxer = BoxerImpl.findBinary(),
-  private val kbest: Integer = 1,
+  private val kbest: Int = 1,
   private val verbose: Boolean = false)
   extends DiscourseInterpreter[T] {
 

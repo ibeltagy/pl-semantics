@@ -79,7 +79,7 @@ class BowVector(val counts: Map[String, Double]) {
   }
 
   def zip2(other: BowVector): Map[String, (Double, Double)] = {
-    (this.counts.keySet ++ other.counts.keySet).mapTo(k => (this.counts.getOrElse(k, 0.), other.counts.getOrElse(k, 0.))).toMap
+    (this.counts.keySet ++ other.counts.keySet).mapTo(k => (this.counts.getOrElse(k, 0.0), other.counts.getOrElse(k, 0.0))).toMap
   }
 
   override def toString = "BowVector(%s)".format(counts.map { case (k, v) => "%s -> %s".format(k, v) }.mkString(", "))

@@ -7,7 +7,7 @@ import utcompling.scalalogic.top.expression.Variable
 
 class LabelCounter {
 
-  private val counter = new Counter
+  private val counter = new Counter(0)
   private val propositions = new HashMap[BoxerVariable, String]
 
   private val PROP_RE = """p\d+""".r

@@ -122,7 +122,7 @@ class FlatTheoremProver[R](
         (proof, msg)
       }
       catch {
-        case e => (None, e.getMessage)
+        case e: Throwable => (None, e.getMessage)
       }
     val visual = StringUtils.sideBySideCentering(StringUtils.box(assumptions.map(_.pretty).mkString("\n")), " + ",
       StringUtils.box(getRules(assumptions, List(goal)).mkString("\n")), " = " + msg + " => ",

@@ -12,6 +12,7 @@ import java.io.File
 import org.apache.commons.logging.LogFactory
 import scala.io.Source
 import utcompling.mlnsemantics.datagen.SimpleTokenizer
+import math.{ceil, min}
 
 /**
  * A companion object handles reading and writing to Lucene.
@@ -58,14 +59,14 @@ class Lucene(rulesFileName: String) {
 	val step = 100000
 	//val numRules = Source.fromFile(rulesFile, "ISO-8859-1").getLines.size
 	val numRules = Source.fromFile(rulesFile).getLines.size
-	val itrCount = (Math.ceil (numRules.toDouble / step)).intValue()
+	val itrCount = (ceil (numRules.toDouble / step)).intValue()
 	for(i <- 0 to itrCount - 1)
 	{
 		LOG.info(i)
 		//val resource = Source.fromFile(rulesFile, "ISO-8859-1")
 		val resource = Source.fromFile(rulesFile)
 		val from  = i * step
-	  		val to = Math.min((i + 1) * step, numRules)
+				val to = min((i + 1) * step, numRules)
 		val rules = resource.getLines.slice(from, to).toIterable
 		this.write(rules)
 		resource.close

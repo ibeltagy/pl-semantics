@@ -3,6 +3,7 @@ package utcompling.mlnsemantics.inference
 import utcompling.mlnsemantics.vecspace.BowVector
 import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.CollectionUtil._
+import math.min
 
 trait RuleWeighter {
   def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: Map[String, BowVector]): Iterable[(String, Option[Double])]
@@ -59,7 +60,7 @@ case class AwithCvecspaceWithSpellingSimilarityRuleWeighter(
     if (s2.length() < 5)
       return 0;
     var score = s1.toSet.intersect(s2.toSet).size * 1.0/ (s1.toSet ++ s2.toSet).size;
-    score = Math.min (0.99, score);
+    score = min(0.99, score);
     if (score > 0.5)
       return score;
     else
@@ -143,7 +144,7 @@ case class RankingRuleWeighter(
           case ((accum, rank), cs) =>
             (accum ++ cs.map(_ -> rank), rank + cs.size)
         }._1
-    val inverseRanked = ranked.mapVals(1. / _)
+    val inverseRanked = ranked.mapVals(1.0 / _)
     inverseRanked.normalizeValues.mapVals(Option(_))
   }
 }

@@ -26,7 +26,7 @@ import utcompling.mlnsemantics.datagen.CncLemmatizeCorpusMapper
 import utcompling.mlnsemantics.datagen.Tokenize
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
 import utcompling.scalalogic.drt.expression.DrtApplicationExpression
-import scala.math.{sqrt, pow}
+import scala.math.{sqrt, pow, min, ceil}
 
 /**
  *
@@ -71,13 +71,13 @@ object Sts {
         val sentences = readLines(stsFile).flatMap(_.split("\t")).toVector
         val step = 500;  //file is large. It should be partitioned before passed to the parser
         val totalSen = sentences.length;
-        val itrCount = (Math.ceil (totalSen*1.0 / step)).intValue();
+        val itrCount = (ceil (totalSen*1.0 / step)).intValue();
         
 	        FileUtils.writeUsing(lemFile) { f =>
 	          for (i <- 0 to itrCount-1 )
 	          {
 		          val from  = i * step;
-		          val to = Math.min((i+1)*step, totalSen);
+		          val to = min((i+1)*step, totalSen);
 					println (from + ", " +  to);
 					 println (sentences.slice(from, to));
 		          val lemmatized = new CncLemmatizeCorpusMapper().parseToLemmas(sentences.slice(from, to))
@@ -105,12 +105,12 @@ object Sts {
         val sentences = readLines(stsFile).flatMap(_.split("\t")).map(Tokenize.separateTokens).toList
         val step = 400; //file is large. It should be partitioned before passed to the parser
         val totalSen = sentences.length;
-        val itrCount = (Math.ceil (totalSen*1.0 / step)).intValue();   
+        val itrCount = (ceil (totalSen*1.0 / step)).intValue();   
         writeUsing(boxFile) { f =>
           for (i <- 0 to itrCount-1 )
           {
         	  val from  = i * step;
-        	  val to = Math.min((i+1)*step, totalSen);
+            val to = min((i+1)*step, totalSen);
 	          for (x <- di.batchInterpret(sentences.slice(from, to)))
 	          {
 	            f.write(x + "\n")

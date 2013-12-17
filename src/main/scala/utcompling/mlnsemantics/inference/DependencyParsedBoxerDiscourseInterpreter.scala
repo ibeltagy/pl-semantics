@@ -60,7 +60,7 @@ class DependencyParsedBoxerDiscourseInterpreter[T](
       p.varName2 match {
         case Some(varName2) => conds += BoxerRel(discId, List(), BoxerVariable(p.varName), BoxerVariable(varName2), p.name, 0); 
         case _ => {
-         conds += BoxerPred(discId, List(), BoxerVariable(p.varName), p.name, p.tag.charAt(0).toLowerCase.toString(), 0)
+         conds += BoxerPred(discId, List(), BoxerVariable(p.varName), p.name, p.tag.substring(0,1).toLowerCase, 0)
          refs += p.varName
         }
       } 
