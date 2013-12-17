@@ -15,7 +15,7 @@ STATIC=-static
 CLFLAGS=-O3 -DNDEBUG $(STATIC) $(INLINE_WARN) $(INLINE_LIMIT)
 
 ########## Debug
-CLFLAGS=-g
+CLFLAGS=-g -rdynamic
 
 BASEDIR=..
 

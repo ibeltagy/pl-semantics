@@ -8,31 +8,48 @@
 #include "Heap.h"
 #include "Alg.h"
 #include "SolverTypes.h"
+#include "Util.h"
+
 using namespace std;
 
 namespace ss{
+
+//#define WITH_TABLE 1
 
 struct Function
 {
 protected:
 	int id_;
 	vector<Variable*> variables_;
+#ifdef WITH_TABLE 
 	vector<Double> table_;
+#endif
 	int tableFalseEntry_;
 	Double weightWhenFalse_;
 	Double weightWhenTrue_;
+	int tableSize_;	
 public:
 	Function():id_(INVALID_VALUE){}
-	Function(const int& id): id_(id),variables_(vector<Variable*>()),table_(vector<Double>())
+	Function(const int& id): id_(id),variables_(vector<Variable*>())
+#ifdef WITH_TABLE 
+		,table_(vector<Double>())
+#endif
 	{
 	}
-	Function(const int& id, const vector<Variable*>& variables): id_(id),variables_(variables), table_(vector<Double>(Variable::getDomainSize(variables)))
+	Function(const int& id, const vector<Variable*>& variables): id_(id),variables_(variables)
+#ifdef WITH_TABLE 
+		, table_(vector<Double>(Variable::getDomainSize(variables)))
+#endif
 	{
 	}
 	Function(const int& id, const vector<Variable*>& variables, Double weighWhenFalse, int tableFalseEntry): 
-		id_(id),variables_(variables), table_(NULL), weightWhenFalse_(weighWhenFalse), tableFalseEntry_(tableFalseEntry), weightWhenTrue_(1)
+		id_(id),variables_(variables), 
+#ifdef WITH_TABLE 
+		table_(NULL),
+#endif
+		weightWhenFalse_(weighWhenFalse), tableFalseEntry_(tableFalseEntry), weightWhenTrue_(1)
 	{
-
+#ifdef WITH_TABLE 
 		int num_values=Variable::getDomainSize(variables);
 		table_=vector<Double> (num_values);
 		for(int j=0;j<num_values;j++)
@@ -42,6 +59,12 @@ public:
 			else
 				table_[j]=Double(1);
 		}
+#else
+
+		tableSize_ = Variable::getDomainSize(variables);
+#endif
+
+
 
 	/*cout <<id_<<": " << weightWhenFalse_ << ", "<< tableFalseEntry_ << "/"<<Variable::getDomainSize(variables_)<<"-->";
 	for(int i = 0; i<variables_.size(); i++)
@@ -58,11 +81,54 @@ public:
 	int id() const {return id_;}
 	vector<Variable*>& variables()  { return variables_;}
 	//vector<Double>& table() { return table_;}
-	Double& tableEntry(int i) { return table_[i];}
-	void tableInit(int size) { table_ = vector<Double> (size);}
-	void tableSet(vector<Double>& table) { table_ = table;}
-	vector<Double>& tableGet() { return table_;}
-	int tableSize() { return table_.size();}
+
+	//Double& tableEntry(int i) { return table_[i];}
+	Double& tableEntry(int i) 
+	{ 
+#ifdef WITH_TABLE 
+		return table_[i];
+#else
+		if (i == tableFalseEntry_)
+			return weightWhenFalse_; 
+		else return weightWhenTrue_;
+#endif
+	}
+
+	void tableInit(int size) 
+	{
+#ifdef WITH_TABLE 
+		table_ = vector<Double> (size);
+#else
+		tableFalseEntry_ = -1;
+		weightWhenFalse_ = 0;
+		weightWhenTrue_  = 0;
+		tableSize_       = size;
+#endif
+	}
+	void tableSet(vector<Double>& table) 
+	{
+#ifdef WITH_TABLE 
+		table_ = table;
+#else
+		assert(false && "Function::tableSet is not implemented yet");
+#endif
+	}
+	vector<Double>& tableGet() 
+	{ 
+#ifdef WITH_TABLE
+		return table_;
+#else
+		assertStacktrace(false && "Function::tableGet is not implemented yet");
+#endif
+	}
+	int tableSize() 
+	{
+#ifdef WITH_TABLE 
+		return table_.size();
+#else
+		return tableSize_;
+#endif
+	}
 	double MSE(Function& function);
 	void project(Function& function);
 	void product(Function& function);
@@ -77,7 +143,11 @@ public:
 	virtual void reduceDomains();
 	Double getWeight()
 	{
+#ifdef WITH_TABLE
 		return table_[Variable::getAddress(variables_)];
+#else
+		return tableEntry(Variable::getAddress(variables_));
+#endif
 	}
 
 	static void dummy_product(Function& f1, Function& f2, Function& f3);

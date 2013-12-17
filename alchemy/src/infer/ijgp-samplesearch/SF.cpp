@@ -7,7 +7,7 @@ SF::SF(CPT& cpt)
 	variables_=cpt.variables();
 	cond_variables_=cpt.cond_variables();
 	marg_variable_=cpt.marg_variable();
-	table_=cpt.tableGet();
+	this->tableSet(cpt.tableGet());
 	int cond_num_values=Variable::getDomainSize(cpt.cond_variables());
 	sampling_table=vector<vector<Double> > (cond_num_values);
 	for(int i=0;i<cond_num_values;i++)
@@ -45,7 +45,7 @@ void SF::getSample(int& value, Double& weight,myRandom& random)
 	if(value >= (int) marg_variable_->domain_size())
 	  value=(int)marg_variable_->domain_size()-1;
 	marg_variable_->addr_value()=value;
-	weight=table_[Variable::getAddress(variables_)];
+	weight=this->tableEntry(Variable::getAddress(variables_));
 	//cerr<<marg_variable_->id()<<" "<<value<<" "<<weight<<endl;
 }
 }

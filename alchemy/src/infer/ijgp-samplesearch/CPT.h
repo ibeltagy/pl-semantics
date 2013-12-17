@@ -92,6 +92,7 @@ public:
 	}
 	void reduceDomains()
 	{
+#ifdef WITH_TABLE
 		int new_num_values=Variable::getDomainSize(variables_);
 		vector<Double> new_table(new_num_values);
 		for(int i=0;i<new_num_values;i++)
@@ -108,10 +109,13 @@ public:
 		}
 		table_=new_table;
 		//cout<<table_.size()<<endl;
+#else
+		assert(false && "CPT::reduceDomains withoutTable is not impemented yet");
+#endif
 	}
 	void removeEvidence()
 	{
-
+#ifdef WITH_TABLE
 		vector<Variable*> other_variables;
 		for(int i=0;i<variables_.size();i++)
 			if(variables_[i]->value()==INVALID_VALUE)
@@ -139,7 +143,9 @@ public:
 		if(marg_variables.empty())
 			marg_variable_=NULL;
 		
-
+#else
+		assert(false && "CPT::removeEvidence withoutTable is not impemented yet");
+#endif
 	}
 };
 }

@@ -6,6 +6,8 @@
 #include <gmp.h>
 #include <gmpxx.h>
 #include <map>
+
+
 using namespace std;
 
 namespace ss{
@@ -22,6 +24,7 @@ public:
 	vector<int> old_domain;
 	int orig_id;
 	vector<int> mapping;
+	vector<int> inverse_mapping;
 	int temp_value;
 	Variable():value_(INVALID_VALUE),id_(INVALID_VALUE),addr_value_(INVALID_VALUE){}
 	Variable(const int& id,const vector<int>& domain): id_(id),domain_(domain),addr_value_(INVALID_VALUE),value_(INVALID_VALUE), old_domain(domain),mapping(domain)
@@ -53,6 +56,9 @@ public:
 		assert(new_dom.size() == domain_.size());
 		old_domain=domain_;
 		mapping=vector<int>();
+		inverse_mapping = vector<int>(domain_.size());
+		for(int i=0;i<inverse_mapping.size();i++)
+			inverse_mapping[i] = INVALID_VALUE;
 		int count=0;
 		domain_=vector<int>();
 		for(int i=0;i<new_dom.size();i++)
@@ -61,6 +67,7 @@ public:
 			{
 				domain_.push_back(count);
 				mapping.push_back(i);
+				inverse_mapping[i] = count;
 				count++;
 			}
 		}

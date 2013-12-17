@@ -78,12 +78,14 @@ public:
 	void product(LogFunction& function);
 	void toLogTable()
 	{
-		log_table_=vector<LogDouble>(table_.size());
-		for(int i=0;i<table_.size();i++)
+		log_table_=vector<LogDouble>(tableSize());
+		for(int i=0;i<log_table_.size();i++)
 		{
-			log_table_[i]=LogDouble(table_[i]);
+			log_table_[i]=LogDouble(tableEntry(i));
 		}
+#ifdef WITH_TABLE
 		table_.clear();
+#endif
 	}
 	void print(ostream& out);
 	static void multiplyAndMarginalize(vector<Variable*>& marg_variables_,vector<LogFunction*>& functions, LogFunction& out_function,bool normalize=true);

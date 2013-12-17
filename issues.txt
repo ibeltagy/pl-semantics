@@ -1,4 +1,5 @@
 SampleSearch:
+-GM::reduceDomains can be better by removing functions that are always true
 -what to do with LogFunction.h
 -what to do with CPT.h
 -what to do with SF.h

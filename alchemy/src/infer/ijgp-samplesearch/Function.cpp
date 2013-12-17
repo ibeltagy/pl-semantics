@@ -9,6 +9,8 @@ namespace ss{
 void Function::reduceDomains()
 {
 	int new_num_values=Variable::getDomainSize(variables_);
+
+#ifdef WITH_TABLE
 	vector<Double> new_table(new_num_values);
 	for(int i=0;i<new_num_values;i++)
 	{
@@ -23,30 +25,60 @@ void Function::reduceDomains()
 		new_table[i]=table_[address];
 	}
 	table_=new_table;
-	//cout<<table_.size()<<endl;
+#else
+	vector<int> old_domain_addr_vals = vector<int>(variables_.size());
+	int address=tableFalseEntry_;
+	for(int i=0;i<variables_.size();i++)
+	{
+		old_domain_addr_vals[i] = address%variables_[i]->old_domain.size();
+		address/=variables_[i]->old_domain.size();
+	}
+
+	int new_tableFalseEntry=0;
+	int multiplier=1;
+	for(int i=0;i<variables_.size();i++)
+	{
+		new_tableFalseEntry += (multiplier*variables_[i]->inverse_mapping[old_domain_addr_vals[i]]);
+		multiplier *= variables_[i]->domain_size();
+	}
+	//cout << tableSize_<<", "<< new_num_values << ", "<< tableFalseEntry_ << ", " << new_tableFalseEntry <<endl;
+	tableFalseEntry_ = new_tableFalseEntry;
+	tableSize_ = new_num_values;
+
+#endif
 }
 void Function::removeEvidence()
 {
-	//cout<<"Here\n";
 	vector<Variable*> other_variables;
 	for(int i=0;i<variables_.size();i++)
 		if(variables_[i]->value()==INVALID_VALUE)
 			other_variables.push_back(variables_[i]);
 
 	int other_num_values=Variable::getDomainSize(other_variables);
+#ifdef WITH_TABLE
+	//cout <<variables_.size() <<", " << other_variables.size() << ", "<< tableSize_ <<", "<<other_num_values<< ", " << tableFalseEntry_ <<" -->" ;
 	vector<Double> new_table(other_num_values);
 	for(int j=0;j<other_num_values;j++)
 	{
 		Variable::setAddress(other_variables,j);
 		int entry=Variable::getAddress(variables_);
 		new_table[j]=tableEntry(entry);
+		//cout << new_table[j] << ", " ;
 	}
-	variables_=other_variables;
+	//cout << endl;
 	table_=new_table;
+#else
+	//cout <<variables_.size() <<", " << other_variables.size() << ", "<< tableSize_ <<", "<<other_num_values<< ", " << tableFalseEntry_ <<", " << endl;
+	//Variable::setAddress(variables_,tableFalseEntry_);
+	//cout << Variable::getAddress(other_variables) << endl;
+	//tableFalseEntry_ = Variable::getAddress(other_variables);
+	tableSize_ = other_num_values;
+#endif
+	variables_=other_variables;
 }
 void Function::project(Function& function)
 {
-	assert(function.tableSize() <= table_.size());
+	assert(function.tableSize() <= this->tableSize());
 	if(function.tableSize() == 0 || function.variables().empty())
 		return;
 	vector<Variable*> new_variables;
@@ -83,7 +115,7 @@ void Function::project(Function& function)
 }
 void Function::product(Function& function)
 {
-	
+#ifdef WITH_TABLE	
 	if(function.tableSize() == 0 || function.variables().empty())
 		return;
 	vector<Variable*> new_variables;
@@ -112,9 +144,10 @@ void Function::product(Function& function)
 		}
 		variables_=new_variables;
 	}
-	
-	
 	normalize();
+#else
+	assert(false && "Function::product withoutTable is not implemented yet");
+#endif
 }
 void Function::dummy_divide(Function& f1, Function& f2, Function& f3)
 {
@@ -149,24 +182,24 @@ void Function::marginalize(vector<Variable*>& marg_variables_,Function& function
 	if(function.variables().empty())
 		return;
 	function.tableInit(Variable::getDomainSize(function.variables()));
-	for(int i=0;i<table_.size();i++)
+	for(int i=0;i<this->tableSize();i++)
 	{
 		Variable::setAddress(variables_,i);
 		int entry=Variable::getAddress(function.variables());
-		function.tableEntry(entry)+=table_[i];
+		function.tableEntry(entry)+=this->tableEntry(i);
 	}
 	function.normalize();
 }
 void Function::normalize()
 {
 	Double norm_const;
-	for(int i=0;i<table_.size();i++)
+	for(int i=0;i<this->tableSize();i++)
 	{
-		norm_const+=table_[i];
+		norm_const+=this->tableEntry(i);
 	}
-	for(int i=0;i<table_.size();i++)
+	for(int i=0;i<this->tableSize();i++)
 	{
-		table_[i]/=norm_const;
+		this->tableEntry(i) /=norm_const;
 	}
 }
 void Function::dummy_multiplyMarginalize(vector<Variable*>& marg_variables_, vector<Function*>& functions, Function& f)
@@ -402,18 +435,18 @@ void Function::print(ostream& out)
 	for(int i=0;i<variables_.size();i++)
 		out<<variables_[i]->id()<<" ";
 	out<<endl;
-	for(int i=0;i<table_.size();i++)
-		out<<table_[i]<<" ";
+	for(int i=0;i<this->tableSize();i++)
+		out<<tableEntry(i)<<" ";
 	out<<endl;
 }
 double Function::MSE(Function& function)
 {
 	double error=0.0;
-	if(function.tableSize()!=table_.size())
+	if(function.tableSize()!=this->tableSize())
 		return -1;
-	for(int i=0;i<table_.size();i++)
+	for(int i=0;i<this->tableSize();i++)
 	{
-		error+=((function.tableEntry(i).value()-table_[i].value())*(function.tableEntry(i).value()-table_[i].value()));
+		error+=((function.tableEntry(i).value()-this->tableEntry(i).value())*(function.tableEntry(i).value()-this->tableEntry(i).value()));
 	}
 	return error;
 
