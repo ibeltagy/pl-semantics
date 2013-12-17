@@ -11,7 +11,8 @@ resolvers ++= Seq(
   "opennlp sourceforge repo" at "http://opennlp.sourceforge.net/maven2",
   "repo.codahale.com" at "http://repo.codahale.com",
   "Breeze Maven2" at "http://repo.scalanlp.org/repo",
-  "Clojars" at "http://www.clojars.org/repo"
+  "Clojars" at "http://www.clojars.org/repo",
+  "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 )
 
 libraryDependencies ++= Seq(
@@ -24,6 +25,8 @@ libraryDependencies ++= Seq(
     ExclusionRule(organization = "com.sun.jdmk"),
     ExclusionRule(organization = "com.sun.jmx")
   ),
+  "org.scalanlp" % "breeze-core_2.9.2" % "0.2",
+  "org.scalanlp" % "breeze-math_2.9.2" % "0.2",
   "junit" % "junit" % "4.10" % "test")
   //"com.novocode" % "junit-interface" % "0.6" % "test->default") //switch to ScalaTest at some point...
 
@@ -69,5 +72,5 @@ seq(StartScriptPlugin.startScriptForClassesSettings: _*)
 
 mainClass in (Compile, run) := Some("utcompling.mlnsemantics.inference.Baseline")
 
-scalacOptions ++= Seq("-optimize", "-deprecation")
+scalacOptions ++= Seq("-optimize", "-deprecation", "-unchecked")
 
