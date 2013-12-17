@@ -26,6 +26,7 @@ import utcompling.mlnsemantics.datagen.CncLemmatizeCorpusMapper
 import utcompling.mlnsemantics.datagen.Tokenize
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
 import utcompling.scalalogic.drt.expression.DrtApplicationExpression
+import scala.math.{sqrt, pow}
 
 /**
  *
@@ -217,10 +218,42 @@ object Sts {
       val (ps, golds) = results.map(_._2).unzip
       println("[" + ps.map(_.mkString(",")).mkString(" ") + "]")
       println(golds.mkString("["," ","]"))
-	  FileUtils.writeUsing(outputSimFile) { f =>
-           f.write(ps.mkString(" ") + "\n")
-		   f.write(golds.mkString(" ") + "\n")
-        }
+      FileUtils.writeUsing(outputSimFile) { f =>
+        f.write(ps.mkString(" ") + "\n")
+        f.write(golds.mkString(" ") + "\n")
+      }
+
+      // output some aggregate statistics
+      val ps_golds: Seq[(Double, Double)] = ps.flatten.zip(golds)
+
+      // root mean squared error
+      val rmse = {
+        val sqerr =
+          ps_golds
+            .filter(_._1 >= 0.0) // don't count ones we had errors for
+            .collect { case (p, g) => { pow(p - g, 2) } }
+        val mse = sqerr.sum / sqerr.size
+        sqrt(mse)
+      }
+
+      // compute accuracy
+      val goldOptions = golds.toSet
+      val choseCorrect =
+        ps_golds
+          .filter(_._1 >= 0.0) // don't count ones we had errors for
+          .collect {
+            case (p, g) => {
+              goldOptions.minBy(o => pow(o - p, 2)) == g // was the nearest option the gold value?
+            }
+          }
+      val total = choseCorrect.length
+      val right = choseCorrect.filter(_ == true).length
+      val wrong = choseCorrect.filter(_ == false).length
+      val accur = right.toDouble / total
+      println("Accuracy: " + ("%.3f" format accur) + " (" + right + "/" + total + ")")
+      println("RMSE: " + ("%.3f" format rmse))
+      // todo: break down by parsing errors, mln errors, etc
+      println("Errors: " + (golds.length - total))
     }
   }
 }
