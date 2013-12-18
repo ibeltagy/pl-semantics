@@ -20,6 +20,10 @@ case $CMD in
 	$START utcompling.mlnsemantics.run.BoxerCli "$@"
 	exit 0
    ;;
+  console)
+    $SBT console
+    exit 0
+   ;;
 esac
 
 #CMD is not compile nor boxer
