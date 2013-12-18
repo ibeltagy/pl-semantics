@@ -10,7 +10,6 @@ resolvers ++= Seq(
   "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
   "opennlp sourceforge repo" at "http://opennlp.sourceforge.net/maven2",
   "repo.codahale.com" at "http://repo.codahale.com",
-  "Breeze Maven2" at "http://repo.scalanlp.org/repo",
   "Clojars" at "http://www.clojars.org/repo",
   "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 )
