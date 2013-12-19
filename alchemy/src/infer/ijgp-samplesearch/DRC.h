@@ -13,8 +13,8 @@ protected:
 public:
 	DRC(GM& gm_, int i_bound_,vector<int>& order);
 	bool isConsistent(int var, int value);
-	void domainConsistency(int var,vector<bool>& new_domain);
-	void reduceFunction(Function* function);
+	//void domainConsistency(int var,vector<bool>& new_domain);
+	//void reduceFunction(Function* function);
 
 };
 }

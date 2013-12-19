@@ -66,6 +66,7 @@ public:
 };
 
 // Join Graph Node using the Shenoy Shafer architecture
+/*
 struct JGNodeSS: public JGNode {
 public:
 	vector<Function*> functions;
@@ -91,7 +92,7 @@ public:
 	void getMarginal(vector<Variable*>& marg_variables, Function& function);
 	void initialize();
 };
-
+*/
 struct JGNodeLSS: public JGNode {
 public:
 	vector<Function*> original_functions;
@@ -116,6 +117,7 @@ public:
 };
 
 // Join Graph Node using the Lauritzen Speigelhalter architecture
+/*
 struct JGNodeLS: public JGNode {
 public:
 	Function function;
@@ -135,7 +137,7 @@ public:
 	//void getMarginal(vector<Variable*>& marg_variables,vector<Double>& marg_table);
 	void getMarginal(vector<Variable*>& marg_variables, Function& function);
 };
-
+*/
 // Hash function with Shenoy Shafer
 /*struct JGNodeHSS: public JGNode {
 public:
@@ -205,7 +207,7 @@ public:
 	virtual void sendMessage2to1() {
 	}
 };
-
+/*
 struct JGEdgeSS: public JGEdge {
 protected:
 	JGNodeSS* ss_node1_;
@@ -225,7 +227,7 @@ public:
 	void sendMessage1to2();
 	void sendMessage2to1();
 };
-
+*/
 struct JGEdgeLSS: public JGEdge {
 protected:
 	JGNodeLSS* ss_node1_;
@@ -248,7 +250,7 @@ public:
 	void sendMessage1to2();
 	void sendMessage2to1();
 };
-
+/*
 struct JGEdgeLS: public JGEdge {
 protected:
 	JGNodeLS* ls_node1_;
@@ -269,7 +271,7 @@ public:
 	void sendMessage1to2();
 	void sendMessage2to1();
 };
-
+*/
 /*
 struct JGEdgeHSS: public JGEdge {
 protected:

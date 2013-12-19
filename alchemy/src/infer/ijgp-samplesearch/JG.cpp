@@ -4,10 +4,12 @@ namespace ss{
 JGNode* JG::addNode(JG_TYPE type) {
 	switch (type) {
 	case SS:
-		return new JGNodeSS();
+		assert(false && "SS not implemented");
+		//return new JGNodeSS();
 		break;
 	case LS:
-		return new JGNodeLS();
+		assert(false && "LS not implemented");
+		//return new JGNodeLS();
 		break;
 	case HSS:
 		assert(false && "HSS not implemented");
@@ -17,19 +19,22 @@ JGNode* JG::addNode(JG_TYPE type) {
 		return new JGNodeLSS();
 		break;
 	default:
-		return new JGNodeSS();
+		assert(false && "SS not implemented");
+		//return new JGNodeSS();
 	}
 }
 
 JGEdge* JG::addEdge(JGNode* s1, JGNode* s2, JG_TYPE type) {
 	switch (type) {
 	case SS:
-		return new JGEdgeSS(dynamic_cast<JGNodeSS*> (s1),
-				dynamic_cast<JGNodeSS*> (s2));
+		assert(false && "SS not implemented");
+		//return new JGEdgeSS(dynamic_cast<JGNodeSS*> (s1),
+		//		dynamic_cast<JGNodeSS*> (s2));
 		break;
 	case LS:
-		return new JGEdgeLS(dynamic_cast<JGNodeLS*> (s1),
-				dynamic_cast<JGNodeLS*> (s2));
+		assert(false && "LS not implemented");
+		//return new JGEdgeLS(dynamic_cast<JGNodeLS*> (s1),
+		//		dynamic_cast<JGNodeLS*> (s2));
 		break;
 	case HSS:
 		assert(false && "HSS not implemented");
@@ -41,8 +46,9 @@ JGEdge* JG::addEdge(JGNode* s1, JGNode* s2, JG_TYPE type) {
 				dynamic_cast<JGNodeLSS*> (s2));
 		break;
 	default:
-		return new JGEdgeSS(dynamic_cast<JGNodeSS*> (s1),
-				dynamic_cast<JGNodeSS*> (s2));
+		assert(false && "SS not implemented");
+		//return new JGEdgeSS(dynamic_cast<JGNodeSS*> (s1),
+		//		dynamic_cast<JGNodeSS*> (s2));
 		break;
 	}
 }
@@ -430,8 +436,9 @@ void JG::printGraph(ostream& out) {
 			out << nodes[i]->variables()[j]->id() << " ";
 		}
 		out << endl;
-		JGNodeSS* ss_node;
-		ss_node = dynamic_cast<JGNodeSS*> (nodes[i]);
+
+		JGNodeLSS* ss_node;
+		ss_node = dynamic_cast<JGNodeLSS*> (nodes[i]);
 		if (ss_node != NULL) {
 			for (int j = 0; j < ss_node->functions.size(); j++) {
 				out << "\t";

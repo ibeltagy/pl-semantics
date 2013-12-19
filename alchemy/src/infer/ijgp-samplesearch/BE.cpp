@@ -671,6 +671,7 @@ BESAT::BESAT(vector<Variable*>& all_variables,vector<vector<Lit> >& clauses, vec
 	
 }
 
+/*
 BESampleSAT::BESampleSAT(vector<Variable*>& all_variables, vector<vector<Lit> >& clauses, vector<int>& order, myRandom& random)
 {
 	typedef vector<Lit>   myClause;
@@ -793,12 +794,12 @@ BESampleSAT::BESampleSAT(vector<Variable*>& all_variables, vector<vector<Lit> >&
 				pos=var_in_pos[new_func.variables()[j]->id()];
 		}
 		assert(pos!=(int)order.size());
-		/*if(pos==(int)order.size())
-		{
-			assert((int)function->log_table.size()==1);
-			log_pe+=function->log_table[0];
-			continue;
-		}*/
+		//if(pos==(int)order.size())
+		//{
+		//	assert((int)function->log_table.size()==1);
+		//	log_pe+=function->log_table[0];
+		//	continue;
+		//}
 		assert(pos > i);
 		buckets[pos].push_back(new_func);
 	}
@@ -835,10 +836,11 @@ BESampleSAT::BESampleSAT(vector<Variable*>& all_variables, vector<vector<Lit> >&
 		}
 	}
 }
-
-
+*/
+/*
 BucketProp::BucketProp(std::vector<Variable*> &variables, std::vector<Function*> &functions, std::vector<int> &order)
 {
+cout << "in BE "<< endl;
 	log_pe=LogDouble(1.0);
 	vector<vector<LogFunction*> > buckets (order.size());
 
@@ -866,13 +868,13 @@ BucketProp::BucketProp(std::vector<Variable*> &variables, std::vector<Function*>
 				pos=var_in_pos[function->variables()[j]->id()];
 		}
 		assert(pos!=(int)order.size());
-		/*{
-			assert((int)function->log_table.size()==1);
-			cerr<<function->log_table[0].toDouble()<<" "<<endl;
-			log_pe+=function->log_table[0];
-			delete(function);
-			continue;
-		}*/
+		//{
+		//	assert((int)function->log_table.size()==1);
+		//	cerr<<function->log_table[0].toDouble()<<" "<<endl;
+		//	log_pe+=function->log_table[0];
+		//	delete(function);
+		//	continue;
+		//}
 		buckets[pos].push_back(function);
 	}
 
@@ -973,4 +975,6 @@ BucketProp::BucketProp(std::vector<Variable*> &variables, std::vector<Function*>
 	}
 	buckets.clear();
 }
+*/
 }
+

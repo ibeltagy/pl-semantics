@@ -1,5 +1,4 @@
 #include "Function.h"
-#include "GrayCode.h"
 #include "myRandom.h"
 
 #include <cassert>
@@ -76,46 +75,12 @@ void Function::removeEvidence()
 #endif
 	variables_=other_variables;
 }
-void Function::project(Function& function)
-{
-	assert(function.tableSize() <= this->tableSize());
-	if(function.tableSize() == 0 || function.variables().empty())
-		return;
-	vector<Variable*> new_variables;
-	do_set_union(variables(),function.variables(),new_variables,less_than_comparator_variable);
-	assert(new_variables.size() == variables_.size());
-	int num_values=Variable::getDomainSize(new_variables);
-	if(new_variables.size()==variables().size())
-	{
-		for(int i=0;i<num_values;i++)
-		{
-			Variable::setAddress(variables(),i);
-			int func_entry=Variable::getAddress(function.variables());
-			if(function.tableEntry(func_entry).isZero())
-			{
-				tableEntry(i)=Double();
-			}
-		}
-	}
-	else
-	{
-		/*vector<Double> old_table;
-		old_table=table_;
-		table_=vector<Double> (num_values);*/
-		for(int i=0;i<num_values;i++)
-		{
-			Variable::setAddress(variables_,i);
-			int func_entry=Variable::getAddress(function.variables());
-			if(function.tableEntry(func_entry).isZero())
-			{
-				tableEntry(i)=Double();
-			}
-		}
-	}
-}
+
+
+/*
 void Function::product(Function& function)
 {
-#ifdef WITH_TABLE	
+#ifdef WITH_TABLE
 	if(function.tableSize() == 0 || function.variables().empty())
 		return;
 	vector<Variable*> new_variables;
@@ -177,7 +142,6 @@ void Function::divide(Function& function)
 
 void Function::marginalize(vector<Variable*>& marg_variables_,Function& function)
 {
-	
 	do_set_intersection(variables_,marg_variables_,function.variables(),less_than_comparator_variable);
 	if(function.variables().empty())
 		return;
@@ -190,6 +154,7 @@ void Function::marginalize(vector<Variable*>& marg_variables_,Function& function
 	}
 	function.normalize();
 }
+*/
 void Function::normalize()
 {
 	Double norm_const;
@@ -202,8 +167,60 @@ void Function::normalize()
 		this->tableEntry(i) /=norm_const;
 	}
 }
+
+void Function::project(Function& function)
+{
+#ifdef WITH_TABLE
+cout << "in project" << endl;
+	assert(function.tableSize() <= this->tableSize());
+	if(function.tableSize() == 0 || function.variables().empty())
+		return;
+	vector<Variable*> new_variables;
+	do_set_union(variables(),function.variables(),new_variables,less_than_comparator_variable);
+	assert(new_variables.size() == variables_.size());
+	int num_values=Variable::getDomainSize(new_variables);
+	if(new_variables.size()==variables().size())
+	{
+		for(int i=0;i<num_values;i++)
+		{
+			Variable::setAddress(variables(),i);
+			int func_entry=Variable::getAddress(function.variables());
+			if(function.tableEntry(func_entry).isZero())
+			{
+				tableEntry(i)=Double();
+			}
+		}
+	}
+	else
+	{
+		//vector<Double> old_table;
+
+		//old_table=table_;
+		//table_=vector<Double> (num_values);
+
+		for(int i=0;i<num_values;i++)
+		{
+
+			Variable::setAddress(variables_,i);
+			int func_entry=Variable::getAddress(function.variables());
+
+			if(function.tableEntry(func_entry).isZero())
+			{
+
+				tableEntry(i)=Double();
+			}
+
+		}
+	}
+#else
+	assertStacktrace(false && "Function::project is not implemented yet");
+#endif
+
+}
 void Function::dummy_multiplyMarginalize(vector<Variable*>& marg_variables_, vector<Function*>& functions, Function& f)
 {
+#ifdef WITH_TABLE
+cout << "in dummy_multiplyMarginalize " << endl;
 	// First iterate through the 
 	vector<Variable*> variables;
 	vector<Variable*> marg_variables;
@@ -244,11 +261,39 @@ void Function::dummy_multiplyMarginalize(vector<Variable*>& marg_variables_, vec
 	{
 		f.tableEntry(i)/=norm_const;
 	}
+#else
+	assertStacktrace(false && "Function::dummy_multiplyMarginalize is not implemented yet");
+#endif
 }
 
+void Function::dummy_product(Function& f1, Function& f2, Function& f3)
+{
+#ifdef WITH_TABLE
+cout << "in dummy_product 2" << endl;
+	do_set_union(f1.variables(),f2.variables(),f3.variables(),less_than_comparator_variable);
+	int num_values=Variable::getDomainSize(f3.variables());
+	f3.tableInit(num_values);
+	for(int i=0;i<num_values;i++)
+	{
+		Variable::setAddress(f3.variables(),i);
+		int add1,add2;
+		add1=Variable::getAddress(f1.variables());
+		add2=Variable::getAddress(f2.variables());
+		//cout<<add1<<" "<<add2<<" val = ";
+		//cout<<f1.table()[add1]<<" "<<f2.table()[add2]<<" ";
+		f3.tableEntry(i)=f1.tableEntry(add1);
+		f3.tableEntry(i)*=f2.tableEntry(add2);
+		//cout<<f3.table()[i]<<endl;
+	}
+#else
+	assertStacktrace(false && "Function::dummy_product is not implemented yet");
+#endif
+}
+
+
+/*
 void Function::multiplyAndMarginalize(vector<Variable*>& marg_variables_, vector<Function*>& functions, Function& new_func)
 {
-	
 	vector<Variable*> variables;
 	vector<Variable*> marg_variables;
 	for(int i=0;i<functions.size();i++)
@@ -379,7 +424,8 @@ void Function::multiplyAndMarginalize(vector<Variable*>& marg_variables_, vector
 	//	f.table()[i]/=norm_const;
 	//}
 	//cout<<"Done\n";
-}
+}*/
+/*
 void Function::divide(Function& f1, Function& f2, Function& f3)
 {
 	vector<Variable*> variables;
@@ -397,6 +443,7 @@ void Function::divide(Function& f1, Function& f2, Function& f3)
 		gray_code.moveForward();
 	}
 }
+
 void Function::product(vector<Function*>& functions, Function& f)
 {
 	vector<Variable*> variables;
@@ -411,24 +458,9 @@ void Function::product(vector<Function*>& functions, Function& f)
 		gray_code.moveForward();
 	}
 }
-void Function::dummy_product(Function& f1, Function& f2, Function& f3)
-{
-	do_set_union(f1.variables(),f2.variables(),f3.variables(),less_than_comparator_variable);
-	int num_values=Variable::getDomainSize(f3.variables());
-	f3.tableInit(num_values);
-	for(int i=0;i<num_values;i++)
-	{
-		Variable::setAddress(f3.variables(),i);
-		int add1,add2;
-		add1=Variable::getAddress(f1.variables());
-		add2=Variable::getAddress(f2.variables());
-		//cout<<add1<<" "<<add2<<" val = ";
-		//cout<<f1.table()[add1]<<" "<<f2.table()[add2]<<" ";
-		f3.tableEntry(i)=f1.tableEntry(add1);
-		f3.tableEntry(i)*=f2.tableEntry(add2);
-		//cout<<f3.table()[i]<<endl;
-	}
-}
+*/
+
+
 void Function::print(ostream& out)
 {
 	out<<"Variables: ";

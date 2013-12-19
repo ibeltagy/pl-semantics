@@ -126,12 +126,9 @@ OBJS=$(OBJDIR)/arguments.o $(OBJDIR)/powerset.o \
 	$(OBJDIR)/Function.o \
 	$(OBJDIR)/GM.o \
 	$(OBJDIR)/Graph.o \
-	$(OBJDIR)/GrayCode.o \
 	$(OBJDIR)/IJGPSamplingHelper.o \
 	$(OBJDIR)/JG.o \
-	$(OBJDIR)/JGLS.o \
 	$(OBJDIR)/JGLSS.o \
-	$(OBJDIR)/JGSS.o \
 	$(OBJDIR)/JT.o \
 	$(OBJDIR)/LogFunction.o \
 	$(OBJDIR)/MAIN.o \
@@ -210,12 +207,9 @@ CPPFILES=$(UTIL)/arguments.cpp $(UTIL)/powerset.cpp $(UTIL)/random.cpp\
 	$(SAMPLESEARCH)/Function.cpp \
 	$(SAMPLESEARCH)/GM.cpp \
 	$(SAMPLESEARCH)/Graph.cpp \
-	$(SAMPLESEARCH)/GrayCode.cpp \
 	$(SAMPLESEARCH)/IJGPSamplingHelper.cpp \
 	$(SAMPLESEARCH)/JG.cpp \
-	$(SAMPLESEARCH)/JGLS.cpp \
 	$(SAMPLESEARCH)/JGLSS.cpp \
-	$(SAMPLESEARCH)/JGSS.cpp \
 	$(SAMPLESEARCH)/JT.cpp \
 	$(SAMPLESEARCH)/LogFunction.cpp \
 	$(SAMPLESEARCH)/MAIN.cpp \
@@ -458,18 +452,12 @@ $(OBJDIR)/GM.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/GM.o -c $(SAMPLESEARCH)/GM.cpp
 $(OBJDIR)/Graph.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/Graph.o -c $(SAMPLESEARCH)/Graph.cpp
-$(OBJDIR)/GrayCode.o:
-	$(GPP) $(CFLAGS) -o $(OBJDIR)/GrayCode.o -c $(SAMPLESEARCH)/GrayCode.cpp
 $(OBJDIR)/IJGPSamplingHelper.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/IJGPSamplingHelper.o -c $(SAMPLESEARCH)/IJGPSamplingHelper.cpp
 $(OBJDIR)/JG.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/JG.o -c $(SAMPLESEARCH)/JG.cpp
-$(OBJDIR)/JGLS.o:
-	$(GPP) $(CFLAGS) -o $(OBJDIR)/JGLS.o -c $(SAMPLESEARCH)/JGLS.cpp
 $(OBJDIR)/JGLSS.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/JGLSS.o -c $(SAMPLESEARCH)/JGLSS.cpp
-$(OBJDIR)/JGSS.o:
-	$(GPP) $(CFLAGS) -o $(OBJDIR)/JGSS.o -c $(SAMPLESEARCH)/JGSS.cpp
 $(OBJDIR)/JT.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/JT.o -c $(SAMPLESEARCH)/JT.cpp
 $(OBJDIR)/LogFunction.o:

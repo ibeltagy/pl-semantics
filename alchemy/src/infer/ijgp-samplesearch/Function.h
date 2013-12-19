@@ -100,9 +100,10 @@ public:
 		table_ = vector<Double> (size);
 #else
 		tableFalseEntry_ = -1;
-		weightWhenFalse_ = 0;
-		weightWhenTrue_  = 0;
+		weightWhenFalse_ = Double();
+		weightWhenTrue_  = Double();
 		tableSize_       = size;
+		//printStacktrace();
 #endif
 	}
 	void tableSet(vector<Double>& table) 
@@ -154,10 +155,10 @@ public:
 	static void dummy_divide(Function& f1, Function& f2, Function& f3);
 	static void dummy_multiplyMarginalize( vector<Variable*>& marg_variables, vector<Function*>& functions, Function& function);
 	static double MSE(Function* f1, Function* f2);
-	static void product(vector<Function*>& functions, Function& function);
+	//static void product(vector<Function*>& functions, Function& function);
 	static void marginalize(vector<Variable*>& marg_variables, vector<Function*>& functions, Function& function);
 	static void multiplyAndMarginalize( vector<Variable*>& marg_variables, vector<Function*>& functions, Function& function);
-	static void divide(Function& f1, Function& f2, Function& f3);
+	//static void divide(Function& f1, Function& f2, Function& f3);
 	
 };
 

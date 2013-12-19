@@ -312,6 +312,8 @@ static void parse_DIMACS(gzFile input_stream, Solver& S)
 SampleSearch::SampleSearch(GM& gm_, JG& jg_, int p_bound, vector<int>& order_) :
 	gm(gm_), jg(jg_)
 {
+	cout << "in SampleSearch consturtor " <<endl;
+	printStacktrace();
 	helper = IJGPSamplingHelper(&gm, &jg, 0, order_);
 	order = vector<int> (order_.size());
 	for (int i = 0; i < order.size(); i++)
@@ -1989,7 +1991,7 @@ pair<double, double> purgeORStoreSATSampling(GM& gm, IJGPSamplingHelper& helper,
 	return pair<double, double> (overall_weight_lb, overall_weight_ub);
 }
 
-void RBSampleSearchSAT::generateSamples(GM&gm, JG& jg, const char* satfile, int p_bound, vector<int>& order, vector<int>& sampling_order, int num_samples,
+/*void RBSampleSearchSAT::generateSamples(GM&gm, JG& jg, const char* satfile, int p_bound, vector<int>& order, vector<int>& sampling_order, int num_samples,
 		int max_restarts)
 {
 	// Initialize the SAT solver
@@ -2235,7 +2237,7 @@ void RBSampleSearchSAT::generateSamples(GM&gm, JG& jg, const char* satfile, int 
 	out.close();
 	//return Double(weight_ub)/Double((double)num_samples);
 }
-
+*/
 void RBSampleSearchSAT::reduce(const char* satfilename, GM &gm, std::vector<vector<bool> >& new_domains)
 {
 	new_domains = vector<vector<bool> > (gm.variables.size());

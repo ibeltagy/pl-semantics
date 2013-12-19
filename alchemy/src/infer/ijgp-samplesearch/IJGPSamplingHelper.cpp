@@ -400,9 +400,11 @@ p(p_)
 	//cout<<"p is "<<p<<endl;
 	//if(sampler!=NULL)
 	//	delete(sampler);
+	printStacktrace();
 	switch(type)
 	{
 	case POSITIVE_SAMPLER:
+		cout << "POSITIVE_SAMPLER"<<endl;
 		if(p==0)
 		{
 			sampler=new POS(gm_,order,jg_);
@@ -413,6 +415,7 @@ p(p_)
 		}
 		break;
 	case ZERO_SAMPLER:
+		cout << "ZERO_SAMPLER"<<endl;
 		if(p==0)
 		{
 			sampler=new COS(gm_,order,jg_);

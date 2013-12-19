@@ -181,6 +181,7 @@ void LogFunction::multiplyAndMarginalize(vector<Variable*>& marg_variables_,vect
 	{
 		//cout<<address<<endl;
 		// Step 1: Visit
+		//TODO:
 		out_function.tableEntry(address)+=mult.toDouble();
 		// Step 2: Choose j
 		int j=f[0];
@@ -308,6 +309,7 @@ void LogFunction::multiplyAndMarginalize(std::vector<Variable*> &marg_variables_
 	{
 		//cout<<address<<endl;
 		// Step 1: Visit
+		//TODO:
 		out_function.tableEntry(address)+=mult.toDouble();
 		// Step 2: Choose j
 		int j=f[0];
