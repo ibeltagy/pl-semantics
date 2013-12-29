@@ -162,7 +162,7 @@ bool DRC::isConsistent(int var, int value)
 	gm.variables[var]->value()=INVALID_VALUE;
 	return true;
 }
-
+/*
 void DRC::domainConsistency(int var,vector<bool>& new_domain)
 {
 	new_domain=vector<bool> (gm.variables[var]->domain_size());
@@ -192,6 +192,7 @@ void DRC::domainConsistency(int var,vector<bool>& new_domain)
 	}
 }
 
+
 void DRC::reduceFunction(Function* function)
 {
 	bool reduced=false;
@@ -211,5 +212,5 @@ void DRC::reduceFunction(Function* function)
 	}
 	
 }
-
+*/
 }

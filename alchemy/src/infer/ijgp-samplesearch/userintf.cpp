@@ -20,6 +20,8 @@
 
 #include <stdio.h>                     // define printf() function
 #include <stdlib.h>                    // define exit() function
+#include <execinfo.h>
+
 namespace ss{
 #if (defined (__BORLANDC__) || defined (_MSC_VER)) && ! defined(_WINDOWS_)
   #include <conio.h>                   // define getch() function
@@ -79,4 +81,17 @@ void FatalError(const char * ErrorText) {
   // Terminate program with error code
   exit(1);
 }
+
+void printStacktrace () 
+{
+  void* callstack[128];
+  int i, frames = backtrace(callstack, 128);
+  char** strs = backtrace_symbols(callstack, frames);
+  for (i = 0; i < frames; ++i) {
+    printf("%s\n", strs[i]);
+  }
+  free(strs);
+}
+
+
 }

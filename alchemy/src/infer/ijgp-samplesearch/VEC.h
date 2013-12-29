@@ -83,6 +83,7 @@ void print_assignment(vector<Variable*>& vars)
 }
 void VEC_DET(GM& gm, vector<int>& order, vector<int>& sampling_order, clock_t& time_bound, ostream& out)
 {
+cout << "in vec det" << endl;
 	assert(gm.mode == DET);
 	if (sampling_order.empty()) {
 		BE be(gm.variables, gm.functions, order);
@@ -108,6 +109,10 @@ void VEC_DET(GM& gm, vector<int>& order, vector<int>& sampling_order, clock_t& t
 	//Double pe;
 	long double pe = 0.0;
 	cerr << "log 10 num values = " << log10_numvalue << endl;
+
+	//for (int i = 0; i < gm.functions.size() ; i ++)
+	//	gm.functions[i]->print();
+
 	Solver solver;
 	gm.convertToSATUAI10();
 	setupSolver(solver, gm, true);

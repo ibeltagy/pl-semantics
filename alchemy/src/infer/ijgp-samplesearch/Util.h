@@ -142,6 +142,9 @@ void do_set_difference(const vector<_Classname> &a, const vector<_Classname> &b,
 	c_=c;
 }
 
+void printStacktrace ();
+#define assertStacktrace(cond)  if (!(cond)){printStacktrace();assert(cond);}
+
 }
 
 #endif

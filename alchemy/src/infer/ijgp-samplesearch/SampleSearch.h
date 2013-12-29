@@ -59,7 +59,7 @@ class RBSampleSearchSAT
 	Double computePE(GM& gm, JG& jg, const char* satfile, int p_bound, vector<int>& order,vector<int>& sampling_order, int num_samples);
 	Double computePEApp(GM& gm, JG& jg, const char* satfile, int p_bound, vector<int>& order,vector<int>& sampling_order, int num_samples, int max_restarts);
 	double runBE(GM& gm, vector<int>& order, char* infile);	
-	void generateSamples(GM& gm, JG& jg, const char* satfile, int p_bound, vector<int>& order,vector<int>& sampling_order, int num_samples, int max_restarts);
+//	void generateSamples(GM& gm, JG& jg, const char* satfile, int p_bound, vector<int>& order,vector<int>& sampling_order, int num_samples, int max_restarts);
 };
 }
 #endif

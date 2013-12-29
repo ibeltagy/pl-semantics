@@ -32,10 +32,12 @@ struct BESAT
 	
 };
 
+/*
 struct BESampleSAT
 {
 	BESampleSAT(vector<Variable*>& all_variables, vector<vector<Lit> >& clauses, vector<int>& order, myRandom& random);
 };
+
 
 struct BucketProp
 {
@@ -43,5 +45,7 @@ struct BucketProp
 	vector<Function> marginals;
 	BucketProp(vector<Variable*>& variables, vector<Function*>& functions, vector<int>& order);
 };
+*/
 }
+
 #endif

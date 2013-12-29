@@ -1434,6 +1434,7 @@ void GM::reduce(int i_bound)
 		}
 		delete(functions[i]);
 		functions[i]=new Function(i,new_func_variables);
+		//TODO:
 		functions[i]->tableSet(new_table);
 	}
 	for(int i=0;i<variables.size();i++)
