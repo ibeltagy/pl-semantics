@@ -7,14 +7,13 @@ import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
 import opennlp.scalabha.util.FileUtils
 import utcompling.scalalogic.fol.expression.FolExpression
 import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
-import utcompling.mlnsemantics.vecspace.BowVectorSpace
+import utcompling.mlnsemantics.vecspace._
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.MergingBoxerExpressionInterpreterDecorator
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.UnnecessarySubboxRemovingBoxerExpressionInterpreter
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.OccurrenceMarkingBoxerExpressionInterpreterDecorator
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.BoxerExpressionInterpreter
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
-import utcompling.mlnsemantics.vecspace.BowVector
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.PredicateCleaningBoxerExpressionInterpreterDecorator
 import utcompling.mlnsemantics.inference._
 
@@ -64,7 +63,8 @@ object Baseline {
     //
     //
 
-    val vsf1 = (words: (String => Boolean)) => Map[String, BowVector]().withDefaultValue(new BowVector(Map("" -> 1)))
+    val singletonVector = new DenseBowVector(Array(1.0))
+    val vsf1 = (words: (String => Boolean)) => Map[String, BowVector]().withDefaultValue(singletonVector)
     val vsf2 = (words: (String => Boolean)) => BowVectorSpace("resources/nytgiga.lem.1m.vc.f2000.m50.wInf", words)
 
     val ttp =

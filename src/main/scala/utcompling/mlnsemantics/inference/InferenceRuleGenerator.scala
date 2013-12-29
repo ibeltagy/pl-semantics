@@ -1,7 +1,6 @@
 package utcompling.mlnsemantics.inference
 
-import utcompling.mlnsemantics.vecspace.BowVector
-import utcompling.mlnsemantics.vecspace.BowVectorSpace
+import utcompling.mlnsemantics.vecspace._
 import utcompling.scalalogic.drt.expression.DrtExpression
 import edu.mit.jwi.item.POS
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression

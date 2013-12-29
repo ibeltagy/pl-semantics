@@ -140,32 +140,9 @@ object FileUtils {
    * problem of having to all of your processing inside the `using` block.
    */
   def readLines(file: File, encoding: Option[String] = None): Iterator[String] = {
-    val resource = encoding match {
-      case Some(enc) => Source.fromFile(file, enc)
-      case None => Source.fromFile(file, "UTF-8")
-    }
-    val blockItr = resource.getLines
-    var finished = false
-    new Iterator[String] {
-      override def next() = {
-        hasNext()
-        if (finished) throw new NoSuchElementException("next on empty iterator")
-        val n = blockItr.next
-        hasNext()
-        n
-      }
-      override def hasNext() = {
-        if (finished)
-          false
-        else {
-          val hn = blockItr.hasNext
-          if (!hn) {
-            finished = true
-            if (resource != null) resource.close()
-          }
-          hn
-        }
-      }
+    encoding match {
+      case Some(enc) => Source.fromFile(file, enc).getLines
+      case None => Source.fromFile(file, "UTF-8").getLines
     }
   }
 

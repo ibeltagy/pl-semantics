@@ -1,6 +1,6 @@
 package utcompling.mlnsemantics.inference
 
-import utcompling.mlnsemantics.vecspace.BowVector
+import utcompling.mlnsemantics.vecspace._
 import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.CollectionUtil._
 import math.min
@@ -74,7 +74,10 @@ case class AwithCvecspaceWithSpellingSimilarityRuleWeighter(
         val v = compositeVectorMaker.make (consequent.split(" "), vectorspace);
         consequent -> Some(v match {
           case cv => pv match {
-    		case pv => pv cosine cv
+            case pv => { /*println(antecedent + " -> " + consequent + "   " + (pv cosine cv))
+                         println(pv)
+                         println(cv)*/
+                         pv cosine cv } 
     		//case None => w  //if vector space does not work, use spelling
           	}
           //case None => w  //if vector space does not work, use spelling

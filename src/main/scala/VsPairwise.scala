@@ -3,8 +3,7 @@ import opennlp.scalabha.util.FileUtils._
 import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.CollectionUtil._
 import opennlp.scalabha.util.Pattern.Range
-import utcompling.mlnsemantics.vecspace.BowVector
-import utcompling.mlnsemantics.vecspace.BowVectorSpace
+import utcompling.mlnsemantics.vecspace._
 import utcompling.mlnsemantics.inference._
 import java.text.DecimalFormat
 

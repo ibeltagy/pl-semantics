@@ -36,6 +36,12 @@ class Config(opts: Map[String, String] = Map()) {
 
   //-------------------------------------------Precompiled distributional phrases (like Marco Baroni's phrases)
 
+  // basic vector space
+  val vectorSpace = opts.get("-vectorSpace") match {
+    case Some(filename) => filename
+    case _ => "resources/full.vs"
+  }
+
   // Scaling weights of distributional inference rules  
   val distWeight = opts.get("-distWeight") match {
     case Some(weight) => weight.toDouble

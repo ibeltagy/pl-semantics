@@ -8,11 +8,10 @@ import opennlp.scalabha.util.CollectionUtil._
 import opennlp.scalabha.util.Pattern.Range
 import utcompling.scalalogic.fol.expression.FolExpression
 import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
-import utcompling.mlnsemantics.vecspace.BowVectorSpace
+import utcompling.mlnsemantics.vecspace._
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.BoxerExpressionInterpreter
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
-import utcompling.mlnsemantics.vecspace.BowVector
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl._
 import utcompling.mlnsemantics.inference._
 import utcompling.scalalogic.discourse.impl.PreparsedBoxerDiscourseInterpreter
@@ -42,7 +41,7 @@ object Sts {
   val SomeRe = """Some\((.*)\)""".r
 
   //Global variables used by other classes
-  var opts:Config = null;	//command line arugments
+  var opts: Config = null;	//command line arugments
   var text = "";			//Text
   var textLemma = "";		//Text lemmatized 
   var hypothesis = "";		//Hypothesis
@@ -78,10 +77,10 @@ object Sts {
 	          {
 		          val from  = i * step;
 		          val to = min((i+1)*step, totalSen);
-					println (from + ", " +  to);
-					 println (sentences.slice(from, to));
+					//println (from + ", " +  to);
+					 //println (sentences.slice(from, to));
 		          val lemmatized = new CncLemmatizeCorpusMapper().parseToLemmas(sentences.slice(from, to))
-		          println(lemmatized);
+		          //println(lemmatized);
 		          lemmatized
 		            .map(_.map(_.map(_._2).mkString(" ")).getOrElse("______parse_failed______"))
 		            .grouped(2).foreach { case Seq(a, b) => f.write("%s\t%s\n".format(a, b)) }
@@ -89,15 +88,15 @@ object Sts {
 	        }
         
 
-      case Seq("vs", fullVsFile, lemFile, stsVsFile) =>
+      case Seq("vs", lemFile, stsVsFile) =>
         val allLemmas = readLines(lemFile).flatMap(_.split("\\s+")).toSet
+        val fullVsFile = opts.vectorSpace
         FileUtils.writeUsing(stsVsFile) { f =>
-          for (line <- readLines(fullVsFile))
-            if (allLemmas(line.split("\\s+|-")(0)))
-            {
-              val modifiedLine = """-j\t|-r\t""".r.replaceAllIn(line, "-a\t");
-              f.write(modifiedLine + "\n")
-            }
+          for (line <- readLines(fullVsFile)) {
+            val word = line.split("-.\t|\t")(0)
+            if (allLemmas(word) || allLemmas(word.toLowerCase))
+              f.write(line + "\n")
+          }
         }
 
       case Seq("box", stsFile, boxFile) =>
@@ -129,6 +128,8 @@ object Sts {
     def run(stsFile: String, boxFile: String, lemFile: String, vsFile: String, goldSimFile: String, outputSimFile: String, allLemmas: String => Boolean, includedPairs: Int => Boolean) {
     	val pairs = readLines(stsFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
 		val lemPairs = readLines(lemFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
+      val vectorSpace = BowVectorSpace(vsFile, x => allLemmas(x))
+
 
 		val boxPairs =
 		FileUtils.readLines(boxFile)
@@ -137,8 +138,6 @@ object Sts {
           .grouped(2)
         val goldSims = FileUtils.readLines(goldSimFile).map(_.toDouble)
       
-      	val vsFileMod = vsFile + ( if(opts.vectorspaceFormatWithPOS) ".pos" else "" );
-
 	    def probOfEnt2simScore(p: Double) = {
 			if(opts.task == "sts")
 				p * 5;
@@ -187,7 +186,7 @@ object Sts {
 	            		  											//This is necessary before generating inference rules, because generating inference rules searches vector space
             	new FindEventsProbabilisticTheoremProver(   //3,4<== Find event variables and prop variables. This is important to reduce domain size. 
             	    new InferenceRuleInjectingProbabilisticTheoremProver( // 6<== Generate Inference rules on the fly + convert the other rules to FOL then add them to the inference problem. 
-		                words => BowVectorSpace(vsFileMod, x => words(x) && allLemmas(x)),
+		                words => vectorSpace,
 		                new SameLemmaHardClauseRuleWeighter(
 		                  new AwithCvecspaceWithSpellingSimilarityRuleWeighter(compositeVectorMaker)),
 		              new FromEntToEqvProbabilisticTheoremProver( // 6.5<== goal =  premise ^  hypothesis. This is for STS
