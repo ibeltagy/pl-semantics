@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export CANDCHOME=candc/bin
-export ALCHEMYHOME=alchemy/bin
+#export ALCHEMYHOME=alchemy/bin
 export WORDNETHOME=resources/wordnet
 
 SBT="java -Dfile.encoding=UTF8 -Xdebug -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=256m -jar bin/sbt-launch-*.jar"
@@ -24,7 +24,14 @@ case $CMD in
     $SBT console
     exit 0
    ;;
+  run-condor)
+   step=$1
+   shift
+   index=$1
+   shift
+	;;
 esac
+
 
 #CMD is not compile nor boxer
 #CMD = run, box, lem, vs, gen, all
@@ -48,6 +55,10 @@ case $DS in
 
 	dsPath="$RES/rte$rte_ver/RTE$rte_ver" #.$rte_mode"
   ;;
+  *) 
+    echo "$DS is a wrong dataset"
+    exit 1
+  ;;
 esac
 
 txt="$dsPath.txt"
@@ -56,7 +67,7 @@ lem="$dsPath.lem"
 vs="$dsPath.vs"
 gs="$dsPath.gs"
 out="$dsPath.out"
-
+rowsCnt=$(wc -l "$txt" | awk  '{print $1}')
 
 if [ "$CMD" == "all" ] || [ "$CMD" == "gen" ] || [ "$CMD" == "box" ]; then
 	echo "Start parsing"
@@ -80,26 +91,15 @@ if [ "$CMD" == "all" ] || [ "$CMD" == "run" ]; then
 	$START utcompling.mlnsemantics.run.Sts run $txt $box $lem $vs $gs $out "$@"
 fi
 
-#  vs-pos)
-#        $START utcompling.mlnsemantics.run.Sts vs /scratch/cluster/beltagy/deft/CORE_SS.bnc-ukwac-wacky.min50.10K.ppmi.svd_500.dan $RES/sts/prob.in.lem $RES/sts/prob.in.vs.pos "$@"
-#	$START utcompling.mlnsemantics.run.Sts vs /scratch/cluster/beltagy/deft/CORE_SS.bnc-ukwac-wacky.min50.10K.ppmi.svd_500.dan $RES/sts/msrParFull.in.lem $RES/sts/msrParFull.in.vs.pos "$@"
-#	$START utcompling.mlnsemantics.run.Sts vs /scratch/cluster/beltagy/deft/CORE_SS.bnc-ukwac-wacky.min50.10K.ppmi.svd_500.dan $RES/sts/STS.MSRvid.in.lem $RES/sts/STS.MSRvid.in.vs.pos "$@"
-#	$START utcompling.mlnsemantics.run.Sts vs /scratch/cluster/beltagy/deft/CORE_SS.bnc-ukwac-wacky.min50.10K.ppmi.svd_500.dan $RES/sts/STS.MSRpar.in.lem $RES/sts/STS.MSRpar.in.vs.pos "$@"
-
-
-#rte )
-#	$START utcompling.mlnsemantics.run.Sts run $RES/rte/RTE$version.$rtemode.txt $RES/rte/RTE$version.$rtemode.box $RES/rte/RTE$version.$rtemode.lem $RES/rte/RTE$version.$rtemode.vs $RES/rte/RTE$version.$rtemode.gs $RES/rte/RTE$version.$rtemode.out -kbest 1 -task rte -vectorMaker add -rules $RES/rte/rules -multiOut $RES/sts/multiOut-$rtemode/RTE$version.$rtemode.multiOut "$@"
-
-# run-trento)
-#	$START utcompling.mlnsemantics.run.Sts run $RES/sts/P.txt $RES/sts/P.box $RES/sts/P.lem $RES/sts/P.vs $RES/sts/P.gs $RES/sts/P.out -kbest 1 -task sts -vectorMaker add -phrases $RES/sts/phrases/phrases.lst -phraseVecs $RES/sts/phrases/word_phrase_sentence_ppmi_$reducedSpace.dm -multiOut $RES/sts/multiOut-test-P/$reducedSpace/tmp.multiOut "$@"
-#	$START utcompling.mlnsemantics.run.Sts run $RES/sts/Prev.txt $RES/sts/Prev.box $RES/sts/Prev.lem $RES/sts/Prev.vs $RES/sts/Prev.gs $RES/sts/Prev.out -kbest 1 -task sts -vectorMaker add -phrases $RES/sts/phrases/phrases.lst -phraseVecs $RES/sts/phrases/word_phrase_sentence_ppmi_$reducedSpace.dm -multiOut $RES/sts/multiOut-test-Prev/$reducedSpace/tmp.multiOut "$@"
-#
-#	$START utcompling.mlnsemantics.run.Sts run $RES/sts/P-S.txt $RES/sts/P-S.box $RES/sts/P-S.lem $RES/sts/P-S.vs $RES/sts/P-S.gs $RES/sts/P-S.out -kbest 1 -task sts -vectorMaker add -phrases $RES/sts/phrases/phrases.lst -phraseVecs $RES/sts/phrases/word_phrase_sentence_ppmi_$reducedSpace.dm -multiOut $RES/sts/multiOut-test-P-S/$reducedSpace/tmp.multiOut "$@"
-#	$START utcompling.mlnsemantics.run.Sts run $RES/sts/P-Srev.txt $RES/sts/P-Srev.box $RES/sts/P-Srev.lem $RES/sts/P-Srev.vs $RES/sts/P-Srev.gs $RES/sts/P-Srev.out -kbest 1 -task sts -vectorMaker add -phrases $RES/sts/phrases/phrases.lst -phraseVecs $RES/sts/phrases/word_phrase_sentence_ppmi_$reducedSpace.dm -multiOut $RES/sts/multiOut-test-P-Srev/$reducedSpace/tmp.multiOut "$@"
-#
-#	$START utcompling.mlnsemantics.run.Sts run $RES/sts/P-SD.txt $RES/sts/P-SD.box $RES/sts/P-SD.lem $RES/sts/P-SD.vs $RES/sts/P-SD.gs $RES/sts/P-SD.out -kbest 1 -task sts -vectorMaker add -phrases $RES/sts/phrases/phrases.lst -phraseVecs $RES/sts/phrases/word_phrase_sentence_ppmi_$reducedSpace.dm -multiOut $RES/sts/multiOut-test-P-SD/$reducedSpace/tmp.multiOut "$@"
-#	$START utcompling.mlnsemantics.run.Sts run $RES/sts/P-SDrev.txt $RES/sts/P-SDrev.box $RES/sts/P-SDrev.lem $RES/sts/P-SDrev.vs $RES/sts/P-SDrev.gs $RES/sts/P-SDrev.out -kbest 1 -task sts -vectorMaker add -phrases $RES/sts/phrases/phrases.lst -phraseVecs $RES/sts/phrases/word_phrase_sentence_ppmi_$reducedSpace.dm -multiOut $RES/sts/multiOut-test-P-SDrev/$reducedSpace/tmp.multiOut "$@"
-#	$START utcompling.mlnsemantics.run.Sts run $RES/sts/RTE$version.test.txt $RES/sts/RTE$version.test.box $RES/sts/RTE$version.test.lem $RES/sts/RTE$version.test.vs $RES/sts/RTE$version.test.gs $RES/sts/RTE$version.test.out -kbest 1 -task rte -vectorMaker add -multiOut $RES/sts/RTE$version.test.multiOut "$@"
-#	;;
+if [ "$CMD" == "run-condor" ]; then
+	rngTo=$(( $step * index ))
+   rngFrom=$(( $index - 1 ))
+	rngFrom=$(( $rngFrom * $step + 1))
+	if [ "$rngFrom" -gt "$rowsCnt" ]; then
+   	echo "range $rngFrom-$rngTo beyond dataset size"
+	   exit 1
+	fi
+   ./bin/condorizer.py $START utcompling.mlnsemantics.run.Sts run $txt $box $lem $vs $gs $out $rngFrom-$rngTo "$@"
+fi
 
 exit 0

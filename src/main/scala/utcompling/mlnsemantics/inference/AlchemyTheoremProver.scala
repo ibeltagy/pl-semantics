@@ -300,7 +300,7 @@ object AlchemyTheoremProver {
 
   private var pairIndx = 0;
 
-  def findBinary(binDir: Option[String] = None, envar: Option[String] = Some("ALCHEMYHOME"), verbose: Boolean = false) =
+  def findBinary(binDir: Option[String] = Some("alchemy/bin"), envar: Option[String] = Some("ALCHEMYHOME"), verbose: Boolean = false) =
   {    //new AlchemyTheoremProver(FileUtils.findBinary("liftedinfer", binDir, envar, verbose))
 	pairIndx = pairIndx+1;
 	//println("pairIndx: " + pairIndx);
