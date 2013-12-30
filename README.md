@@ -95,31 +95,32 @@ Entry point for running the system on Condor is the script
 The script provides the following functionalities: 
 
 * Get status of Condor jobs
+
    ~/mln-semantics$ bin/condor.sh  status
 
 *  Remove all submitted Condor jobs
+
 	~/mln-semantics$ bin/condor.sh  remove
 
 * Submit new jobs to Condor. STEP is number of pairs per job. ARGS are the usual arguments you want to pass to bin/mlnsem (execluding the leading "run" and the range argument). Output files are saved in mln-semantics/condor/out/. Be careful, consecutive submissions of tasks will overwrite each others. 
 
-   ~/mln-semantics$ bin/condor.sh submit STEP ARGS 
+	~/mln-semantics$ bin/condor.sh submit STEP ARGS 
 
 for example: submit the sick dataset to condor. Each Condor job contains 10 pairs of sentences. Run each pair for 30 seconds, and do not print any log
 
-   ~/mln-semantics$ bin/condor.sh submit 10 sick-rte -timeout 30000 -log OFF 
+	~/mln-semantics$ bin/condor.sh submit 10 sick-rte -timeout 30000 -log OFF 
 
-* Prints a list of the tasks that without submitting anything. This is helpful to be called before actually submitting the tasks.
+* Prints a list of the tasks without submitting anything. This is helpful to be called before actually submitting the tasks.
 
-   ~/mln-semantics$ bin/condor.sh print STEP ARGS
+	~/mln-semantics$ bin/condor.sh print STEP ARGS
 
-* In some cases (for reason I do not understand) some condor tasks break without notice. The argument fix checks all output files and make sure that all condor tasks terminated correctly. If some of them did not, resubmit them again. Make sure to use the same STEP and ARGS. Do not call "fix" while some taks are already running 
+* In some cases (for reasons I do not understand) some condor tasks break without notice. Calling the condor script with the argument "fix" checks all output files and make sure that all condor tasks terminated correctly. If some of them did not, resubmit them again. Make sure to use the same STEP and ARGS. Do not call "fix" while some taks are already running 
 
    ~/mln-semantics$ bin/condor.sh fix STEP ARGS 
 
-* Collect results of individual tasks into one block and prints it. Make sure to use the same STEP.  
+* Collects results of individual tasks into one block and prints it. Make sure to use the same STEP.  
 
    ~/mln-semantics$ bin/condor.sh collect STEP 
-
 
 Using Boxer
 -----------
