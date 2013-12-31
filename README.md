@@ -122,6 +122,31 @@ for example: submit the sick dataset to condor. Each Condor job contains 10 pair
 
    ~/mln-semantics$ bin/condor.sh collect STEP 
 
+Classification and Regression
+-----------------------------
+
+We use WEKA for classification and Regression. We use AdaBoost for classification for RTE, and Additive Regression for regression for STS. 
+The script bin/weka.sh is to make this task easy. 
+
+The script bin/weka.sh can be called like this: 
+
+   ~/mln-semantics$ cat ACTUAL | bin/weka.sh COMMAND GoldStandardFile NumberOfParses
+
+where
+
+* ACTUAL: is a file contains the system's output score in one long line. 
+
+* COMMAND: "classify" or "regress" depending on the task
+
+* GoldStandardFile: the name is descriptive enough. A sample file is resources/sick/sick-rte.gs
+
+* NumberOfParses: this option is useful if ACTUAL contains ouput of the system for multible parses. Make sure to use the correct number of parses. If number of parses is 1, use 1. 
+
+Example: after running the system on Condor, you can read the output using the condor script with argument "collect" as shown before. One easy way to get the classification/regression score is by piping the output from the condor scrip to the weka script as below: 
+
+	~/mln-semantics$ bin/condor.sh collect 10 | tail -n 1  | bin/weka.sh regress resources/sick/sick-rte.gs  1 
+
+
 Using Boxer
 -----------
 
