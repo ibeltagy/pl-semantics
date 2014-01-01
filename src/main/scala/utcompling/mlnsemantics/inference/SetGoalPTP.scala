@@ -72,7 +72,10 @@ class SetGoalPTP(
     {
       //H+, H-
       flipQ = false;
-      val hPlus = GoalExpression(skolemNew(goal -> SetVarBindPTP.entPred_h), Double.PositiveInfinity)
+      univVars = List();
+      var hPlusExp = skolemNew(goal -> SetVarBindPTP.entPred_h);
+      univVars.foreach (v => hPlusExp = FolAllExpression (v, hPlusExp));   //apply univVars
+      val hPlus = GoalExpression(hPlusExp, Double.PositiveInfinity);
       flipQ = true;
       val hMinus = GoalExpression(skolemNew(SetVarBindPTP.entPred_h -> goal, List(), true), Double.PositiveInfinity)
 		if(Sts.opts.noHMinus)
@@ -92,6 +95,7 @@ class SetGoalPTP(
   //****************************** fixDCA functions **************************  
   private var newConstants: Map[String, Set[String]] = null; 
   private var flipQ = false;
+  private var univVars: List[Variable] = List();  
   private def skolemNew(expr: FolExpression, skolemVars: List[Variable] = List(), isNegated:Boolean = false): FolExpression = 
   {
 	expr match {
@@ -99,7 +103,10 @@ class SetGoalPTP(
     	  if (isNegated)
     	  {
     	    if(!flipQ)
-    	    	FolExistsExpression(variable, skolemNew(term, skolemVars, isNegated))
+    	    {	//FolExistsExpression(variable, skolemNew(term, skolemVars, isNegated))
+                univVars = univVars ++ List(variable);
+		skolemNew(term, skolemVars, isNegated);
+	    }
     	    else 
     	    	FolAllExpression(variable, skolemNew(term, skolemVars, isNegated))
     	  }
@@ -110,7 +117,10 @@ class SetGoalPTP(
           if (!isNegated)
           {
         	  if(!flipQ)
-        		  FolAllExpression(variable, skolemNew(term, skolemVars, isNegated))
+        	  {	  //FolAllExpression(variable, skolemNew(term, skolemVars, isNegated))
+	                  univVars = univVars ++ List(variable);
+			  skolemNew(term, skolemVars, isNegated);
+		  }
         	  else
         		  FolExistsExpression(variable, skolemNew(term, skolemVars, isNegated))
           }

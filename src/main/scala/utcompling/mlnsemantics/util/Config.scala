@@ -126,14 +126,14 @@ class Config(opts: Map[String, String] = Map()) {
 
   //do all the changes required to fix the problems resulting from the Domain Closure Assumption
   val fixDCA = opts.get("-fixDCA") match {
-    case Some("true") => true;
-    case _ => false;
+    case Some("false") => false;
+    case _ => true;
   }
 
   //if fixDCA is true, noHMinus ignores H- and set negative prior on all predicates
   val noHMinus = opts.get("-noHMinus") match {
-    case Some("true") => true;
-    case _ => false;
+    case Some("false") => false;
+    case _ => true;
   }
   
   //keep universal quantifiers or replace them with existentials
@@ -151,8 +151,8 @@ class Config(opts: Map[String, String] = Map()) {
   
   //recover event variables and prop variables or not
  val withEventProp = opts.get("-withEventProp") match {
-    case Some("false") => false;
-    case _ => true;
+    case Some("true") => true;
+    case _ => false;
   }
 
   //-------------------------------------------task
