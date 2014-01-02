@@ -1165,6 +1165,7 @@ void RBSampleSearch::computePEApp(GM& gm, JG& jg, int p_bound, vector<int>& orde
 		}
 	}
 }
+/*
 void RBSampleSearch::computeBeliefsApp(GM& gm, JG& jg, int p_bound, vector<int>& order, clock_t& time_bound, vector<int>& sampling_order, int max_restarts)
 {
 	// Initialize the SAT solver
@@ -1301,6 +1302,7 @@ void RBSampleSearch::computeBeliefsApp(GM& gm, JG& jg, int p_bound, vector<int>&
 		}
 	}
 }
+*/
 void RBSampleSearch::computeBeliefsApp_Improved(GM& gm, JG& jg, int p_bound, vector<int>& order, clock_t& time_bound, vector<int>& sampling_order, int max_restarts,
 		vector<set<int> >& clusters)
 {
@@ -1433,7 +1435,7 @@ void RBSampleSearch::computeBeliefsApp_Improved(GM& gm, JG& jg, int p_bound, vec
 		}
 	}
 }
-
+/*
 void RBSampleSearch::computeBayesBeliefsApp(GM& gm, GM& other_gm, JG& jg, int p_bound, vector<int>& order, clock_t& time_bound, vector<int>& sampling_order,
 		int max_restarts)
 {
@@ -1585,7 +1587,7 @@ void RBSampleSearch::computeBayesBeliefsApp(GM& gm, GM& other_gm, JG& jg, int p_
 		}
 	}
 }
-
+*/
 bool SampleSearch::isconsistent(GM& gm)
 {
 	gm.convertToSAT();
@@ -1675,6 +1677,7 @@ pair<double, double> purgeORStoreSAT(GM& gm, IJGPSamplingHelper& helper, ORStore
 	//store.reset();
 	return pair<double, double> (overall_weight_lb, overall_weight_ub);
 }
+/*
 RBSampleSearchSAT::RBSampleSearchSAT() :
 	interval(10), outfilename("out")
 {
@@ -1684,16 +1687,16 @@ Double RBSampleSearchSAT::computePEApp(GM&gm, JG& jg, const char* satfile, int p
 		int max_restarts)
 {
 	// Initialize the SAT solver
-	/*        SATInstance xInstance;
-	 SATSolver xSATSolver(&xInstance);
-	 char satfilename[1000];
-	 strcpy(satfilename,satfile);
-	 xInstance.bReadDimacs(satfilename);
-	 xSATSolver.bPreprocess(3,10);
-	 ofstream xNewInstance;
-	 xNewInstance.open("temp.cnf", ios::out);
-	 xInstance.vOutputDimacs(xNewInstance);
-	 */
+	//        SATInstance xInstance;
+	//SATSolver xSATSolver(&xInstance);
+	// char satfilename[1000];
+	// strcpy(satfilename,satfile);
+	// xInstance.bReadDimacs(satfilename);
+	// xSATSolver.bPreprocess(3,10);
+	// ofstream xNewInstance;
+	// xNewInstance.open("temp.cnf", ios::out);
+	// xInstance.vOutputDimacs(xNewInstance);
+	// 
 	Solver solver;
 	gzFile in = gzopen("temp2.cnf", "rb");
 	parse_DIMACS(in, solver);
@@ -1918,7 +1921,7 @@ double RBSampleSearchSAT::runBE(GM& gm, vector<int>& order, char* infile)
 	cout << be_sat.log_pe << endl;
 	return exp(be_sat.log_pe);
 }
-
+*/
 pair<double, double> purgeORStoreSATSampling(GM& gm, IJGPSamplingHelper& helper, ORStore& store, vector<int>& sampling_order, vector<vector<int> >& all_samples, vector<
 		vector<bool> >& full_samples, vector<double>& all_weights, ofstream& out)
 {
@@ -2237,7 +2240,7 @@ pair<double, double> purgeORStoreSATSampling(GM& gm, IJGPSamplingHelper& helper,
 	out.close();
 	//return Double(weight_ub)/Double((double)num_samples);
 }
-*/
+
 void RBSampleSearchSAT::reduce(const char* satfilename, GM &gm, std::vector<vector<bool> >& new_domains)
 {
 	new_domains = vector<vector<bool> > (gm.variables.size());
@@ -2282,7 +2285,7 @@ void RBSampleSearchSAT::reduce(const char* satfilename, GM &gm, std::vector<vect
 	}
 	cerr << "Domains reduced\n";
 }
-
+*/
 Double getSampleSAT(vector<Function>& functions, Variable* variable, myRandom& random)
 {
 	assert(variable->value()==INVALID_VALUE);
@@ -2324,6 +2327,7 @@ Double getSampleSAT(vector<Function>& functions, Variable* variable, myRandom& r
 		return Double((long double) 1.0 - p);
 	}
 }
+/*
 Double RBSampleSearchSAT::computePE(GM& gm, JG& jg, const char* satfile, int p_bound, vector<int>& order, vector<int>& sampling_order, int num_samples)
 {
 	Solver solver;
@@ -2427,5 +2431,5 @@ Double RBSampleSearchSAT::computePE(GM& gm, JG& jg, const char* satfile, int p_b
 			cout << "z " << log10((sum_weight / Double((long double) i)).value()) << endl;
 		}
 	}
-}
+}*/
 }

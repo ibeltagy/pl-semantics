@@ -1212,6 +1212,66 @@ void GM::readErgo(char* infilename)
 }
 */
 
+void GM::readMLN(VariableState* state_)
+{
+	type=MARKOV;
+	//ifstream infile(infilename);
+	cerr<<"Reading Markov network\n";	
+	int num_variables = state_->getNumAtoms();
+	//infile>>num_variables;
+	// Read domains
+	variables=vector<Variable*> (num_variables);
+	for(int i=0;i<num_variables;i++)
+	{
+		int domain_size = 2;
+		//infile>>domain_size;
+		vector<int> domain(domain_size);
+		for(int j=0;j<domain_size;j++)
+			domain[j]=j;
+		variables[i]=new Variable(i,domain);
+		variables[i]->orig_id=i;
+	}
+	copy_of_variables=variables;
+	int num_functions = state_->getNumClauses();
+	//infile>>num_functions;
+	vector<vector<Variable*> > scope (num_functions);
+	functions=vector<Function*> (num_functions);
+	for(int i=0;i<num_functions;i++)
+	{
+		GroundClause *gndClause = state_->getGndClause(i);
+		int num_vars_in_func = gndClause->getNumGroundPredicates();
+		//infile>>num_vars_in_func;
+		scope[i]=vector<Variable*>(num_vars_in_func);
+		for(int j=0;j<num_vars_in_func;j++)
+		{
+			int curr_var = gndClause->getGroundPredicateIndex(j);
+			//infile>>curr_var;
+			int var_id=((curr_var > 0)? (curr_var-1):(-curr_var-1));
+			scope[i][j]=variables[var_id];
+			if(curr_var>0)
+				variables[var_id]->addr_value()=0;
+			else
+				variables[var_id]->addr_value()=1;
+		}
+		double clauseW = exp(-gndClause->getWt());
+		if(gndClause->isHardClause())
+			clauseW = 0;
+		//infile>>clauseW;
+		Double weightWhenFalse = Double();
+		if(clauseW > DBL_MIN)
+			weightWhenFalse = Double(clauseW);
+		else
+			mode=DET;
+		//cout << "IsZero(" << whenWhenFalse <<"/"<<clauseW <<") = " <<whenWhenFalse.isZero() << "/" << (clauseW == 0)<<endl;
+		sort(scope[i].begin(),scope[i].end(),less_than_comparator_variable);
+		int tableFalseEntry = Variable::getAddress(scope[i]);
+		functions[i]=new Function(i ,scope[i], weightWhenFalse, tableFalseEntry);
+		//for(int j = 0; j<functions[i]->table().size(); j++)
+		//	cout <<functions[i]->table()[j] <<"("<<functions[i]->table()[j].isZero()<<") ";
+		//cout <<endl;
+
+	}
+}
 void GM::readMLN(const char* infilename)
 {
 	type=MARKOV;

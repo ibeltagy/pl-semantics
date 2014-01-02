@@ -181,7 +181,6 @@ public:
 
 				sample_weight += log(curr_weight.value());
 			}
-
 			BE be(gm.variables, gm.functions, order);
 			//cout<<log10(be.log_pe.toDouble().value())<<" "<<flush;
 			long double actual_weight = be.log_pe.toLongdouble();
@@ -200,6 +199,7 @@ public:
 		return log10(pe.value());
 	}
 
+/*
 	void computeBeliefs(GM& gm, JG& jg, int p_bound, vector<int>& order,
 			vector<int>& sampling_order, clock_t& time_bound, ostream& out)
 	{
@@ -260,6 +260,7 @@ public:
 		}
 		gm.printMarginalsUAI10(marginals, out);
 	}
+*/
 	void computeBeliefs_Improved(GM& gm, JG& jg, int p_bound, vector<int>& order, vector<set<int> >& clusters,
 				vector<int>& sampling_order, clock_t& time_bound, ostream& out)
 		{
@@ -340,6 +341,7 @@ public:
 			cerr<<"Num Samples = "<<num_samples<<endl;
 			gm.printMarginalsUAI10(marginals, out);
 		}
+
 
 };
 }

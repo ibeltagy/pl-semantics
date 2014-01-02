@@ -84,6 +84,7 @@ BE::BE(std::vector<Variable*> &variables, std::vector<Function*> &functions, std
 			cout<<"\t";
 			buckets[i][j]->print(cout);
 		}*/
+		//cerr << "1" << endl;
 		LogFunction::multiplyAndMarginalize(marg_variables,buckets[i],*function,false);
 		//cout<<"End mult\n";
 
@@ -131,7 +132,7 @@ BE::BE(std::vector<Variable*> &variables, std::vector<Function*> &functions, std
 	buckets.clear();
 }
 
-
+/*
 BESample::BESample(std::vector<Variable*> &variables, std::vector<Function*> &functions, std::vector<int> &order,myRandom& random)
 {
 	log_pe=LogDouble(1.0);
@@ -161,13 +162,13 @@ BESample::BESample(std::vector<Variable*> &variables, std::vector<Function*> &fu
 				pos=var_in_pos[function->variables()[j]->id()];
 		}
 		assert(pos!=(int)order.size());
-		/*{
-			assert((int)function->log_table.size()==1);
-			cerr<<function->log_table[0].toDouble()<<" "<<endl;
-			log_pe+=function->log_table[0];
-			delete(function);
-			continue;
-		}*/
+		//{
+		//	assert((int)function->log_table.size()==1);
+		//	cerr<<function->log_table[0].toDouble()<<" "<<endl;
+		//	log_pe+=function->log_table[0];
+		//	delete(function);
+		//	continue;
+		//}
 		buckets[pos].push_back(function);
 	}
 	
@@ -186,20 +187,20 @@ BESample::BESample(std::vector<Variable*> &variables, std::vector<Function*> &fu
 		//cout<<bucket_variables.size()<<" "<<flush;
 		//cout<<"buck-vars.size ="<<bucket_variables.size()<<endl;
 		//cerr<<"Processing bucket "<<i<<" out of "<<buckets.size()<<endl;
-		/*if((int)bucket_variables.size()==1)
-		{
-			Double temp;
-			for(int k=0;k<bucket_variables[0]->domain_size();k++)
-			{
-				Double mult(1.0);
-				for(int j=0;j<buckets[i].size();j++)
-					mult*=buckets[i][j]->log_table[k].toDouble();
-				temp+=mult;
-			}
-			cerr<<temp<<endl;
-			log_pe+=LogDouble(temp);
-			continue;
-		}*/
+		//if((int)bucket_variables.size()==1)
+		//{
+		//	Double temp;
+		//	for(int k=0;k<bucket_variables[0]->domain_size();k++)
+		//	{
+		//		Double mult(1.0);
+		//		for(int j=0;j<buckets[i].size();j++)
+		//			mult*=buckets[i][j]->log_table[k].toDouble();
+		//		temp+=mult;
+		//	}
+		//	cerr<<temp<<endl;
+		//	log_pe+=LogDouble(temp);
+		//	continue;
+		//}
 
 		// Compute variables required for marginalization
 		//cerr<<bucket_variables.size()<<endl;
@@ -209,12 +210,13 @@ BESample::BESample(std::vector<Variable*> &variables, std::vector<Function*> &fu
 		do_set_difference(bucket_variables,bucket_variable,marg_variables,less_than_comparator_variable);
 
 		LogFunction* function= new LogFunction();
-		/*cout<<"Start mult\n";
-		for(int j=0;j<buckets[i].size();j++)
-		{
-			cout<<"\t";
-			buckets[i][j]->print(cout);
-		}*/
+		//cout<<"Start mult\n";
+		//for(int j=0;j<buckets[i].size();j++)
+		//{
+		//	cout<<"\t";
+		//	buckets[i][j]->print(cout);
+		//}
+		cout << "2" << endl;
 		LogFunction::multiplyAndMarginalize(marg_variables,buckets[i],*function,false);
 		//cout<<"End mult\n";
 
@@ -238,24 +240,24 @@ BESample::BESample(std::vector<Variable*> &variables, std::vector<Function*> &fu
 				pos=var_in_pos[function->variables()[j]->id()];
 		}
 		assert(pos!=(int)order.size());
-		/*if(pos==(int)order.size())
-		{
-			assert((int)function->log_table.size()==1);
-			log_pe+=function->log_table[0];
-			continue;
-		}*/
+		//if(pos==(int)order.size())
+		//{
+		//	assert((int)function->log_table.size()==1);
+		//	log_pe+=function->log_table[0];
+		//	continue;
+		//}
 		assert(pos > i);
 		buckets[pos].push_back(function);
-		/*
-		for(int j=0;j<buckets[i].size();j++)
-		{
-			delete(buckets[i][j]);
-		}
-		buckets[i].clear();
-		*/
+		//
+		//for(int j=0;j<buckets[i].size();j++)
+		//{
+		//	delete(buckets[i][j]);
+		//}
+		//buckets[i].clear();
+		//
 	}
 
-	/* Generate a sample from the buckets */
+	// Generate a sample from the buckets 
 	for(int i=buckets.size()-1;i>-1;i--){
 		int curr_var=order[i];
 		if(variables[curr_var]->value()!=INVALID_VALUE){
@@ -296,7 +298,7 @@ BESample::BESample(std::vector<Variable*> &variables, std::vector<Function*> &fu
 		}
 		assert(variables[curr_var]->value()!=INVALID_VALUE);
 	}
-	/* Delete all the buckets */
+	// Delete all the buckets 
 	for(int i=0;i<buckets.size();i++){
 		for(int j=0;j<buckets[i].size();j++){
 			if (buckets[i][j]!=NULL){
@@ -306,8 +308,8 @@ BESample::BESample(std::vector<Variable*> &variables, std::vector<Function*> &fu
 	}
 	buckets.clear();
 }
-
-
+*/
+/*
 struct SATFunction
 {
 	vector<Variable*>& all_variables;
@@ -360,7 +362,6 @@ struct SATFunction
 		return true;
 	}
 	void multiplyAndMarginalize(vector<Variable*>& marg_variables, SATFunction& other_func){
-		
 		assert((int)(variables.size()-marg_variables.size())==1);
 		other_func.variables=marg_variables;
 		other_func.table=vector<double>(Variable::getDomainSize(marg_variables));
@@ -446,7 +447,8 @@ struct SATFunction
 		clauses.push_back(&clause);
 	}
 };
-
+*/
+/*
 bool isClauseSatisfied(vector<Variable*>& all_variables, vector<Lit>& clause)
 {
 	for(int i=0;i<clause.size();i++){
@@ -550,6 +552,8 @@ double superhack(vector<Variable*>& all_variables,vector<vector<Lit> >& clauses,
 	pe*=be.log_pe.toDouble().value();
 	return pe;
 }
+*/
+/*
 BESAT::BESAT(vector<Variable*>& all_variables,vector<vector<Lit> >& clauses, vector<int>& order)
 {
 	log_pe=log(superhack(all_variables,clauses,order));
@@ -597,13 +601,13 @@ BESAT::BESAT(vector<Variable*>& all_variables,vector<vector<Lit> >& clauses, vec
 				pos=var_in_pos[Var];
 		}
 		assert(pos!=(int)order.size());
-		/*{
-			assert((int)function->log_table.size()==1);
-			cerr<<function->log_table[0].toDouble()<<" "<<endl;
-			log_pe+=function->log_table[0];
-			delete(function);
-			continue;
-		}*/
+		//{
+		//	assert((int)function->log_table.size()==1);
+		//	cerr<<function->log_table[0].toDouble()<<" "<<endl;
+		//	log_pe+=function->log_table[0];
+		//	delete(function);
+		//	continue;
+		//}
 	
 		buckets[pos]->addClause(clauses[i]);
 	}
@@ -651,12 +655,12 @@ BESAT::BESAT(vector<Variable*>& all_variables,vector<vector<Lit> >& clauses, vec
 				pos=var_in_pos[tmp_function->variables[j]->id()];
 		}
 		assert(pos!=(int)order.size());
-		/*if(pos==(int)order.size())
-		{
-			assert((int)function->log_table.size()==1);
-			log_pe+=function->log_table[0];
-			continue;
-		}*/
+		//if(pos==(int)order.size())
+		//{
+		//	assert((int)function->log_table.size()==1);
+		//	log_pe+=function->log_table[0];
+		//	continue;
+		//}
 		assert(pos > i);
 		buckets[pos]->addFunction(tmp_function);
 		
@@ -670,7 +674,7 @@ BESAT::BESAT(vector<Variable*>& all_variables,vector<vector<Lit> >& clauses, vec
 	}
 	
 }
-
+*/
 /*
 BESampleSAT::BESampleSAT(vector<Variable*>& all_variables, vector<vector<Lit> >& clauses, vector<int>& order, myRandom& random)
 {

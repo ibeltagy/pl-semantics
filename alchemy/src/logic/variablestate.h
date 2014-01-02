@@ -2760,8 +2760,50 @@ class VariableState
     for (int i = 0; i < getNumAtoms(); i++)
     {
       (*gndPreds_)[i]->print(out, domain_);
-      out << " " << lowAtom_[i + 1] << endl;
+      out << " " << lowAtom_[i + 1] <<" "<<atom_[i + 1] << " "<< (*gndPreds_)[i]->getTruthValue()<<endl;
     }
+  }
+	
+  long double getLnPdf()
+  {
+      long double sumWeights = 0;
+      long double pdf = 1;
+      for (int i = 0; i < gndClauses_->size(); i++)
+      {
+	  GroundClause* clause = (*gndClauses_)[i];
+	  //cout <<clause->getWt() << " clause "<<i<<" has " <<clause->getNumGroundPredicates() <<" preds: "; 
+	  bool satisfied = false;
+	  for (int j = 0; j < clause->getNumGroundPredicates(); j++)
+	  {
+	    int index =  clause->getGroundPredicateIndex(j);
+	    const GroundPredicate* pred = clause->getGroundPredicate(j, &gndPredHashArray_);
+
+	    if(index < 0 && pred->getTruthValue() == false || index > 0 && pred->getTruthValue() == true)
+	    {
+		satisfied = true;
+		break;
+	    }
+
+	    //pred->print(cout);
+	    //cout <<":"<<index<<":- "<<pred->getTruthValue()<<", ";
+	  }
+
+	  if(satisfied)
+	  {	
+		sumWeights += clause->getWt();
+		//cout << "satisfied. Current sumWeight: " <<sumWeights;
+	  }
+	  else 
+	  {
+		if (clause->isHardClause())
+			pdf = 0;
+		else
+			pdf *= exp(-clause->getWt());
+		//cout << "un-satisfied. current pdf: " << pdf;
+          }
+          //cout <<endl;
+      }
+      return pdf;
   }
 
   /**

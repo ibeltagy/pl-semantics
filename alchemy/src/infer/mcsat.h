@@ -208,6 +208,8 @@ class MCSAT : public MCMC
     int sample = 0;
     int numSamplesPerPred = 0;
     bool done = false;
+    z_ = 0; //initilize estimate of partition function to zero
+    zSamplesCount_ = 0;
     while (!done)
     {
       ++sample;
@@ -261,6 +263,12 @@ class MCSAT : public MCMC
 
     cout<< "Time taken for SampleSat = "; 
     Timer::printTime(cout, ssSecondsElapsed_); cout << endl;
+
+    cout<< "Number of samples generated = " << zSamplesCount_ << endl; 
+
+    cout<< "Estimate of log10(Z) = " << state_->getNumAtoms()*log10(2) +log10(zSamplesCount_) - log10(z_) <<endl;
+    cout<< "Estimate of Z = 2^" << state_->getNumAtoms() << "*" << zSamplesCount_ << "/" << z_ ;
+    cout<< " = " << 1.0 * pow(2, state_->getNumAtoms()) * zSamplesCount_ / z_ <<endl;
 
       // Update gndPreds probability that it is true
     for (int i = 0; i < state_->getNumAtoms(); i++)
@@ -348,6 +356,20 @@ class MCSAT : public MCMC
       if (!burningIn && newAssignment) numTrue_[i]++;
     }
     
+
+//    cout << "Samples: " << endl;
+//    state_->printLowState(cout);
+    double pdf = state_->getLnPdf();
+//    cout << "Sample's PDF: "<<  pdf <<endl;
+    if (!burningIn)
+    {
+	if (pdf != 0)
+	{
+		z_ += 1.0/pdf;
+		zSamplesCount_ ++;
+	}
+    }
+
       // If keeping track of true clause groundings
     if (!burningIn && trackClauseTrueCnts_)
       tallyCntsFromState();
@@ -429,6 +451,10 @@ class MCSAT : public MCMC
   //double upSecondsElapsed_;
     // Time spent on SampleSat
   double ssSecondsElapsed_;
+
+  //estimate of partition function
+  long double z_;
+  int zSamplesCount_;
 };
 
 #endif /*MCSAT_H_*/

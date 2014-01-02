@@ -75,6 +75,7 @@
 #include "infer.h"
 
 extern const char* ZZ_TMP_FILE_POSTFIX; //defined in fol.y
+char* aresultsFile = NULL;
 
   // TODO: List the arguments common to learnwts and inference in
   // inferenceargs.h. This can't be done with a static array.

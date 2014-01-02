@@ -14,7 +14,7 @@ using namespace std;
 
 namespace ss{
 
-//#define WITH_TABLE 1
+#define WITH_TABLE 1
 
 struct Function
 {

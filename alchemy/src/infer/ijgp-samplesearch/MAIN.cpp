@@ -12,6 +12,7 @@
 #include "Parameters.h"
 #include "VEC.h"
 
+
 namespace ss{
 
 string getOutFilename(string& str)
@@ -84,7 +85,8 @@ void readParameters(int argc, char* argv[])
 	cout <<"time: " <<argv[argc-2] << endl;
 	task = argv[argc - 1];
 	cout <<"Task: " <<argv[argc-1] << endl;
-	outfilename = getOutFilename(uaifilename) + "." + task;
+//	outfilename = getOutFilename(uaifilename) + "." + task;
+	outfilename = uaifilename + "." + task;
 	cout << outfilename << endl;
 	ofstream out(outfilename.c_str());
 	out << task << endl;
@@ -132,7 +134,7 @@ void readEvidence(GM& gm, vector<int>& evidence)
 	in.close();
 }
 
-int MAIN(int argc, char** argv)
+int MAIN(VariableState* state, int argc, char** argv)
 {
 	Timer timer;
 	timer.start();
@@ -149,7 +151,8 @@ int MAIN(int argc, char** argv)
 	readParameters(argc, argv);
 	GM gm;
 	//gm.readUAI08(uaifilename.c_str());
-	gm.readMLN(uaifilename.c_str());
+	//gm.readMLN(uaifilename.c_str());
+	gm.readMLN(state);
 
 	// Read Evidence
 	vector<int> evidence;
@@ -177,7 +180,8 @@ int MAIN(int argc, char** argv)
 	}
 	UAI2010Parameters params(gm, total_time, task);
 	cerr << "# sampled = " << params.s_order.size() << endl;
-	if (params.exact_inf_test()) {
+	//if (params.exact_inf_test()) {
+	if (false) {
 		if (task == "PR") {
 			total_time -= timer.elapsed_seconds();
 			if (gm.mode == DET) {

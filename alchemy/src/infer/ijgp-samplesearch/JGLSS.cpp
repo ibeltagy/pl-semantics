@@ -71,8 +71,10 @@ void JGNodeLSS::getCF(vector<Variable*>& cond_variables_, Variable* marg_variabl
 	Function func;
 	
 	//Function::dummy_multiplyMarginalize(all_variables,all_functions,func);
+	//cerr << "3" << endl;
 	LogFunction::multiplyAndMarginalize(all_variables,all_functions,func);
-	//func.print(cout);
+	//func.print(cerr);
+	//cout << "SF size: " << func.variables().size() << endl;
 	cf=CPT(func,marg_variable,cond_variables);
 	//cout<<"JGCF end\n";
 }
@@ -95,6 +97,7 @@ void JGNodeLSS::getMarginal(vector<Variable*>& marg_variables, Function& functio
 		}
 	}*/
 	compileAllFunctions(all_functions);
+	cout << "4" << endl;
 	LogFunction::multiplyAndMarginalize(marg_variables,all_functions,function);
 }
 
@@ -144,6 +147,7 @@ void JGEdgeLSS::sendMessage1to2()
 	//cout<<ss_node1_->id()<<" to "<<ss_node2_->id()<<endl;
 	LogFunction* m=dynamic_cast<LogFunction*> (node1_to_node2_message_);
 	assert(m!=NULL);
+	//cerr << "5" << endl;
 	LogFunction::multiplyAndMarginalize(variables(),all_functions,*m);
 	//Function::dummy_multiplyMarginalize(this->variables(),all_functions,this->message1());
 }
@@ -177,6 +181,7 @@ void JGEdgeLSS::sendMessage2to1()
 	//cout<<ss_node2_->id()<<" to "<<ss_node1_->id()<<endl;
 	LogFunction* m=dynamic_cast<LogFunction*> (node2_to_node1_message_);
 	assert(m!=NULL);
+	//cerr << "6" << endl;
 	LogFunction::multiplyAndMarginalize(this->variables(),all_functions,*m);
 	//Function::dummy_multiplyMarginalize(this->variables(),all_functions,this->message2());
 }

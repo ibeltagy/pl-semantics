@@ -15,6 +15,7 @@ using namespace std;
 #include "Alg.h"
 #include "SolverTypes.h"
 #include "SATInstance.h"
+#include "variablestate.h"
 
 namespace ss{
 
@@ -88,6 +89,7 @@ struct GM {
 	//void writeConstraintGraph(char* cgraph);
 	void convertToCN(GM& cn);
 	void readMLN(const char* infile);
+	void readMLN(VariableState* state);
 	//void readUAI08(const char* infile);
 	//void readUAIO8Evidence(char* evidencefile);
 	//void readErgo(char* infile);

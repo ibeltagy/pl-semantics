@@ -2,13 +2,13 @@
 #ifndef SS_MAIN_H_
 #define SS_MAIN_H_
 
-
+#include "variablestate.h"
 
 using namespace std;
 
 namespace ss{
 
-int MAIN(int argc, char** argv);
+int MAIN(VariableState* state, int argc, char** argv);
 
 }
 #endif

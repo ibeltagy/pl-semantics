@@ -49,6 +49,7 @@ public:
 	void computeBayesBeliefsApp(GM& gm, GM& other_gm,JG& jg, int p_bound, vector<int>& order,clock_t& time_bound, vector<int>& sampling_order, int max_restarts);
 };
 
+/*
 class RBSampleSearchSAT
 {
 	public:
@@ -61,5 +62,6 @@ class RBSampleSearchSAT
 	double runBE(GM& gm, vector<int>& order, char* infile);	
 //	void generateSamples(GM& gm, JG& jg, const char* satfile, int p_bound, vector<int>& order,vector<int>& sampling_order, int num_samples, int max_restarts);
 };
+*/
 }
 #endif

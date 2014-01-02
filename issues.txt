@@ -1,3 +1,7 @@
+Alchemy: 
+-wierd handling of a formula like a(x)^b(y).
+-wrong handling of weights: infinity + w = 10 + w
+-----------
 SampleSearch:
 -GM::reduceDomains can be better by removing functions that are always true
 -what to do with LogFunction.h

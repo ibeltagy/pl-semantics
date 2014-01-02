@@ -19,19 +19,21 @@ struct BE
 	BE(vector<Variable*>& variables, vector<Function*>& functions, vector<int>& order);
 	
 };
-
+/*
 struct BESample
 {
 	LogDouble log_pe;
 	BESample(vector<Variable*>& variables, vector<Function*>& functions, vector<int>& order, myRandom& random);
 };
+*/
+/*
 struct BESAT
 {
 	double log_pe;
 	BESAT(vector<Variable*>& all_variables,vector<vector<Lit> >& clauses, vector<int>& order);
 	
 };
-
+*/
 /*
 struct BESampleSAT
 {

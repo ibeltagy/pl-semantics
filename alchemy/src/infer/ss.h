@@ -5,9 +5,11 @@
 #include "MAIN.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include "infer.h"
 
+const int ssdebug = false;
 
-const int ssdebug = true;
+extern char* aresultsFile;
 
 struct SampleSearchParams
 {
@@ -48,6 +50,7 @@ class SampleSearchProxy: public Inference
   void infer()
   {
     ////////////////////////////////
+/*
     ofstream outFile;
     outFile.open ("mln.uai");
 
@@ -114,8 +117,8 @@ class SampleSearchProxy: public Inference
     }
 
     outFile.close(); 
-
-    std::system("cat mln.uai");
+*/
+    //std::system("cat mln.uai");
     //std::ostringstream command;
     //command << "./ijgp-samplesearch mln.uai empty.evd " << this->params.maxSeconds <<" PR";
     //std::system(command.str().c_str());
@@ -124,23 +127,24 @@ class SampleSearchProxy: public Inference
     cout << "calling SS"<<endl;
     char ** argv  = new char*[5];
     for(int i = 0;i<5;i++)
-	argv[i] = new char[20];
+	argv[i] = new char[50];
 
     strcpy (argv[0],"./ijgp-samplesearch");
-    strcpy (argv[1],"mln.uai");
+    strcpy (argv[1],aresultsFile);
     strcpy (argv[2],"empty.evd");
     strcpy (argv[3],t.str().c_str());
     strcpy (argv[4],"PR");
 
-    cout <<argv[0]<<endl;
-    cout <<argv[1]<<endl;
-    cout <<argv[2]<<endl;
-    cout <<argv[3]<<endl;
-    cout <<argv[4]<<endl;
+    //cout <<argv[0]<<endl;
+    //cout <<argv[1]<<endl;
+    //cout <<argv[2]<<endl;
+    //cout <<argv[3]<<endl;
+    //cout <<argv[4]<<endl;
 
-    ss::MAIN (5, argv);
+    ss::MAIN (state_, 5, argv);
+    //cout << aresultsFile << endl;
 
-    std::system("cat mln.uai.PR");
+    //std::system("cat mln.uai.PR");
   }
 
   void printNetwork(std::ostream& out) 

@@ -90,7 +90,7 @@
 // Variables for holding inference command line args are in inferenceargs.h
 
 char* aevidenceFiles  = NULL;
-char* aresultsFile    = NULL;
+extern char* aresultsFile;
 char* aqueryPredsStr  = NULL;
 char* aqueryFile      = NULL;
 

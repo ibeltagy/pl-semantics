@@ -66,6 +66,7 @@ struct JGHelperFunction {
 JG::JG(GM& gm, int i_bound__, int num_iterations__, vector<int>& order,
 		JG_TYPE type) :
 	num_iterations_(num_iterations__), i_bound_(i_bound__), copy_of_gm(&gm) {
+	//printStacktrace();
 	vector<int> mapped_order(order.size());
 	for (int i = 0; i < order.size(); i++)
 		mapped_order[order[i]] = i;

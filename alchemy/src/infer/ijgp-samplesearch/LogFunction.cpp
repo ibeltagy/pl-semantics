@@ -6,6 +6,9 @@ void LogFunction::print(ostream& out)
 	for(int i=0;i<variables_.size();i++)
 		out<<variables_[i]->id()<<" ("<<variables_[i]->domain_size()<<") ";
 	out<<endl;
+	for(int i=0;i<this->logTableSize();i++)
+		out<<logTableEntry(i).todouble()<<" ";
+	out<<endl;
 }
 LogFunction::LogFunction(Function& function)
 {
@@ -98,7 +101,7 @@ LogFunction::LogFunction(Function& function)
 }
 void LogFunction::multiplyAndMarginalize(vector<Variable*>& marg_variables_,vector<LogFunction*>& functions, Function& out_function, bool normalize)
 {
-	//cout<<"Mult\n";
+	//cout<<"Mult1\n";
 	// Compute the appropriate variables from the two functions
 	vector<Variable*> variables;
 	vector<Variable*> marg_variables;
@@ -234,6 +237,7 @@ void LogFunction::multiplyAndMarginalize(vector<Variable*>& marg_variables_,vect
 }
 void LogFunction::multiplyAndMarginalize(std::vector<Variable*> &marg_variables_, std::vector<LogFunction*> &functions, LogFunction &out_function, bool normalize)
 {
+	//cout<<"Mult2\n";
 	//cout<<"Mult\n";
 	// Compute the appropriate variables from the two functions
 	vector<Variable*> variables;
@@ -356,6 +360,7 @@ void LogFunction::multiplyAndMarginalize(std::vector<Variable*> &marg_variables_
 	if(normalize)
 		out_function.normalize();
 	out_function.toLogTable();
+	//out_function.print(cout);
 	//cout<<"mult done\n";
 }
 }

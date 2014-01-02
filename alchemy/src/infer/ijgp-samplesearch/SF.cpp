@@ -23,6 +23,7 @@ SF::SF(CPT& cpt)
 			sampling_table[i][j]=prev_val;
 		}
 	}
+	//print(cerr);
 }
 void SF::getSample(int& value, Double& weight,myRandom& random)
 {
