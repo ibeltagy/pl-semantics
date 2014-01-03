@@ -41,9 +41,12 @@ class SetGoalPTP(
       if (Sts.opts.softLogicTool == "psl")
       {
         //simple conjunction, two goals
-        val expr_t = GoalExpression((first -> SetVarBindPTP.entPred_t).asInstanceOf[FolExpression], Double.PositiveInfinity);
-        val expr_h = GoalExpression((second -> SetVarBindPTP.entPred_h).asInstanceOf[FolExpression], Double.PositiveInfinity);         
-        extraExpressions = List(expr_h, expr_t);
+        val ent_t = FolApplicationExpression(FolVariableExpression(Variable("entailment_t")), FolVariableExpression(Variable("")));
+        val ent_h = FolApplicationExpression(FolVariableExpression(Variable("entailment_h")), FolVariableExpression(Variable("")));        
+        val expr_t = GoalExpression((universalifyGoalFormula(first -> ent_t )).asInstanceOf[FolExpression], Double.PositiveInfinity);
+        val expr_h = GoalExpression((universalifyGoalFormula(second -> ent_h )).asInstanceOf[FolExpression], Double.PositiveInfinity);
+        val expr_h_t = GoalExpression(FolVariableExpression(Variable("entailment")).asInstanceOf[FolExpression], Double.NegativeInfinity);
+        extraExpressions = List(expr_h, expr_t, expr_h_t);
       }
 
       //---------------------STS on MLN--------------------------
@@ -149,6 +152,29 @@ class SetGoalPTP(
     }
     else 
     	v
+  }
+
+  //****************************** PSL functions **************************
+  private def universalifyGoalFormula(goalFormula: FolIfExpression) = {
+    val FolIfExpression(goal, consequent) = goalFormula
+
+    def isConjoinedAtoms(e: FolExpression): Boolean = {
+      e match {
+        case FolAtom(_, _*) => true
+        case FolAndExpression(a, b) => isConjoinedAtoms(a) && isConjoinedAtoms(b)
+        case _ => false
+      }
+    }
+
+    def universalify(e: FolExpression): FolExpression = {
+      e match {
+        case FolExistsExpression(v, term) => FolAllExpression(v, universalify(term))
+        case _ if isConjoinedAtoms(e) => e -> consequent
+        case _ => e -> consequent // sys.error(e.toString)
+      }
+    }
+
+    universalify(goal)
   }
 
   //****************************** Mini-clauses functions ************************** 

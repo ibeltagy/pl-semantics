@@ -20,10 +20,6 @@ import scala.sys.process.ProcessLogger
 import java.io.File
 
 class PSLTheoremProver(
-  //override val binary: String,
-  //prior: Double = -3,
-  //var entWeight: Double = 1,
-  //logBase: Double = E
   )
   
   extends ProbabilisticTheoremProver[FolExpression] {
@@ -47,10 +43,7 @@ class PSLTheoremProver(
   private var entailmentConsequent_t:FolExpression = FolVariableExpression(Variable("entailment_t"));
   private val entailedConst = ("ent" -> Set("ent_h", "ent_t"))
   private var entailmentConsequent:FolExpression = FolAtom(Variable("entailment"), Variable(""));
-  
-  private var varBind: Option[Boolean] = None;
-  private var task = "sts";
-  
+    
   override def prove(
     constants: Map[String, Set[String]],
     declarations: Map[FolExpression, Seq[String]],
@@ -58,10 +51,6 @@ class PSLTheoremProver(
     assumptions: List[WeightedFolEx],
     goal: FolExpression): Seq[Double] = {
 
-    if (varBind == None)
-    	varBind  = Some(Sts.opts.varBind)
-    else varBind  = Some(false); //second call
-       
     declarations.foreach { dec =>
       dec match {
         case (FolAtom(Variable(pred), args @ _*), argTypes) =>
@@ -72,37 +61,12 @@ class PSLTheoremProver(
     }
     
     // This block adds all variables to the entailment clause. 
-    val variables: Set[Variable] = findAllVars(goal);
+    //val variables: Set[Variable] = findAllVars(goal);
     var typeParam_h : List[String]= List();
     var typeParam_t : List[String]= List();
-    if(!varBind.get){
-	    typeParam_h = List();
-	    typeParam_t = List();
-	    entailmentConsequent_t = FolAtom(Variable("entailment_t"), Variable("")); 
-	    entailmentConsequent_h = FolAtom(Variable("entailment_h"), Variable(""));
-    }
-    else
-    {
-	    for (v <- variables )
-	    {
-	     	  v.name.charAt(0) match {
-	     	    case 't' => entailmentConsequent_t = FolApplicationExpression(entailmentConsequent_t, FolVariableExpression(Variable(v.name))); 
-	     	    case 'h' => entailmentConsequent_h = FolApplicationExpression(entailmentConsequent_h, FolVariableExpression(Variable(v.name)));
-	     	    case _ => throw new RuntimeException ("unsupported type");
-	     	  }
-	     	  v.name.substring(0, 2) match {
-	     	    case "tx" => typeParam_t ::= "indv_t";
-	     	    case "te" => typeParam_t ::= "evnt_t";
-	     	    case "tp" => typeParam_t ::= "prop_t";
-	     	    case "hx" => typeParam_h ::= "indv_h";
-	     	    case "he" => typeParam_h ::= "evnt_h";
-	     	    case "hp" => typeParam_h ::= "prop_h";
-	     	    case _ => throw new RuntimeException ("unsupported type");
-	     	  } 
-	    }
-    }
-    typeParam_h = typeParam_h.reverse;
-    typeParam_t = typeParam_t.reverse;
+    entailmentConsequent_t = FolAtom(Variable("entailment_t"), Variable("")); 
+	entailmentConsequent_h = FolAtom(Variable("entailment_h"), Variable(""));
+
     val entailedDec_h = FolVariableExpression(Variable("entailment_h")) -> typeParam_h;
     val entailedDec_t = FolVariableExpression(Variable("entailment_t")) -> typeParam_t;
     val entailedDec = FolVariableExpression(Variable("entailment")) -> List();
@@ -154,12 +118,6 @@ class PSLTheoremProver(
     {
     	case e: Exception =>{
     	  System.err.println (e);
-    	  //if (varBind.get) //try again 
-    	  //{
-			// println("backoff to dependency parse")
-    	   // return this.prove(constants, declarations, evidence, assumptions, goal);
-    	  //}
-    	  //else
     	  return Seq(-2.0);
     	}   				 
     }
@@ -174,6 +132,7 @@ class PSLTheoremProver(
       case _ =>"0";
     };
     //val proc = Process("java", Seq("-cp", PSLTheoremProver.cp, "psl.TextInterface", mlnFile, mode, timeoutVal)).run(
+    LOG.trace("Calling: ant -buildfile psl/build.xml run -Darg0=%s -Darg1=%s -Darg2=%s ".format(mlnFile, mode, timeoutVal));
     val proc = Process("ant", Seq("-buildfile", "psl/build.xml", "run", "-Darg0="+mlnFile, "-Darg1="+mode, "-Darg2="+timeoutVal)).run(
     ProcessLogger(l=>{
           System.out.println(l)
@@ -216,8 +175,10 @@ class PSLTheoremProver(
     evidence: List[FolExpression],
     goal: FolExpression) = {
     
-    //val pslFilePath = "psl/run/%s.psl".format(Sts.pairIndex); 
-    val pslFilePath = System.getProperty("user.dir")+"/psl/run/%s.psl".format(Sts.pairIndex);
+    //val pslFilePath = "psl/run/%s.psl".format(Sts.pairIndex);
+    //val tempFile = FileUtils.mktemp(suffix = ".mln") 
+    //val pslFilePath = System.getProperty("user.dir")+"/psl/run/%s.psl".format(Sts.pairIndex);
+    val pslFilePath = FileUtils.mktemp(suffix = ".psl") 
     val pslFile = new java.io.PrintWriter(new File(pslFilePath))
     try { 
 
@@ -267,8 +228,10 @@ class PSLTheoremProver(
       	pslFile.write("predicate,all,1\n")
       	pslFile.write("predicate,dummyPred,1\n")
       	declarationNames.foreach {
+      	    case ("entailment_h", varTypes) => pslFile.write("predicate,%s,%s\n".format("entailment_h", 0))
+      	    case ("entailment_t", varTypes) => pslFile.write("predicate,%s,%s\n".format("entailment_t", 0))
 			case (pred, varTypes) => {
-				//pslFile.write("m.add predicate: \"%s\", %s open: true;\n".format(pred, varTypes.indices.map("arg" + _+": Entity, ").mkString("")))
+				//pslFile.write("m.add predicate: \"%s\", %s open: true;\n".format(pred, varTypes.indices.map("arg" + _+": Entity, ").mkString(""))) 
 			  pslFile.write("predicate,%s,%s\n".format(pred, varTypes.length))
 			}
     	}
@@ -296,12 +259,23 @@ class PSLTheoremProver(
             weight match {
               case Double.PositiveInfinity => Some(HardWeightedExpression(folEx))
               case Double.NegativeInfinity => None ;//Some(HardWeightedExpression(-folEx))
-              case _ if weight < Sts.opts.weightThreshold => None
               case _ => Some(e)
             }
-          case e @ HardWeightedExpression(folEx) => Some(e)
+          case e @ _ => Some(e)
         }.foreach { e => 
           e match {
+          	  case PriorExpression(folExp, weight) => 
+	            	None
+	            	//f.write("%.5f %s\n".format(weight, convert(folExp)))
+	          case GoalExpression(folExp, weight) =>
+	          {	        	  	            
+	        	  if(weight == Double.PositiveInfinity)
+	        	    //pslFile.write("rule,avg,%s\n".format(convert(universalifyGoalFormula(breakVariableBinding(first) -> entailmentConsequent_h)))) //normal anding
+	        		  pslFile.write("rule,avg,%s\n".format(convert(folExp))) //normal anding
+	        	  else
+	        		  pslFile.write("rule,and,entailment_h()&entailment_t()>>entailment()\n");
+	        	     
+	          }
 	          case SoftWeightedExpression(folExp, weight) =>
 	            var usedWeight = min(weight, 1);
 	            usedWeight = max(usedWeight, 0);
@@ -334,7 +308,7 @@ class PSLTheoremProver(
 		            	  val allString = rhsAnd match {
 		            	    case FolAtom(pred, args @ _*) if pred.name.endsWith("_dh") => "all_h" 
 		            	    case FolAtom(pred, args @ _*) if pred.name.endsWith("_dt") => "all_t"
-		            	    case _ => throw new RuntimeException("unsuppoeted expression: %s".format(rhsAnd));
+		            	    case _ => throw new RuntimeException("unsupported expression: %s".format(rhsAnd));
 		            	  }
 		            	  
 		            	  missingVars.foreach(v => {
@@ -380,7 +354,7 @@ class PSLTheoremProver(
 	   }
         
        //=================Goal
-       task match {
+/*	    Sts.opts.task match {
       	//case "rte" => pslFile.write("m.add rule: %s, constraint: true;\n".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
          case "rte" =>pslFile.write("rule,min,%s\n".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
       	//case "sts" => pslFile.write("m.add rule: %s, constraint: true;\n".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
@@ -402,6 +376,8 @@ class PSLTheoremProver(
          writeTwoGoals(goal);
          }
        }
+        */
+        
 
        //=================Similarity File      
         /* val simFile = new java.io.PrintWriter(new File("psl/run/%s.sim".format(Sts.pairIndex)))
@@ -524,27 +500,7 @@ class PSLTheoremProver(
     */
   }
 
-  private def universalifyGoalFormula(goalFormula: FolIfExpression) = {
-    val FolIfExpression(goal, consequent) = goalFormula
-
-    def isConjoinedAtoms(e: FolExpression): Boolean = {
-      e match {
-        case FolAtom(_, _*) => true
-        case FolAndExpression(a, b) => isConjoinedAtoms(a) && isConjoinedAtoms(b)
-        case _ => false
-      }
-    }
-
-    def universalify(e: FolExpression): FolExpression = {
-      e match {
-        case FolExistsExpression(v, term) => FolAllExpression(v, universalify(term))
-        case _ if isConjoinedAtoms(e) => e -> consequent
-        case _ => e -> consequent // sys.error(e.toString)
-      }
-    }
-
-    universalify(goal)
-  }
+  
 
   private def makeEvidenceFile(evidence: List[FolExpression]) = {
     val tempFile = FileUtils.mktemp(suffix = ".db")
@@ -680,33 +636,6 @@ class PSLTheoremProver(
       case _ => List(input);
     }
   
-  
-  //average instead of anding 
-  private def average(input: FolExpression, bound: Set[Variable] = Set()): String =
-    input match {
-      case FolExistsExpression(variable, term) => average(term, bound + variable) // don't add outermost 'exist'
-      case _ => _average(input, bound)
-    }
-
-  private def _average(input: FolExpression, bound: Set[Variable]): String =
-    input match {
-      case FolAndExpression(first, second) => _average(first, bound) +  _average(second, bound)
-      //case _ => entWeight + "  " + _convert(input -> entailmentConsequent, bound) + "\n"
-      case _ => entWeight + "  " + convert(universalifyGoalFormula(input -> entailmentConsequent), bound) + "\n"
-      
-      /*case FolExistsExpression(variable, term) => "exist " + variable.name + " (" + _convert(term, bound + variable) + ")"
-      case FolAllExpression(variable, term) => "forall " + variable.name + " (" + _convert(term, bound + variable) + ")"
-      case FolNegatedExpression(term) => "!(" + _convert(term, bound) + ")"
-      case FolAndExpression(first, second) => "(" + _convert(first, bound) + " ^ " + _convert(second, bound) + ")"
-      case FolOrExpression(first, second) => "(" + _convert(first, bound) + " v " + _convert(second, bound) + ")"
-      case FolIfExpression(first, second) => "(" + _convert(first, bound) + " => " + _convert(second, bound) + ")"
-      case FolIffExpression(first, second) => "(" + _convert(first, bound) + " <=> " + _convert(second, bound) + ")"
-      case FolEqualityExpression(first, second) => "(" + _convert(first, bound) + " = " + _convert(second, bound) + ")"
-      case FolAtom(pred, args @ _*) => pred.name.replace("'", "") + "(" + args.map(v => if (bound(v)) v.name else quote(v.name)).mkString(",") + ")"
-      case FolVariableExpression(v) => if (bound(v)) v.name else quote(v.name)
-      */
-    }
-
   //convert a FOLExpression to an alchamy string 
   private def convert(input: FolExpression, bound: Set[Variable] = Set()): String =
     input match {
