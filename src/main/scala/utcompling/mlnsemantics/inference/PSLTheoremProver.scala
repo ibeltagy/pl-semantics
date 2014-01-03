@@ -326,7 +326,7 @@ class PSLTheoremProver(
 	                case _ => throw new RuntimeException("unsupported infernece rule format"); 
 	              }
 	            }
-	          case HardWeightedExpression(folExp) => throw new RuntimeException("only simple inference rules are accepted");
+	          case HardWeightedExpression(folExp) => throw new RuntimeException("only simple inference rules are accepted. %s is not supported".format(folExp));
          }
        }
        
@@ -408,7 +408,8 @@ class PSLTheoremProver(
 	          					const;
 	          			}).mkString(","))
 	          			);
-	        case e => throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
+	        //case e => throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
+	         case e => LOG.trace( "Non atomic evidence:  '%s' ".format(e));
 	    }
 	    pslFile.write("data,dummyPred,999999\n");
 	    //Generate evidences for predicate "all"
