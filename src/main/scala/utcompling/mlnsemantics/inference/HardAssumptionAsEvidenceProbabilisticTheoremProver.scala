@@ -60,7 +60,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
     delegate.prove(
       newConstants,
       newDeclarations,
-      evidence ++ extraEvid,  //toSet to remove duplicate evidences
+      evidence ++ extraEvid.toSet,  //toSet to remove duplicate evidences
       newAssumptions,
       goal)
     

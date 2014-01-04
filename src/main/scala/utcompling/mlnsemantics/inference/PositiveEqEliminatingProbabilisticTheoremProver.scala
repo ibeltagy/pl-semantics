@@ -50,7 +50,7 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
     delegate.prove(
       newConstants,
       declarations,
-      evidence ++ extraEvd,
+      evidence ++ extraEvd.toSet, //toSet to remove duplicates
       newAssumptions,
       goal)
   }

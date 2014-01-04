@@ -58,11 +58,13 @@ class FromEntToEqvProbabilisticTheoremProver(
       }
       case "sts" => {
         prefix = "h";
-        val premH = renameVars(prem)
-        val hypH = renameVars(hyp)
+        val modifiedPrem = goSTS(prem);
+        val modifiedHyp = goSTS(hyp);
+        val premH = renameVars(modifiedPrem)
+        val hypH = renameVars(modifiedHyp)
         prefix = "t";
-        val premT = renameVars(hyp)
-        val hypT = renameVars(prem)        
+        val premT = renameVars(modifiedHyp)
+        val hypT = renameVars(modifiedPrem)
 	    (List (HardWeightedExpression (premH)) ++ 
 	    	List (HardWeightedExpression (premT)) ++ 
 	    	assumptions.filterNot( _ == assumptions.head), //add premise and hypothesis to assumptions 
@@ -71,4 +73,20 @@ class FromEntToEqvProbabilisticTheoremProver(
     }
     delegate.prove(constants, declarations, evidence, newAssumptions, newGoal)
   }
+  
+  def goSTS(e: BoxerExpression): BoxerExpression = {
+      e match {
+         case BoxerImp(discId, indices, first, second) =>  //remove "->"
+   	  		  BoxerProp(discId, indices, BoxerVariable("v"), BoxerDrs(first.refs ++ second.refs, first.conds ++ second.conds))
+         case BoxerOr(discId, indices, first, second) =>  //remove "or"
+   	  		  //BoxerProp(discId, indices, BoxerVariable("v"), BoxerDrs(first.refs ++ second.refs, first.conds ++ second.conds))
+   	  		  BoxerDrs(first.refs ++ second.refs, first.conds ++ second.conds)
+         case BoxerNot(discId, indices, drs) => //remove negation. This is wrong for now 
+   	  	 	  //BoxerProp(discId, indices, BoxerVariable("v"), drs)
+   	  		  drs
+	     case _ => e.visitConstruct(goSTS)
+      }
+    }
+
+	
 }
