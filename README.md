@@ -102,25 +102,25 @@ The script provides the following functionalities:
 
 	~/mln-semantics$ bin/condor.sh  remove
 
-* Submit new jobs to Condor. STEP is number of pairs per job. ARGS are the usual arguments you want to pass to bin/mlnsem (execluding the leading "run" and the range argument). Output files are saved in mln-semantics/condor/out/. Be careful, consecutive submissions of tasks will overwrite each others. 
+* Submit new jobs to Condor. EXP_NAME: is the name of the experiment, output from condor will be stored in condor/EXP_NAME/ . STEP is number of pairs per job. ARGS are the usual arguments you want to pass to bin/mlnsem (execluding the leading "run" and the range argument). Output files are saved in mln-semantics/condor/EXP_NAME/. Be careful, consecutive submissions of tasks with the same EXP_NAME  will overwrite each others. The file: mln-semantics/condor/EXP_NAME/config contains the command line arguments passed to the condor script. 
 
-	~/mln-semantics$ bin/condor.sh submit STEP ARGS 
+	~/mln-semantics$ bin/condor.sh submit EXP_NAME STEP ARGS 
 
-for example: submit the sick dataset to condor. Each Condor job contains 10 pairs of sentences. Run each pair for 30 seconds, and do not print any log
+for example: submit the sick dataset to condor. Output from condor will be saved in condor/firstExp.  Each Condor job contains 10 pairs of sentences. Run each pair for 30 seconds, and do not print any log
 
-	~/mln-semantics$ bin/condor.sh submit 10 sick-rte -timeout 30000 -log OFF 
+	~/mln-semantics$ bin/condor.sh submit firstExp 10 sick-rte -timeout 30000 -log OFF 
 
-* Prints a list of the tasks without submitting anything. This is helpful to be called before actually submitting the tasks.
+* Prints a list of the tasks without submitting anything. This is helpful to check the number of tasks and arguments before submitting the tasks.
 
-	~/mln-semantics$ bin/condor.sh print STEP ARGS
+	~/mln-semantics$ bin/condor.sh print EXP_NAME STEP ARGS
 
-* In some cases (for reasons I do not understand) some condor tasks break without notice. Calling the condor script with the argument "fix" checks all output files and make sure that all condor tasks terminated correctly. If some of them did not, resubmit them again. Make sure to use the same STEP and ARGS. Do not call "fix" while some taks are already running 
+* In some cases (for reasons I do not understand) some condor tasks break without notice. Calling the condor script with the argument "fix" checks all output files and make sure that all condor tasks terminated correctly. If some of them did not, resubmit them again. Make sure to use the same STEP and ARGS. Do not call "fix" while some taks are already running . Make sure to use the same STEP that was used during "submit"
 
-   ~/mln-semantics$ bin/condor.sh fix STEP ARGS 
+   ~/mln-semantics$ bin/condor.sh fix EXP_NAME STEP ARGS 
 
 * Collects results of individual tasks into one block and prints it. Make sure to use the same STEP.  
 
-   ~/mln-semantics$ bin/condor.sh collect STEP 
+   ~/mln-semantics$ bin/condor.sh collect EXP_NAME STEP 
 
 Classification and Regression
 -----------------------------
@@ -130,7 +130,7 @@ The script bin/weka.sh is to make this task easy.
 
 The script bin/weka.sh can be called like this: 
 
-   ~/mln-semantics$ cat ACTUAL | bin/weka.sh COMMAND GoldStandardFile NumberOfParses
+   ~/mln-semantics$ cat ACTUAL | bin/weka.sh COMMAND GoldStandardFile NumberOfColumns
 
 where
 
@@ -140,11 +140,11 @@ where
 
 * GoldStandardFile: the name is descriptive enough. A sample file is resources/sick/sick-rte.gs
 
-* NumberOfParses: this option is useful if ACTUAL contains ouput of the system for multible parses. Make sure to use the correct number of parses. If number of parses is 1, use 1. 
+* NumberOfColumns[optional, defaul = 1]: number of columns in ACTUAL. It is useful in case of STS which outputs two columns, and in multiple parses which outout squared numbers of parses. This argument is optional, and its default value is 1. 
 
 Example: after running the system on Condor, you can read the output using the condor script with argument "collect" as shown before. One easy way to get the classification/regression score is by piping the output from the condor scrip to the weka script as below: 
 
-	~/mln-semantics$ bin/condor.sh collect 10 | tail -n 1  | bin/weka.sh regress resources/sick/sick-rte.gs  1 
+	~/mln-semantics$ bin/condor.sh collect firstExp 10 | tail -n 1  | bin/weka.sh regress resources/sick/sick-rte.gs  1 
 
 
 Using Boxer

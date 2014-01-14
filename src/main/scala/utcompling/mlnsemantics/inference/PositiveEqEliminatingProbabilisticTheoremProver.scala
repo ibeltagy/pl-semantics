@@ -28,6 +28,12 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
     goal: BoxerExpression): Seq[Double] = {
 
     newConstants = constants;//extra constants are added by skolemConstAsEvd
+    extraEvd = List();
+    evdBeforeEqRemove = List();
+    equalities = List();
+    inNot = false;
+    negatedConstCount = 0;
+
     
     //Remove it only from the Text because that help generating the evidence.
     //No need to do it for the hypothesis 

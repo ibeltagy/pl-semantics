@@ -215,7 +215,7 @@ object Sts {
         }
 
       val (ps, golds) = results.map(_._2).unzip
-      println("[" + ps.map(_.mkString(",")).mkString(" ") + "]")
+      println("[" + ps.map( r=> { r.map("%1.4f".format(_)).mkString(",") }  ).mkString(" ") + "]")
       println(golds.mkString("["," ","]"))
       FileUtils.writeUsing(outputSimFile) { f =>
         f.write(ps.mkString(" ") + "\n")

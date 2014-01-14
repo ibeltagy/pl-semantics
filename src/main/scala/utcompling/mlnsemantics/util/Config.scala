@@ -155,6 +155,14 @@ class Config(opts: Map[String, String] = Map()) {
     case _ => false;
   }
 
+  //------------------------------------------PSL
+  //PSL grounding limit. Set it to ZERO for "no limit"
+  val groundLimit = opts.get("-groundLimit") match {
+    case Some(l) => l.toInt;
+    case _ => 10000; 
+  }
+
+
   //-------------------------------------------task
     
   //task: rte, sts

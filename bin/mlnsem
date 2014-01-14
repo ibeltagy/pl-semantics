@@ -91,6 +91,14 @@ if [ "$CMD" == "all" ] || [ "$CMD" == "run" ]; then
 	$START utcompling.mlnsemantics.run.Sts run $txt $box $lem $vs $gs $out "$@"
 fi
 
+if [ "$CMD" == "vecadd" ]; then
+   $START VsPairwise  $lem $vs add "$@"
+fi
+
+if [ "$CMD" == "vecmul" ]; then
+   $START VsPairwise  $lem $vs mul "$@"
+fi
+
 if [ "$CMD" == "run-condor" ]; then
 	rngTo=$(( $step * index ))
    rngFrom=$(( $index - 1 ))

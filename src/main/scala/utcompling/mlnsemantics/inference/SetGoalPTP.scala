@@ -27,7 +27,14 @@ class SetGoalPTP(
 
     var extraExpressions: List[WeightedExpression[FolExpression]] = List();
     newConstants = constants;//extra constants are added by skolemNew
-
+	 flipQ = false;
+	 univVars = List();
+	 ands = List();
+	 nonRelationsMap = List();
+	 relationsMap = List();
+	 notEqMap = List();
+	 impMap = List();
+	 entPred = null;
   	//=====================Start STS=============================    
     if (Sts.opts.task == "sts")
     {

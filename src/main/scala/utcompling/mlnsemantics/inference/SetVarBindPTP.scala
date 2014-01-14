@@ -12,6 +12,7 @@ import utcompling.mlnsemantics.run.Sts
 object SetVarBindPTP{
   var entPred_h: FolExpression = null
   var entPred_t: FolExpression = null
+  var varBind: Boolean = false
 }
     
 class SetVarBindPTP(
@@ -43,12 +44,16 @@ class SetVarBindPTP(
           val variables: Seq[Variable] = goal.getVariables.toSeq; //find all variables and use them to construct the predicate
           for (v <- variables) {  
             v.name.charAt(0) match {
-              case 't' => SetVarBindPTP.entPred_t = FolApplicationExpression(SetVarBindPTP.entPred_t, FolVariableExpression(Variable(v.name)));
-              case 'h' => SetVarBindPTP.entPred_h = FolApplicationExpression(SetVarBindPTP.entPred_h, FolVariableExpression(Variable(v.name)));
+              case 't' => {
+						SetVarBindPTP.entPred_t = FolApplicationExpression(SetVarBindPTP.entPred_t, FolVariableExpression(Variable(v.name)));
+		            typeParam_t ::= v.name.substring(0, 2)
+				  }
+              case 'h' => {
+						SetVarBindPTP.entPred_h = FolApplicationExpression(SetVarBindPTP.entPred_h, FolVariableExpression(Variable(v.name)));
+		            typeParam_h ::= v.name.substring(0, 2)
+				  }
               case _ => throw new RuntimeException("unsupported type");
             }
-
-            typeParam_t ::= v.name.substring(0, 2)
           }
         }
 
@@ -69,6 +74,7 @@ class SetVarBindPTP(
     //first run with variable binding   
     if (Sts.opts.varBind == true && Sts.opts.task == "sts") {
       val entDeclar = getEntDeclar(true);
+      SetVarBindPTP.varBind = true;
       result = delegate.prove(constants, declarations ++ entDeclar, evidence, assumptions, goal);
     }
     
@@ -80,6 +86,7 @@ class SetVarBindPTP(
 	      case "sts" => Map("ent_h" -> Set("entConst_h")) ++ Map("ent_t" -> Set("entConst_t"))
 	      case "rte" => Map("ent_h" -> Set("entConst_h"))
 	    }
+      SetVarBindPTP.varBind = false;
     	result = delegate.prove(constants ++ entConst, declarations ++ entDeclar, evidence, assumptions, goal);
     }
 

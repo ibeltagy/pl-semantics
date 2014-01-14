@@ -99,7 +99,7 @@ class PSLTheoremProver(
     	//498,517,664,960,1431   (memroy)
     	//InnerJoin, OuterJoin, OuterJoinWithDummy;
     	//var resultScore = callPSL(mlnFile, "InnerJoin", timeout);
-    	var resultScore = callPSL(mlnFile, "OuterJoin", Sts.opts.timeout);
+    	var resultScore = callPSL(mlnFile, "OuterJoin", Sts.opts.timeout, Sts.opts.groundLimit);
     	
     	//if (resultScore == 0 )
     	//	resultScore = callPSL(mlnFile, "OuterJoin", timeout);
@@ -125,19 +125,26 @@ class PSLTheoremProver(
   }
   
   //mode: InnerJoin, OuterJoin, OuterJoinWithDummy
-  private def callPSL (mlnFile: String, mode: String, timeout: Option[Long] = None):Double = { 
-    var entailmentLine = ""
+  private def callPSL (mlnFile: String, mode: String, timeout: Option[Long] = None, groundLimit: Int = 0/*0 means infinity*/):Double = { 
+    var entailmentLine = "";
+	 var entailmentHLine = "";
+    var entailmentTLine = "";
     val timeoutVal = timeout match {
       case Some(time) => time.toString();
       case _ =>"0";
     };
     //val proc = Process("java", Seq("-cp", PSLTheoremProver.cp, "psl.TextInterface", mlnFile, mode, timeoutVal)).run(
-    LOG.trace("Calling: ant -buildfile psl/build.xml run -Darg0=%s -Darg1=%s -Darg2=%s ".format(mlnFile, mode, timeoutVal));
-    val proc = Process("ant", Seq("-buildfile", "psl/build.xml", "run", "-Darg0="+mlnFile, "-Darg1="+mode, "-Darg2="+timeoutVal)).run(
+    LOG.trace("Calling: ant -buildfile psl/build.xml run -Darg0=%s -Darg1=%s -Darg2=%s -Darg3=%s".format(mlnFile, mode, timeoutVal, groundLimit));
+    val proc = Process("ant", Seq("-buildfile", "psl/build.xml", "run", "-Darg0="+mlnFile, "-Darg1="+mode, "-Darg2="+timeoutVal, "-Darg3="+groundLimit)).run(
     ProcessLogger(l=>{
           System.out.println(l)
           if (l.startsWith("     [java] entailment() V="))
         	  	entailmentLine = l;
+			 else if (l.startsWith("     [java] entailment_h() V="))
+            entailmentHLine = l;
+			 else if (l.startsWith("     [java] entailment_t() V="))
+            entailmentTLine = l;
+
       }, System.err.println(_)))
     
     var exitcode = 1;
@@ -156,15 +163,42 @@ class PSLTheoremProver(
     	println("ERROR: PSL inference fails.")
     	return -1;
     }
-    if (entailmentLine == "")
-    	return 0;
-    else
-    {
-      val lineSplits = entailmentLine.split("\\[");
-      val scoreWithBracket = lineSplits(lineSplits.length-1);
-      return scoreWithBracket.substring(0, scoreWithBracket.length()-1).toDouble;
-      //return entailmentLine.substring(16, entailmentLine.length()-1).toDouble;      
-    }
+
+
+	def lineToScore (line: String) = 
+	{
+        if (line == "")
+              0;
+        else
+        {
+              val lineSplits = line.split("\\[");
+              val scoreWithBracket = lineSplits(lineSplits.length-1);
+              scoreWithBracket.substring(0, scoreWithBracket.length()-1).toDouble;
+        }
+	}
+	
+
+	 if(Sts.opts.task == "rte")
+	 {
+			return lineToScore(entailmentLine);
+
+		/*		if (entailmentLine == "")
+				  return 0;
+				else
+				{
+				  val lineSplits = entailmentLine.split("\\[");
+				  val scoreWithBracket = lineSplits(lineSplits.length-1);
+				  return scoreWithBracket.substring(0, scoreWithBracket.length()-1).toDouble;
+				  //return entailmentLine.substring(16, entailmentLine.length()-1).toDouble;      
+				}
+		*/
+	 }
+	 else
+	 {
+		var entHscore = lineToScore(entailmentHLine);
+		var entTscore = lineToScore(entailmentTLine);
+	  return entHscore*100000 + entTscore;
+	 }
     
   }
 

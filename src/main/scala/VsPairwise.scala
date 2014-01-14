@@ -10,33 +10,59 @@ import java.text.DecimalFormat
     
 object VsPairwise {
      
-  val stsVsFile = "/home/beltagy/workspace/deft/mln-semantics/resources/sts/STS.MSRvid.in.vs";
-  val rw: RuleWeighter = AwithCvecspaceWithSpellingSimilarityRuleWeighter(SimpleCompositeVectorMaker());
-  var vectorspace = BowVectorSpace(stsVsFile)
   
-  def sim(word1:String, word2:String):Double = 
+/*  def sim(word1:String, word2:String):Double = 
   {
      rw.weightForRules(word1, List(word1), Map(word2-> List(word2)), vectorspace).head._2.get
   }
-  
+ */ 
     def main(args: Array[String]) :Unit = {
-      
-    	val lemFile = "/home/beltagy/workspace/deft/mln-semantics/resources/sts/STS.MSRvid.in.lem";
-    	
-    	println("....")
+
+      val lemFile = args(0);  
+		val stsVsFile = args(1);
+		val rw: RuleWeighter = (
+			if(args(2) == "add")
+				AwithCvecspaceWithSpellingSimilarityRuleWeighter(SimpleCompositeVectorMaker());
+			else if (args(2) == "mul")
+				AwithCvecspaceWithSpellingSimilarityRuleWeighter(MultiplicationCompositeVectorMaker());
+			else {
+				println ("wrong input %s".format(args(2)));
+				return;
+			}
+		)
+		val startFrom: Int = args(3).toInt;
+
+      var vectorspace = BowVectorSpace(stsVsFile)
+ 	
         val allLemmas = readLines(lemFile) //.flatMap(_.split("\\s+"))
         val line  = ""
-
+			var counter = 0;
         allLemmas.foreach(line => {
-        	val splits = line.split("\t");
-        	val txt = splits.apply(0);
-        	val hyp = splits.apply(1);
-        	val txtWords = txt.split(" ").map(s=>s.toLowerCase());
-        	val hypWords = hyp.split(" ").map(s=>s.toLowerCase());
-        	val words = txtWords ++ hypWords 
-        	vectorspace = BowVectorSpace(stsVsFile, x => words.contains(x) )
-        	val sim = rw.weightForRules(txtWords.mkString("_"), txtWords, Map(hypWords.mkString("_")-> hypWords), vectorspace)
-        	println("%1.4f".format(sim.head._2.get));
+			try 
+			{
+					counter = counter + 1;
+					if (counter < startFrom)
+					{
+						println("skip %s".format(counter));
+					}
+					else
+					{
+					  val splits = line.split("\t");
+					  val txt = splits.apply(0);
+					  val hyp = splits.apply(1);
+					  val txtWords = txt.split(" ").map(s=>s.toLowerCase());
+					  val hypWords = hyp.split(" ").map(s=>s.toLowerCase());
+					  val words = txtWords ++ hypWords 
+					  vectorspace = BowVectorSpace(stsVsFile, x => words.contains(x) )
+					  val sim = rw.weightForRules(txtWords.mkString(" "), txtWords, Map(hypWords.mkString(" ")-> hypWords), vectorspace)
+					  println("%1.4f".format(sim.head._2.get));
+					}
+			} catch 
+			{
+				case e: Exception =>{
+					println("NaN");	
+				}   				 
+			}
         	//val txtVec = txtWords.foreach(w=> { })
         	//val dfrm = DecimalFormat("#.####");
         	//println(dfrm.format(score));

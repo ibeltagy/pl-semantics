@@ -12,18 +12,36 @@ case $CMD in
 		;;
 esac
 
-outputDir="condor/out/"
-step=$2
+expName=$2
+if [ -z "$expName" ]; then
+   echo "Experiment name can not be empty"
+   exit 1
+fi
+
+outputDir="condor/$expName/"
+
+step=$3
 if [ -z "$step" ] || [ "$step" -le "0" ]; then
    echo "step can not be zero or empty"
    exit 1
 fi
+
+
 total=$(( 5000+$step-1 ))
 total=$(( $total / $step ))
 echo "Number of jobs $total"
 shift
 shift
+shift
 
+case $CMD in
+   submit)
+		echo "Storing condor output files in : $outputDir. Old content will be overwritten"
+		rm $outputDir -r
+		mkdir $outputDir
+      echo "$outputDir $step $@" >> $outputDir/config
+		;;
+esac
 
 collectBuffer=""
 for (( i=1; i<=$total; i++ ))

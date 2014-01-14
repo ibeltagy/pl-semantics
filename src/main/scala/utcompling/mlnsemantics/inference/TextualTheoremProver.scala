@@ -44,11 +44,13 @@ class TextualTheoremProver(
     LOG.trace(hyp)
     val List(t, h) = discourseIterpreter.batchInterpretMultisentence(List(text, hyp), Some(List("t", "h")), false, false)
 
+	 var parseError = false;
     var txtEx  = (t match {
       case Some(txt) => txt;
       case _ => {
         println ("Parsing text failed. Return -2");
-        return Seq.fill(Sts.opts.kbest * Sts.opts.kbest)(-2);
+		  parseError = true;
+		  null;
       }
     })
     
@@ -56,9 +58,19 @@ class TextualTheoremProver(
       case Some(txt) => txt;
       case _ => {
         println ("Parsing hypothesis failed. Return -2");
-        return Seq.fill(Sts.opts.kbest * Sts.opts.kbest)(-2);
+		  parseError = true;
+		  null;
       }
     })
+
+	 if (parseError)
+	 {
+		if(Sts.opts.task == "rte")
+			return Seq.fill(Sts.opts.kbest * Sts.opts.kbest)(-2);
+		else 
+			return Seq.fill(Sts.opts.kbest * Sts.opts.kbest * 2)(-2);
+	 }
+
     
     val constants:Map[String, Set[String]] = Map();
     val declarations:Map[BoxerExpression, Seq[String]] = Map();

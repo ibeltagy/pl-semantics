@@ -77,13 +77,13 @@ class FromEntToEqvProbabilisticTheoremProver(
   def goSTS(e: BoxerExpression): BoxerExpression = {
       e match {
          case BoxerImp(discId, indices, first, second) =>  //remove "->"
-   	  		  BoxerProp(discId, indices, BoxerVariable("v"), BoxerDrs(first.refs ++ second.refs, first.conds ++ second.conds))
+   	  		  BoxerProp(discId, indices, BoxerVariable("v"), goSTS(BoxerDrs(first.refs ++ second.refs, first.conds ++ second.conds)))
          case BoxerOr(discId, indices, first, second) =>  //remove "or"
-   	  		  //BoxerProp(discId, indices, BoxerVariable("v"), BoxerDrs(first.refs ++ second.refs, first.conds ++ second.conds))
-   	  		  BoxerDrs(first.refs ++ second.refs, first.conds ++ second.conds)
-         case BoxerNot(discId, indices, drs) => //remove negation. This is wrong for now 
-   	  	 	  //BoxerProp(discId, indices, BoxerVariable("v"), drs)
-   	  		  drs
+   	  		  //BoxerProp(discId, indices, BoxerVariable("v"), goSTS(BoxerDrs(first.refs ++ second.refs, first.conds ++ second.conds)))
+   	  		  goSTS(BoxerDrs(first.refs ++ second.refs, first.conds ++ second.conds))
+        // case BoxerNot(discId, indices, drs) => //remove negation. This is wrong for now 
+   	  	 	  //BoxerProp(discId, indices, BoxerVariable("v"), goSTS(drs))
+   	  //		  goSTS(drs)
 	     case _ => e.visitConstruct(goSTS)
       }
     }

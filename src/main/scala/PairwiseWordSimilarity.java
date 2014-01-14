@@ -68,7 +68,15 @@ public class PairwiseWordSimilarity {
 	    		{
 	    			word2 = word2.toLowerCase().replace("-", "");
 	    			//double s = rcs.calcRelatednessOfWords(word1, word2);
-	    			double s = VsPairwise.sim(word1, word2); //rw.weightForRules(word1, (Iterable<String>)Arrays.asList(s1), (Map<String, Iterable<String>>)new HashMap<String, ArrayList<String>>(), (Map<String, BowVector>)new HashMap<String,BowVector>());
+
+					//TODO: I will fix the line below later
+	    			//double s = VsPairwise.sim(word1, word2); 
+					double s = 0.0;
+
+
+
+
+//rw.weightForRules(word1, (Iterable<String>)Arrays.asList(s1), (Map<String, Iterable<String>>)new HashMap<String, ArrayList<String>>(), (Map<String, BowVector>)new HashMap<String,BowVector>());
 	    			if(word1.equals(word2))
 	    			{
 	    				s = 12;

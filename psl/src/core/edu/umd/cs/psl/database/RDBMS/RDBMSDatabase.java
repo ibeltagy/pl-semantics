@@ -634,7 +634,8 @@ public class RDBMSDatabase implements Database {
 						//query_predicatesCount = sqler.getSQL(f, minNullCnt);
 						query_predicatesCount = sqler.getSQL(f, 1000);
 						query = query_predicatesCount.get0();
-						query = query + " limit 10000";
+						if (PSLConfiguration.groundLimit > 0)
+							query = query + " limit " + PSLConfiguration.groundLimit;
 						log.trace(query);
 						
 				    	//rs = stmt.executeQuery( "EXPLAIN ANALYZE "  + query + " limit 10000");

@@ -52,6 +52,14 @@ if (this.args.length != 0 && this.args[0].endsWith(".psl") )
 			
 		}
 	}
+   if(this.args.length >= 4 ) {
+
+      try{
+         PSLConfiguration.groundLimit = this.args[3].toInteger();
+      }catch(Exception e){
+
+      }
+   }
 }
 
 println "### Pair " + pslFilePath.substring(pslFilePath.lastIndexOf('/')+1, pslFilePath.lastIndexOf('.'))

@@ -14,6 +14,7 @@ import org.apache.commons.logging.LogFactory
 import support.HardWeightedExpression
 import utcompling.mlnsemantics.run.Sts
 import opennlp.scalabha.util.FileUtils
+import scala.math
 
 class DoMultipleParsesTheoremProver(
   delegate: ProbabilisticTheoremProver[BoxerExpression])
@@ -48,14 +49,37 @@ class DoMultipleParsesTheoremProver(
 	    			for(j <- 0 to Sts.opts.kbest-1)
 		    		{
 	    				if (goalParses.length <= i)
-	    				  score = score ++ List(-2.0)
+						{
+							if(Sts.opts.task == "sts")
+			    				  score = score ++ List(-2.0, -2.0)
+							else score = score ++ List(-2.0)
+						}
 	    				else if (assumptionParses.length <= j)
-	    				  score = score ++ List(-2.0)
+						{
+                     if(Sts.opts.task == "sts")
+                          score = score ++ List(-2.0, -2.0)
+                     else score = score ++ List(-2.0)
+						}
 	    				else
 	    				{
-							val result = delegate.prove(constants, declarations, evidence, List(HardWeightedExpression(assumptionParses.apply(j)._1)), goalParses.apply(i)._1)
+							
+							val result = delegate.prove(Map(), Map(), List(), List(HardWeightedExpression(assumptionParses.apply(j)._1)), goalParses.apply(i)._1)
 							val oneScore = result match { case Seq(s) => s; case Seq() => -1 /* unknown error*/};
-							score = score ++ List(oneScore)	    					
+							if(Sts.opts.task == "sts")
+							{
+								if (oneScore <= 0 )	
+								{
+									score = score ++ List(oneScore)
+									score = score ++ List(oneScore)
+								}
+								else
+								{
+									score = score ++ List(math.floor(oneScore)/100000.0)
+									score = score ++ List(oneScore - math.floor(oneScore))
+								}
+							}
+							else
+								score = score ++ List(oneScore)	    					
 	    				}
 		    		} 
 	    		}

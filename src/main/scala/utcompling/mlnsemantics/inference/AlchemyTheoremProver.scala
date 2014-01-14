@@ -19,6 +19,7 @@ import scala.sys.process.Process
 import scala.sys.process.ProcessLogger
 import edu.mit.jwi.item.POS
 import scala.collection.JavaConversions._
+import scala.compat.Platform
 
 class AlchemyTheoremProver(
   override val binary: String,
@@ -87,8 +88,17 @@ class AlchemyTheoremProver(
       dec match {
         case (FolAtom(Variable(pred), args @ _*), argTypes) =>
           for (a <- argTypes)
+			 {
             require(constants.contains(a), "No contants were found for type '%s' of declared predicate '%s'.".format(a, pred))
-        case d => throw new RuntimeException("Only atoms may be declared.  '%s' is not an atom.".format(d))
+				if(!constants.contains(a))
+					LOG.error ("No contants were found for type '%s' of declared predicate '%s'.".format(a, pred));
+					//return Some(-1.0);
+			 }
+        case d => {
+				throw new RuntimeException("Only atoms may be declared.  '%s' is not an atom.".format(d))
+				//LOG.error("Only atoms may be declared.  '%s' is not an atom.".format(d));
+				//return Some(-1.0);
+			}
       }
     }
 
@@ -198,8 +208,12 @@ class AlchemyTheoremProver(
     //Dunno, but it seems that MC-SAT is better
     //val allArgs = "-ptpe" :: "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
     val allArgs = "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
-
+    val tStart = Platform.currentTime;
+	 //println("start time %s".format(tStart));
     val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, LOG.isTraceEnabled, Sts.opts.timeout);
+    val tEnd = Platform.currentTime;
+    //println("end time %s".format(tEnd));
+	 println ("Total time:(%s) %s".format(SetVarBindPTP.varBind, (tEnd-tStart)/1000.0));
 
     exitcode match {
       case 0 => 
@@ -234,7 +248,7 @@ class AlchemyTheoremProver(
 			 }
 		    
 		    val score  = Sts.opts.task match {
-		      case "sts" => (score1 + score2) / 2.0;
+		      case "sts" => (score1*100000 + score2);
 		      case "rte" => score1;
 		    }  
 		

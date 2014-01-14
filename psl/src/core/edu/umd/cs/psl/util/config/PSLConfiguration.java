@@ -29,6 +29,7 @@ public class PSLConfiguration extends Configuration {
 
 	public static final long startTime = System.currentTimeMillis();
 	public static long timeout = 0;
+	public static int groundLimit = 0; //grounding limit when using AVG. 0 means: no limit. Take care that "no limit" may not work for long sentences
 	
 	public PSLConfiguration(String rootDir, String configFile, String baseFile) {
 		super(rootDir+File.separator+configFile,(baseFile==null?null:rootDir+File.separator+baseFile));
