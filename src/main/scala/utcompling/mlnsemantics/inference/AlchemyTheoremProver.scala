@@ -248,7 +248,7 @@ class AlchemyTheoremProver(
 			 }
 		    
 		    val score  = Sts.opts.task match {
-		      case "sts" => (score1*100000 + score2);
+		      case "sts" => (math.floor(score1*10000)*10 + score2);
 		      case "rte" => score1;
 		    }  
 		

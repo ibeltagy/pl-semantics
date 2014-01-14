@@ -74,8 +74,9 @@ class DoMultipleParsesTheoremProver(
 								}
 								else
 								{
-									score = score ++ List(math.floor(oneScore)/100000.0)
-									score = score ++ List(oneScore - math.floor(oneScore))
+									println(oneScore);
+									score = score ++ List((oneScore.toInt/10)/10000.0)
+									score = score ++ List(oneScore - ((oneScore.toInt/10)*10) )
 								}
 							}
 							else

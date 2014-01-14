@@ -197,7 +197,7 @@ class PSLTheoremProver(
 	 {
 		var entHscore = lineToScore(entailmentHLine);
 		var entTscore = lineToScore(entailmentTLine);
-	  return entHscore*100000 + entTscore;
+	  return math.floor(entHscore*10000)*10 + entTscore;
 	 }
     
   }

@@ -102,25 +102,25 @@ The script provides the following functionalities:
 
 	~/mln-semantics$ bin/condor.sh  remove
 
-* Submit new jobs to Condor. EXP_NAME: is the name of the experiment, output from condor will be stored in condor/EXP_NAME/ . STEP is number of pairs per job. ARGS are the usual arguments you want to pass to bin/mlnsem (execluding the leading "run" and the range argument). Output files are saved in mln-semantics/condor/EXP_NAME/. Be careful, consecutive submissions of tasks with the same EXP_NAME  will overwrite each others. The file: mln-semantics/condor/EXP_NAME/config contains the command line arguments passed to the condor script. 
+* Submit new jobs to Condor. EXP_DIR_PREFIX: is the prefix of the directory used to store output from condor. For example, if EXP_DIR_PREFIX is "output/test", the directory will be "output/test.exp/". STEP is number of pairs per job. ARGS are the usual arguments you want to pass to bin/mlnsem (execluding the leading "run" and the range argument). Output files are saved in mln-semantics/EXP_DIR_PREFIX.exp/. Be careful, consecutive submissions of tasks with the same EXP_DIR_PREFIX  will overwrite each others. The file: mln-semantics/EXP_DIR_PREFIX.exp/config contains the command line arguments passed to the condor script. 
 
-	~/mln-semantics$ bin/condor.sh submit EXP_NAME STEP ARGS 
+	~/mln-semantics$ bin/condor.sh submit EXP_DIR_PREFIX STEP ARGS 
 
-for example: submit the sick dataset to condor. Output from condor will be saved in condor/firstExp.  Each Condor job contains 10 pairs of sentences. Run each pair for 30 seconds, and do not print any log
+for example: submit the sick dataset to condor. Output from condor will be saved in condor/firstExp.exp/ .  Each Condor job contains 10 pairs of sentences. Run each pair for 30 seconds, and do not print any log
 
-	~/mln-semantics$ bin/condor.sh submit firstExp 10 sick-rte -timeout 30000 -log OFF 
+	~/mln-semantics$ bin/condor.sh submit condor/firstExp 10 sick-rte -timeout 30000 -log OFF 
 
 * Prints a list of the tasks without submitting anything. This is helpful to check the number of tasks and arguments before submitting the tasks.
 
-	~/mln-semantics$ bin/condor.sh print EXP_NAME STEP ARGS
+	~/mln-semantics$ bin/condor.sh print EXP_DIR_PREFIX STEP ARGS
 
-* In some cases (for reasons I do not understand) some condor tasks break without notice. Calling the condor script with the argument "fix" checks all output files and make sure that all condor tasks terminated correctly. If some of them did not, resubmit them again. Make sure to use the same STEP and ARGS. Do not call "fix" while some taks are already running . Make sure to use the same STEP that was used during "submit"
+* In some cases (for reasons I do not understand) some condor tasks break without notice. Calling the condor script with the argument "fix" checks all output files and make sure that all condor tasks terminated correctly. If some of them did not, resubmit them again. Do not call "fix" while some taks are already running . Make sure to use the same EXP_DIR_PREFIX. STEP and ARGS will be read from the "config" file
 
-   ~/mln-semantics$ bin/condor.sh fix EXP_NAME STEP ARGS 
+   ~/mln-semantics$ bin/condor.sh fix EXP_DIR_PREFIX
 
-* Collects results of individual tasks into one block and prints it. Make sure to use the same STEP.  
+* Collects results of individual tasks into one block and prints it.
 
-   ~/mln-semantics$ bin/condor.sh collect EXP_NAME STEP 
+   ~/mln-semantics$ bin/condor.sh collect EXP_DIR_PREFIX
 
 Classification and Regression
 -----------------------------
@@ -144,7 +144,7 @@ where
 
 Example: after running the system on Condor, you can read the output using the condor script with argument "collect" as shown before. One easy way to get the classification/regression score is by piping the output from the condor scrip to the weka script as below: 
 
-	~/mln-semantics$ bin/condor.sh collect firstExp 10 | tail -n 1  | bin/weka.sh regress resources/sick/sick-rte.gs  1 
+	~/mln-semantics$ bin/condor.sh collect condor/firstExp  | tail -n 1  | bin/weka.sh regress resources/sick/sick-rte.gs  1 
 
 
 Using Boxer
