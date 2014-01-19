@@ -9,10 +9,6 @@
     <property name="debuglevel" value="source,lines,vars"/>
     <property name="target" value="1.6"/>
     <property name="source" value="1.6"/>
-    <path id="Groovy DSL Support.libraryclasspath">
-        <pathelement location="/u/beltagy/.groovy/greclipse/global_dsld_support"/>
-        <pathelement location="/usr/eclipse/plugins/org.codehaus.groovy_2.0.6.xx-RELEASE-20121219-0800-e37/plugin_dsld_support/"/>
-    </path>
     <path id="psl.classpath">
         <pathelement location="target/classes"/>
     	<pathelement location="groovy-all-2.1.5.jar"/>
@@ -32,10 +28,7 @@
         <pathelement location="${M2_REPO}/junit/junit/4.0/junit-4.0.jar"/>
         <pathelement location="${M2_REPO}/log4j/log4j/1.2.16/log4j-1.2.16.jar"/>
         <pathelement location="${M2_REPO}/de/mathnbits/mathnbitsSTL/1.0/mathnbitsSTL-1.0.jar"/>
-        <pathelement location="${M2_REPO}/com/mosek/mosek/6.0/mosek-6.0.jar"/>
-        <pathelement location="${M2_REPO}/mysql/mysql-connector-java/5.0.5/mysql-connector-java-5.0.5.jar"/>
         <pathelement location="${M2_REPO}/edu/emory/mathcs/parallelcolt/0.9.4/parallelcolt-0.9.4.jar"/>
-        <pathelement location="${M2_REPO}/edu/umd/cs/psl-addon-mosek/1.0.3/psl-addon-mosek-1.0.3.jar"/>
         <pathelement location="${M2_REPO}/org/slf4j/slf4j-api/1.5.8/slf4j-api-1.5.8.jar"/>
         <pathelement location="${M2_REPO}/org/slf4j/slf4j-log4j12/1.5.8/slf4j-log4j12-1.5.8.jar"/>
         <pathelement location="${M2_REPO}/com/healthmarketscience/sqlbuilder/sqlbuilder/2.0.6/sqlbuilder-2.0.6.jar"/>
@@ -62,16 +55,16 @@
     <target name="build-subprojects"/>
     <target depends="init" name="build-project">
         <echo message="${ant.project.name}: ${ant.file}"/>
-        <javac debug="true" debuglevel="${debuglevel}" destdir="target/classes" source="${source}" target="${target}">
+        <javac includeantruntime="false" debug="true" debuglevel="${debuglevel}" destdir="target/classes" source="${source}" target="${target}">
             <src path="src/main/resources"/>
             <exclude name="**/*.java"/>
             <classpath refid="psl.classpath"/>
         </javac>
-        <javac debug="true" debuglevel="${debuglevel}" destdir="target/classes" source="${source}" target="${target}">
+        <javac includeantruntime="false" debug="true" debuglevel="${debuglevel}" destdir="target/classes" source="${source}" target="${target}">
             <src path="src/core"/>
             <classpath refid="psl.classpath"/>
         </javac>
-    	<javac debug="true" debuglevel="${debuglevel}" destdir="target/classes" source="${source}" target="${target}">
+    	<javac includeantruntime="false" debug="true" debuglevel="${debuglevel}" destdir="target/classes" source="${source}" target="${target}">
             <src path="src/groovy"/>
     		<include name="**/*.java"/>
             <classpath refid="psl.classpath"/>
