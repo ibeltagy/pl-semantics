@@ -87,9 +87,9 @@ The script provides the following functionalities:
 
 	~/mln-semantics$ bin/condor.sh submit EXP_DIR_PREFIX STEP ARGS 
 
-for example: submit the sick dataset to condor. Output from condor will be saved in condor/firstExp.exp/ .  Each Condor job contains 10 pairs of sentences. Run each pair for 30 seconds, and do not print any log
+for example: submit the sick-sts  dataset to condor. Output from condor will be saved in condor/firstExp.exp/ .  Each Condor job contains 10 pairs of sentences. Run each pair for 30 seconds, and do not print any log. Use PSL and for the STS task 
 
-	~/mln-semantics$ bin/condor.sh submit condor/firstExp 10 sick-rte -timeout 30000 -log OFF 
+	~/mln-semantics$ bin/condor.sh submit condor/firstExp 10 sick-sts -task sts -softLogic psl -timeout 30000 -log OFF 
 
 * Prints a list of the tasks without submitting anything. This is helpful to check the number of tasks and arguments before submitting the tasks.
 
@@ -102,6 +102,7 @@ for example: submit the sick dataset to condor. Output from condor will be saved
 * Collects results of individual tasks into one block and prints it.
 
    ~/mln-semantics$ bin/condor.sh collect EXP_DIR_PREFIX
+
 
 Classification and Regression
 -----------------------------
@@ -125,8 +126,13 @@ where
 
 Example: after running the system on Condor, you can read the output using the condor script with argument "collect" as shown before. One easy way to get the classification/regression score is by piping the output from the condor scrip to the weka script as below: 
 
-	~/mln-semantics$ bin/condor.sh collect condor/firstExp  | tail -n 1  | bin/weka.sh regress resources/sick/sick-rte.gs  1 
+	~/mln-semantics$ bin/condor.sh collect condor/firstExp  | tail -n 1  | bin/weka.sh regress resources/sick/sick-sts.gs  1 
 
+Example running on condor then regression: 
+-------------------------------------------
+
+   ~/mln-semantics$ bin/condor.sh submit condor/firstExp 10 sick-sts -task sts -softLogic psl -timeout 30000 -log OFF
+   ~/mln-semantics$ bin/condor.sh collect condor/firstExp  | tail -n 1  | bin/weka.sh regress resources/sick/sick-sts.gs
 
 Using Boxer
 -----------

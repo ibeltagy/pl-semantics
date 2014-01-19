@@ -110,8 +110,8 @@ esac
          ;;
       regress)  
 			result=$(java -Xmx1024m -cp $wekaJarPath weka.classifiers.meta.AdditiveRegression -i $testCV  -S 0.95 -I 10 -W weka.classifiers.rules.M5Rules )
-			echo "$result"
-         result=$(java -Xmx1024m -cp $wekaJarPath weka.classifiers.functions.MultilayerPerceptron -i $testCV   )
+#			echo "$result"
+#         result=$(java -Xmx1024m -cp $wekaJarPath weka.classifiers.functions.MultilayerPerceptron -i $testCV   )
          ;;
    esac
 	
