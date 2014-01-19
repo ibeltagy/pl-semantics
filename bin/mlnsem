@@ -8,12 +8,26 @@ SBT="java -Dfile.encoding=UTF8 -Xdebug -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEn
 START="target/start"
 RES="resources"
 
-CMD=$1  #compile, boxer, run, box, lem, vs, gen, all
+CMD=$1  #install, compile, boxer, run, box, lem, vs, gen, all, vecadd, vecmull, run-condor
 shift
 
 case $CMD in
+  install)
+   ln -s /u/beltagy/workspace/deft/mln-semantics/lib/ws4j-1.0.1.jar lib/ws4j-1.0.1.jar
+   ln -s /u/beltagy/workspace/deft/mln-semantics/candc/models candc/models
+   ln -s /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt resources/full.vs
+   ln -s /u/dhg/Corpora/wordnet-3.0/ resources/wordnet
+   ln -s /u/beltagy/workspace/deft/mln-semantics/resources/englishPCFG.ser.gz resources/englishPCFG.ser.gz
+   ln -s /u/beltagy/workspace/deft/mln-semantics/resources/rules resources/rules
+   ln -s /u/beltagy/workspace/deft/mln-semantics/resources/phrase-vectors resources/phrase-vectors
+	make -C candc/
+   make -C alchemy/src/ depend
+	exit 0
+	;;
   compile)
 	$SBT add-start-script-tasks start-script
+	make -C alchemy/src/ infer
+	ant -buildfile psl/build.xml
 	exit 0
    ;;
   boxer)
