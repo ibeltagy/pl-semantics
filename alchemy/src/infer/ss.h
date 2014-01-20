@@ -29,9 +29,10 @@ class SampleSearchProxy: public Inference
 
  SampleSearchProxy(VariableState* state, long int seed, const bool& trackClauseTrueCnts,
         SampleSearchParams* sampleSearchParams,
-        Array<Array<Predicate* >* >* queryFormulas = NULL)
+        Array<Array<Predicate* >* >* queryFormulas = NULL, bool withSSQ = false)
     : Inference(state, seed, trackClauseTrueCnts, queryFormulas)
   {
+	this->withSSQ_ = withSSQ;
 	this->params = (*sampleSearchParams);
 	if(this->params.maxSeconds <=0 )
 		this->params.maxSeconds = 100;
@@ -124,13 +125,19 @@ class SampleSearchProxy: public Inference
     //std::system(command.str().c_str());
     std::ostringstream t;
     t << this->params.maxSeconds;
-    cout << "calling SS"<<endl;
+    std::ostringstream resFile;
+    resFile << aresultsFile;
+    if(this->withSSQ_)
+	resFile << ".num";
+    else
+	resFile << ".dnum";
+
     char ** argv  = new char*[5];
     for(int i = 0;i<5;i++)
 	argv[i] = new char[50];
 
     strcpy (argv[0],"./ijgp-samplesearch");
-    strcpy (argv[1],aresultsFile);
+    strcpy (argv[1],resFile.str().c_str());
     strcpy (argv[2],"empty.evd");
     strcpy (argv[3],t.str().c_str());
     strcpy (argv[4],"PR");
@@ -140,7 +147,7 @@ class SampleSearchProxy: public Inference
     //cout <<argv[2]<<endl;
     //cout <<argv[3]<<endl;
     //cout <<argv[4]<<endl;
-
+    cout << "calling SS"<<endl;
     ss::MAIN (state_, 5, argv);
     //cout << aresultsFile << endl;
 
@@ -164,6 +171,7 @@ class SampleSearchProxy: public Inference
 
 private:
 	SampleSearchParams params;
+	bool withSSQ_;
 };
 
 #endif /*SS_H_*/

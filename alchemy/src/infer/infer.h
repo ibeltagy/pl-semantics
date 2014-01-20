@@ -608,18 +608,28 @@ void setsrand()
   //copy srcFile to dstFile, & append '#include "dbFiles"' to latter
 void copyFileAndAppendDbFile(const string& srcFile, string& dstFile, 
                              const Array<string>& dbFilesArr,
-                             const Array<string>& constFilesArr)
+                             const Array<string>& constFilesArr, 
+			     const string& ssqFile = "" )
 {
   ofstream out(dstFile.c_str());
   ifstream in(srcFile.c_str());
   if (!out.good()) { cout<<"ERROR: failed to open "<<dstFile<<endl;exit(-1);}
   if (!in.good()) { cout<<"ERROR: failed to open "<<srcFile<<endl;exit(-1);}
-  
+
   string buffer;
   while(getline(in, buffer)) out << buffer << endl;
   in.close();
-
   out << endl;
+
+  if(ssqFile.length() != 0)
+  {
+	ifstream inssq(ssqFile.c_str());
+	if (!inssq.good()) { cout<<"ERROR: failed to open "<<ssqFile<<endl;exit(-1);}
+	while(getline(inssq, buffer)) out << buffer << endl;
+	inssq.close();
+	out << endl;
+  }
+
   for (int i = 0; i < constFilesArr.size(); i++) 
     out << "#include \"" << constFilesArr[i] << "\"" << endl;
   out << endl;
@@ -1004,8 +1014,13 @@ bool createQueryFilePreds(const string& queryFile, const Domain* const & domain,
  */
 int buildInference(Inference*& inference, Domain*& domain,
                    bool const &aisQueryEvidence, Array<Predicate *> &queryPreds,
-                   Array<TruthValue> &queryPredValues)
+                   Array<TruthValue> &queryPredValues, bool withSSQ)
 {
+  queryPredsStr = "";
+  queryFile = "";
+  queries = GroundPredicateHashArray();
+  knownQueries = GroundPredicateHashArray();
+
   string inMLNFile, wkMLNFile, evidenceFile;
 
   StringHashArray queryPredNames;
@@ -1191,7 +1206,12 @@ int buildInference(Inference*& inference, Domain*& domain,
   char buf[100];
   sprintf(buf, "%s%d%s", tmp.c_str(), getpid(), ZZ_TMP_FILE_POSTFIX);
   wkMLNFile = buf;
-  copyFileAndAppendDbFile(inMLNFile, wkMLNFile,
+
+  if(withSSQ && asamplesearchInfer  && asamplesearchQueryFile)
+	copyFileAndAppendDbFile(inMLNFile, wkMLNFile,
+                          evidenceFilesArr, constFilesArr, asamplesearchQueryFile);
+  else
+	copyFileAndAppendDbFile(inMLNFile, wkMLNFile,
                           evidenceFilesArr, constFilesArr);
 
     // Parse wkMLNFile, and create the domain, MLN, database
@@ -1444,7 +1464,7 @@ int buildInference(Inference*& inference, Domain*& domain,
       }
       else if (asamplesearchInfer && !aHybrid)
       { // SampleSearch
-        inference = new SampleSearchProxy(state, aSeed, trackClauseTrueCnts, samplesearchparams, queryFormulas);
+        inference = new SampleSearchProxy(state, aSeed, trackClauseTrueCnts, samplesearchparams, queryFormulas, withSSQ);
       }
       else if (asimtpInfer && !aHybrid)
       { // Simulated Tempering

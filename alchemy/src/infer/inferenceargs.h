@@ -158,9 +158,11 @@ int amcmcMaxSeconds   = -1;
 
 
   // SampleSearch params
+
+char* asamplesearchQueryFile	= NULL;
 int asamplesearchIBound		= -1;
 int asamplesearchRbBound 	= -1;
-int asamplesearchNumItr	= -1;
+int asamplesearchNumItr		= -1;
 
   // Gibbs params
 double agibbsDelta           = 0.05;

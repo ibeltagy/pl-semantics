@@ -73,6 +73,7 @@
 #include "arguments.h"
 #include "util.h"
 #include "infer.h"
+#include <math.h> 
 
 extern const char* ZZ_TMP_FILE_POSTFIX; //defined in fol.y
 char* aresultsFile = NULL;
@@ -114,6 +115,9 @@ ARGS ARGS::Args[] =
   
   ARGS("ss", ARGS::Tog, asamplesearchInfer,
        "Run inference using SampleSearch and estimate partition function Z"),
+
+  ARGS("ssq", ARGS::Opt, asamplesearchQueryFile,
+      "File contains query formulas. This only works with SampleSearch."),
 
   ARGS("ibound", ARGS::Opt, asamplesearchIBound,
        "SampleSearch's I-Bound of IJGP"),
@@ -629,20 +633,45 @@ int main(int argc, char* argv[])
 
   Domain* domain = NULL;
   Inference* inference = NULL;
+
+  Array<Predicate *> queryPredsSSQ;
+  Array<TruthValue> queryPredValuesSSQ;
+  Domain* domainSSQ = NULL;
+  Inference* inferenceSSQ = NULL;
+
+
   if (buildInference(inference, domain, aisQueryEvidence, queryPreds,
-                     queryPredValues) > -1)
+                     queryPredValues, false) > -1)
   {
 	  //for(int i=0;i<queryPreds.size();i++)
 	  //{
 		//  queryPreds[i]->print(cout,domain);
 		 // cout<<endl;
 	  //}
-    double initTime, runTime;
+	cout << "asamplesearchInfer: " <<asamplesearchInfer << endl;
+	if (asamplesearchQueryFile) 
+		cout << "asamplesearchQueryFile: " <<asamplesearchQueryFile << endl;
+	else
+		cout << "asamplesearchQueryFile: NULL" << endl;
+		
+	if(asamplesearchInfer  && asamplesearchQueryFile)
+	{
+		cout << "=========================before build 2"<< endl;
+		if(buildInference(inferenceSSQ, domainSSQ, aisQueryEvidence, 
+			queryPredsSSQ, queryPredValuesSSQ, true) <= -1)
+		{
+			inferenceSSQ = NULL;
+		cout << "=========================build 2 failed"<< endl;
+		}
+	}
+
+	double initTime, runTime;
 	Timer timer1;
 	
 	timer1.reset();
 	inference->init();
-    initTime = timer1.time();
+	if(inferenceSSQ) inferenceSSQ->init();
+	initTime = timer1.time();
 	
 	timer1.reset();
 	
@@ -663,6 +692,7 @@ int main(int argc, char* argv[])
       else
       {
         inference->infer();
+	if(inferenceSSQ) inferenceSSQ->infer();
       }
 
       runTime = timer1.time();
@@ -683,7 +713,41 @@ int main(int argc, char* argv[])
         }
         else
         {
-	      printResults(queryFile, queryPredsStr, domain, resultsOut, &queries,
+	  if(inferenceSSQ)
+	  {
+		std::ostringstream resFile;
+		resFile << aresultsFile << ".num.PR";
+		ifstream in(resFile.str().c_str());
+		if (!in.good()) { cout<<"ERROR: failed to open "<<resFile.str()<<endl;exit(-1);}
+		string buffer;
+		getline(in, buffer);
+		getline(in, buffer);
+		stringstream ss(buffer);
+		double num;
+		ss >> num;
+		in.close();
+
+		std::ostringstream resFile2;
+		resFile2 << aresultsFile << ".dnum.PR";
+		ifstream in2(resFile2.str().c_str());
+		if (!in2.good()) { cout<<"ERROR: failed to open "<<resFile2.str()<<endl;exit(-1);}
+		getline(in2, buffer);
+		getline(in2, buffer);
+		stringstream ss2(buffer);
+		double dnum;
+		ss2 >> dnum;
+		in2.close();
+
+		double p = pow(10.0, num-dnum);
+
+		ofstream out(aresultsFile);
+		if (!out.good()) { cout<<"ERROR: failed to open "<<aresultsFile<<endl;exit(-1);}
+		out  << p<< endl;
+		out.close();
+		cout << "p=" <<p<<endl;
+	  }
+	  else
+		printResults(queryFile, queryPredsStr, domain, resultsOut, &queries,
                        inference, inference->getState());
         }
       }
@@ -692,9 +756,11 @@ int main(int argc, char* argv[])
 
   resultsOut.close();
   if (domain) delete domain;
+  if (domainSSQ) delete domainSSQ;
   for (int i = 0; i < knownQueries.size(); i++)
     if (knownQueries[i]) delete knownQueries[i];
   if (inference) delete inference;
+  if (inferenceSSQ) delete inferenceSSQ;
   
   cout << "total time taken = "; Timer::printTime(cout, timer.time()-begSec);
   cout << endl;
