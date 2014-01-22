@@ -172,10 +172,12 @@ object Sts {
 				case "dep" => new DependencyParsedBoxerDiscourseInterpreter(depParser);
 				case "box" => new PreparsedBoxerDiscourseInterpreter(boxPair, new PassthroughBoxerExpressionInterpreter());
 			}			
+			
 			val softLogicTool: ProbabilisticTheoremProver[FolExpression] = opts.softLogicTool match {
 				case "psl" => new PSLTheoremProver()
 				case "none" => new NoneTheoremProver()
-				case "mln" => AlchemyTheoremProver.findBinary();
+				case "mln" => new MLNTheoremProver()
+				case "ss" => new SampleSearchTheoremProver()
 			}		
 			 
           val ttp =

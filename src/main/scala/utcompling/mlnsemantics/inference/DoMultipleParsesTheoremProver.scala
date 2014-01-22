@@ -64,6 +64,11 @@ class DoMultipleParsesTheoremProver(
 	    				{
 							
 							val result = delegate.prove(Map(), Map(), List(), List(HardWeightedExpression(assumptionParses.apply(j)._1)), goalParses.apply(i)._1)
+							if(Sts.opts.task == "sts")
+								 	assert(result.length == 2);
+							else assert(result.length == 1);
+							score = score ++ result;
+							/*
 							val oneScore = result match { case Seq(s) => s; case Seq() => -1 /* unknown error*/};
 							if(Sts.opts.task == "sts")
 							{
@@ -80,7 +85,8 @@ class DoMultipleParsesTheoremProver(
 								}
 							}
 							else
-								score = score ++ List(oneScore)	    					
+								score = score ++ List(oneScore)
+							*/	    					
 	    				}
 		    		} 
 	    		}

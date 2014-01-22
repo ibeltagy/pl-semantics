@@ -21,6 +21,8 @@ case $CMD in
    ln -s /u/beltagy/workspace/deft/mln-semantics/resources/rules resources/rules
    ln -s /u/beltagy/workspace/deft/mln-semantics/resources/phrase-vectors resources/phrase-vectors
 	make -C candc/
+	git checkout candc/src/lib/version.cc
+	git checkout candc/src/prolog/boxer/version.pl
    make -C alchemy/src/ depend
 	exit 0
 	;;

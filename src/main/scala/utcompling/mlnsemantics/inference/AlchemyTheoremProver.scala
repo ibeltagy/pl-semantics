@@ -21,63 +21,15 @@ import edu.mit.jwi.item.POS
 import scala.collection.JavaConversions._
 import scala.compat.Platform
 
-class AlchemyTheoremProver(
-  override val binary: String,
-  logBase: Double = E)
-  extends SubprocessCallable(binary)
-  with ProbabilisticTheoremProver[FolExpression] {
-
+class AlchemyTheoremProver{
+  
   type WeightedFolEx = WeightedExpression[FolExpression]
 
   private val LOG = LogFactory.getLog(classOf[AlchemyTheoremProver])
   
-  override def prove(
-    constants: Map[String, Set[String]],
-    declarations: Map[FolExpression, Seq[String]],
-    evidence: List[FolExpression],
-    assumptions: List[WeightedFolEx],
-    goal: FolExpression): Seq[Double] = {
-
-
-    val mlnFile = makeMlnFile(
-      constants,
-      declarations,
-      assumptions,
-      evidence,
-      goal)
-					
-    val evidenceFile = makeEvidenceFile(evidence)
-    val resultFile = FileUtils.mktemp(suffix = ".res")
-   
-    //all evd are in the mln file
-    val openWorldPreds =
-      declarations.keys.map{
-        case FolAtom(Variable(pred), _*) => pred
-        case FolVariableExpression(Variable(pred)) => pred
-    }.mkString(",")
-    
-    val args = /*List("-ow", openWorldPreds) ++ */(Sts.opts.task match {
-      case "sts" => List("-q", openWorldPreds)
-      case "rte" => List("-q", openWorldPreds)
-    })
-    try 
-    {      
-    	callAlchemy(mlnFile, evidenceFile, resultFile, args) match {
-	      case Some(t) => Seq(t.toDouble)
-	      case _ => throw new RuntimeException("no valid output in the result file");
-    	}
-
-    }catch 
-    {
-    	case e: Exception =>{
-    	  System.err.println (e);
-    	  return Seq();
-    	}   				 
-    }
-    
-  }
-
-  private def makeMlnFile(
+  private val binary:String = FileUtils.findBinary("infer", Some("alchemy/bin") , Some("ALCHEMYHOME"))
+  
+  protected def makeMlnFile(
     constants: Map[String, Set[String]],
     declarations: Map[FolExpression, Seq[String]],
     assumptions: List[WeightedFolEx],
@@ -185,7 +137,7 @@ class AlchemyTheoremProver(
     tempFile
   }
 
-  private def makeEvidenceFile(evidence: List[FolExpression]) = {
+  protected def makeEvidenceFile(evidence: List[FolExpression]) = {
     val tempFile = FileUtils.mktemp(suffix = ".db")
     FileUtils.writeUsing(tempFile) { f =>
       f.write("//\n");
@@ -197,7 +149,7 @@ class AlchemyTheoremProver(
     tempFile
   }
 
-  private def callAlchemy(mln: String, evidence: String, result: String, args: List[String] = List()): Option[String] = {
+  protected def callAlchemy(mln: String, evidence: String, result: String, args: List[String] = List()): Int = {
     if (LOG.isDebugEnabled) {
       LOG.debug("mln file:\n" + readLines(mln).mkString("\n").trim)
       LOG.debug("evidence file:\n" + readLines(evidence).mkString("\n").trim)
@@ -210,63 +162,17 @@ class AlchemyTheoremProver(
     val allArgs = "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
     val tStart = Platform.currentTime;
 	 //println("start time %s".format(tStart));
-    val (exitcode, stdout, stderr) = callAllReturns(None, allArgs, LOG.isTraceEnabled, Sts.opts.timeout);
+    var caller = new SubprocessCallable(binary);
+    val (exitcode, stdout, stderr) = caller.callAllReturns(None, allArgs, LOG.isTraceEnabled, Sts.opts.timeout);
     val tEnd = Platform.currentTime;
     //println("end time %s".format(tEnd));
 	 println ("Total time:(%s) %s".format(SetVarBindPTP.varBind, (tEnd-tStart)/1000.0));
 
-    exitcode match {
-      case 0 => 
-      {
-		    val out = new StringBuilder
-			val err = new StringBuilder
-		 
-		    /*var command = (Sts.opts.task == "sts" && varBind.get) match {
-					case true =>  "grep entailment_h "+result+" | awk '{print $2}'| sort -n -r  | head -n 1";
-					case false => "grep \"entailment_h(\\\"ent_h\" "+result+" | awk '{print $2}'| sort -n -r  | head -n 1"
-			 }*/
-			var command = "grep entailment_h "+result+" | awk '{print $2}'| sort -n -r  | head -n 1";
-			
-		    Process("/bin/sh", Seq("-c", command)) ! (ProcessLogger(out.append(_).append("\n"), System.err.println(_)))
-		    
-		    val score1 = out.mkString("").trim().toDouble;
-		    out.clear();
-		    
-			 var score2 = 0.0;
-			 if (Sts.opts.task == "sts")
-			 {
-						/*command = varBind.get match {
-							  case true =>  "grep entailment_t "+result+" | awk '{print $2}'| sort -n -r  | head -n 1";
-							  case false => "grep \"entailment_t(\\\"ent_t\" "+result+" | awk '{print $2}'| sort -n -r  | head -n 1"
-						}*/
-			   			command = "grep entailment_t "+result+" | awk '{print $2}'| sort -n -r  | head -n 1";
-		
-						Process("/bin/sh", Seq("-c", command)) ! (ProcessLogger(out.append(_).append("\n"), System.err.println(_)))
-						
-						score2 = out.mkString("").trim().toDouble;
-						out.clear();
-			 }
-		    
-		    val score  = Sts.opts.task match {
-		      case "sts" => (math.floor(score1*10000)*10 + score2);
-		      case "rte" => score1;
-		    }  
-		
-		    if (LOG.isDebugEnabled())
-		    {
-		    	val results = readLines(result).mkString("\n").trim
-		    	LOG.debug("results file:\n" + results)
-		    }
-		    Some(score.toString())
-      }
-      //case _ => throw new RuntimeException("Failed with exitcode=%s.\n%s\n%s".format(exitcode, stdout, stderr))
-      case -3 /*timeout*/ => Some("-3")
-      case _ => throw new RuntimeException("Failed with exitcode=%s.".format(exitcode))
-    }
+     return exitcode;
   }
   
   //convert a FOLExpression to an Alchemy string 
-  private def convert(input: FolExpression, bound: Set[Variable] = Set()): String =
+  protected def convert(input: FolExpression, bound: Set[Variable] = Set()): String =
     input match {
       case FolAllExpression(variable, term) => convert(term, bound + variable) // don't add outermost 'forall'
       case _ => _convert(input, bound)
@@ -307,29 +213,9 @@ class AlchemyTheoremProver(
 	case FolVariableExpression(v) => v.name.toLowerCase()
     }
 
-  private def quote(s: String) = '"' + s + '"'
+  protected def quote(s: String) = '"' + s + '"'
 }
 
 object AlchemyTheoremProver {
-
-  private var pairIndx = 0;
-
-  def findBinary(binDir: Option[String] = Some("alchemy/bin"), envar: Option[String] = Some("ALCHEMYHOME"), verbose: Boolean = false) =
-  {    //new AlchemyTheoremProver(FileUtils.findBinary("liftedinfer", binDir, envar, verbose))
-	pairIndx = pairIndx+1;
-	//println("pairIndx: " + pairIndx);
-    new AlchemyTheoremProver(FileUtils.findBinary("infer", binDir, envar, verbose))
-  }
-
-  def main(args: Array[String]) {
-    val parse = new FolLogicParser().parse(_)
-    val atp = new AlchemyTheoremProver(pathjoin(System.getenv("HOME"), "bin/alchemy/bin/infer"))
-    val constants = Map("ind" -> Set("Socrates"))
-    val declarations = Map[FolExpression, Seq[String]](FolAtom(Variable("man")) -> Seq("ind"), FolAtom(Variable("mortal")) -> Seq("ind"))
-    val evidence = List("man(Socrates)").map(parse)
-    val assumptions = List(HardWeightedExpression(parse("all x.(man(x) -> mortal(x))")))
-    val goal = parse("mortal(Socrates)")
-    println(atp.prove(constants, declarations, evidence, assumptions, goal))
-
-  }
+  
 }

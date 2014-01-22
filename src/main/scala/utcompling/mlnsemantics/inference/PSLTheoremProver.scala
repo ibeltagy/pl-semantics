@@ -106,7 +106,7 @@ class PSLTheoremProver(
     	//if (resultScore == 0 )
     	// resultScore = callPSL(mlnFile, "OuterJoinWithDummy", timeout);    	
     	  
-    	return Seq(resultScore);
+    	return resultScore;
     	//Process("mvn", Seq("compile", "-f", "psl/pom.xml")) ! (ProcessLogger(System.err.println(_), System.err.println(_)))
     	//Process("mvn", Seq("exec:java", "-Dexec.mainClass=psl.TextInterface", "-f", "psl/pom.xml")) ! (ProcessLogger(System.err.println(_), System.err.println(_)))
     	//println (PSLTheoremProver.cp);
@@ -125,7 +125,7 @@ class PSLTheoremProver(
   }
   
   //mode: InnerJoin, OuterJoin, OuterJoinWithDummy
-  private def callPSL (mlnFile: String, mode: String, timeout: Option[Long] = None, groundLimit: Int = 0/*0 means infinity*/):Double = { 
+  private def callPSL (mlnFile: String, mode: String, timeout: Option[Long] = None, groundLimit: Int = 0/*0 means infinity*/):Seq[Double] = { 
     var entailmentLine = "";
 	 var entailmentHLine = "";
     var entailmentTLine = "";
@@ -161,7 +161,9 @@ class PSLTheoremProver(
     println ("exitcode = " + exitcode)
     if (exitcode != 0){
     	println("ERROR: PSL inference fails.")
-    	return -1;
+    	if(Sts.opts.task == "rte")
+    	  return Seq(-1);
+    	else return Seq(-1, -1);
     }
 
 
@@ -180,7 +182,7 @@ class PSLTheoremProver(
 
 	 if(Sts.opts.task == "rte")
 	 {
-			return lineToScore(entailmentLine);
+			return Seq(lineToScore(entailmentLine));
 
 		/*		if (entailmentLine == "")
 				  return 0;
@@ -197,7 +199,7 @@ class PSLTheoremProver(
 	 {
 		var entHscore = lineToScore(entailmentHLine);
 		var entTscore = lineToScore(entailmentTLine);
-	  return math.floor(entHscore*10000)*10 + entTscore;
+	  return Seq(entHscore, entTscore)
 	 }
     
   }

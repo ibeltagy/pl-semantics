@@ -4,6 +4,9 @@ bin/infer -i test/test.mln -e test/test.db  -r test/test.res -q cut_v_dh,man_n_d
 
 ../bin/infer -i ../test/test.mln -e ../test/test.db  -r ../test/test.res -q cut_v_dh,man_n_dh,onion_n_dh,slice_v_dh,entailment_h,woman_n_dh,tomato_n_dh,r_patient_dh,r_agent_dh -ss -maxSeconds 999
 
+ ../bin/infer -i ../test/test.mln -e ../test/test.db  -r ../test/test.res -q cut_v_dh,man_n_dh,onion_n_dh,slice_v_dh,entailment_h,woman_n_dh,tomato_n_dh,r_patient_dh,r_agent_dh -ss -maxSeconds 10 -ssq ../test/test.q 
+
+
 */
 //
 //qek: 15.9321, 16.5025, 30.8849
@@ -58,4 +61,4 @@ man_n_dh("hx2").
 //0.94956 (man_n_dh(x1) => ((slice_v_dh(x0) ^ woman_n_dh(x1)) ^ r_agent_dh(x0,x1)))
 //2.40192 (((cut_v_dh(x0) ^ onion_n_dh(x1)) ^ r_patient_dh(x0,x1)) => slice_v_dh(x0))
 
-!((exist he0, hx1, hx2((((r_patient_dh(he0,hx1) ^ r_agent_dh(he0,hx2)) ^ slice_v_dh(he0)) ^ tomato_n_dh(hx1)) ^ woman_n_dh(hx2)))).
+//!((exist he0, hx1, hx2((((r_patient_dh(he0,hx1) ^ r_agent_dh(he0,hx2)) ^ slice_v_dh(he0)) ^ tomato_n_dh(hx1)) ^ woman_n_dh(hx2)))).

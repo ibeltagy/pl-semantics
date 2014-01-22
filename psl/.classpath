@@ -20,7 +20,6 @@
 	<classpathentry kind="var" path="M2_REPO/junit/junit/4.0/junit-4.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/log4j/log4j/1.2.16/log4j-1.2.16.jar"/>
 	<classpathentry kind="var" path="M2_REPO/de/mathnbits/mathnbitsSTL/1.0/mathnbitsSTL-1.0.jar"/>
-	<classpathentry kind="var" path="M2_REPO/com/mosek/mosek/6.0/mosek-6.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/mysql/mysql-connector-java/5.0.5/mysql-connector-java-5.0.5.jar"/>
 	<classpathentry kind="var" path="M2_REPO/edu/emory/mathcs/parallelcolt/0.9.4/parallelcolt-0.9.4.jar"/>
 	<classpathentry kind="var" path="M2_REPO/edu/umd/cs/psl-addon-mosek/1.0.3/psl-addon-mosek-1.0.3.jar" sourcepath="/psl-addon-mosek-src"/>

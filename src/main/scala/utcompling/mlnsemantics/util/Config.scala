@@ -146,6 +146,7 @@ class Config(opts: Map[String, String] = Map()) {
   val softLogicTool = opts.get("-softLogic") match {
     case Some("psl") => "psl"
     case Some("none") => "none"
+    case Some("ss") => "ss"
     case _ => "mln"
   }
   
