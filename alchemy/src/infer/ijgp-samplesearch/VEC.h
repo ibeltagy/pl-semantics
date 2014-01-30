@@ -88,8 +88,8 @@ cout << "in vec det" << endl;
 	if (sampling_order.empty()) {
 		BE be(gm.variables, gm.functions, order);
 		cerr << "Exact result\n";
-		out << log10(gm.mult_factor.value() * exp(be.log_pe.toLongdouble())) << endl;
-		cerr << log10(gm.mult_factor.value() * exp(be.log_pe.toLongdouble())) << endl;
+		out << (gm.mult_factor.value() * exp(be.log_pe.toLongdouble())) << endl;
+		cerr << (gm.mult_factor.value() * exp(be.log_pe.toLongdouble())) << endl;
 		return;
 	}
 	Timer timer;
@@ -199,8 +199,8 @@ cout << "in vec det" << endl;
 		cerr << log10(pe * gm.mult_factor.value()) + log10_factor << endl;
 	}
 	else {
-		out << log10(pe * gm.mult_factor.value()) << endl;
-		cerr << log10(pe * gm.mult_factor.value()) << endl;
+		out << (pe * gm.mult_factor.value()) << endl;
+		cerr << (pe * gm.mult_factor.value()) << endl;
 		cerr << "Exact answer\n";
 	}
 	for (int i = 0; i < cond_variables.size(); i++)
@@ -288,7 +288,7 @@ void VEC(GM& gm, vector<int>& order, vector<int>& sampling_order, clock_t& time_
 
 	}
 	else {
-		out << log10(pe * gm.mult_factor.value()) << endl;
+		out << pe * gm.mult_factor.value() << endl;
 		cerr << "Exact answer\n";
 	}
 }

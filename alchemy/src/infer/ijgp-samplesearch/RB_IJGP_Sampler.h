@@ -194,9 +194,9 @@ public:
 		for (int i = 0; i < gm.variables.size(); i++) {
 			gm.variables[i]->value() = INVALID_VALUE;
 		}
-		cout << "M= " << gm.mult_factor << ", Z = " << log10(pe.value())
+		cout << "M= " << gm.mult_factor << ", Z = " << pe.value()
 				<< " #Samples = " << num_samples << endl;
-		return log10(pe.value());
+		return (pe.value());
 	}
 
 /*

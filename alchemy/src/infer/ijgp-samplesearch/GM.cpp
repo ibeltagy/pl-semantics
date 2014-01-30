@@ -1245,7 +1245,7 @@ void GM::readMLN(VariableState* state_)
 		for(int j=0;j<num_vars_in_func;j++)
 		{
 			int curr_var = gndClause->getGroundPredicateIndex(j);
-			//infile>>curr_var;
+			cout << curr_var << " ";
 			int var_id=((curr_var > 0)? (curr_var-1):(-curr_var-1));
 			scope[i][j]=variables[var_id];
 			if(curr_var>0)
@@ -1253,15 +1253,26 @@ void GM::readMLN(VariableState* state_)
 			else
 				variables[var_id]->addr_value()=1;
 		}
-		double clauseW = exp(-gndClause->getWt());
+		double clauseW = gndClause->getWt();
+		if(clauseW < 0 )
+		{
+			cerr <<"Negative weight "<< clauseW <<" is not allowed" << endl;
+			exit(-1);
+		}
+		clauseW = exp(-clauseW);
 		if(gndClause->isHardClause())
 			clauseW = 0;
 		//infile>>clauseW;
 		Double weightWhenFalse = Double();
 		if(clauseW > DBL_MIN)
+		{
 			weightWhenFalse = Double(clauseW);
+			cout << ": "<<weightWhenFalse << endl;
+		}
 		else
-			mode=DET;
+		{	mode=DET;
+			cout << ": ZERO" << endl;
+		}
 		//cout << "IsZero(" << whenWhenFalse <<"/"<<clauseW <<") = " <<whenWhenFalse.isZero() << "/" << (clauseW == 0)<<endl;
 		sort(scope[i].begin(),scope[i].end(),less_than_comparator_variable);
 		int tableFalseEntry = Variable::getAddress(scope[i]);
@@ -1271,6 +1282,7 @@ void GM::readMLN(VariableState* state_)
 		//cout <<endl;
 
 	}
+	cout << "number of ground atoms: " << num_variables << endl;
 }
 void GM::readMLN(const char* infilename)
 {

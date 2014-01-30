@@ -1157,7 +1157,7 @@ void RBSampleSearch::computePEApp(GM& gm, JG& jg, int p_bound, vector<int>& orde
 				for (int j = 0; j < gm.variables.size(); j++) {
 					gm.variables[j]->value() = INVALID_VALUE;
 				}
-				out << log10((pe_ub + pe_lb) / (long double) 2) << endl;
+				out << ((pe_ub + pe_lb) / (long double) 2) << endl;
 				cout << num_samples << endl;
 				return;
 				//return log10((pe_ub+pe_lb)/(long double)2);

@@ -167,9 +167,9 @@ int MAIN(VariableState* state, int argc, char** argv)
 	else if (task == "MAR") {
 		gm.setEvidenceBeliefsUAI08(evidence);
 	}
-	if (gm.mode == DET) {
-		gm.reduceDomains();
-	}
+	//if (gm.mode == DET) {
+	//	gm.reduceDomains();
+	//}
 	// SampleSearch is very expensive. Therefore if the SAT instance is empty, set gm mode to non-deterministic
 	if (gm.mode == DET) {
 		gm.convertToSATUAI10();
@@ -180,8 +180,8 @@ int MAIN(VariableState* state, int argc, char** argv)
 	}
 	UAI2010Parameters params(gm, total_time, task);
 	cerr << "# sampled = " << params.s_order.size() << endl;
-	//if (params.exact_inf_test()) {
-	if (false) {
+	if (params.exact_inf_test()) {
+	//if (false) {
 		if (task == "PR") {
 			total_time -= timer.elapsed_seconds();
 			if (gm.mode == DET) {

@@ -122,7 +122,11 @@ class GroundClause
   }
 
   void addWt(const double& wt)
-  { if (wt_ == HARD_GROUNDCLAUSE_WT) return; wt_ += wt; }
+  { if (wt_ == HARD_GROUNDCLAUSE_WT) return; 
+    if (wt == HARD_GROUNDCLAUSE_WT)//This is a bug fixed
+	wt_ = HARD_GROUNDCLAUSE_WT;
+    else
+	wt_ += wt; }
 
   void setWt(const double& wt)
   { if (wt_ == HARD_GROUNDCLAUSE_WT) return; wt_ = wt; }

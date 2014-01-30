@@ -663,6 +663,11 @@ int main(int argc, char* argv[])
 			inferenceSSQ = NULL;
 		cout << "=========================build 2 failed"<< endl;
 		}
+		if(inferenceSSQ->getState()->getNumAtoms() != inference->getState()->getNumAtoms())
+		{
+			cerr << "Number of atoms is not similar for both Inference tasks"<< endl;
+			exit(-1);
+		}
 	}
 
 	double initTime, runTime;
@@ -738,13 +743,14 @@ int main(int argc, char* argv[])
 		ss2 >> dnum;
 		in2.close();
 
-		double p = pow(10.0, num-dnum);
+		//double p = pow(10.0, num-dnum);
+		double p = num / dnum;
 
 		ofstream out(aresultsFile);
 		if (!out.good()) { cout<<"ERROR: failed to open "<<aresultsFile<<endl;exit(-1);}
 		out  << p<< endl;
 		out.close();
-		cout << "p=" <<p<<endl;
+		cout << "p=" <<p<< " = " << num  << " / " << dnum <<endl;
 	  }
 	  else
 		printResults(queryFile, queryPredsStr, domain, resultsOut, &queries,
