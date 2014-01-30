@@ -352,13 +352,14 @@ class MRF
 
     bool invertWt = false;
       // We want to normalize soft unit clauses to all be positives
-    if (!isHardClause && gndClause->getNumGroundPredicates() == 1 &&
-        !gndClause->getGroundPredicateSense(0))
-    {
-      gndClause->setGroundPredicateSense(0, true);
-      gndClause->setWt(-gndClause->getWt());
-      invertWt = true;
-    }
+//NO we do not. Keep them as they are. I want to avoid all negative weights
+//    if (!isHardClause && gndClause->getNumGroundPredicates() == 1 &&
+//        !gndClause->getGroundPredicateSense(0))
+//    {
+//      gndClause->setGroundPredicateSense(0, true);
+//      gndClause->setWt(-gndClause->getWt());
+//      invertWt = true;
+//    }
 
     GroundClauseSet::iterator iter = gndClausesSet->find(gndClause);
       // If the unknown clause is not in gndClauses

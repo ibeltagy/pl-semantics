@@ -1561,7 +1561,8 @@ void zzcreateClauses(const ListObj* const & lo, Array<Clause*>& clauses,
   {
     Clause* clause = new Clause();
     zzcreateClause(disjunctions[i], clause, isIndivisible);
-    if (clause->getNumPredicates() > 1)
+    //if (clause->getNumPredicates() > 1)
+    if (true)    //Do not negate a conjunction of unitPreds.
       clauses.append(clause);
     else
     {

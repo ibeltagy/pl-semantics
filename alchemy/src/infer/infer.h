@@ -609,7 +609,8 @@ void setsrand()
 void copyFileAndAppendDbFile(const string& srcFile, string& dstFile, 
                              const Array<string>& dbFilesArr,
                              const Array<string>& constFilesArr, 
-			     const string& ssqFile = "" )
+			     const string& ssqFile, 
+			     bool withSSQ)
 {
   ofstream out(dstFile.c_str());
   ifstream in(srcFile.c_str());
@@ -625,7 +626,15 @@ void copyFileAndAppendDbFile(const string& srcFile, string& dstFile,
   {
 	ifstream inssq(ssqFile.c_str());
 	if (!inssq.good()) { cout<<"ERROR: failed to open "<<ssqFile<<endl;exit(-1);}
-	while(getline(inssq, buffer)) out << buffer << endl;
+	while(getline(inssq, buffer)) 
+	{
+		if(buffer.length() == 0 ||buffer.compare(0, 1, "/") == 0)
+			continue;
+		if(withSSQ)
+			out << buffer << " ." <<endl;
+		else 	out << "0.0000001" <<buffer <<endl;
+	}
+	getline(inssq, buffer);
 	inssq.close();
 	out << endl;
   }
@@ -1207,12 +1216,12 @@ int buildInference(Inference*& inference, Domain*& domain,
   sprintf(buf, "%s%d%s", tmp.c_str(), getpid(), ZZ_TMP_FILE_POSTFIX);
   wkMLNFile = buf;
 
-  if(withSSQ && asamplesearchInfer  && asamplesearchQueryFile)
+  if(asamplesearchInfer  && asamplesearchQueryFile)
 	copyFileAndAppendDbFile(inMLNFile, wkMLNFile,
-                          evidenceFilesArr, constFilesArr, asamplesearchQueryFile);
+                          evidenceFilesArr, constFilesArr, asamplesearchQueryFile, withSSQ);
   else
 	copyFileAndAppendDbFile(inMLNFile, wkMLNFile,
-                          evidenceFilesArr, constFilesArr);
+                          evidenceFilesArr, constFilesArr, "", false);
 
     // Parse wkMLNFile, and create the domain, MLN, database
   domain = new Domain;
