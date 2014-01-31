@@ -1,3 +1,7 @@
+a bird flies	a bird flies
+a bird flied	all birds fly
+all birds fly	a bird flies
+all birds fly	all birds fly
 The kids are wearing bathing suits and water is splashing around	The kids are not wearing suits and water is splashing around
 A man is cutting onion.	A woman is slicing tomato.
 A B C hi dude no parse break break hi no try out hey ha ha ha damn it no way.	XYZ
