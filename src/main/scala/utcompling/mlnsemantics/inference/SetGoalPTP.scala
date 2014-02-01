@@ -69,6 +69,13 @@ class SetGoalPTP(
     {
       throw new RuntimeException("RTE is not supported on PSL");
     }
+    //---------------------RTE on SampleSearch--------------------------
+    else if (Sts.opts.task == "rte" && Sts.opts.softLogicTool == "ss")
+    {
+      //simple conjunction, one goal, no entailment predicate
+      val expr = -ssGoal(goal);
+      extraExpressions = List(GoalExpression(expr.asInstanceOf[FolExpression], Double.PositiveInfinity));
+    }
     //---------------------RTE - no Fix DCA--------------------------
     else if (Sts.opts.task == "rte" && Sts.opts.fixDCA == false)
     {
@@ -76,7 +83,6 @@ class SetGoalPTP(
       val expr = goal -> SetVarBindPTP.entPred_h;
       extraExpressions = List(GoalExpression(expr.asInstanceOf[FolExpression], Double.PositiveInfinity));
     }
-
     //---------------------RTE - Fix DCA--------------------------
     else if (Sts.opts.task == "rte" && Sts.opts.fixDCA == true)
     {
@@ -102,6 +108,13 @@ class SetGoalPTP(
 
   }
 
+  //****************************** ssQuery functions *************************
+  private def ssGoal(expr: FolExpression, skolemVars: List[Variable] = List(), isNegated:Boolean = false): FolExpression =
+  {
+    expr
+  }
+  
+  
   //****************************** fixDCA functions **************************  
   private var newConstants: Map[String, Set[String]] = null; 
   private var flipQ = false;

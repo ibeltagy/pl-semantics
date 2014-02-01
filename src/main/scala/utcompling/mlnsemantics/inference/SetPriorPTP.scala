@@ -44,8 +44,12 @@ class SetPriorPTP(
     }
     SetPriorPTP.entPrior = SetPriorPTP.predPrior //entailment prior equals the other predicates priors
 
+    if (Sts.opts.softLogicTool == "ss")
+    {
+      //No priors when using SS
+    }
     //Only prior on Entailment. It is a function of another Infernece Step   
-    if (Sts.opts.fixDCA == true && Sts.opts.task == "rte" && Sts.opts.noHMinus == false /*ignoring H- for now until we fix inference*/) 
+    else if (Sts.opts.fixDCA == true && Sts.opts.task == "rte" && Sts.opts.noHMinus == false /*ignoring H- for now until we fix inference*/) 
     {
       //Run inference for the first time to get the "default probability"
       SetPriorPTP.withText = false;

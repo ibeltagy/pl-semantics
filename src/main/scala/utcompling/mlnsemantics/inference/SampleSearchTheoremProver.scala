@@ -55,9 +55,10 @@ class SampleSearchTheoremProver
    
     //all evd are in the mln file
     val openWorldPreds =
-      declarations.keys.map{
-        case FolAtom(Variable(pred), _*) => pred
-        case FolVariableExpression(Variable(pred)) => pred
+      declarations.keys.flatMap{
+        case FolAtom(Variable(pred), _*)  if (!pred.startsWith("skolem")) => Some(pred)
+        case FolVariableExpression(Variable(pred)) if (!pred.startsWith("skolem")) => Some(pred)
+        case _ => None
     }.mkString(",")
     
     val args = List("-ss", "-maxSeconds", "5", "-ssq", queryFile) ++ (Sts.opts.task match {
@@ -65,6 +66,9 @@ class SampleSearchTheoremProver
       case "rte" => List("-q", openWorldPreds)
     })
    
+    if (LOG.isDebugEnabled) {
+      LOG.debug("Query file:\n" + readLines(queryFile).mkString("\n").trim)
+    }
   	callAlchemy(mlnFile, evidenceFile, resultFile, args) match {
   		case 0  =>
   		{
@@ -92,9 +96,9 @@ class SampleSearchTheoremProver
 	          case GoalExpression(folExp, weight) =>
 	          {
 	        	  if(weight == Double.PositiveInfinity)
-	        		  f.write("%s .\n".format(convert(folExp)))
+	        		  f.write("%s \n".format(convert(folExp)))
 	        	  else
-	        	      f.write("%.5f %s\n".format(weight, convert(folExp)))  
+	        	      throw new RuntimeException("Weighted goal is not supported in SampleSearch");  
 	          }
 	          case _  => assert(false);
        }
