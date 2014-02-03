@@ -2679,7 +2679,9 @@ void zzappendFormulaClausesToMLN(const ListObj* const & formula,
       delete formulas2[g];
       //cout << "cnf = " << endl << "\t: " << *cnf << endl;
 
-      cnf->cleanUpVars();
+	//Bug fixed. 
+	//Cleanup is wrong, for cases like Exist Forall ... 
+      //cnf->cleanUpVars();
       //cout << "cnf (after cleanUp) = " << endl << "\t: " << *cnf << endl;
 
       //commented out: not likely for there to be redundant clauses and is slow

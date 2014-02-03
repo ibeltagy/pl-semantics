@@ -25,6 +25,7 @@ class SetGoalPTP(
     assumptions: List[WeightedExpression[FolExpression]],
     goal: FolExpression): Seq[Double] = {
 
+    var negatedGoal = false;
     var extraExpressions: List[WeightedExpression[FolExpression]] = List();
     newConstants = constants;//extra constants are added by skolemNew
 	 flipQ = false;
@@ -35,6 +36,7 @@ class SetGoalPTP(
 	 notEqMap = List();
 	 impMap = List();
 	 entPred = null;
+	 
   	//=====================Start STS=============================    
     if (Sts.opts.task == "sts")
     {
@@ -73,8 +75,16 @@ class SetGoalPTP(
     else if (Sts.opts.task == "rte" && Sts.opts.softLogicTool == "ss")
     {
       //simple conjunction, one goal, no entailment predicate
-      val expr = -ssGoal(goal);
+      quantifiers = Map();
+      val goalExist = ssGoal(goal);
+      val expr = -goal;
+      negatedGoal = true;
       extraExpressions = List(GoalExpression(expr.asInstanceOf[FolExpression], Double.PositiveInfinity));
+      goalExist match {
+        case Some(g) => extraExpressions = extraExpressions ++List(HardWeightedExpression(g)); 
+        case _ =>
+      }
+
     }
     //---------------------RTE - no Fix DCA--------------------------
     else if (Sts.opts.task == "rte" && Sts.opts.fixDCA == false)
@@ -104,16 +114,67 @@ class SetGoalPTP(
     else
       throw new RuntimeException("Not possible to reach this point")
 
-    delegate.prove(newConstants, declarations, evidence, assumptions ++ extraExpressions, null)
-
+    val res = delegate.prove(newConstants, declarations, evidence, assumptions ++ extraExpressions, null)
+    if (negatedGoal)
+    {
+      require(res.size == 1);
+      if (res.head > 0)
+        Seq(1 - res.head)
+      else
+    	res
+    }else res;
   }
 
   //****************************** ssQuery functions *************************
-  private def ssGoal(expr: FolExpression, skolemVars: List[Variable] = List(), isNegated:Boolean = false): FolExpression =
-  {
-    expr
-  }
+  private var quantifiers: Map[String, (String, Boolean)] = null;
   
+  private def ssGoal(expr: FolExpression, isNegated:Boolean = false): Option[FolExpression] =
+  {
+	expr match {
+      case FolExistsExpression(variable, term) => {
+        quantifiers = quantifiers 	++  Map( variable.name  ->  ("E", isNegated) );
+        ssGoal(term, isNegated) 
+      }
+      case FolAllExpression(variable, term) => {
+        quantifiers = quantifiers 	++  Map( variable.name  ->  ("A", isNegated) );
+        ssGoal(term, isNegated)
+      }
+      case FolIfExpression(first, second) => ssGoal(first, isNegated);
+      case FolAndExpression(first, second) => {
+        val f = ssGoal(first, isNegated);
+        val s = ssGoal(second, isNegated);
+        if (f.isEmpty && s.isEmpty)
+          return None;
+        else if (f.isEmpty)
+          return s;
+        else if (s.isEmpty)
+          return f;
+        else return  Some(FolAndExpression(f.get, s.get));
+      }
+
+      case FolAtom(pred, args @ _*) =>{
+        var univCount = 0;
+        args.forall(arg=>{
+          require(quantifiers.contains(arg.name));
+          val q = quantifiers(arg.name);
+          if (q._1 == "A" && q._2 == false || q._1 == "E" && q._2 == true)
+            univCount = univCount + 1;
+          true
+        })
+        if(univCount == 0 ) // all variables are existentially quantified
+        	return None;
+        require(univCount == args.length) // all variables are universally quantified
+        Some(FolAtom.apply(pred, args.map(arg => skolemNew(arg, List(arg)) ) :_ *));  
+      }
+	  case FolVariableExpression(v) => Some(FolVariableExpression(skolemNew(v, List(v))));
+
+	  case FolNegatedExpression(term) => throw new RuntimeException(expr + " is not a valid expression")
+      case FolOrExpression(first, second) => throw new RuntimeException(expr + " is not a valid expression")
+      case FolIffExpression(first, second) => throw new RuntimeException(expr + " is not a valid expression")
+      case FolEqualityExpression(first, second) => throw new RuntimeException(expr + " is not a valid expression")
+	  case _ => throw new RuntimeException(expr + " is not a valid expression")
+	}
+  }
   
   //****************************** fixDCA functions **************************  
   private var newConstants: Map[String, Set[String]] = null; 

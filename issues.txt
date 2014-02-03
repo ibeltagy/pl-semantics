@@ -1,6 +1,11 @@
-Alchemy: 
--wierd handling of a formula like a(x)^b(y).
--wrong handling of weights: infinity + w = 10 + w
+Alchemy:
+-Why IR changes affects p(-H) and p(H) differently ?
+-How to do negation in text and hypothesis ? 
+-When to negate H and when not ? (for computational efficieny). Looks like always negate
+-Parsing bug in deallocation alchemy/src/parser/listobj.h. For now, deallocation disabled
+-Why p(H) not equal 1-p(-H) ?  Beucase of bug in parsing. Bug fixed
+-FIXED: wierd handling of a formula like a(x)^b(y).
+-FIXED: wrong handling of weights: infinity + w = 10 + w
 -----------
 SampleSearch:
 -GM::reduceDomains can be better by removing functions that are always true

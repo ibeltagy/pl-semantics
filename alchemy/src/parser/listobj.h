@@ -275,7 +275,10 @@ class ListObj
       newVar->clearList();
       delete newVar;
       ListObj* ret = toCNF(aarg2, app, domain, vtMap, hasExist);
-      delete aarg2; delete app; delete p1;
+	//Bug fixed: double memory allocation in cases like Exist Forall Exist ....
+	//TODO: use shared_ptr for automatic memory handling.
+	//The current solution leaks memory
+      delete aarg2; /*delete app;*/ delete p1;
       return ret;
     }
 
