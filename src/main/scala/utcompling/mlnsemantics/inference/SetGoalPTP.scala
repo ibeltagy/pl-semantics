@@ -77,8 +77,8 @@ class SetGoalPTP(
       //simple conjunction, one goal, no entailment predicate
       quantifiers = Map();
       val goalExist = ssGoal(goal);
-      val expr = -goal;
-      negatedGoal = true;
+      val expr = goal;
+      negatedGoal = false;
       extraExpressions = List(GoalExpression(expr.asInstanceOf[FolExpression], Double.PositiveInfinity));
       goalExist match {
         case Some(g) => extraExpressions = extraExpressions ++List(HardWeightedExpression(g)); 
@@ -168,7 +168,7 @@ class SetGoalPTP(
       }
 	  case FolVariableExpression(v) => Some(FolVariableExpression(skolemNew(v, List(v))));
 
-	  case FolNegatedExpression(term) => throw new RuntimeException(expr + " is not a valid expression")
+	  case FolNegatedExpression(term) => None//throw new RuntimeException(expr + " is not a valid expression")
       case FolOrExpression(first, second) => throw new RuntimeException(expr + " is not a valid expression")
       case FolIffExpression(first, second) => throw new RuntimeException(expr + " is not a valid expression")
       case FolEqualityExpression(first, second) => throw new RuntimeException(expr + " is not a valid expression")

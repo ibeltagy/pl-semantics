@@ -1,16 +1,23 @@
 a bird flies	a bird flies
 a bird flied	all birds fly
+a bird flies	no bird flies
+a bird flies	all birds do not fly
 all birds fly	a bird flies
 all birds fly	all birds fly
+all birds fly	no bird flies
+all birds fly	all birds do not fly
+no bird flies	a bird flies
+no bird flies	all birds fly
+no bird flies	no bird flies
+no bird flies	all birds do not fly
+all birds do not fly	a bird flies
+all birds do not fly	all birds fly
+all birds do not fly	no bird flies
+all birds do not fly	all birds do not fly
 some guy owns a compnay	some guy owns a compnay
 some guy owns a compnay	some guy owns all companies
 some guy owns all companies	some guy owns a compnay
 some guy owns all companies	some guy owns all companies
-a bird flies	a bird does not fly
-a bird flies	no bird flies
-a bird flies	no birds fly
-a bird flies	not all birds fly
-a bird flies	all birds do not fly
 The kids are wearing bathing suits and water is splashing around	The kids are not wearing suits and water is splashing around
 A man is cutting onion.	A woman is slicing tomato.
 A B C hi dude no parse break break hi no try out hey ha ha ha damn it no way.	XYZ

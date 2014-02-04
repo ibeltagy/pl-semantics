@@ -1,6 +1,7 @@
 Add the semantic role uniqueness constraint.
 -----
 Alchemy:
+-Contradicting MLNs return Z=1 but it should return Z=0
 -How to do negation in text and hypothesis ? 
 -When to negate H and when not ? (for computational efficieny). Looks like always negate
 -Why IR changes affects p(-H) and p(H) differently ? (They do not).
