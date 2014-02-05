@@ -43,7 +43,8 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
 	        	inNot = false;
 	        	equalities = List();
 	        	evdBeforeEqRemove = List()
-	        	var newExpr = skolemConstAsEvd(e, true, true, false)
+	        	//var newExpr = skolemConstAsEvd(e, true, true, false)
+	        	var newExpr = e
 				equalities = groupEqvClasses(equalities);
 				LOG.trace(equalities)
 				extraEvd = extraEvd ++ evdBeforeEqRemove.map(applyEq);
