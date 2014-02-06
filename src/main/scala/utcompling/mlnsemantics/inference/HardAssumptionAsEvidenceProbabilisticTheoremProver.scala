@@ -127,12 +127,15 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 	          extraUnivVars = extraUnivVars ++ existVars;  
 	          newDeclarations = newDeclarations  ++ Map(skolemPred->skolemPredVarTypes)
 	          var exp = (skolemPred->e).asInstanceOf[FolExpression];
-	          existVars.foreach(v =>{
-        	    exp = FolAllExpression(Variable(v), exp);
-        	  })
 
 	          //generate evidence
-	          goUniv(exp, univVars, existVars, isNegated)
+	          exp = goUniv(exp, univVars, existVars, isNegated)
+
+	          existVars.foreach(v =>{
+	        	  exp = FolAllExpression(Variable(v), exp);
+        	  })
+
+        	  exp
           }
         }
       }

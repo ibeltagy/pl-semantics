@@ -10,11 +10,14 @@ import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 import utcompling.mlnsemantics.run.Sts
 import scala.collection.mutable.MutableList
 import utcompling.mlnsemantics.inference.support.GoalExpression
+import org.apache.commons.logging.LogFactory
 
 class SetGoalPTP(
   delegate: ProbabilisticTheoremProver[FolExpression])
   extends ProbabilisticTheoremProver[FolExpression] {
 
+  private val LOG = LogFactory.getLog(classOf[SetGoalPTP])
+  
   /**
    * Return the proof, or None if the proof failed
    */
@@ -76,14 +79,36 @@ class SetGoalPTP(
     {
       //simple conjunction, one goal, no entailment predicate
       quantifiers = Map();
-      val goalExist = ssGoal(goal);
-      val expr = -goal;
-      negatedGoal = true;
+      constantsCounter = 0;
+      isQuery = true;
+      val goalExist = introduction(goal, false);
+      var expr = goal;
+      negatedGoal = false;
+      if(!goal.isInstanceOf[FolNegatedExpression]) //if it is not already negated, negate it
+      {
+        expr = -goal;
+        negatedGoal = true;
+      }
       extraExpressions = List(GoalExpression(expr.asInstanceOf[FolExpression], Double.PositiveInfinity));
       goalExist match {
-        case Some(g) => extraExpressions = extraExpressions ++List(HardWeightedExpression(g)); 
+        case Some(g) => extraExpressions = extraExpressions :+ HardWeightedExpression(g); 
         case _ =>
       }
+      //----------------------
+      assumptions //apply the same introduction procedure to the Text. 
+        .forall {
+          case HardWeightedExpression(e) => {
+		      quantifiers = Map();
+		      constantsCounter = 0;
+		      isQuery = false;
+		      val textExit = introduction(e, false);
+		      textExit match {
+		        case Some(t) => extraExpressions = extraExpressions :+ HardWeightedExpression(t); true; 
+		        case _ => false;
+		      }
+          }
+          case _ => false;
+        }
 
     }
     //---------------------RTE - no Fix DCA--------------------------
@@ -125,34 +150,79 @@ class SetGoalPTP(
     }else res;
   }
 
-  //****************************** ssQuery functions *************************
+  //****************************** SampleSearch functions *************************
   private var quantifiers: Map[String, (String, Boolean)] = null;
+  private var constantsCounter = 0;
+  private var isQuery = true; 
   
-  private def ssGoal(expr: FolExpression, isNegated:Boolean = false): Option[FolExpression] =
+  private def introduction(expr: FolExpression, isNegated:Boolean): Option[FolExpression] =
   {
 	expr match {
       case FolExistsExpression(variable, term) => {
         quantifiers = quantifiers 	++  Map( variable.name  ->  ("E", isNegated) );
-        ssGoal(term, isNegated) 
+        introduction(term, isNegated) 
       }
       case FolAllExpression(variable, term) => {
         quantifiers = quantifiers 	++  Map( variable.name  ->  ("A", isNegated) );
-        ssGoal(term, isNegated)
+        introduction(term, isNegated)
       }
-      case FolIfExpression(first, second) => ssGoal(first, isNegated);
-      case FolAndExpression(first, second) => {
-        val f = ssGoal(first, isNegated);
-        val s = ssGoal(second, isNegated);
-        if (f.isEmpty && s.isEmpty)
-          return None;
-        else if (f.isEmpty)
-          return s;
-        else if (s.isEmpty)
-          return f;
-        else return  Some(FolAndExpression(f.get, s.get));
+      case FolIfExpression(first, second) => introduction(FolAndExpression(first, second), isNegated);
+      case FolOrExpression(first, second) => introduction(FolAndExpression(first, second), isNegated);
+      case FolAndExpression(first, second) =>  {
+         val f = introduction(first, isNegated);
+		  val s = introduction(second, isNegated);
+		  if (f.isEmpty && s.isEmpty)
+			  return None;
+		  else if (f.isEmpty)
+			  return s;
+		  else if (s.isEmpty)
+			  return f;
+		  else return  Some(FolAndExpression(f.get, s.get));
       }
-
       case FolAtom(pred, args @ _*) =>{
+    	if(isIntroduction(args, isNegated))
+    	  Some(FolAtom.apply(pred, args.map(arg => introduction(arg, isNegated) ) :_ *));
+    	else 
+    	  None
+      }
+	  case FolVariableExpression(v) => Some(FolVariableExpression(introduction(v, isNegated)));
+	  case FolNegatedExpression(term) => introduction(term, !isNegated);
+      case FolEqualityExpression(first, second) => {
+        if(isNegated)
+        	None
+        else
+        {
+        	if(isIntroduction(Seq(first.asInstanceOf[FolVariableExpression].variable, 
+        						   second.asInstanceOf[FolVariableExpression].variable), isNegated))
+        		Some(FolEqualityExpression(introduction(first, isNegated).get, introduction(second, isNegated).get));
+        	else 
+        	  None
+        }
+      }
+      case FolIffExpression(first, second) => throw new RuntimeException(expr + " is not a valid expression")      
+	  case _ => throw new RuntimeException(expr + " is not a valid expression")
+	}
+  }
+  private def introduction(v: Variable, isNegated:Boolean): Variable =
+  {
+		  require(quantifiers.contains(v.name));
+          val q = quantifiers(v.name);
+          //variable should be universally quantified
+          require(q._1 == "A" && q._2 == false || q._1 == "E" && q._2 == true)   
+          var newVarName = v.name;  
+          if(isQuery)
+            newVarName = newVarName + "_hPlus";
+
+          if(q._1 == "E")
+          {
+            newVarName = newVarName + "_" + constantsCounter;
+            constantsCounter = constantsCounter + 1;
+          }
+          addConst(newVarName);
+          return Variable(newVarName);
+  }
+  private def isIntroduction (args: Seq[Variable], isNegated:Boolean): Boolean = 
+  {
         var univCount = 0;
         args.forall(arg=>{
           require(quantifiers.contains(arg.name));
@@ -161,31 +231,14 @@ class SetGoalPTP(
             univCount = univCount + 1;
           true
         })
-        if(univCount == 0 ) // all variables are existentially quantified
-        	return None;
-        require(univCount == args.length) // all variables are universally quantified
-        Some(FolAtom.apply(pred, args.map(arg => skolemNew(arg, List(arg)) ) :_ *));  
-      }
-	  case FolVariableExpression(v) => Some(FolVariableExpression(skolemNew(v, List(v))));
-
-	  case FolNegatedExpression(term) => None//throw new RuntimeException(expr + " is not a valid expression")
-      case FolOrExpression(first, second) => {
-        val f = ssGoal(first, isNegated);
-        val s = ssGoal(second, isNegated);
-        if (f.isEmpty && s.isEmpty)
-          return None;
-        else if (f.isEmpty)
-          return s;
-        else if (s.isEmpty)
-          return f;
-        else return  Some(FolOrExpression(f.get, s.get));
-      }
-      case FolIffExpression(first, second) => throw new RuntimeException(expr + " is not a valid expression")
-      case FolEqualityExpression(first, second) => {
-    	  	Some(FolEqualityExpression(ssGoal(first, isNegated).get, ssGoal(second, isNegated).get));        
-      }
-	  case _ => throw new RuntimeException(expr + " is not a valid expression")
-	}
+        if(univCount == args.length ) // all variables are universally quantified
+        	return true;
+        else
+        {
+        	if(univCount  != 0)
+        	  LOG.trace("found %s variables, only %s of them is/are universlly quantified".format(args.length, univCount)) 
+            return false
+        }
   }
   
   //****************************** fixDCA functions **************************  
@@ -239,13 +292,15 @@ class SetGoalPTP(
     if(skolemVars.contains(v))
     {
     	val newVarName = v.name+"_hPlus"
-    	val varType = v.name.substring(0, 2);
-    	newConstants += (varType -> (newConstants.apply(varType) + newVarName))
+    	addConst(newVarName);
     	Variable(newVarName)
     }
     else 
     	v
   }
+  
+  private def addConst(varName: String) =
+		newConstants += (varName.substring(0, 2) -> (newConstants.apply(varName.substring(0, 2)) + varName))
 
   //****************************** PSL functions **************************
   private def universalifyGoalFormula(goalFormula: FolIfExpression) = {

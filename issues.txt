@@ -1,6 +1,8 @@
-Add the semantic role uniqueness constraint.
+Add the semantic role uniqueness constraint. PSL and MLN
 -----
 Alchemy:
+-Infinite loop in HardAssumptionAsEvidenceProbabilisticTheoremProver in example 13
+-What to do with relation predicates with one univ, one exist var ??
 -Contradicting MLNs return Z=1 but it should return Z=0
 -How to do negation in text and hypothesis ? 
 -When to negate H and when not ? (for computational efficieny). Looks like always negate
