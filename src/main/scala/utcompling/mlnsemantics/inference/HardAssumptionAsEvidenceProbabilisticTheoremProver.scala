@@ -75,6 +75,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 	  e match 
       {
       	case FolExistsExpression(v, term) => goExist(term, univVars, existVars:+v.name, isNegated)
+      	case FolAllExpression(v, term) if (isNegated) => goExist(term, univVars, existVars:+v.name, isNegated)      	
         case _ => {
           if(univVars.size == 0)
           {
