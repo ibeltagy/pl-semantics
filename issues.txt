@@ -1,6 +1,7 @@
 Add the semantic role uniqueness constraint. PSL and MLN
 -----
 Alchemy:
+-try examples 24,25,27,28 for more bugs in alchemy
 -Do not forget the unicorn 
 -Infinite loop in HardAssumptionAsEvidenceProbabilisticTheoremProver in example 13
 -What to do with relation predicates with one univ, one exist var ??

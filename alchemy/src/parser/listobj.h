@@ -489,7 +489,7 @@ class ListObj
         if (strcmp((*p)[i]->getStr(), varName)==0)
           (*p)[i]->setStrIfStr(constName);
       }
-      else
+      else if (!((*p)[i]->isStr()))
         replace((*p)[i], varName, constName, domain);
     }
   }
