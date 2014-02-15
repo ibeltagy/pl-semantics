@@ -134,7 +134,7 @@ class UnnecessarySubboxRemovingBoxerExpressionInterpreter extends BoxerExpressio
         if(name == "theme")
         	(None, Set()) //Cuong suggested removing the predicate "theme". This should change if we want to support embedded propositions  
         else        
-        	(Some(BoxerRel(discId, indices, event, variable, name, sense)), Set(variable))
+        	(Some(BoxerRel(discId, indices, event, variable, name, sense)), Set(variable, event))
         
       case BoxerCard(discId, indices, variable, num, typ) =>
         (Some(BoxerCard(discId, indices, variable, num, typ)), Set(variable))

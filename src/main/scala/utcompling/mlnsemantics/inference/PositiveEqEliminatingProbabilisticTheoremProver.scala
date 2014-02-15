@@ -44,7 +44,7 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
 	        	equalities = List();
 	        	evdBeforeEqRemove = List()
 	        	//var newExpr = skolemConstAsEvd(e, true, true, false)
-	        	var newExpr = e
+	        	var newExpr = findRemoveEq(e, false);
 				equalities = groupEqvClasses(equalities);
 				LOG.trace(equalities)
 				extraEvd = extraEvd ++ evdBeforeEqRemove.map(applyEq);
@@ -196,6 +196,53 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
       case _ => throw new RuntimeException(e + " is not possible")
     }
   }
+  
+  private def findRemoveEq(e:BoxerExpression, isNegated: Boolean) : BoxerExpression = 
+  {
+    e match {
+      case BoxerAlfa(variable, first, second) => BoxerAlfa(variable, findRemoveEq(first, isNegated),
+    		  														findRemoveEq(second, isNegated));
+      case BoxerMerge(pred, first, second) => BoxerMerge(pred, findRemoveEq(first, isNegated), 
+    		  													findRemoveEq(second, isNegated));
+      case BoxerApp(function, argument) => BoxerApp(findRemoveEq(function, isNegated), 
+    		  										findRemoveEq(argument, isNegated));      
+      case BoxerProp(discId, indices, variable, drs) => BoxerProp(discId, indices, variable, findRemoveEq(drs, isNegated));
+      
+      case BoxerImp(discId, indices, first, second) => {
+         if(isNegated)
+        	 BoxerImp(discId, indices, findRemoveEq(first, !isNegated), second);
+         else 
+           e;
+      }      
+      case BoxerNot(discId, indices, drs) =>  BoxerNot(discId, indices, findRemoveEq(drs, !isNegated))
+      
+      case BoxerOr(discId, indices, first, second) => e
+      
+      case BoxerDrs(refs, conds) => 
+      {
+        var conditions:List[BoxerExpression] = List();
+        conditions = conds.flatMap(c=> 
+        {
+        	c match
+            {
+        	  case BoxerEq(discId, indices, first, second) =>
+        	    	if(!isNegated)
+        	    		equalities = equalities ++ List(Set(first.name, second.name));  
+        	    	None;
+        	  case BoxerPred(discId, indices, variable, name, pos, sense) => Some(c) 
+        	  case BoxerNamed(discId, indices, variable, name, typ, sense) => Some(c)
+        	  case BoxerRel(discId, indices, event, variable, name, sense) => Some(c)
+        	  case BoxerCard(discId, indices, variable, num, typ) => Some(c)
+        	  case BoxerTimex(discId, indices, variable, timeExp) => Some(c)
+        	  case _ => List(findRemoveEq(c, isNegated)) 
+            } 
+        })
+       	BoxerDrs(refs, conditions)
+      }
+      case _ => throw new RuntimeException(e + " is not possible")
+    } 
+  }
+  
   
   /*private def findRemoveEq(e: BoxerExpression): BoxerExpression = 
   {
