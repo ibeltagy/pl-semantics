@@ -81,7 +81,11 @@ class SetGoalPTP(
       quantifiers = Map();
       constantsCounter = 0;
       isQuery = true;
-      val goalExist = introduction(goal, false);
+      val goalExist = if(goal.isInstanceOf[FolVariableExpression])
+    	  				None  //handling a very special case of parsing error
+    	  						//where the expression is just an empty box
+				      else 
+				    	introduction(goal, false);
       var expr = goal;
       negatedGoal = false;
       if(!goal.isInstanceOf[FolNegatedExpression]) //if it is not already negated, negate it
@@ -101,7 +105,11 @@ class SetGoalPTP(
 		      quantifiers = Map();
 		      constantsCounter = 0;
 		      isQuery = false;
-		      val textExit = introduction(e, false);
+		      val textExit = if(e.isInstanceOf[FolVariableExpression])
+	    	  					None  //handling a very special case of parsing error
+	    	  						//where the expression is just an empty box
+	    	  				else 
+	    	  					introduction(e, false);
 		      textExit match {
 		        case Some(t) => extraExpressions = extraExpressions :+ HardWeightedExpression(t); true; 
 		        case _ => false;
