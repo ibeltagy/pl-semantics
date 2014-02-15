@@ -12,7 +12,7 @@ class UnnecessarySubboxRemovingBoxerExpressionInterpreter extends BoxerExpressio
     val crushed = crush(e, Set())._1
     if(crushed.isDefined)
       crushed.get
-    else BoxerDrs(List(), List())
+    else BoxerDrs(List((List()->BoxerVariable("x0"))), List(BoxerEq("", List(), BoxerVariable("x0"), BoxerVariable("x0"))))
   }
   /**
    * @return a pair: (crushed expression, free variables found below)
