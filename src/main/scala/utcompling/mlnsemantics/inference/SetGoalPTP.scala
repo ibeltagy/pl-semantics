@@ -88,7 +88,14 @@ class SetGoalPTP(
 				    	introduction(goal, false);
       var expr = goal;
       negatedGoal = false;
-      if(!goal.isInstanceOf[FolNegatedExpression]) //if it is not already negated, negate it
+      var countUniv = 0;
+      quantifiers.foreach(q=>{
+        if(q._2._1 == "A" && q._2._2 == false ||q._2._1 == "E" && q._2._2 == true)
+          countUniv = countUniv + 1;
+      })
+      
+      //if(!goal.isInstanceOf[FolNegatedExpression]) //if it is not already negated, negate it
+      if (2*countUniv < quantifiers.size) //if Univs are less than Exists, negate
       {
         expr = -goal;
         negatedGoal = true;
