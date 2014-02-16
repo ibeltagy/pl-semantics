@@ -184,13 +184,13 @@ class AlchemyTheoremProver{
     	  if (outer != null && outer.isInstanceOf[FolExistsExpression])
     	    ", " + variable.name + _convert(term, bound + variable, input)
     	  else
-    		 "(exist " + variable.name + _convert(term, bound + variable, input) + ")" 
+    		 "(exist " + variable.name + " " + _convert(term, bound + variable, input) + ")" 
       }
       case FolAllExpression(variable, term) => {
        	  if (outer != null && outer.isInstanceOf[FolAllExpression])
     	    ", " + variable.name + _convert(term, bound + variable, input)
     	  else
-    		 "(forall " + variable.name + _convert(term, bound + variable, input) + ")" 
+    		 "(forall " + variable.name + " " +  _convert(term, bound + variable, input) + ")" 
       }
       case FolNegatedExpression(term) => "!(" + _convert(term, bound) + ")"
       case FolAndExpression(first, second) => "(" + _convert(first, bound) + " ^ " + _convert(second, bound) + ")"
