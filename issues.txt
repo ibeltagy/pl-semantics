@@ -1,19 +1,23 @@
 Add the semantic role uniqueness constraint. PSL and MLN
 -----
 Alchemy:
+-make sure it is strict subset
+-There is a case where picking the smaller-sized type is not enough. 
+-Do not forget the typing problem when handling existential quantifier
+-in progress two exp, condor/sick-rte-ir0-noIntro and condor/sick-rte-ir0-noIntroVerylong. Both Introduction is disabled(this messes negation and universal)
 -count univ and exist to decide negate or not
--In sample search, it is better to go back to log10
 -find the rule of everything, where NotExist is treated as Univ
--try examples 24,25,27,28 for more bugs in alchemy
--Do not forget the unicorn 
--Infinite loop in HardAssumptionAsEvidenceProbabilisticTheoremProver in example 13
--What to do with relation predicates with one univ, one exist var ??
+-Do not forget the unicorn. It has examples in the SICK ds
+-In sample search, it is better to go back to log10. No
+-What to do with relation predicates with one univ, one exist var. Ignore it.
 -Contradicting MLNs return Z=1 but it should return Z=0
 -How to do negation in text and hypothesis ? 
 -When to negate H and when not ? (for computational efficieny). Looks like always negate
--Why IR changes affects p(-H) and p(H) differently ? (They do not).
 -Parsing bug in deallocation alchemy/src/parser/listobj.h. For now, deallocation disabled
--Why p(H) not equal 1-p(-H) ?  Beucase of bug in parsing. Bug fixed
+-FIXED: Why IR changes affects p(-H) and p(H) differently ? (They do not).
+-FIXED: Why p(H) not equal 1-p(-H) ?  Beucase of bug in parsing. Bug fixed
+-FIXED: try examples 24,25,27,28 for more bugs in alchemy. Done
+-FIXED: Infinite loop in HardAssumptionAsEvidenceProbabilisticTheoremProver in example 13. 
 -FIXED: wierd handling of a formula like a(x)^b(y).
 -FIXED: wrong handling of weights: infinity + w = 10 + w
 -----------
@@ -22,7 +26,6 @@ SampleSearch:
 -what to do with LogFunction.h
 -what to do with CPT.h
 -what to do with SF.h
-
 -------------------
 -still, there are types problems in inference rules. I will disable recovering types for the current experiments
 -paraphrase to logic

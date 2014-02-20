@@ -128,6 +128,9 @@ ARGS ARGS::Args[] =
   ARGS("numItr", ARGS::Opt, asamplesearchNumItr,
        "SampleSearch's number of iterations of IJGP"),
 
+  ARGS("focusGround", ARGS::Tog, afocusedGrounding,
+       "Enable focused grounding"),
+
   ARGS("ms", ARGS::Tog, amcsatInfer,
        "Run inference using MC-SAT and return probabilities "
        "for all query atoms"),

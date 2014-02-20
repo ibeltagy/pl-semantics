@@ -86,6 +86,7 @@ using namespace std;
 #include "clausesampler.h"
 #include "clausehelper.h"
 
+extern bool afocusedGrounding;
 const bool useInverseIndex = true;
   // 0 = no ouput, 1 = some output, 2 = full output
 const int clausedebug = 0;
@@ -1183,7 +1184,23 @@ class Clause
       vgt->numGndings = domain->getNumConstantsByType(vgt->typeId);
       assert(vgt->numGndings > 0);
     }
-    assert(typeId == vgt->typeId);
+    else 
+    {
+	if (afocusedGrounding)//only allow wrong-typed formula when focused grounding is enabled
+	{
+		if (typeId != vgt->typeId)
+		{
+			int newTypeNumConst = domain->getNumConstantsByType(typeId);
+			if(newTypeNumConst < vgt->numGndings)
+			{
+				vgt->numGndings = newTypeNumConst;
+				vgt->typeId = typeId;
+			}
+		}
+	}
+	else 
+		assert(typeId == vgt->typeId);
+    }
     vgt->vars.append(t);
   }
   
@@ -1471,9 +1488,9 @@ class Clause
    * @return Structure containing the index, variable ids and groundings
    * for the given literal.
    */
-  static LitIdxVarIdsGndings* createLitIdxVarIdsGndings(Predicate* const & lit,
+  LitIdxVarIdsGndings* createLitIdxVarIdsGndings(Predicate* const & lit,
                                                      const unsigned int& litIdx,
-                                                   const Domain* const & domain)
+                                                   const Domain* const & domain) const
   {
     LitIdxVarIdsGndings* ivg = new LitIdxVarIdsGndings;
     ivg->litIdx = litIdx;
@@ -1485,7 +1502,18 @@ class Clause
       {
         int varId = t->getId();
         if (!ivg->varIds.contains(varId))
-          addVarIdAndGndings(varId, lit->getTermTypeAsInt(i), domain, ivg);
+	{
+	  if(afocusedGrounding)
+	  {
+		  assert((-varId) < varIdToVarsGroundedType_->size());
+		  VarsGroundedType*& vgt = (*varIdToVarsGroundedType_)[-varId];
+	    	  assert (vgt);
+		  addVarIdAndGndings(varId, vgt->typeId, domain, ivg);
+	  }
+	  else
+          	addVarIdAndGndings(varId, lit->getTermTypeAsInt(i), domain, ivg);
+
+	}
       }
       assert(t->getType() != Term::FUNCTION);
       assert(ivg->varIds.size() == ivg->varGndings.getNumArrays());

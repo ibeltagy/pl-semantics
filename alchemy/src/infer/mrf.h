@@ -75,6 +75,7 @@
 #include "mln.h"
 #include "groundpredicate.h"
 
+extern bool afocusedGrounding;
 const bool mrfdebug = false;
 
 ///////////////////////////////////////////////////////////////////////////
@@ -163,6 +164,60 @@ class MRF
       }
     }
 	
+if (afocusedGrounding)
+{//with focused grounding enabled
+
+      for (int i = 0; i < mln->getNumClauses() ; i++)
+      {
+	Clause* c = const_cast<Clause*>( mln->getClause(i));
+	//cout << "\tIn clause c: ";  c->printWithWtAndStrVar(cout, domain); cout << endl;
+	const int clauseId = mln->findClauseIdx(c);  
+	assert(clauseId >= 0);
+		
+		  //ignore clause with zero weight
+        if (c->getWt() == 0) continue;
+
+          //add gnd clauses with unknown truth values to gndClauses_
+        const double* parentWtPtr =
+          (trackParentClauseWts) ? c->getWtPtr() : NULL;
+        AddGroundClauseStruct agc(&seenPreds, &unseenPreds, gndPreds_,
+                                  NULL,
+                                  &gndClausesSet, gndClauses_,
+                                  markHardGndClauses, parentWtPtr,
+                                  clauseId);
+
+    	try
+        {
+      	  c->addUnknownClauses(domain, db, -1, NULL, &agc);
+        }
+        catch (bad_alloc&)
+        {
+          cout << "Bad alloc when adding unknown ground clauses to MRF!\n";
+          cerr << "Bad alloc when adding unknown ground clauses to MRF!\n";
+          throw 1;
+        }
+
+          // If too much memory to build MRF then destroy it
+        if (memLimit > 0)
+        {
+          memNeeded = sizeKB();
+          if (memNeeded > memLimit)
+          {
+            for (int i = 0; i < gndClauses_->size(); i++)
+              delete (*gndClauses_)[i];
+            delete gndClauses_;    
+
+            for (int i = 0; i < gndPreds_->size(); i++)
+              if ((*gndPreds_)[i]) delete (*gndPreds_)[i];
+            delete gndPreds_;
+    
+            throw 1;
+          }
+        }
+      }
+}//end of focused-grounding
+else
+{
       //while there are still unknown preds we have not looked at
     while (!unseenPreds.empty())   
     {
@@ -263,6 +318,7 @@ class MRF
         (*allPredGndingsAreQueries)[predId]++;
       }
     }//while (!unseenPreds.empty())
+}//end of non-focused-grounding
 
     cout << "number of grounded predicates = " << gndPreds_->size() << endl;
     cout << "number of grounded clauses = " << gndClauses_->size() << endl;
