@@ -209,7 +209,8 @@ object Sts {
 		                   new SetPriorPTP( //
 		                    new SetGoalPTP( //
 		                      new HardAssumptionAsEvidenceProbabilisticTheoremProver( // 15<== Generate evidence from premise.
-		                        softLogicTool)))))))))))) // 16<== run Alchemy or PSL
+		                        new AutoTypingPTP(
+		                        softLogicTool))))))))))))) // 16<== run Alchemy or PSL
 
           val p = ttp.prove(Tokenize(txt).mkString(" "), Tokenize(hyp).mkString(" "))
           println("Some(%s) [actual: %s, gold: %s]".format(p.mkString(":"), p.map(probOfEnt2simScore).mkString(":"), goldSim))

@@ -1,4 +1,6 @@
 Add the semantic role uniqueness constraint. PSL and MLN
+Premise is messed up when run using PSL. 
+Make PSL works for RTE
 -----
 Alchemy:
 -make sure it is strict subset

@@ -151,7 +151,13 @@ class Config(opts: Map[String, String] = Map()) {
   }
   
   //recover event variables and prop variables or not
- val withEventProp = opts.get("-withEventProp") match {
+  val withEventProp = opts.get("-withEventProp") match {
+    case Some("true") => true;
+    case _ => false;
+  }
+  
+  //recover event variables and prop variables or not
+ val negativeEvd = opts.get("-negativeEvd") match {
     case Some("true") => true;
     case _ => false;
   }

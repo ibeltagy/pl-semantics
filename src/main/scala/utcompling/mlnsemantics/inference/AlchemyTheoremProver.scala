@@ -77,12 +77,13 @@ class AlchemyTheoremProver{
     }
     f.write("\n")
 
+    /*
     evidence.foreach {
         case e @ FolAtom(pred, args @ _*) if (!pred.name.startsWith("skolem_")) => f.write (convert(e) + ".\n");
         case e @ FolAtom(pred, args @ _*) => ;
         case e @ FolNegatedExpression(FolAtom(pred, args @ _*)) => f.write (convert(e) + ".\n");
         case e => throw new RuntimeException("Only atoms or negated atoms may be evidence.  '%s' is not an atom.".format(e))
-      }
+      }*/
     
     f.write("\n//begin assumptions\n")
 
@@ -142,7 +143,8 @@ class AlchemyTheoremProver{
     FileUtils.writeUsing(tempFile) { f =>
       f.write("//\n");
       evidence.foreach {
-        case e @ FolAtom(pred, args @ _*) if (pred.name.startsWith("skolem_"))=> f.write (convert(e) + "\n");
+        case e @ FolAtom(pred, args @ _*) /*if (pred.name.startsWith("skolem_")) */=> f.write (convert(e) + "\n");
+        case e @ FolNegatedExpression(a) => f.write ("!" + convert(a) + "\n");
         case e => //throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
       }
     }
