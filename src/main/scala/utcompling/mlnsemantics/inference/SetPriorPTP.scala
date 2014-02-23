@@ -47,6 +47,8 @@ class SetPriorPTP(
     if (Sts.opts.softLogicTool == "ss")
     {
       //No priors when using SS
+      SetPriorPTP.predPrior = 0;
+      SetPriorPTP.entPrior = 0;
     }
     //Only prior on Entailment. It is a function of another Infernece Step   
     else if (Sts.opts.fixDCA == true && Sts.opts.task == "rte" && Sts.opts.noHMinus == false /*ignoring H- for now until we fix inference*/) 

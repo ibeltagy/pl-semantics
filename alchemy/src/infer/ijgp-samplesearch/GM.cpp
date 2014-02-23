@@ -1890,7 +1890,7 @@ void GM::setEvidenceBeliefsUAI08(vector<int>& evidence)
 	variables=new_variables;
 }
 
-void GM::reduceDomains()
+bool GM::reduceDomains()
 {
 	RBSampleSearch rss(cout);
 	vector<vector<bool> > new_domains;
@@ -1905,10 +1905,16 @@ void GM::reduceDomains()
 		functions[i]->reduceDomains();
 
 	// Remove variables which have just one value
+	// Break if found variable with zero values
 	for(int i=0;i<variables.size();i++){
 		if((int)variables[i]->domain_size()==(int)1)
 		{
 			variables[i]->value()=0;
+		}
+		else if((int)variables[i]->domain_size()==(int)0)
+		{
+			cerr << "variable with domain size = 0" << endl;
+			return false;
 		}
 	}
 	vector<Function*> new_functions;
@@ -1966,6 +1972,7 @@ void GM::reduceDomains()
 	}
 	variables=new_variables;
 	cerr<<"Domains reduced\n";
+	return true;
 }
 /*void GM::writeSAT(char* satfilename)
 {

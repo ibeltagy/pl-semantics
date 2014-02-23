@@ -168,7 +168,14 @@ int MAIN(VariableState* state, int argc, char** argv)
 		gm.setEvidenceBeliefsUAI08(evidence);
 	}
 	if (gm.mode == DET) {
-		gm.reduceDomains();
+		bool isConsistentProblem = gm.reduceDomains();
+		if(!isConsistentProblem)
+		{
+			cerr << "inconsistent problem, Z = 0" << endl;
+			out << 0 << endl;
+			out.close();
+			return 0;
+		}		
 	}
 	// SampleSearch is very expensive. Therefore if the SAT instance is empty, set gm mode to non-deterministic
 	if (gm.mode == DET) {

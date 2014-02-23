@@ -158,7 +158,7 @@ class SetGoalPTP(
     if (negatedGoal)
     {
       require(res.size == 1);
-      if (res.head > 0)
+      if (res.head >= 0)
         Seq(1 - res.head)
       else
     	res

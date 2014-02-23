@@ -161,6 +161,13 @@ class Config(opts: Map[String, String] = Map()) {
     case Some("true") => true;
     case _ => false;
   }
+ 
+ //Enable focus grounding. It does full grounding taking 
+ //wrong types into account  
+ val focusGround= opts.get("-focusGround") match {
+    case Some("true") => true;
+    case _ => false;
+  }
 
   //------------------------------------------PSL
   //PSL grounding limit. Set it to ZERO for "no limit"

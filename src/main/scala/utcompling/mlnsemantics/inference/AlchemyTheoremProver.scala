@@ -161,7 +161,9 @@ class AlchemyTheoremProver{
     //val allArgs = "-bp" :: "-lifted" :: "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
     //Dunno, but it seems that MC-SAT is better
     //val allArgs = "-ptpe" :: "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
-    val allArgs = "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
+    var allArgs = "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
+    if(Sts.opts.focusGround)
+      allArgs = allArgs  ++  List(("-focusGround"));
     val tStart = Platform.currentTime;
 	 //println("start time %s".format(tStart));
     var caller = new SubprocessCallable(binary);

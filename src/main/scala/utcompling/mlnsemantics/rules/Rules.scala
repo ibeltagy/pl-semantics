@@ -169,21 +169,23 @@ object Rules {
     if(score < Sts.opts.weightThreshold )
       return List();
   
-    List(createWeightedExpression(leftFOL, rightFOL, "h", score)) ++
+    List(createWeightedExpression(leftFOL, rightFOL, "h", score)).flatten ++
     (
       if (Sts.opts.task == "sts")
-        List(createWeightedExpression(rightFOL, leftFOL, "t", score))
+        List(createWeightedExpression(rightFOL, leftFOL, "t", score)).flatten
       else List())
   }
 
-  private def createWeightedExpression(leftFOL: BoxerDrs, rightFOL: BoxerDrs, discId: String, score: Double): WeightedExpression[BoxerExpression] =
+  private def createWeightedExpression(leftFOL: BoxerDrs, rightFOL: BoxerDrs, discId: String, score: Double): Option[WeightedExpression[BoxerExpression]] =
     {
+      if(leftFOL.conds.length < rightFOL.conds.length)
+        return None
       val changedLHS = changeExpDirection(leftFOL);
       var rhs = rightFOL
       rhs = BoxerDrs(List(), rhs.conds);
       var lhs = changedLHS.asInstanceOf[BoxerDrs]();
       lhs = BoxerDrs((lhs.refs ++ rhs.refs).toSet.toList, lhs.conds);
       val unweightedRule = BoxerImp(discId, List(), lhs, rhs)
-      return SoftWeightedExpression(unweightedRule, score)
+      return Some(SoftWeightedExpression(unweightedRule, score))
     }
 }
