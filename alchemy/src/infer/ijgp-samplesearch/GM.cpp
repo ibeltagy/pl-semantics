@@ -1254,11 +1254,14 @@ void GM::readMLN(VariableState* state_)
 				variables[var_id]->addr_value()=1;
 		}
 		double clauseW = gndClause->getWt();
-		if(clauseW < 0 )
+		//Disabling negative weights was mainly to avoid negative infinity. 
+		//As Alchemy now does not generate negative infinities, I do not 
+		//need this anymore. 
+		/*if(clauseW < 0 )
 		{
 			cerr <<"Negative weight "<< clauseW <<" is not allowed" << endl;
 			exit(-1);
-		}
+		}*/
 		clauseW = exp(-clauseW);
 		if(gndClause->isHardClause())
 			clauseW = 0;

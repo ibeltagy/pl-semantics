@@ -140,19 +140,8 @@ class AutoTypingPTP(
           case _ => throw new RuntimeException("Non-atomic declaration");
       }
     });
-
-        
-    
-    
-    autoConst.foreach(pred=>{
-      
-    })
   }
   
-  private def initAutoConst() = 
-  {
-    
-  }
   private def applyArrows() = 
   {
     var repeat = true;

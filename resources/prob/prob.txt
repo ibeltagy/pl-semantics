@@ -1,6 +1,6 @@
 The kids are wearing bathing suits and water is splashing around	The kids are not wearing suits and water is splashing around
 A snake is being fed a mouse by a man	No snake is being fed a mouse by a man
-A blond girl waves while she is riding	Hi dude
+There is no woman using an eye pencil and applying eye liner to her eyelid	A woman is applying cosmetics to her eyelid
 a bird flies	a bird flies
 a bird flied	all birds fly
 a bird flies	no bird flies

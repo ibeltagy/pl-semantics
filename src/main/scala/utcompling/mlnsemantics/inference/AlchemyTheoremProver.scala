@@ -115,15 +115,17 @@ class AlchemyTheoremProver{
             	var usedWeight = min(weight, 0.999);
 	            usedWeight = max(usedWeight, 0.001);
 	            usedWeight = SetPriorPTP.predPrior + log(usedWeight) - log(1-usedWeight);
-	            if (usedWeight  > 0)
-	            {
+
+	            //include all rules even the ones with negative weights 
+	            //if (usedWeight  > 0)
+	            //{
 	              //This is a nasty hack to inverse what alchamy does when it splits a formula into smaller formulas
 	              var count = folExpString.split("=>").apply(1).count(_ == '^') + 1;
 	              if (!Sts.opts.scaleW) 
 				    count = 1;
 	              usedWeight = usedWeight * count;
 	              f.write("%.5f %s\n".format(usedWeight, folExpString))
-	            }
+	            //}
 
 	            //val usedWeight = 10 * weight // 5 * (pow(weight, 10)) //DONE: Set these parameters!!
 	            // DONE: we want to design a function `f` such that, for the simplest examples (only one weighted clause), mln(f(s)) == s

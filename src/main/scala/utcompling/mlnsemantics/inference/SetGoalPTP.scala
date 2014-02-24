@@ -85,7 +85,7 @@ class SetGoalPTP(
     	  				None  //handling a very special case of parsing error
     	  						//where the expression is just an empty box
 				      else 
-				    	introduction(goal, false);
+				    	introduction(goal, false, null);
       var expr = goal;
       negatedGoal = false;
       var countUniv = 0;
@@ -116,7 +116,7 @@ class SetGoalPTP(
 	    	  					None  //handling a very special case of parsing error
 	    	  						//where the expression is just an empty box
 	    	  				else 
-	    	  					introduction(e, false);
+	    	  					introduction(e, false, null);
 		      textExit match {
 		        case Some(t) => extraExpressions = extraExpressions :+ HardWeightedExpression(t); true; 
 		        case _ => false;
@@ -169,23 +169,24 @@ class SetGoalPTP(
   private var quantifiers: Map[String, (String, Boolean)] = null;
   private var constantsCounter = 0;
   private var isQuery = true; 
+  private var parent: FolExpression = null;
   
-  private def introduction(expr: FolExpression, isNegated:Boolean): Option[FolExpression] =
+  private def introduction(expr: FolExpression, isNegated:Boolean, parent:FolExpression): Option[FolExpression] =
   {
 	expr match {
       case FolExistsExpression(variable, term) => {
         quantifiers = quantifiers 	++  Map( variable.name  ->  ("E", isNegated) );
-        introduction(term, isNegated) 
+        introduction(term, isNegated, expr) 
       }
       case FolAllExpression(variable, term) => {
         quantifiers = quantifiers 	++  Map( variable.name  ->  ("A", isNegated) );
-        introduction(term, isNegated)
+        introduction(term, isNegated, expr)
       }
-      case FolIfExpression(first, second) => introduction(FolAndExpression(first, second), isNegated);
-      case FolOrExpression(first, second) => introduction(FolAndExpression(first, second), isNegated);
+      case FolIfExpression(first, second) => introduction(FolAndExpression(first, second), isNegated, expr);
+      case FolOrExpression(first, second) => introduction(FolAndExpression(first, second), isNegated, expr);
       case FolAndExpression(first, second) =>  {
-         val f = introduction(first, isNegated);
-		  val s = introduction(second, isNegated);
+         val f = introduction(first, isNegated, expr);
+		  val s = introduction(second, isNegated, expr);
 		  if (f.isEmpty && s.isEmpty)
 			  return None;
 		  else if (f.isEmpty)
@@ -195,13 +196,21 @@ class SetGoalPTP(
 		  else return  Some(FolAndExpression(f.get, s.get));
       }
       case FolAtom(pred, args @ _*) =>{
-    	if(isIntroduction(args, isNegated))
-    	  Some(FolAtom.apply(pred, args.map(arg => introduction(arg, isNegated) ) :_ *));
+    	if(isIntroduction(args, isNegated) )
+    	{
+    	  if(parent.isInstanceOf[FolAndExpression])
+    		  Some(FolAtom.apply(pred, args.map(arg => introduction(arg, isNegated) ) :_ *));
+    	  else
+    	  {
+    		System.err.println(">>>>>>The unicorn case<<<<<<");
+    	    None
+    	  }
+    	}
     	else 
     	  None
       }
 	  case FolVariableExpression(v) => Some(FolVariableExpression(introduction(v, isNegated)));
-	  case FolNegatedExpression(term) => introduction(term, !isNegated);
+	  case FolNegatedExpression(term) => introduction(term, !isNegated, expr);
       case FolEqualityExpression(first, second) => {
         if(isNegated)
         	None
@@ -209,7 +218,7 @@ class SetGoalPTP(
         {
         	if(isIntroduction(Seq(first.asInstanceOf[FolVariableExpression].variable, 
         						   second.asInstanceOf[FolVariableExpression].variable), isNegated))
-        		Some(FolEqualityExpression(introduction(first, isNegated).get, introduction(second, isNegated).get));
+        		Some(FolEqualityExpression(introduction(first, isNegated, expr).get, introduction(second, isNegated, expr).get));
         	else 
         	  None
         }
