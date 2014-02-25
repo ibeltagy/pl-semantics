@@ -49,7 +49,13 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
           case HardWeightedExpression(e) => {
         	  extraUnivVars = Set();
         	  var exp = goUniv(e, List(), List(), false);
-        	  List(HardWeightedExpression(exp))
+        	  if(Sts.opts.softLogicTool == "psl")
+        	  {
+        	    conjToEvd(exp);
+        	    List()
+        	  }
+        	  else
+        		  List(HardWeightedExpression(exp))
           }
           case a @ _ => List(a)
         }
@@ -63,6 +69,16 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
     
   }
   
+  private def conjToEvd(e: FolExpression): Any = 
+  {
+      e match 
+      {
+        case FolAtom(pred, args @ _*) => extraEvid = e :: extraEvid;
+        case _ => e.visit(conjToEvd, (x:List[Any])=> 0)
+      }
+  }
+      
+      
   private def addConst(varName: String) =
 		newConstants += (varName.substring(0, 2) -> (newConstants.apply(varName.substring(0, 2)) + varName))
   

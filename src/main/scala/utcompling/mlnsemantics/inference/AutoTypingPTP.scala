@@ -16,14 +16,6 @@ class AutoTypingPTP(
   delegate: ProbabilisticTheoremProver[FolExpression])
   extends ProbabilisticTheoremProver[FolExpression] {
 
-
-  
-  /*private var oldConstants: Map[String, Set[String]] = null;
-  private var newDeclarations: Map[FolExpression, Seq[String]] = null;
-
-  private var skolemFunctionsCounter:Int = 0;
-  private var skolemConstCounter:Int = 0; 
-  */
   private var allConstants: Map[String, Set[String]] = null;
   private var autoConst : scala.collection.mutable.Map[String, (String, scala.collection.mutable.Set[String])] = null; //predName#varIndx -> (type, HX1, HX2 ....)
   private var arrows : scala.collection.mutable.Set[(String, String)] = null; //predName#varIndx -> predName#varIndx 
@@ -40,20 +32,13 @@ class AutoTypingPTP(
     assumptions: List[WeightedExpression[FolExpression]],
     goal: FolExpression): Seq[Double] = {
     
-
-/*    oldConstants = constants;
-    newDeclarations = declarations;
-
-  	skolemFunctionsCounter = 0;
-  	skolemConstCounter = 0; 
-*/
     allConstants = constants;
     extraEvid = List();
   	quantifiedVars = scala.collection.mutable.Set();
     autoConst = scala.collection.mutable.Map(); //predName#varIndx -> HX1, HX2 ....
     arrows =  scala.collection.mutable.Set(); //an x -> y means all constants of x should be propagated to y
     
-    if(Sts.opts.negativeEvd)
+    if(Sts.opts.negativeEvd && Sts.opts.task == "rte" && (Sts.opts.softLogicTool == "mln"|| Sts.opts.softLogicTool == "ss"))
     {
 	    
 	    declarations.foreach(d => {

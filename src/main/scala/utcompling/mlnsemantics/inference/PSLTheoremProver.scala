@@ -182,7 +182,7 @@ class PSLTheoremProver(
 
 	 if(Sts.opts.task == "rte")
 	 {
-			return Seq(lineToScore(entailmentLine));
+			return Seq(lineToScore(entailmentHLine));
 
 		/*		if (entailmentLine == "")
 				  return 0;

@@ -72,7 +72,10 @@ class SetGoalPTP(
     //=====================Start RTE=============================
     else if (Sts.opts.task == "rte" && Sts.opts.softLogicTool == "psl")
     {
-      throw new RuntimeException("RTE is not supported on PSL");
+      //throw new RuntimeException("RTE is not supported on PSL"); NOT anymore
+        val ent_h = FolApplicationExpression(FolVariableExpression(Variable("entailment_h")), FolVariableExpression(Variable("")));        
+        val expr_h = GoalExpression((universalifyGoalFormula(goal -> ent_h )).asInstanceOf[FolExpression], Double.PositiveInfinity);
+        extraExpressions = List(expr_h);
     }
     //---------------------RTE on SampleSearch--------------------------
     else if (Sts.opts.task == "rte" && Sts.opts.softLogicTool == "ss")

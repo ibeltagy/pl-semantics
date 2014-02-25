@@ -50,16 +50,23 @@ class FromEntToEqvProbabilisticTheoremProver(
     Sts.opts.task match {
       case "rte" => {
         prefix = "h";
-        val premH = renameVars(prem)
-        val hypH = renameVars(hyp)
+        var modifiedPrem = prem;
+        var modifiedHyp = hyp;
+        if(Sts.opts.softLogicTool == "psl")
+        {
+        	modifiedPrem = goFlat(prem);
+        	modifiedHyp = goFlat(hyp);
+        }
+        val premH = renameVars(modifiedPrem) //goFlat removes IMP, NOT, OR, but not for RTE on MLN
+        val hypH = renameVars(modifiedHyp)
         (List (HardWeightedExpression (premH)) ++ 
             assumptions.filterNot( _ == assumptions.head), 
 	     hypH)
       }
       case "sts" => {
         prefix = "h";
-        val modifiedPrem = goSTS(prem);
-        val modifiedHyp = goSTS(hyp);
+        val modifiedPrem = goFlat(prem);
+        val modifiedHyp = goFlat(hyp);
         val premH = renameVars(modifiedPrem)
         val hypH = renameVars(modifiedHyp)
         prefix = "t";
@@ -74,17 +81,21 @@ class FromEntToEqvProbabilisticTheoremProver(
     delegate.prove(constants, declarations, evidence, newAssumptions, newGoal)
   }
   
-  def goSTS(e: BoxerExpression): BoxerExpression = {
+  def goFlat(e: BoxerExpression): BoxerExpression = {
       e match {
          case BoxerImp(discId, indices, first, second) =>  //remove "->"
-   	  		  BoxerProp(discId, indices, BoxerVariable("v"), goSTS(BoxerDrs(first.refs ++ second.refs, first.conds ++ second.conds)))
+   	  		  BoxerProp(discId, indices, BoxerVariable("v"), goFlat(BoxerDrs(first.refs ++ second.refs, first.conds ++ second.conds)))
          case BoxerOr(discId, indices, first, second) =>  //remove "or"
    	  		  //BoxerProp(discId, indices, BoxerVariable("v"), goSTS(BoxerDrs(first.refs ++ second.refs, first.conds ++ second.conds)))
-   	  		  goSTS(BoxerDrs(first.refs ++ second.refs, first.conds ++ second.conds))
-         case BoxerNot(discId, indices, drs) => //remove negation. This is wrong for now 
-   	  	 	  //BoxerProp(discId, indices, BoxerVariable("v"), goSTS(drs))
-   	  		  goSTS(drs)
-	     case _ => e.visitConstruct(goSTS)
+   	  		  goFlat(BoxerDrs(first.refs ++ second.refs, first.conds ++ second.conds))
+         case BoxerNot(discId, indices, drs) => 
+           if(Sts.opts.task == "rte" )
+        	  BoxerDrs(List(), List());//replace negation with nothing. 
+           		//This may result in a completely empty expression, which should be replaced with a single dummy predicate
+           else
+             //remove negation, or add a predicate of Negation. For now, just remove negation  
+   	  		  goFlat(drs)
+	     case _ => e.visitConstruct(goFlat)
       }
     }
 
