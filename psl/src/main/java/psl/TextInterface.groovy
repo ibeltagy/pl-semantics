@@ -109,7 +109,7 @@ while(( l = fr.readLine()) != null){
 		splits = l.split(",");
 		arg = new LinkedHashMap();
 		arg.put("on", predicates.get(splits[1]))
-		m.addConstraint(PredicateConstraint.PartialInverseFunctional, arg)
+		m.addConstraint(PredicateConstraint.PartialFunctional, arg)
 	}	
 	else if (l.startsWith("rule,"))
 	{

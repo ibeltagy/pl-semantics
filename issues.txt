@@ -1,8 +1,10 @@
 Add the semantic role uniqueness constraint. PSL and MLN
-Premise is messed up when run using PSL. 
-Make PSL works for RTE
+Make PSL works for RTE. Negation in Premise is fine. Negation in hypothesis is very wrong
 -----
 Alchemy:
+-generate negative evidence also for the negated existentially quantified variables. 
+-more negative evd can be generated or a^r1^b=>c^r2^d. Arrows have conjunction. 
+-make the application of the negative evidence prior to converting to CNF. May be this can be done with some manipulation of the typing system.
 -make sure it is strict subset
 -There is a case where picking the smaller-sized type is not enough. 
 -Do not forget the typing problem when handling existential quantifier

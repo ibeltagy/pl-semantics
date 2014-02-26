@@ -37,8 +37,18 @@ class OnTheFlyRules extends Rules {
         }
       }.toSet)
 
-      val assumRel = text.getRelations();
-      val goalRel = hypothesis.getRelations();
+      val assumRel = text.getRelations().flatMap(r=>{
+        r match { //do not generate inference rules connected with a "theme" relation
+          case BoxerRel(discId, indices, event, variable, name, sense) if (name.contains("theme")) => None;
+          case _ => Some(r)
+        } 
+      });
+      val goalRel = hypothesis.getRelations().flatMap(r=>{
+        r match {
+          case BoxerRel(discId, indices, event, variable, name, sense) if (name.contains("theme")) => None;
+          case _ => Some(r)
+        } 
+      });
 
       // Use this map to check variable types in inference rules
       var predTypeMap = Map[String, String]()
