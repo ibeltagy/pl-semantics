@@ -103,15 +103,30 @@ while(( l = fr.readLine()) != null){
 		arg.put("weight", Double.parseDouble(splits[2]))
 		m.addPrior(Prior.Simple, arg)
 
-	}else if (l.startsWith("rule,"))
+	}
+	else if (l.startsWith("constraint,"))
+	{
+		splits = l.split(",");
+		arg = new LinkedHashMap();
+		arg.put("on", predicates.get(splits[1]))
+		m.addConstraint(PredicateConstraint.PartialInverseFunctional, arg)
+	}	
+	else if (l.startsWith("rule,"))
 	{
 //		m.add rule: (TX4 ^ TX2) >> entailment_h(), constraint: true
-		splits = l.split(",", 2);
+		splits = l.split(",",2);
+		lastIndexOfComma = splits[1].lastIndexOf(",");
+		fStr = splits[1].substring(0, lastIndexOfComma);
+		wStr = splits[1].substring(lastIndexOfComma+1);
 		arg = new LinkedHashMap();
-		arg.put("constraint", true)
-		f = parseFormula(splits[1])
+		if(wStr.compareTo("inf") == 0)
+			arg.put("constraint", true)
+		else arg.put("weight", Double.parseDouble(wStr))
+			
+		f = parseFormula(fStr)
 		m.addRule(f, arg);		
 	}
+	
 	else if (l.startsWith("data,"))//data,predName,val1,val2
 								   //data,predName,val1
 	{

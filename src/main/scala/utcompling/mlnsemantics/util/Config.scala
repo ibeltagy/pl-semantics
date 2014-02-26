@@ -175,6 +175,12 @@ class Config(opts: Map[String, String] = Map()) {
     case Some(l) => l.toInt;
     case _ => 10000; 
   }
+  
+  //partial functional  constraint on the agent and patient predicates
+  val funcConst = opts.get("-funcConst") match {
+     case Some("true") => true;
+     case _ => false;
+  }
 
 
   //-------------------------------------------task

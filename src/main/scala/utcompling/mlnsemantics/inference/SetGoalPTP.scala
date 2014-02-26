@@ -73,8 +73,14 @@ class SetGoalPTP(
     else if (Sts.opts.task == "rte" && Sts.opts.softLogicTool == "psl")
     {
       //throw new RuntimeException("RTE is not supported on PSL"); NOT anymore
-        val ent_h = FolApplicationExpression(FolVariableExpression(Variable("entailment_h")), FolVariableExpression(Variable("")));        
-        val expr_h = GoalExpression((universalifyGoalFormula(goal -> ent_h )).asInstanceOf[FolExpression], Double.PositiveInfinity);
+        val ent_h = FolApplicationExpression(FolVariableExpression(Variable("entailment_h")), FolVariableExpression(Variable("")));
+        val modifiedGoal = 
+        		if(goal.isInstanceOf[FolVariableExpression])
+    	  		  	//handling a very special case of parsing error where the expression is just an empty box
+        			FolApplicationExpression(FolVariableExpression(Variable("dummyPred")), FolVariableExpression(Variable( "x" )));
+				else 
+					goal;
+        val expr_h = GoalExpression((universalifyGoalFormula(modifiedGoal -> ent_h )).asInstanceOf[FolExpression], Double.PositiveInfinity);
         extraExpressions = List(expr_h);
     }
     //---------------------RTE on SampleSearch--------------------------
