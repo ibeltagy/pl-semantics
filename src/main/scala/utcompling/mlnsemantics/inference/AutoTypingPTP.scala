@@ -18,7 +18,7 @@ class AutoTypingPTP(
 
   private var allConstants: Map[String, Set[String]] = null;
   private var autoConst : scala.collection.mutable.Map[String, (String, scala.collection.mutable.Set[String])] = null; //predName#varIndx -> (type, HX1, HX2 ....)
-  private var arrows : scala.collection.mutable.Set[(String, String)] = null; //predName#varIndx -> predName#varIndx 
+  private var arrows : scala.collection.mutable.Set[(Set[String], String)] = null; //predName#varIndx -> predName#varIndx 
   private var extraEvid: List[FolExpression] = null;
   private var quantifiedVars: scala.collection.mutable.Set[String] = null;
   
@@ -135,9 +135,10 @@ class AutoTypingPTP(
     	repeat = false;
     	arrows.foreach(arrow=>{
 	      val rhsSetSize = autoConst(arrow._2)._2.size;
-	      autoConst(arrow._2)._2 ++= autoConst(arrow._1)._2;
-	      if (rhsSetSize != autoConst(arrow._2)._2.size)
-	        repeat = true
+	      var constToPropagate = (arrow._1.map(v=>autoConst(v)._2)).reduceLeft(_&_)
+	      if(! (constToPropagate -- autoConst(arrow._2)._2).isEmpty )
+	        repeat = true;
+	      autoConst(arrow._2)._2 ++= constToPropagate;
 		})
     }
   }
@@ -174,21 +175,23 @@ class AutoTypingPTP(
       		val lhsVars = findArrows(lhs);
       		val rhsVars = findArrows(rhs)
    			rhsVars.foreach(rhsVar => {
-   				var matchFound:Boolean = false; 
+   				var lhsMatchedVars: scala.collection.mutable.Set[String] = scala.collection.mutable.Set();
    				lhsVars.foreach(lhsVar => {
       				if(lhsVar._1 == rhsVar._1)
       				{
-      				  matchFound = true;
       				  if(lhsVar._2 != rhsVar._2) // do not add self-loops
-      					  arrows += ((lhsVar._2, rhsVar._2))
+      					  lhsMatchedVars += lhsVar._2
       				}
       			})
-      			if (!matchFound)
+      			if (!lhsMatchedVars.isEmpty)
+      				arrows += ((lhsMatchedVars.toSet, rhsVar._2))
+      			else
       			{
       			  //RHS variable is not bounded with a LHS variable. 
       			  //In this case, do not generate an arrow, 
       			  //but add all constants in the type to the predicate.
-      			  //This type of inference rules is wrong. I better remove it.
+      			  //This type of inference rules is wrong. I better remove it
+      			  //It is removed
       			  val t = autoConst(rhsVar._2)._1;
       			  autoConst(rhsVar._2)._2 ++= allConstants(t);      			  
       			}
