@@ -17,7 +17,7 @@ class AutoTypingPTP(
   extends ProbabilisticTheoremProver[FolExpression] {
 
   private var allConstants: Map[String, Set[String]] = null;
-  private var autoConst : scala.collection.mutable.Map[String, (String, String, scala.collection.mutable.Set[(String, String)])] = null; //predName#varIndx -> (type, H
+  private var autoConst : scala.collection.mutable.Map[String, (Seq[String], scala.collection.mutable.Set[Seq[String]])] = null; //predName#varIndx -> (type, H
 
   //private var arrows : scala.collection.mutable.Set[(Set[String], String)] = null; //predName#varIndx#varIndx -> predName#varIndx#varIndx 
   private var extraEvid: List[FolExpression] = null;
@@ -49,8 +49,8 @@ class AutoTypingPTP(
 	    declarations.foreach(d => {
 	      d match {
 	          case (FolAtom(pred, args @ _*), s) => { 
-	            require(args.length == 1 || args.length == 2)
-	            autoConst += ("%s#%s#%s".format(pred.name, args.indices.head, args.indices.last)->((s.head, s.last, scala.collection.mutable.Set())));
+	            //require(args.length == 1 || args.length == 2)
+	            autoConst += (pred.name ->((s, scala.collection.mutable.Set())));
 	          }
 	          case _ => throw new RuntimeException("Non-atomic declaration");
 	      }
@@ -102,13 +102,13 @@ class AutoTypingPTP(
           case (FolAtom(pred, args @ _*), s) => {
             if(!pred.name.startsWith("skolem"))
             {	
-              val t = autoConst("%s#%s#%s".format(pred.name, args.indices.head, args.indices.last));
+              val t = autoConst(pred.name);
+              assert(args.length == t._1.length)
               if (args.length == 1)
               {
-            	  assert(t._1 == t._2);
-            	  val(c1, c2) = t._3.unzip;
-            	  val possibleConst = c1; 
-            	  allConstants(t._1).foreach(c=>
+            	  //Map[String, (Seq[String], scala.collection.mutable.Set[Seq[String]])]
+            	  val possibleConst = t._2.map(_.head);
+            	  allConstants(t._1.head).foreach(c=>
             	  {
             	      if(!possibleConst.contains(c))
             	      {
@@ -121,10 +121,10 @@ class AutoTypingPTP(
             	  
               }else if (args.length == 2)
               {
-            	  val possibleConst =  t._3;
-            	  allConstants(t._1).foreach(c1=>
+            	  val possibleConst =  t._2.map(e=>(e.head, e.last));
+            	  allConstants(t._1.head).foreach(c1=>
             	  {
-            		  allConstants(t._2).foreach(c2=>
+            		  allConstants(t._1.last).foreach(c2=>
             		  {            	    
 	            	      if(!possibleConst.contains((c1, c2)) && !( possibleConst.contains((c1, "any")) && possibleConst.contains(("any", c2))))
 	            	      {
@@ -161,75 +161,105 @@ class AutoTypingPTP(
     }
   }
 */
-  private def propagate(lhs: Set[(String, String, String)], rhs: (String, String, String)):Any =
+  private def propagate(lhs: Set[(String, Seq[String])], rhs: (String, Seq[String])):Any =
   {
 	  object AllDone extends Exception { }
-	  if (rhs._3.contains( "skolem"))//do not propagate to "skolem" predicates because they are already close-world
+	  if (rhs._1.contains( "skolem"))//do not propagate to "skolem" predicates because they are already close-world
 	    return 
-	  if(!quantifiedVars.contains(rhs._1) && !quantifiedVars.contains(rhs._2))
+	  assert(rhs._2.size < 3)
+	  if((quantifiedVars & rhs._2.toSet).isEmpty) //intersection is empty, so all variables are not quantified
 	     return //if both rhs variables are Constants
 	  
-	  var allExtraConst:Set[(String, String)] = null; 
+	  var allExtraConst:Set[Seq[String]] = null; 
 		  
-	  lhs.foreach(lhsVar=>{
+	  lhs.toList.sortBy( l => -l._1.length()).foreach(lhsEntry=>{   //sorting to make predicates of multiple arguments come first. 
+		  														//this is important for the intersection
 		  try 
 		  {
-			  if(lhsVar._3 == rhs._3) // do not add self-loops
+			  if(lhsEntry._1 == rhs._1) // do not add self-loops
 			    throw AllDone
-			  if ((Set(lhsVar._1, lhsVar._2) & Set(rhs._1, rhs._2).toSet ).isEmpty) //there is variables overlap
+			  if (( lhsEntry._2.toSet & rhs._2.toSet ).isEmpty) //there is no variables overlap
 			    throw AllDone
-			  var lhsConst = autoConst(lhsVar._3);
-			  //assert(lhsConst._1 == lhsVar._1)
-			  //assert(lhsConst._2 == lhsVar._2)
-			  var lhsConstSet = lhsConst._3; 
+			  var lhsConstSet = autoConst(lhsEntry._1)._2;
+			  lhsEntry._2.indices.foreach(lhsVarIdx=>{
+			    val lhsVar = lhsEntry._2(lhsVarIdx);
+			    if(!quantifiedVars.contains(lhsVar)) //Constant not variable
+				  lhsConstSet = lhsConstSet.map(c=>c.updated(lhsVarIdx, lhsVar));
+			  })
 
-			  if(!quantifiedVars.contains(lhsVar._1)) //Constant not variable
-				  lhsConstSet = lhsConstSet.map(c=>(lhsVar._1, c._2));
-			  if(!quantifiedVars.contains(lhsVar._2)) //Constant not variable
-				  lhsConstSet = lhsConstSet.map(c=>(c._1, lhsVar._2));
-			  val lhsConstSetUnzip = lhsConstSet.toList.unzip
-			  var col1 : List[String] = List();
-			  var col2 : List[String] = List();
-			  if(rhs._1 == lhsVar._1)
+			  val lhsConstSetPropagated = lhsConstSet.map(lhsConst=>
 			  {
-			    col1 = lhsConstSetUnzip._1
-			  }
-			  else if(rhs._1 == lhsVar._2)
-			  {
-			    col1 = lhsConstSetUnzip._2
-			  }
+			      val lhsConstPropagated = rhs._2.map(rhsVar=>{
+			        if(lhsEntry._2.contains(rhsVar))
+			        {
+			    	  val idx = lhsEntry._2.indexOf(rhsVar)
+			    	  lhsConst(idx);
+			        }
+			        else "any";
+			      })//end rhsConst
+			      lhsConstPropagated;
+			  }).toSet//end lhsConst
 			  
-			  if(rhs._2 == lhsVar._1)
-			  {
-			    col2 = lhsConstSetUnzip._1
-			  }
-			  else if(rhs._2 == lhsVar._2)
-			  {
-			    col2 = lhsConstSetUnzip._2
-			  }
-			  //assert(!(col1.isEmpty&&col2.isEmpty))
-			  if(col1.isEmpty)
-			    col1 = List.fill(col2.size)("any");
-			  if(col2.isEmpty)
-			    col2 = List.fill(col1.size)("any");
-			  
-			  val extraConst = (col1 zip col2).toSet
 			  if(allExtraConst ==  null)
-			    allExtraConst = extraConst;
-			  else allExtraConst = (extraConst & allExtraConst);
+			    allExtraConst = lhsConstSetPropagated;
+			  else 
+			  {
+			    allExtraConst = allExtraConst.flatMap(e=>{
+			      if(lhsConstSetPropagated.contains(e))
+			        Some(e)
+			      else
+			      {
+			        var found = false;
+			        e.indices.foreach(idx=>{
+			          if(lhsConstSetPropagated.contains(e.updated(idx, "any")))
+			            found = true
+			        })
+			        if(found)
+			          Some(e)
+			        else
+			          None
+			      }
+			  	})
+			  }
 			  
 		  } catch {case AllDone =>}
 
 	  })
 	  if (allExtraConst != null)
 	  {
-	      if(! (allExtraConst -- autoConst(rhs._3)._3).isEmpty )
+/*	      if(lhs.size > 1)
+	      {
+	        //replace all "any" with actual constants
+	        allExtraConst = allExtraConst.flatMap(extraC => 
+	        {
+	        	val cnt = extraC.count(_ == "any");
+	        	if(cnt == 0)
+	        		Some(extraC)
+	            else if(cnt == extraC.size)
+	            	None
+	            else if(cnt > 1)
+	            	throw new RuntimeException ("More than one 'any' is not implemented, and it should not happen");
+	            else
+	            {
+	            	val i = extraC.indexOf("any");
+	            	allExtraConst.flatMap(anyRep => {
+	            	  if(anyRep(i) == "any")
+	            	    None
+	            	  else
+	            	    Set(extraC.updated(i, anyRep(i)))
+	            	})
+	            }
+	        })
+	      }
+	      * 
+	      */
+	      if(! (allExtraConst -- autoConst(rhs._1)._2).isEmpty )
 	        repeat = true;
-		  autoConst(rhs._3)._3 ++= allExtraConst;
+		  autoConst(rhs._1)._2 ++= allExtraConst;
 	  }
   }
     
-  private def findConstVarsQuantif(e: FolExpression): Set[(String, String, String)] =
+  private def findConstVarsQuantif(e: FolExpression): Set[(String, Seq[String])] =
   {
       e match 
       {
@@ -244,18 +274,18 @@ class AutoTypingPTP(
         	{
         	  if(first) //add constants only in the first iteration
         	  {
-        	    autoConst("%s#%s#%s".format(pred.name, args.indices.head, args.indices.last))._3  += ((
-        	      if(quantifiedVars.contains(args.head.name)) "any" else args.head.name, 
-        	      if(quantifiedVars.contains(args.last.name)) "any" else args.last.name))
+        	    autoConst(pred.name)._2  += args.map(arg=>{
+        	      if(quantifiedVars.contains(arg.name)) "any" else arg.name
+        	      })
         	  }
         	}
-        	Set((args.head.name, args.last.name, "%s#%s#%s".format(pred.name, args.indices.head, args.indices.last)));
-       	case _ => e.visit(findConstVarsQuantif, (x:List[Set[(String, String, String)]])=> x.reduce( _ ++ _))
+        	Set((pred.name, args.map(_.name)));
+       	case _ => e.visit(findConstVarsQuantif, (x:List[Set[(String, Seq[String])]])=> x.reduce( _ ++ _))
       }
   }
   
   //assume all inference rules are of the form  Univ LHS conjunctions => RHS conjunctions
-  private def findArrowsIR(e: FolExpression) : Set[(String, String, String)] =
+  private def findArrowsIR(e: FolExpression) : Set[(String, Seq[String])] =
   {
 	  e match 
       {
@@ -265,35 +295,11 @@ class AutoTypingPTP(
       		val lhsVars = findArrowsIR(lhs);
       		val rhsVars = findArrowsIR(rhs)
    			rhsVars.foreach(rhsVar => propagate(lhsVars, rhsVar));
-      		/*
-   			{
-   				var lhsMatchedVars: scala.collection.mutable.Set[String] = scala.collection.mutable.Set();
-   				lhsVars.foreach(lhsVar => {
-   					if(lhsVar._3 != rhsVar._3) // do not add self-loops
-   					{
-   					  if (!(Set(lhsVar._1, lhsVar._2) & Set(rhsVar._1, rhsVar._2)).isEmpty) //there is variables overlap
-   					    lhsMatchedVars += lhsVar._3
-   					}
-      			})
-      			if (!lhsMatchedVars.isEmpty)
-      				propagate (lhsMatchedVars.toSet, rhsVar._2);
-      			/*  //No need for this case anymore because it can not happen 
-      			else
-      			{
-      			  //RHS variable is not bounded with a LHS variable. 
-      			  //In this case, do not generate an arrow, 
-      			  //but add all constants in the type to the predicate.
-      			  //This type of inference rules is wrong. I better remove it
-      			  //It is removed
-      			  val t = autoConst(rhsVar._2)._1;
-      			  autoConst(rhsVar._2)._2 ++= allConstants(t);      			  
-      			}*/
-      		})*/
       		Set();
       	}
       	case FolAtom(pred, args @ _*) => 
-      	  Set((args.head.name, args.last.name, "%s#%s#%s".format(pred.name, args.indices.head, args.indices.last)));
-      	case _ => e.visit(findArrowsIR, (x:List[Set[(String, String, String)]])=> x.reduce( _ ++ _))
+      	  Set((pred.name, args.map(_.name)));
+      	case _ => e.visit(findArrowsIR, (x:List[Set[(String, Seq[String])]])=> x.reduce( _ ++ _))
       }
   }
 }

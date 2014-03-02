@@ -144,7 +144,7 @@ class AlchemyTheoremProver{
     val tempFile = FileUtils.mktemp(suffix = ".db")
     FileUtils.writeUsing(tempFile) { f =>
       f.write("//\n");
-      evidence.foreach {
+      evidence.sortBy(x => x.toString() ).foreach {  //sorting is just for readability
         case e @ FolAtom(pred, args @ _*) /*if (pred.name.startsWith("skolem_")) */=> f.write (convert(e) + "\n");
         case e @ FolNegatedExpression(a) => f.write ("!" + convert(a) + "\n");
         case e => //throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
