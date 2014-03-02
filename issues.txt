@@ -2,6 +2,10 @@ Add the semantic role uniqueness constraint. PSL and MLN
 Make PSL works for RTE. Negation in Premise is fine. Negation in hypothesis is very wrong
 -----
 Alchemy:
+-predicates of more than two args are possible
+-intersection of possible constats is wrong. It does not handle ANY right
+-take source of consts into acount
+-why "all birds do not fly    no bird flies" should equal 1
 -generate negative evidence also for the negated existentially quantified variables. 
 -more negative evd can be generated or a^r1^b=>c^r2^d. Arrows have conjunction. 
 -make the application of the negative evidence prior to converting to CNF. May be this can be done with some manipulation of the typing system.

@@ -17,10 +17,13 @@ class AutoTypingPTP(
   extends ProbabilisticTheoremProver[FolExpression] {
 
   private var allConstants: Map[String, Set[String]] = null;
-  private var autoConst : scala.collection.mutable.Map[String, (String, scala.collection.mutable.Set[String])] = null; //predName#varIndx -> (type, HX1, HX2 ....)
-  private var arrows : scala.collection.mutable.Set[(Set[String], String)] = null; //predName#varIndx -> predName#varIndx 
+  private var autoConst : scala.collection.mutable.Map[String, (String, String, scala.collection.mutable.Set[(String, String)])] = null; //predName#varIndx -> (type, H
+
+  //private var arrows : scala.collection.mutable.Set[(Set[String], String)] = null; //predName#varIndx#varIndx -> predName#varIndx#varIndx 
   private var extraEvid: List[FolExpression] = null;
   private var quantifiedVars: scala.collection.mutable.Set[String] = null;
+  private var repeat = true;
+  private var first = true;
   
   /**
    * Return the proof, or None if the proof failed
@@ -36,7 +39,9 @@ class AutoTypingPTP(
     extraEvid = List();
   	quantifiedVars = scala.collection.mutable.Set();
     autoConst = scala.collection.mutable.Map(); //predName#varIndx -> HX1, HX2 ....
-    arrows =  scala.collection.mutable.Set(); //an x -> y means all constants of x should be propagated to y
+    //arrows =  scala.collection.mutable.Set(); //an x -> y means all constants of x should be propagated to y
+    repeat = true;
+	first = true;
     
     if(Sts.opts.negativeEvd && Sts.opts.task == "rte" && (Sts.opts.softLogicTool == "mln"|| Sts.opts.softLogicTool == "ss"))
     {
@@ -44,23 +49,38 @@ class AutoTypingPTP(
 	    declarations.foreach(d => {
 	      d match {
 	          case (FolAtom(pred, args @ _*), s) => { 
-	            args.indices.foreach(i=>
-	              {
-	            	//allConstants(args(idx).name.substring(0, 2));
-	                autoConst += ("%s#%s".format(pred.name, i)->((s(i), scala.collection.mutable.Set())));
-	              })
+	            require(args.length == 1 || args.length == 2)
+	            autoConst += ("%s#%s#%s".format(pred.name, args.indices.head, args.indices.last)->((s.head, s.last, scala.collection.mutable.Set())));
 	          }
 	          case _ => throw new RuntimeException("Non-atomic declaration");
 	      }
 	    });
 	        
-	    assumptions.foreach{
-	          case HardWeightedExpression(e) => findConsts(e);
-	          case SoftWeightedExpression(e, w) => findArrows (e)
+	    evidence.foreach(e=>{
+	      quantifiedVars.clear(); 
+	      findConstVarsQuantif(e);
+	    });
+		while (repeat)
+		{
+			repeat = false;
+			assumptions.foreach{
+	          case HardWeightedExpression(e) => {
+	            quantifiedVars.clear(); 
+	            val vars = findConstVarsQuantif(e);
+	            //generate arrows from vars
+	   			vars.foreach(rhsVar => {
+	   				vars.foreach(lhsVar =>
+	   					propagate(Set(lhsVar), rhsVar)
+	      			)
+	      		})	            
+	          }
+	          case SoftWeightedExpression(e, w) => quantifiedVars.clear(); findArrowsIR (e)
 	          case _ => ;
 	        }
+	    	first = false;
+		}//Repeat
 	    
-	    applyArrows();
+	    //applyArrows();
 	    
 	    genNegativeEvd(declarations);
     }
@@ -77,56 +97,54 @@ class AutoTypingPTP(
   private def genNegativeEvd(declarations:Map[FolExpression, Seq[String]]) = 
   {    
     declarations.foreach(d => {
-      d match {
+    d match 
+    {
           case (FolAtom(pred, args @ _*), s) => {
             if(!pred.name.startsWith("skolem"))
-            {
-	            val negEvdConsts = args.indices.map(i=>
-	            {
-	                val t = autoConst("%s#%s".format(pred.name, i));
-	                allConstants(t._1) -- t._2; //all
-	            })
-	            if(negEvdConsts.length > 2 || negEvdConsts.length < 1 )
-	              throw new RuntimeException("unsupported number of arguments of predicate " + pred.name);
-	            if(negEvdConsts.length == 1)
-	            {
-	              negEvdConsts(0).foreach(c=>{
-	            	  var negEvd: FolExpression = FolVariableExpression(Variable(pred.name));
-	              	  negEvd = FolApplicationExpression(negEvd, FolVariableExpression(Variable( c )));
-	              	  negEvd = FolNegatedExpression(negEvd);
-	              	  extraEvid = negEvd :: extraEvid;
-	              })
-	            }else if(negEvdConsts.length == 2)
-	            {
-	              negEvdConsts(0).foreach(c0=>{
-	                val allC = allConstants( autoConst("%s#%s".format(pred.name, 1))._1 ) 
-	                allC.foreach(c1=>{
-	            	  var negEvd: FolExpression = FolVariableExpression(Variable(pred.name));
-	              	  negEvd = FolApplicationExpression(negEvd, FolVariableExpression(Variable( c0 )));
-	            	  negEvd = FolApplicationExpression(negEvd, FolVariableExpression(Variable( c1 )));
-	              	  negEvd = FolNegatedExpression(negEvd);
-	              	  extraEvid = negEvd :: extraEvid;
-	                })
-	              })
-	              val allC = allConstants( autoConst("%s#%s".format(pred.name, 0))._1 )
-                  allC.foreach(c0=>{
-	                negEvdConsts(1).foreach(c1=>{
-	            	  var negEvd: FolExpression = FolVariableExpression(Variable(pred.name));
-	              	  negEvd = FolApplicationExpression(negEvd, FolVariableExpression(Variable( c0 )));
-	            	  negEvd = FolApplicationExpression(negEvd, FolVariableExpression(Variable( c1 )));
-	              	  negEvd = FolNegatedExpression(negEvd);
-	              	  extraEvid = negEvd :: extraEvid;
-	                })
-	              })
-	              
-	            }
-            }
-          }
+            {	
+              val t = autoConst("%s#%s#%s".format(pred.name, args.indices.head, args.indices.last));
+              if (args.length == 1)
+              {
+            	  assert(t._1 == t._2);
+            	  val(c1, c2) = t._3.unzip;
+            	  val possibleConst = c1; 
+            	  allConstants(t._1).foreach(c=>
+            	  {
+            	      if(!possibleConst.contains(c))
+            	      {
+            	    	  var negEvd: FolExpression = FolVariableExpression(Variable(pred.name));
+            	    	  negEvd = FolApplicationExpression(negEvd, FolVariableExpression(Variable( c )));
+            	    	  negEvd = FolNegatedExpression(negEvd);
+            	    	  extraEvid = negEvd :: extraEvid;
+            	      }
+            	  })
+            	  
+              }else if (args.length == 2)
+              {
+            	  val possibleConst =  t._3;
+            	  allConstants(t._1).foreach(c1=>
+            	  {
+            		  allConstants(t._2).foreach(c2=>
+            		  {            	    
+	            	      if(!possibleConst.contains((c1, c2)) && !( possibleConst.contains((c1, "any")) && possibleConst.contains(("any", c2))))
+	            	      {
+			            	  var negEvd: FolExpression = FolVariableExpression(Variable(pred.name));
+			              	  negEvd = FolApplicationExpression(negEvd, FolVariableExpression(Variable( c1 )));
+			            	  negEvd = FolApplicationExpression(negEvd, FolVariableExpression(Variable( c2 )));
+			              	  negEvd = FolNegatedExpression(negEvd);
+			              	  extraEvid = negEvd :: extraEvid;
+	            	      }
+            		  })
+            	  })
+              }
+              else assert(false);
+	         } //if not skolem
+          } // case FolAtom
           case _ => throw new RuntimeException("Non-atomic declaration");
       }
     });
   }
-  
+/*  
   private def applyArrows() = 
   {
     var repeat = true;
@@ -142,49 +160,124 @@ class AutoTypingPTP(
 		})
     }
   }
+*/
+  private def propagate(lhs: Set[(String, String, String)], rhs: (String, String, String)):Any =
+  {
+	  object AllDone extends Exception { }
+	  if (rhs._3.contains( "skolem"))//do not propagate to "skolem" predicates because they are already close-world
+	    return 
+	  if(!quantifiedVars.contains(rhs._1) && !quantifiedVars.contains(rhs._2))
+	     return //if both rhs variables are Constants
+	  
+	  var allExtraConst:Set[(String, String)] = null; 
+		  
+	  lhs.foreach(lhsVar=>{
+		  try 
+		  {
+			  if(lhsVar._3 == rhs._3) // do not add self-loops
+			    throw AllDone
+			  if ((Set(lhsVar._1, lhsVar._2) & Set(rhs._1, rhs._2).toSet ).isEmpty) //there is variables overlap
+			    throw AllDone
+			  var lhsConst = autoConst(lhsVar._3);
+			  //assert(lhsConst._1 == lhsVar._1)
+			  //assert(lhsConst._2 == lhsVar._2)
+			  var lhsConstSet = lhsConst._3; 
 
-  private def findConsts(e: FolExpression): Any =
+			  if(!quantifiedVars.contains(lhsVar._1)) //Constant not variable
+				  lhsConstSet = lhsConstSet.map(c=>(lhsVar._1, c._2));
+			  if(!quantifiedVars.contains(lhsVar._2)) //Constant not variable
+				  lhsConstSet = lhsConstSet.map(c=>(c._1, lhsVar._2));
+			  val lhsConstSetUnzip = lhsConstSet.toList.unzip
+			  var col1 : List[String] = List();
+			  var col2 : List[String] = List();
+			  if(rhs._1 == lhsVar._1)
+			  {
+			    col1 = lhsConstSetUnzip._1
+			  }
+			  else if(rhs._1 == lhsVar._2)
+			  {
+			    col1 = lhsConstSetUnzip._2
+			  }
+			  
+			  if(rhs._2 == lhsVar._1)
+			  {
+			    col2 = lhsConstSetUnzip._1
+			  }
+			  else if(rhs._2 == lhsVar._2)
+			  {
+			    col2 = lhsConstSetUnzip._2
+			  }
+			  //assert(!(col1.isEmpty&&col2.isEmpty))
+			  if(col1.isEmpty)
+			    col1 = List.fill(col2.size)("any");
+			  if(col2.isEmpty)
+			    col2 = List.fill(col1.size)("any");
+			  
+			  val extraConst = (col1 zip col2).toSet
+			  if(allExtraConst ==  null)
+			    allExtraConst = extraConst;
+			  else allExtraConst = (extraConst & allExtraConst);
+			  
+		  } catch {case AllDone =>}
+
+	  })
+	  if (allExtraConst != null)
+	  {
+	      if(! (allExtraConst -- autoConst(rhs._3)._3).isEmpty )
+	        repeat = true;
+		  autoConst(rhs._3)._3 ++= allExtraConst;
+	  }
+  }
+    
+  private def findConstVarsQuantif(e: FolExpression): Set[(String, String, String)] =
   {
       e match 
       {
-      	case FolExistsExpression(v, term) => quantifiedVars += v.name; findConsts(term);  
-        case FolAllExpression(v, term) => quantifiedVars += v.name; findConsts(term);
-        case FolAtom(pred, args @ _*) => args.indices.foreach(idx =>{
-        	if(quantifiedVars.contains(args(idx).name))
+      	case FolExistsExpression(v, term) => quantifiedVars += v.name; findConstVarsQuantif(term);  
+        case FolAllExpression(v, term) => quantifiedVars += v.name; findConstVarsQuantif(term);
+        case FolAtom(pred, args @ _*) =>
+        	if(quantifiedVars.contains(args.head.name) && quantifiedVars.contains(args.last.name))
         	{
-        	  //insert ALL in autoConst at pred#idx
-        	  autoConst("%s#%s".format(pred.name, idx))._2 ++= allConstants(args(idx).name.substring(0, 2));
+        	  None; // do nothing
         	}
         	else
         	{
-        	  //insert args(idx).name in autoConst at pred#idx
-        	  autoConst("%s#%s".format(pred.name, idx))._2 += args(idx).name;
+        	  if(first) //add constants only in the first iteration
+        	  {
+        	    autoConst("%s#%s#%s".format(pred.name, args.indices.head, args.indices.last))._3  += ((
+        	      if(quantifiedVars.contains(args.head.name)) "any" else args.head.name, 
+        	      if(quantifiedVars.contains(args.last.name)) "any" else args.last.name))
+        	  }
         	}
-        })
-        case _ => e.visit(findConsts, (x:List[Any])=> 0)
+        	Set((args.head.name, args.last.name, "%s#%s#%s".format(pred.name, args.indices.head, args.indices.last)));
+       	case _ => e.visit(findConstVarsQuantif, (x:List[Set[(String, String, String)]])=> x.reduce( _ ++ _))
       }
   }
   
   //assume all inference rules are of the form  Univ LHS conjunctions => RHS conjunctions
-  private def findArrows(e: FolExpression) : List[(String, String)] =
+  private def findArrowsIR(e: FolExpression) : Set[(String, String, String)] =
   {
 	  e match 
       {
-      	case FolAllExpression(v, term) => findArrows(term);
+      	case FolAllExpression(v, term) => quantifiedVars += v.name; findArrowsIR(term);
+      	case FolExistsExpression(v, term) => quantifiedVars += v.name; findArrowsIR(term);      	
       	case FolIfExpression(lhs, rhs) =>  {
-      		val lhsVars = findArrows(lhs);
-      		val rhsVars = findArrows(rhs)
-   			rhsVars.foreach(rhsVar => {
+      		val lhsVars = findArrowsIR(lhs);
+      		val rhsVars = findArrowsIR(rhs)
+   			rhsVars.foreach(rhsVar => propagate(lhsVars, rhsVar));
+      		/*
+   			{
    				var lhsMatchedVars: scala.collection.mutable.Set[String] = scala.collection.mutable.Set();
    				lhsVars.foreach(lhsVar => {
-      				if(lhsVar._1 == rhsVar._1)
-      				{
-      				  if(lhsVar._2 != rhsVar._2) // do not add self-loops
-      					  lhsMatchedVars += lhsVar._2
-      				}
+   					if(lhsVar._3 != rhsVar._3) // do not add self-loops
+   					{
+   					  if (!(Set(lhsVar._1, lhsVar._2) & Set(rhsVar._1, rhsVar._2)).isEmpty) //there is variables overlap
+   					    lhsMatchedVars += lhsVar._3
+   					}
       			})
       			if (!lhsMatchedVars.isEmpty)
-      				arrows += ((lhsMatchedVars.toSet, rhsVar._2))
+      				propagate (lhsMatchedVars.toSet, rhsVar._2);
+      			/*  //No need for this case anymore because it can not happen 
       			else
       			{
       			  //RHS variable is not bounded with a LHS variable. 
@@ -194,14 +287,13 @@ class AutoTypingPTP(
       			  //It is removed
       			  val t = autoConst(rhsVar._2)._1;
       			  autoConst(rhsVar._2)._2 ++= allConstants(t);      			  
-      			}
-      		})
-      		List();
+      			}*/
+      		})*/
+      		Set();
       	}
-      	case FolAtom(pred, args @ _*) => args.indices.map(idx =>{
-        	  (args(idx).name , "%s#%s".format(pred.name, idx));
-        }).toList;
-      	case _ => e.visit(findArrows, (x:List[List[(String, String)]])=> x.reduce( _ ++ _))
+      	case FolAtom(pred, args @ _*) => 
+      	  Set((args.head.name, args.last.name, "%s#%s#%s".format(pred.name, args.indices.head, args.indices.last)));
+      	case _ => e.visit(findArrowsIR, (x:List[Set[(String, String, String)]])=> x.reduce( _ ++ _))
       }
   }
 }
