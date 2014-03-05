@@ -75,39 +75,47 @@ Entry point for running the system on Condor is the script
 
 The script provides the following functionalities: 
 
-* Get status of Condor jobs
+* Get status of Condor jobs. ARGS are passed to condor_q
 
-   ~/mln-semantics$ bin/condor.sh  status
+   ~/mln-semantics$ bin/condor  status  ARGS
 
 *  Remove all submitted Condor jobs
 
-	~/mln-semantics$ bin/condor.sh  remove
+	~/mln-semantics$ bin/condor  remove
 
-* Submit new jobs to Condor. EXP_DIR_PREFIX: is the prefix of the directory used to store output from condor. For example, if EXP_DIR_PREFIX is "output/test", the directory will be "output/test.exp/". STEP is number of pairs per job. ARGS are the usual arguments you want to pass to bin/mlnsem (execluding the leading "run" and the range argument). Output files are saved in mln-semantics/EXP_DIR_PREFIX.exp/. Be careful, consecutive submissions of tasks with the same EXP_DIR_PREFIX  will overwrite each others. The file: mln-semantics/EXP_DIR_PREFIX.exp/config contains the command line arguments passed to the condor script. 
+* Submit new jobs to Condor. EXP_DIR: is the directory used to store output from condor. STEP is number of pairs per job. ARGS are the usual arguments you want to pass to bin/mlnsem (execluding the leading "run" and the range argument), and execluding "task" that the script picks automatically based on the dataset. Output files are saved in mln-semantics/EXP_DIR/. Be careful, consecutive submissions of tasks with the same EXP_DIR  will overwrite each others. The file: mln-semantics/EXP_DIR/config contains the command line arguments passed to the condor script. 
 
-	~/mln-semantics$ bin/condor.sh submit EXP_DIR_PREFIX STEP ARGS 
+	~/mln-semantics$ bin/condor submit EXP_DIR STEP ARGS 
 
-for example: submit the sick-sts  dataset to condor. Output from condor will be saved in condor/firstExp.exp/ .  Each Condor job contains 10 pairs of sentences. Run each pair for 30 seconds, and do not print any log. Use PSL and for the STS task 
+for example: submit the sick-sts  dataset to condor. Output from condor will be saved in condor/firstExp/ .  Each Condor job contains 10 pairs of sentences. Run each pair for 30 seconds, and do not print any log. Use PSL for the STS task 
 
-	~/mln-semantics$ bin/condor.sh submit condor/firstExp 10 sick-sts -task sts -softLogic psl -timeout 30000 -log OFF 
+	~/mln-semantics$ bin/condor submit condor/firstExp 10 sick-sts -task sts -softLogic psl -timeout 30000 -log OFF 
+
+It is actually simpler, because default values are set to make condor experiments easier depending on the dataset, so the command above can be
+
+   ~/mln-semantics$ bin/condor submit condor/firstExp 10 sick-sts
+
 
 * Prints a list of the tasks without submitting anything. This is helpful to check the number of tasks and arguments before submitting the tasks.
 
-	~/mln-semantics$ bin/condor.sh print EXP_DIR_PREFIX STEP ARGS
+	~/mln-semantics$ bin/condor print EXP_DIR STEP ARGS
 
-* In some cases (for reasons I do not understand) some condor tasks break without notice. Calling the condor script with the argument "fix" checks all output files and make sure that all condor tasks terminated correctly. If some of them did not, resubmit them again. Do not call "fix" while some taks are already running . Make sure to use the same EXP_DIR_PREFIX. STEP and ARGS will be read from the "config" file
+* In some cases (for reasons I do not understand) some condor tasks break without notice. Calling the condor script with the argument "fix" checks all output files and make sure that all condor tasks terminated correctly. If some of them did not, resubmit them again. Do not call "fix" while some taks are already running . Make sure to use the same EXP_DIR. STEP and ARGS will be read from the "config" file
 
-   ~/mln-semantics$ bin/condor.sh fix EXP_DIR_PREFIX
+   ~/mln-semantics$ bin/condor fix EXP_DIR
 
-* Collects results of individual tasks into one block and prints it.
+* Collects results of individual tasks into one block, prints it, and store it in EXP_DIR/result
 
-   ~/mln-semantics$ bin/condor.sh collect EXP_DIR_PREFIX
+   ~/mln-semantics$ bin/condor collect EXP_DIR
 
+* Call the weka script (explained below) with the approbriate arguments based on the experiment. Note that "collect" has to be called before "eval" because "eval" uses "collect"'s output that is saved in EXP_DIR/result
+
+   ~/mln-semantics$ bin/condor eval EXP_DIR
 
 Classification and Regression
 -----------------------------
 
-We use WEKA for classification and Regression. We use AdaBoost for classification for RTE, and Additive Regression for regression for STS. 
+We use WEKA for classification and Regression. We use SVM  for classification for RTE, and Additive Regression for regression for STS. 
 The script bin/weka.sh is to make this task easy. 
 
 The script bin/weka.sh can be called like this: 
@@ -126,13 +134,18 @@ where
 
 Example: after running the system on Condor, you can read the output using the condor script with argument "collect" as shown before. One easy way to get the classification/regression score is by piping the output from the condor scrip to the weka script as below: 
 
-	~/mln-semantics$ bin/condor.sh collect condor/firstExp  | tail -n 1  | bin/weka.sh regress resources/sick/sick-sts.gs  1 
+	~/mln-semantics$ bin/condor collect condor/firstExp  | tail -n 1  | bin/weka.sh regress resources/sick/sick-sts.gs  1 
 
-Example running on condor then regression: 
+Example running condor: 
 -------------------------------------------
 
-   ~/mln-semantics$ bin/condor.sh submit condor/firstExp 10 sick-sts -task sts -softLogic psl -timeout 30000 -log OFF
-   ~/mln-semantics$ bin/condor.sh collect condor/firstExp  | tail -n 1  | bin/weka.sh regress resources/sick/sick-sts.gs
+   ~/mln-semantics$ bin/condor submit condor/firstExp 2 sick-rte     //or could be " 10 sick-sts" for the sts dataset. No need to select timeout, task, inference tool, nor the log level, the appropriate default values are automatically picked for each dataset 
+   ~/mln-semantics$ bin/condor status     //make sure all tasks are done
+   ~/mln-semantics$ bin/condor collect  condor/firstExp   //collect and report number of errors
+   ~/mln-semantics$ bin/condor fix  condor/firstEx       //fix in case collects report errors
+   ~/mln-semantics$ bin/condor collect  condor/firstExp   //collect again after fixing it done
+   ~/mln-semantics$ bin/condor eval  condor/firstEx      //use output from collect to call weka for regression or classification depending on the dataset
+
 
 Using Boxer
 -----------
