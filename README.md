@@ -140,10 +140,15 @@ Example running condor:
 -------------------------------------------
 
    ~/mln-semantics$ bin/condor submit condor/firstExp 2 sick-rte     //or could be " 10 sick-sts" for the sts dataset. No need to select timeout, task, inference tool, nor the log level, the appropriate default values are automatically picked for each dataset 
+
    ~/mln-semantics$ bin/condor status     //make sure all tasks are done
+
    ~/mln-semantics$ bin/condor collect  condor/firstExp   //collect and report number of errors
+
    ~/mln-semantics$ bin/condor fix  condor/firstEx       //fix in case collects report errors
+
    ~/mln-semantics$ bin/condor collect  condor/firstExp   //collect again after fixing it done
+
    ~/mln-semantics$ bin/condor eval  condor/firstEx      //use output from collect to call weka for regression or classification depending on the dataset
 
 
