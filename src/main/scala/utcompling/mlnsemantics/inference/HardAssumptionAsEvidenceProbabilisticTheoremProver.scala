@@ -10,6 +10,9 @@ import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 import utcompling.mlnsemantics.run.Sts
 import scala.collection.mutable.MutableList
 import utcompling.mlnsemantics.inference.support.GoalExpression
+import scala.actors.Futures._  
+import scala.actors.threadpool.TimeoutException
+
 
 class HardAssumptionAsEvidenceProbabilisticTheoremProver(
   delegate: ProbabilisticTheoremProver[FolExpression])
@@ -23,6 +26,9 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
   private var skolemConstCounter:Int = 0; 
   private var extraUnivVars: Set[String] = null;
   
+  object PermutTimesout extends Exception { }
+
+  	  
   /**
    * Return the proof, or None if the proof failed
    */
@@ -41,31 +47,35 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
   	skolemConstCounter = 0; 
   	extraUnivVars = null;
 
-    
-    val newAssumptions:List[WeightedExpression[FolExpression]] =  if(Sts.opts.fixDCA == false) assumptions //if no-fixDCA, then do nothing
-    else //fixDCA: handle skolem functions 
-      assumptions
-        .flatMap {
-          case HardWeightedExpression(e) => {
-        	  extraUnivVars = Set();
-        	  var exp = goUniv(e, List(), List(), false);
-        	  if(Sts.opts.softLogicTool == "psl")
-        	  {
-        	    conjToEvd(exp);
-        	    List()
-        	  }
-        	  else
-        		  List(HardWeightedExpression(exp))
-          }
-          case a @ _ => List(a)
-        }
-    
-    delegate.prove(
-      newConstants,
-      newDeclarations,
-      (evidence.toSet ++ extraEvid.toSet).toList,  //toSet to remove duplicate evidences
-      newAssumptions,
-      goal)
+    try 
+    {
+	    val newAssumptions:List[WeightedExpression[FolExpression]] =  if(Sts.opts.fixDCA == false) assumptions //if no-fixDCA, then do nothing
+	    else //fixDCA: handle skolem functions 
+	      assumptions
+	        .flatMap {
+	          case HardWeightedExpression(e) => {
+	        	  extraUnivVars = Set();
+	        	  var exp = goUniv(e, List(), List(), false);
+	        	  if(Sts.opts.softLogicTool == "psl")
+	        	  {
+	        	    conjToEvd(exp);
+	        	    List()
+	        	  }
+	        	  else
+	        		  List(HardWeightedExpression(exp))
+	          }
+	          case a @ _ => List(a)
+	        }
+			println("done skolem")
+	    delegate.prove(
+	      newConstants,
+	      newDeclarations,
+	      (evidence.toSet ++ extraEvid.toSet).toList,  //toSet to remove duplicate evidences
+	      newAssumptions,
+	      goal)
+    }catch {
+      case PermutTimesout => Seq(-4.0)
+    }
     
   }
   
@@ -85,6 +95,14 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
   //generate permutations
   private def permut[A](as: List[A], k: Int): List[List[A]] = 
     (List.fill(k)(as)).flatten.combinations(k).toList
+    
+   def runWithTimeout[T](timeoutMs: Long)(f: => T) : Option[T] = {
+    awaitAll(timeoutMs, future(f)).head.asInstanceOf[Option[T]]
+  }
+
+  def runWithTimeout[T](timeoutMs: Long, default: T)(f: => T) : T = {
+    runWithTimeout(timeoutMs)(f).getOrElse(default)
+  }
     
   private def goExist(e: FolExpression, univVars: List[String], existVars: List[String], isNegated: Boolean): FolExpression =
   {
@@ -117,7 +135,11 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 	            skolemPredVarTypes = skolemPredVarTypes  ++ List((existVar.substring(0, 2)))
 	          })
 	          
-	          permut(List.range (0, maxUnivConstListLen), univVars.size).foreach(p => {
+              
+	          def genPermutes = {
+					//println ("in")
+	            permut(List.range (0, maxUnivConstListLen), univVars.size).foreach(p => {
+					//println("inner");
 	        	  var skolemEvd: FolExpression = FolVariableExpression(Variable("skolem_"+skolemFunctionsCounter));
 	        	  object AllDone extends Exception { }
 	        	  try
@@ -140,7 +162,20 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 	        	  }catch{
 	        	      case AllDone =>//do nothing
 	        	  }
-	          })
+	            })
+	          }
+				 println ("before permute");
+	          //Sts.opts.timeout match  //regardless of the timeout parameter, timeout here is always inforced to 30 seconds 
+	          //{
+	          // case Some(t) => 
+	              	val finish = runWithTimeout(30000, false) { genPermutes;  true }
+	              	if(!finish)
+	              		throw PermutTimesout
+	          //  case _ => genPermutes; 
+	          //}
+				//genPermutes;
+				println("after permute");
+	          
 	          extraUnivVars = extraUnivVars ++ existVars;  
 	          newDeclarations = newDeclarations  ++ Map(skolemPred->skolemPredVarTypes)
 	          var exp = (skolemPred->e).asInstanceOf[FolExpression];

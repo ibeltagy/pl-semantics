@@ -100,7 +100,7 @@ object Sts {
         }
 
       case Seq("box", stsFile, boxFile) =>
-        val di = new ModalDiscourseInterpreter()
+        val di = new ModalDiscourseInterpreter
         val sentences = readLines(stsFile).flatMap(_.split("\t")).map(Tokenize.separateTokens).toList
         val step = 400; //file is large. It should be partitioned before passed to the parser
         val totalSen = sentences.length;
@@ -192,7 +192,8 @@ object Sts {
 		                new SameLemmaHardClauseRuleWeighter(
 		                  new AwithCvecspaceWithSpellingSimilarityRuleWeighter(compositeVectorMaker)),
 		              new FromEntToEqvProbabilisticTheoremProver( // 6.5<== goal =  premise ^  hypothesis. This is for STS
-		               new PositiveEqEliminatingProbabilisticTheoremProver( //remove positive equalities from Text. This helps evidence generation 
+		               new GivenNotTextProbabilisticTheoremProver( // 6.6<== get p(h|t) and p(h|-t)		                  
+		                new PositiveEqEliminatingProbabilisticTheoremProver( //remove positive equalities from Text. This helps evidence generation 
 		                 new TypeConvertingPTP( // 7<== Entry point for final modifications on Boxer's representation before converting to FOL
 		                  new BoxerExpressionInterpreter[FolExpression] {
 		                    def interpret(x: BoxerExpression): FolExpression = {
@@ -210,7 +211,7 @@ object Sts {
 		                    new SetGoalPTP( //
 		                      new HardAssumptionAsEvidenceProbabilisticTheoremProver( // 15<== Generate evidence from premise.
 		                        new AutoTypingPTP(
-		                        softLogicTool))))))))))))) // 16<== run Alchemy or PSL
+		                        softLogicTool)))))))))))))) // 16<== run Alchemy or PSL
 
           val p = ttp.prove(Tokenize(txt).mkString(" "), Tokenize(hyp).mkString(" "))
           println("Some(%s) [actual: %s, gold: %s]".format(p.mkString(":"), p.map(probOfEnt2simScore).mkString(":"), goldSim))

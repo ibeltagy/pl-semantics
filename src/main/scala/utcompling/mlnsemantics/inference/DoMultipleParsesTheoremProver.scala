@@ -66,6 +66,8 @@ class DoMultipleParsesTheoremProver(
 							val result = delegate.prove(Map(), Map(), List(), List(HardWeightedExpression(assumptionParses.apply(j)._1)), goalParses.apply(i)._1)
 							if(Sts.opts.task == "sts")
 								 	assert(result.length == 2);
+							else  if (Sts.opts.task == "rte" && Sts.opts.withNegT && Sts.opts.softLogicTool != "psl")
+								assert(result.length == 2); //check GivenNotTextProbabilisticTheoremProver for details
 							else assert(result.length == 1);
 							score = score ++ result;
 							/*

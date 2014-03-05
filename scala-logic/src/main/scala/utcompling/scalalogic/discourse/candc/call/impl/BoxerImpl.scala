@@ -27,7 +27,7 @@ class BoxerImpl(override val binary: String, defaultArgs: Map[String, String] = 
 
         val defaultArgs = Map[String, String](
             "--input" -> tempFilename)
-        val stdout = this.call(None, (this.defaultArgs ++ defaultArgs ++ args).flatMap { case (k, v) => List(k, v) }.toList, false)
+        val stdout = this.call(None, (this.defaultArgs ++ defaultArgs ++ args).flatMap { case (k, v) => List(k, v) }.toList, true)
         FileUtils.remove(tempFilename)
         //return (stdout, out)
         return stdout

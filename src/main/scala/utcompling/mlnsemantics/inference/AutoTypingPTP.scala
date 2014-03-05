@@ -11,6 +11,9 @@ import utcompling.mlnsemantics.run.Sts
 import scala.collection.mutable.MutableList
 import utcompling.mlnsemantics.inference.support.GoalExpression
 import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
+import scala.actors.Futures._
+import scala.actors.threadpool.TimeoutException
+
 
 class AutoTypingPTP(
   delegate: ProbabilisticTheoremProver[FolExpression])
@@ -24,7 +27,14 @@ class AutoTypingPTP(
   private var quantifiedVars: scala.collection.mutable.Set[String] = null;
   private var repeat = true;
   private var first = true;
-  
+  def runWithTimeout[T](timeoutMs: Long)(f: => T) : Option[T] = {
+          awaitAll(timeoutMs, future(f)).head.asInstanceOf[Option[T]]
+  }
+
+  def runWithTimeout[T](timeoutMs: Long, default: T)(f: => T) : T = {
+      runWithTimeout(timeoutMs)(f).getOrElse(default)
+  }
+ 
   /**
    * Return the proof, or None if the proof failed
    */
@@ -37,12 +47,12 @@ class AutoTypingPTP(
     
     allConstants = constants;
     extraEvid = List();
-  	quantifiedVars = scala.collection.mutable.Set();
+  	 quantifiedVars = scala.collection.mutable.Set();
     autoConst = scala.collection.mutable.Map(); //predName#varIndx -> HX1, HX2 ....
     //arrows =  scala.collection.mutable.Set(); //an x -> y means all constants of x should be propagated to y
     repeat = true;
-	first = true;
-    
+	 first = true;
+    println("in auto const");
     if(Sts.opts.negativeEvd && Sts.opts.task == "rte" && (Sts.opts.softLogicTool == "mln"|| Sts.opts.softLogicTool == "ss"))
     {
 	    
@@ -60,10 +70,13 @@ class AutoTypingPTP(
 	      quantifiedVars.clear(); 
 	      findConstVarsQuantif(e);
 	    });
-		while (repeat)
+
+		def findApply = 
 		{
-			repeat = false;
-			assumptions.foreach{
+		   while (repeat)
+		   {
+				repeat = false;
+				assumptions.foreach{
 	          case HardWeightedExpression(e) => {
 	            quantifiedVars.clear(); 
 	            val vars = findConstVarsQuantif(e);
@@ -76,13 +89,25 @@ class AutoTypingPTP(
 	          }
 	          case SoftWeightedExpression(e, w) => quantifiedVars.clear(); findArrowsIR (e)
 	          case _ => ;
-	        }
-	    	first = false;
-		}//Repeat
+	         }
+	    	   first = false;
+			}//Repeat
+	      println ("after findApply");
+         genNegativeEvd(declarations);
+		}
+	
+
+		println ("before findApply");
+      val finish = runWithTimeout(30000, false) { findApply ;  true }
+
+      if(!finish)
+			return Seq(-4.0)
+      	
 	    
 	    //applyArrows();
 	    
-	    genNegativeEvd(declarations);
+	    //genNegativeEvd(declarations);
+		 println("leaving autoconst");
     }
     
     delegate.prove(
@@ -172,7 +197,7 @@ class AutoTypingPTP(
 	  
 	  var allExtraConst:Set[Seq[String]] = null; 
 		  
-	  lhs.toList.sortBy( l => -l._1.length()).foreach(lhsEntry=>{   //sorting to make predicates of multiple arguments come first. 
+	  lhs.toList.sortBy( l => -l._2.length).foreach(lhsEntry=>{   //sorting to make predicates of multiple arguments come first. 
 		  														//this is important for the intersection
 		  try 
 		  {

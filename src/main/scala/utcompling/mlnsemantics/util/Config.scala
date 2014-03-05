@@ -27,11 +27,12 @@ import org.apache.log4j.Level
 class Config(opts: Map[String, String] = Map()) {
 
   //log levels as defined by log4j
-  val loglevel = opts.get("-log").map(Level.toLevel).getOrElse(Level.DEBUG);
+  val loglevel = opts.get("-log").map(Level.toLevel).getOrElse(Level.OFF);
   
   val timeout = opts.get("-timeout") match {
-    case Some(t) => Some(t.toLong);
-    case _ => None;
+  	case Some("-1") => None;  //no timeout 
+  	case Some(t) => Some(t.toLong);
+    case _ => Some(120000L); //by default, timeout is 5 minutes
   }
 
   //-------------------------------------------Precompiled distributional phrases (like Marco Baroni's phrases)
@@ -117,72 +118,7 @@ class Config(opts: Map[String, String] = Map()) {
     case _ => 0.20;
   }
 
-  //-------------------------------------------logic and inference
-
-  val logicFormSource = opts.get("-logic") match {
-    case Some("dep") => "dep";
-    case _ => "box";
-  }
-
-  //do all the changes required to fix the problems resulting from the Domain Closure Assumption
-  val fixDCA = opts.get("-fixDCA") match {
-    case Some("false") => false;
-    case _ => true;
-  }
-
-  //if fixDCA is true, noHMinus ignores H- and set negative prior on all predicates
-  val noHMinus = opts.get("-noHMinus") match {
-    case Some("false") => false;
-    case _ => true;
-  }
   
-  //keep universal quantifiers or replace them with existentials
-  val keepUniv = opts.get("-keepUniv") match {
-    case Some("false") => false;
-    case _ => true;
-  }
-  
-  //What probabilistic logic tool to be used, PSL or MLN. NONE is a dummy inference that always returns 0. 
-  val softLogicTool = opts.get("-softLogic") match {
-    case Some("psl") => "psl"
-    case Some("none") => "none"
-    case Some("ss") => "ss"
-    case _ => "mln"
-  }
-  
-  //recover event variables and prop variables or not
-  val withEventProp = opts.get("-withEventProp") match {
-    case Some("true") => true;
-    case _ => false;
-  }
-  
-  //recover event variables and prop variables or not
- val negativeEvd = opts.get("-negativeEvd") match {
-    case Some("true") => true;
-    case _ => false;
-  }
- 
- //Enable focus grounding. It does full grounding taking 
- //wrong types into account  
- val focusGround= opts.get("-focusGround") match {
-    case Some("true") => true;
-    case _ => false;
-  }
-
-  //------------------------------------------PSL
-  //PSL grounding limit. Set it to ZERO for "no limit"
-  val groundLimit = opts.get("-groundLimit") match {
-    case Some(l) => l.toInt;
-    case _ => 10000; 
-  }
-  
-  //partial functional  constraint on the agent and patient predicates
-  val funcConst = opts.get("-funcConst") match {
-     case Some("true") => true;
-     case _ => false;
-  }
-
-
   //-------------------------------------------task
     
   //task: rte, sts
@@ -214,6 +150,85 @@ class Config(opts: Map[String, String] = Map()) {
   val scaleW = opts.get("-scaleW") match {
     case Some(s) => s.toBoolean
     case _ => true;
+  }
+
+  
+  //-------------------------------------------logic and inference
+
+  val logicFormSource = opts.get("-logic") match {
+    case Some("dep") => "dep";
+    case _ => "box";
+  }
+
+  //do all the changes required to fix the problems resulting from the Domain Closure Assumption
+  val fixDCA = opts.get("-fixDCA") match {
+    case Some("false") => false;
+    case _ => true;
+  }
+
+  //if fixDCA is true, noHMinus ignores H- and set negative prior on all predicates
+  val noHMinus = opts.get("-noHMinus") match {
+    case Some("false") => false;
+    case _ => true;
+  }
+  
+  //keep universal quantifiers or replace them with existentials
+  val keepUniv = opts.get("-keepUniv") match {
+    case Some("false") => false;
+    case _ => true;
+  }
+  
+  //What probabilistic logic tool to be used, PSL or MLN. NONE is a dummy inference that always returns 0. 
+  val softLogicTool = opts.get("-softLogic") match {
+    case Some("psl") => "psl"
+    case Some("none") => "none"
+    case Some("ss") => "ss"
+    case Some("mln") => "mln"
+    case _ => {
+      task match {
+        case "rte" => "ss"
+        case "sts" => "psl"
+        case _ => "none"
+      }
+    }
+  }
+  
+  //recover event variables and prop variables or not
+  val withEventProp = opts.get("-withEventProp") match {
+    case Some("true") => true;
+    case _ => false;
+  }
+  
+  //recover event variables and prop variables or not
+ val negativeEvd = opts.get("-negativeEvd") match {
+    case Some("false") => false;
+    case _ => true;
+  }
+
+ //in RTE, find p(h|t) and p(h|-t) to help classify E,N,C
+ val withNegT = opts.get("-withNegT") match {
+    case Some("false") => false;
+    case _ => true;
+  } 
+ 
+ //Enable focus grounding. It does full grounding taking 
+ //wrong types into account  
+ val focusGround= opts.get("-focusGround") match {
+    case Some("false") => false;
+    case _ => true;
+  }
+
+  //------------------------------------------PSL
+  //PSL grounding limit. Set it to ZERO for "no limit"
+  val groundLimit = opts.get("-groundLimit") match {
+    case Some(l) => l.toInt;
+    case _ => 10000; 
+  }
+  
+  //partial functional  constraint on the agent and patient predicates
+  val funcConst = opts.get("-funcConst") match {
+     case Some("true") => true;
+     case _ => false;
   }
 
   //-------------------------------------------multiple parses

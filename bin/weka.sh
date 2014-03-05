@@ -1,5 +1,6 @@
 read line
 wekaJarPath="/u/beltagy/workspace/deft/weka/weka.jar"
+libsvmPath="/u/beltagy/wekafiles/packages/LibSVM/lib/libsvm.jar:/u/beltagy/wekafiles/packages/LibSVM/LibSVM.jar"
 act=$line
 CMD=$1
 gs=$2
@@ -10,7 +11,7 @@ size=5000
 count=0
 
 if [ -z "$columns" ] || [ "$columns" -le "0" ]; then
-	columns=1
+	columns=2 #sts has two columns, rte also two columns
 fi
 
 #case $CMD in
@@ -106,14 +107,16 @@ esac
 
    case $CMD in
       classify)
-         result=$(java -Xmx1024m -cp $wekaJarPath weka.classifiers.meta.AdaBoostM1 -i $testCV  )
+#        result=$(java -Xmx1024m -cp $wekaJarPath weka.classifiers.meta.AdaBoostM1 -i $testCV  )
+         java -Xmx1024m -cp $wekaJarPath:$libsvmPath weka.Run -no-scan -no-load  weka.classifiers.functions.LibSVM -i $testCV 
+
          ;;
       regress)  
-			result=$(java -Xmx1024m -cp $wekaJarPath weka.classifiers.meta.AdditiveRegression -i $testCV  -S 0.95 -I 10 -W weka.classifiers.rules.M5Rules )
+			java -Xmx1024m -cp $wekaJarPath weka.classifiers.meta.AdditiveRegression -i $testCV  -S 0.95 -I 10 -W weka.classifiers.rules.M5Rules
 #			echo "$result"
-#         result=$(java -Xmx1024m -cp $wekaJarPath weka.classifiers.functions.MultilayerPerceptron -i $testCV   )
+#        result=$(java -Xmx1024m -cp $wekaJarPath weka.classifiers.functions.MultilayerPerceptron -i $testCV   )
          ;;
    esac
-	
-	echo "$result"
+
+   #echo "$result"
 	echo "----------------------------------------------------------------------------------------------------------"
