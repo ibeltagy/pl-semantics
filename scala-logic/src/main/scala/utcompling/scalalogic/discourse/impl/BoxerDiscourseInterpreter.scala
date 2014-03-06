@@ -32,13 +32,19 @@ class BoxerDiscourseInterpreter[T](
   override def batchInterpretMultisentence(inputs: List[List[String]], discourseIds: Option[List[String]] = None, question: Boolean = false, verbose: Boolean = false): List[Option[T]] = {
     val newDiscourseIds = discourseIds.getOrElse((0 until inputs.length).map(_.toString).toList)
     require(inputs.length == newDiscourseIds.length)
-
+/*
+    val candcDependencyParseArgs = Map[String, String](
+      "--candc-printer" -> "deps",	
+      "--candc-parser-kbest" -> kbest.toString(),
+      "--candc-int-betas" -> "0.075 0.03 0.01 0.005 0.001")
+    val candcDependencyParseOut = this.candc.batchParseMultisentence(inputs, candcDependencyParseArgs.toMap, Some(newDiscourseIds), Some(if (question) "questions" else "boxer"), verbose = verbose)
+    println(candcDependencyParseOut)
+  */  
     val candcArgs = Map[String, String](
       "--candc-printer" -> "boxer",	
       "--candc-parser-kbest" -> kbest.toString(),
       "--candc-int-betas" -> "0.075 0.03 0.01 0.005 0.001")
     val candcOut = this.candc.batchParseMultisentence(inputs, candcArgs.toMap, Some(newDiscourseIds), Some(if (question) "questions" else "boxer"), verbose = verbose)
-    //println(candcOut)
     
     val boxerArgs = Map[String, String](
       "--box" -> "false",
@@ -74,7 +80,7 @@ class BoxerDiscourseInterpreter[T](
     val IdLineRe = """^id\((\S+),\s*(\d+)\)\.$""".r
     val SemLineRe = """^sem\((\d+),$""".r
     for (line <- lines.map(_.trim)) {
-      println(line)
+      //println(line)
       line match {
         case IdLineRe(discourseIdWithScore, drsId) =>
           //lines.next.trim match { case SemLineRe(drsId2) => require(drsId == drsId2, "%s != %s".format(drsId, drsId2)) }

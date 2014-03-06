@@ -80,8 +80,14 @@ class SampleSearchTheoremProver
   			}
   			else
   			{
-	  			val score = results(0).toDouble;
-	  			Seq(score);
+	  			try 
+	  			{
+	  				val score = results(0).toDouble;
+	  				Seq(score);
+	  			}catch {
+	  			  case e: Exception => LOG.error("result file is corrupted");
+	  			  Seq(-1.0);
+	  			}
   			}
 	      }
 	      case -3 => Seq(-3.0); 

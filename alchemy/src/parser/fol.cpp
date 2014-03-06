@@ -403,13 +403,13 @@ static const unsigned short int yyrline[] =
      972,   981,   989,   998,  1010,  1019,  1034,  1038,  1037,  1048,
     1051,  1059,  1063,  1062,  1082,  1081,  1100,  1099,  1114,  1114,
     1118,  1117,  1130,  1129,  1142,  1141,  1153,  1152,  1164,  1166,
-    1172,  1164,  1183,  1182,  1198,  1206,  1219,  1221,  1219,  1228,
-    1232,  1259,  1258,  1291,  1310,  1291,  1476,  1496,  1495,  1663,
-    1677,  1691,  1708,  1725,  1738,  1761,  1763,  1780,  1778,  1789,
-    1817,  1827,  1839,  1854,  1860,  1871,  2068,  2104,  2067,  2188,
-    2187,  2272,  2281,  2290,  2299,  2308,  2320,  2319,  2336,  2335,
-    2350,  2352,  2357,  2387,  2356,  2406,  2412,  2418,  2448,  2454,
-    2465,  2471,  2405,  2485
+    1172,  1164,  1183,  1182,  1203,  1211,  1224,  1226,  1224,  1233,
+    1237,  1264,  1263,  1296,  1315,  1296,  1481,  1501,  1500,  1668,
+    1682,  1696,  1713,  1730,  1743,  1766,  1768,  1785,  1783,  1794,
+    1822,  1832,  1844,  1859,  1865,  1876,  2073,  2109,  2072,  2193,
+    2192,  2277,  2286,  2295,  2304,  2313,  2325,  2324,  2341,  2340,
+    2355,  2357,  2362,  2392,  2361,  2411,  2417,  2423,  2453,  2459,
+    2470,  2476,  2410,  2490
 };
 #endif
 
@@ -2549,8 +2549,13 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
 /* Line 936 of glr.c  */
 #line 1183 "../src/parser/fol.y"
     { 
-    zzassert(!zzisNegated,"expecting !zzisNegated");
-    zzisNegated = true;
+	 if(zzisNegated)
+   	zzisNegated = false;
+    else
+      zzisNegated = true;
+
+//    zzassert(!zzisNegated,"expecting !zzisNegated");
+//    zzisNegated = true;
 
     zzconsumeToken(zztokenList,"!");
     if (folDbg >= 1) printf("! "); 
@@ -2562,14 +2567,14 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 133:
 
 /* Line 936 of glr.c  */
-#line 1193 "../src/parser/fol.y"
+#line 1198 "../src/parser/fol.y"
     { zzcreateListObjFromTop(zzformulaListObjs, "!"); }
     break;
 
   case 134:
 
 /* Line 936 of glr.c  */
-#line 1199 "../src/parser/fol.y"
+#line 1204 "../src/parser/fol.y"
     { 
     const char* fa = zztokenList.removeLast();
     if (folDbg >= 1) printf("FORALL ");
@@ -2582,7 +2587,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 135:
 
 /* Line 936 of glr.c  */
-#line 1207 "../src/parser/fol.y"
+#line 1212 "../src/parser/fol.y"
     { 
     const char* ex = zztokenList.removeLast();
     if (folDbg >= 1) printf("EXIST "); 
@@ -2595,14 +2600,14 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 136:
 
 /* Line 936 of glr.c  */
-#line 1219 "../src/parser/fol.y"
+#line 1224 "../src/parser/fol.y"
     { if (folDbg >= 2) printf("variables: variables\n"); }
     break;
 
   case 137:
 
 /* Line 936 of glr.c  */
-#line 1221 "../src/parser/fol.y"
+#line 1226 "../src/parser/fol.y"
     {  
     zzconsumeToken(zztokenList,",");
     if (folDbg >= 1) printf(", "); 
@@ -2613,14 +2618,14 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 139:
 
 /* Line 936 of glr.c  */
-#line 1228 "../src/parser/fol.y"
+#line 1233 "../src/parser/fol.y"
     { zzformulaStr.append(" "); }
     break;
 
   case 140:
 
 /* Line 936 of glr.c  */
-#line 1233 "../src/parser/fol.y"
+#line 1238 "../src/parser/fol.y"
     {
   const char* varName = zztokenList.removeLast();  
   if (folDbg >= 1) printf("v_%s ", varName); 
@@ -2647,7 +2652,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 141:
 
 /* Line 936 of glr.c  */
-#line 1259 "../src/parser/fol.y"
+#line 1264 "../src/parser/fol.y"
     {
     const char* predName = zztokenList.removeLast();
     if (folDbg >= 1) printf("p_%s ", predName); 
@@ -2682,7 +2687,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 143:
 
 /* Line 936 of glr.c  */
-#line 1291 "../src/parser/fol.y"
+#line 1296 "../src/parser/fol.y"
     {
     ++zzfdnumPreds;
     //zzfdisEqualPred = true;
@@ -2705,7 +2710,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 144:
 
 /* Line 936 of glr.c  */
-#line 1310 "../src/parser/fol.y"
+#line 1315 "../src/parser/fol.y"
     {
   	ListObj* predlo = zzpredFuncListObjs.top();
     predlo->replace(PredicateTemplate::EMPTY_NAME, zzinfixPredName);
@@ -2729,7 +2734,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 145:
 
 /* Line 936 of glr.c  */
-#line 1329 "../src/parser/fol.y"
+#line 1334 "../src/parser/fol.y"
     {  
     ListObj* predlo = zzpredFuncListObjs.top();
     //predlo->replace(PredicateTemplate::EMPTY_NAME, zzinfixPredName);
@@ -2878,7 +2883,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 146:
 
 /* Line 936 of glr.c  */
-#line 1476 "../src/parser/fol.y"
+#line 1481 "../src/parser/fol.y"
     {
 	// Add the one constant for propositional case
     const char* constName = Domain::PROPOSITIONAL_CONSTANT;
@@ -2902,7 +2907,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 147:
 
 /* Line 936 of glr.c  */
-#line 1496 "../src/parser/fol.y"
+#line 1501 "../src/parser/fol.y"
     {  
     zzconsumeToken(zztokenList, "(");
     if (folDbg >= 1) printf("( "); 
@@ -2915,7 +2920,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 148:
 
 /* Line 936 of glr.c  */
-#line 1505 "../src/parser/fol.y"
+#line 1510 "../src/parser/fol.y"
     {  
     zzconsumeToken(zztokenList, ")");
     if (folDbg >= 1) printf(") "); 
@@ -3076,7 +3081,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 149:
 
 /* Line 936 of glr.c  */
-#line 1664 "../src/parser/fol.y"
+#line 1669 "../src/parser/fol.y"
     {
   	zzconsumeToken(zztokenList, ">");
     if (folDbg >= 1) printf("> "); 
@@ -3094,7 +3099,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 150:
 
 /* Line 936 of glr.c  */
-#line 1678 "../src/parser/fol.y"
+#line 1683 "../src/parser/fol.y"
     {
    	zzconsumeToken(zztokenList, "<");
     if (folDbg >= 1) printf("< "); 
@@ -3112,7 +3117,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 151:
 
 /* Line 936 of glr.c  */
-#line 1692 "../src/parser/fol.y"
+#line 1697 "../src/parser/fol.y"
     {
   	zzconsumeToken(zztokenList, ">");
     if (folDbg >= 1) printf(">");
@@ -3133,7 +3138,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 152:
 
 /* Line 936 of glr.c  */
-#line 1709 "../src/parser/fol.y"
+#line 1714 "../src/parser/fol.y"
     {
 	zzconsumeToken(zztokenList, "<");
     if (folDbg >= 1) printf("<");
@@ -3154,7 +3159,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 153:
 
 /* Line 936 of glr.c  */
-#line 1726 "../src/parser/fol.y"
+#line 1731 "../src/parser/fol.y"
     {
   	zzconsumeToken(zztokenList, "=");
     if (folDbg >= 1) printf("= "); 
@@ -3171,7 +3176,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 154:
 
 /* Line 936 of glr.c  */
-#line 1739 "../src/parser/fol.y"
+#line 1744 "../src/parser/fol.y"
     {
   	zzconsumeToken(zztokenList, "!");
   	zzconsumeToken(zztokenList, "=");
@@ -3196,7 +3201,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 156:
 
 /* Line 936 of glr.c  */
-#line 1764 "../src/parser/fol.y"
+#line 1769 "../src/parser/fol.y"
     { 
     zzconsumeToken(zztokenList, "*");
     if (folDbg >= 1) printf("* "); 
@@ -3211,7 +3216,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 157:
 
 /* Line 936 of glr.c  */
-#line 1780 "../src/parser/fol.y"
+#line 1785 "../src/parser/fol.y"
     {  
     zzconsumeToken(zztokenList, ",");
     if (folDbg >= 1) printf(", "); 
@@ -3224,7 +3229,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 159:
 
 /* Line 936 of glr.c  */
-#line 1790 "../src/parser/fol.y"
+#line 1795 "../src/parser/fol.y"
     {
   	// After the first term in an internal pred., check if we can determine type
   	if (zzpred && zzpred->isEmptyPred() &&
@@ -3253,7 +3258,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 160:
 
 /* Line 936 of glr.c  */
-#line 1818 "../src/parser/fol.y"
+#line 1823 "../src/parser/fol.y"
     {
     const char* constName = zztokenList.removeLast();
     if (folDbg >= 1) printf("c2_%s ", constName); 
@@ -3267,7 +3272,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 161:
 
 /* Line 936 of glr.c  */
-#line 1828 "../src/parser/fol.y"
+#line 1833 "../src/parser/fol.y"
     {
     const char* constName = zztokenList.removeLast();
     if (folDbg >= 1) printf("c2_%s ", constName); 
@@ -3283,7 +3288,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 162:
 
 /* Line 936 of glr.c  */
-#line 1840 "../src/parser/fol.y"
+#line 1845 "../src/parser/fol.y"
     {
     const char* intStr = zztokenList.removeLast();
     if (folDbg >= 1) printf("c3_%s ", intStr);
@@ -3302,7 +3307,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 163:
 
 /* Line 936 of glr.c  */
-#line 1855 "../src/parser/fol.y"
+#line 1860 "../src/parser/fol.y"
     {
     zztermIsVariable(folDbg);
     if (zzisPlus) zzisPlus = false;
@@ -3312,7 +3317,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 164:
 
 /* Line 936 of glr.c  */
-#line 1861 "../src/parser/fol.y"
+#line 1866 "../src/parser/fol.y"
     {
     zzconsumeToken(zztokenList, "+");
     if (folDbg >= 1) printf("+ "); 
@@ -3327,7 +3332,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 165:
 
 /* Line 936 of glr.c  */
-#line 1872 "../src/parser/fol.y"
+#line 1877 "../src/parser/fol.y"
     {
     zzassert(zzfunc != NULL,"expecting zzfunc != NULL");
     zzcheckFuncNumTerm(zzfunc);
@@ -3524,7 +3529,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 166:
 
 /* Line 936 of glr.c  */
-#line 2068 "../src/parser/fol.y"
+#line 2073 "../src/parser/fol.y"
     {
     const char* funcName = zztokenList.removeLast();
     if (folDbg >= 1) printf("f_%s ", funcName);
@@ -3565,7 +3570,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 167:
 
 /* Line 936 of glr.c  */
-#line 2104 "../src/parser/fol.y"
+#line 2109 "../src/parser/fol.y"
     {
     zzconsumeToken(zztokenList, "(");
     if (folDbg >= 1) printf("( "); 
@@ -3576,7 +3581,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 168:
 
 /* Line 936 of glr.c  */
-#line 2110 "../src/parser/fol.y"
+#line 2115 "../src/parser/fol.y"
     {
   	  //If an internal func., then need to determine type
 	if (zzinfixFuncName)
@@ -3658,7 +3663,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 169:
 
 /* Line 936 of glr.c  */
-#line 2188 "../src/parser/fol.y"
+#line 2193 "../src/parser/fol.y"
     {
       // Create a function corresponding to the infix sign
     if (zzfunc != NULL) { zzfuncStack.push(zzfunc); zzfunc = NULL; }
@@ -3686,7 +3691,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 170:
 
 /* Line 936 of glr.c  */
-#line 2211 "../src/parser/fol.y"
+#line 2216 "../src/parser/fol.y"
     {
     ListObj* funclo = zzpredFuncListObjs.top();
 
@@ -3750,7 +3755,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 171:
 
 /* Line 936 of glr.c  */
-#line 2273 "../src/parser/fol.y"
+#line 2278 "../src/parser/fol.y"
     {
     zzconsumeToken(zztokenList, "+");
     if (folDbg >= 1) printf("+ "); 
@@ -3763,7 +3768,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 172:
 
 /* Line 936 of glr.c  */
-#line 2282 "../src/parser/fol.y"
+#line 2287 "../src/parser/fol.y"
     {
    	zzconsumeToken(zztokenList, "-");
     if (folDbg >= 1) printf("- "); 
@@ -3776,7 +3781,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 173:
 
 /* Line 936 of glr.c  */
-#line 2291 "../src/parser/fol.y"
+#line 2296 "../src/parser/fol.y"
     {
   	zzconsumeToken(zztokenList, "*");
     if (folDbg >= 1) printf("* ");
@@ -3789,7 +3794,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 174:
 
 /* Line 936 of glr.c  */
-#line 2300 "../src/parser/fol.y"
+#line 2305 "../src/parser/fol.y"
     {
 	zzconsumeToken(zztokenList, "/");
     if (folDbg >= 1) printf("/ ");
@@ -3802,7 +3807,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 175:
 
 /* Line 936 of glr.c  */
-#line 2309 "../src/parser/fol.y"
+#line 2314 "../src/parser/fol.y"
     {
   	zzconsumeToken(zztokenList, "%");
     if (folDbg >= 1) printf("%% ");
@@ -3815,7 +3820,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 176:
 
 /* Line 936 of glr.c  */
-#line 2320 "../src/parser/fol.y"
+#line 2325 "../src/parser/fol.y"
     { 
       // Square Brackets
     zzconsumeToken(zztokenList,"["); 
@@ -3828,7 +3833,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 177:
 
 /* Line 936 of glr.c  */
-#line 2329 "../src/parser/fol.y"
+#line 2334 "../src/parser/fol.y"
     { 
     zzconsumeToken(zztokenList,"]"); 
     if (folDbg >= 1) printf("] "); 
@@ -3839,7 +3844,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 178:
 
 /* Line 936 of glr.c  */
-#line 2336 "../src/parser/fol.y"
+#line 2341 "../src/parser/fol.y"
     { 
     zzconsumeToken(zztokenList,"("); 
     if (folDbg >= 1) printf("( "); 
@@ -3851,7 +3856,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 179:
 
 /* Line 936 of glr.c  */
-#line 2344 "../src/parser/fol.y"
+#line 2349 "../src/parser/fol.y"
     { 
     zzconsumeToken(zztokenList,")"); 
     if (folDbg >= 1) printf(") "); 
@@ -3862,7 +3867,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 182:
 
 /* Line 936 of glr.c  */
-#line 2357 "../src/parser/fol.y"
+#line 2362 "../src/parser/fol.y"
     {
     const char* predName = zztokenList.removeLast();
     if (folDbg >= 1) printf("p_%s ", predName); 
@@ -3896,7 +3901,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 183:
 
 /* Line 936 of glr.c  */
-#line 2387 "../src/parser/fol.y"
+#line 2392 "../src/parser/fol.y"
     {
     zzconsumeToken(zztokenList,"="); 
     if (folDbg >= 1) printf("= "); 
@@ -3908,7 +3913,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 184:
 
 /* Line 936 of glr.c  */
-#line 2394 "../src/parser/fol.y"
+#line 2399 "../src/parser/fol.y"
     {
   	const char* tmp = zztokenList.removeLast();
   	//zztmpReturnConstant = (char *)malloc((strlen(tmp) + 1)*sizeof(char));
@@ -3924,7 +3929,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 185:
 
 /* Line 936 of glr.c  */
-#line 2406 "../src/parser/fol.y"
+#line 2411 "../src/parser/fol.y"
     {
     zzconsumeToken(zztokenList,"-");
     if (folDbg >= 1) printf("-"); 
@@ -3935,7 +3940,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 186:
 
 /* Line 936 of glr.c  */
-#line 2412 "../src/parser/fol.y"
+#line 2417 "../src/parser/fol.y"
     {
     zzconsumeToken(zztokenList,"("); 
     if (folDbg >= 1) printf("("); 
@@ -3946,7 +3951,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 187:
 
 /* Line 936 of glr.c  */
-#line 2418 "../src/parser/fol.y"
+#line 2423 "../src/parser/fol.y"
     {
     const char* predName = zztokenList.removeLast();
     if (folDbg >= 1) printf("p_%s ", predName); 
@@ -3980,7 +3985,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 188:
 
 /* Line 936 of glr.c  */
-#line 2448 "../src/parser/fol.y"
+#line 2453 "../src/parser/fol.y"
     { 
     zzconsumeToken(zztokenList,"-"); 
     if (folDbg >= 1) printf("- "); 
@@ -3991,7 +3996,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 189:
 
 /* Line 936 of glr.c  */
-#line 2454 "../src/parser/fol.y"
+#line 2459 "../src/parser/fol.y"
     {
   	const char* tmp = zztokenList.removeLast();
   	//zztmpReturnConstant = (char *)malloc((strlen(tmp) + 1)*sizeof(char));
@@ -4007,7 +4012,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 190:
 
 /* Line 936 of glr.c  */
-#line 2465 "../src/parser/fol.y"
+#line 2470 "../src/parser/fol.y"
     {
     zzconsumeToken(zztokenList,")");
     if (folDbg >= 1) printf(")"); 
@@ -4018,7 +4023,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 191:
 
 /* Line 936 of glr.c  */
-#line 2471 "../src/parser/fol.y"
+#line 2476 "../src/parser/fol.y"
     {
     zzconsumeToken(zztokenList,"^"); 
     if (folDbg >= 1) printf("^"); 
@@ -4029,7 +4034,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 192:
 
 /* Line 936 of glr.c  */
-#line 2477 "../src/parser/fol.y"
+#line 2482 "../src/parser/fol.y"
     {
     zzconsumeToken(zztokenList,"2"); 
     if (folDbg >= 1) printf("2"); 
@@ -4040,7 +4045,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
   case 193:
 
 /* Line 936 of glr.c  */
-#line 2486 "../src/parser/fol.y"
+#line 2491 "../src/parser/fol.y"
     {
   }
     break;
@@ -4048,7 +4053,7 @@ yyuserAction (yyRuleNum yyn, int yyrhslen, yyGLRStackItem* yyvsp,
 
 
 /* Line 936 of glr.c  */
-#line 4052 "fol.cpp"
+#line 4057 "fol.cpp"
       default: break;
     }
 
@@ -5705,7 +5710,7 @@ yypdumpstack (yyGLRStack* yystackp)
 
 
 /* Line 2659 of glr.c  */
-#line 2490 "../src/parser/fol.y"
+#line 2495 "../src/parser/fol.y"
 
 
 /******************* function definitions ****************************/

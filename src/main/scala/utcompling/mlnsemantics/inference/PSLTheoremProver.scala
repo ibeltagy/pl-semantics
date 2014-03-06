@@ -182,7 +182,7 @@ class PSLTheoremProver(
 
 	 if(Sts.opts.task == "rte")
 	 {
-			return Seq(lineToScore(entailmentLine));
+			return Seq(lineToScore(entailmentHLine));
 
 		/*		if (entailmentLine == "")
 				  return 0;
@@ -269,6 +269,8 @@ class PSLTheoremProver(
 			case (pred, varTypes) => {
 				//pslFile.write("m.add predicate: \"%s\", %s open: true;\n".format(pred, varTypes.indices.map("arg" + _+": Entity, ").mkString(""))) 
 			  pslFile.write("predicate,%s,%s\n".format(pred, varTypes.length))
+			  if((pred.contains("agent")||pred.contains("patient"))&& Sts.opts.funcConst)
+				  pslFile.write("constraint,%s\n".format(pred))
 			}
     	}
        //=================Priors
@@ -307,9 +309,9 @@ class PSLTheoremProver(
 	          {	        	  	            
 	        	  if(weight == Double.PositiveInfinity)
 	        	    //pslFile.write("rule,avg,%s\n".format(convert(universalifyGoalFormula(breakVariableBinding(first) -> entailmentConsequent_h)))) //normal anding
-	        		  pslFile.write("rule,avg,%s\n".format(convert(folExp))) //normal anding
+	        		  pslFile.write("rule,avg,%s,inf\n".format(convert(folExp))) //normal anding
 	        	  else
-	        		  pslFile.write("rule,and,entailment_h()&entailment_t()>>entailment()\n");
+	        		  pslFile.write("rule,and,entailment_h()&entailment_t()>>entailment(),inf\n");
 	        	     
 	          }
 	          case SoftWeightedExpression(folExp, weight) =>
@@ -353,7 +355,7 @@ class PSLTheoremProver(
 		            	  })
 		            	  val rhsString = convert(rhsAnd)
 		            	  //pslFile.writeLine("m.add rule: (%s & sim(\"%s\", \"%s\")) >> %s, constraint: true;"
-		            	  pslFile.write("rule,and,%s&sim(\"%s\",\"%s\")>>%s\n"
+		            	  pslFile.write("rule,and,%s&sim(\"%s\",\"%s\")>>%s,1\n"
 		            	      //.format(extendedLhsString, lastSimilarityID.toString(), "", rhsString))
 		            	      //.format(extendedLhsString, lhsSimString, rhsSimString, rhsString))
 		            	      .format(extendedLhsString, "%.3f".format(usedWeight), "", rhsString))

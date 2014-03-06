@@ -1181,8 +1181,13 @@ sentence:
 | 
   '!'  // '!' sentence
   { 
-    zzassert(!zzisNegated,"expecting !zzisNegated");
-    zzisNegated = true;
+	 if(zzisNegated)
+   	zzisNegated = false;
+    else
+      zzisNegated = true;
+
+//    zzassert(!zzisNegated,"expecting !zzisNegated");
+//    zzisNegated = true;
 
     zzconsumeToken(zztokenList,"!");
     if (folDbg >= 1) printf("! "); 

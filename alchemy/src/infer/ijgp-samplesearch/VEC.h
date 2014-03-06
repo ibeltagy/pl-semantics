@@ -195,7 +195,8 @@ cout << "in vec det" << endl;
 		}
 		cerr << "Explored = " << log10_explored << "out of " << log10_numvalue << endl;
 		long double log10_factor = log10_numvalue - log10_explored;
-		out << log10(pe * gm.mult_factor.value()) + log10_factor << endl;
+		//out << log10(pe * gm.mult_factor.value()) + log10_factor << endl;
+		out << pe * gm.mult_factor.value() * pow(10, log10_factor) << endl;
 		cerr << log10(pe * gm.mult_factor.value()) + log10_factor << endl;
 	}
 	else {
@@ -284,7 +285,8 @@ void VEC(GM& gm, vector<int>& order, vector<int>& sampling_order, clock_t& time_
 	cerr << "Explored = " << num_explored << "out of " << pow(10,log10_num_values) << endl;
 	if (has_timed_out) {
 		long double log10_factor = log10_num_values - log10(num_explored);
-		out << log10(pe * gm.mult_factor.value()) + log10_factor << endl;
+		//out << log10(pe * gm.mult_factor.value()) + log10_factor << endl;
+		out << pe * gm.mult_factor.value() * pow(10, log10_factor)  << endl;
 
 	}
 	else {

@@ -1,13 +1,47 @@
-Alchemy: 
--wierd handling of a formula like a(x)^b(y).
--wrong handling of weights: infinity + w = 10 + w
+-P(H|-T) takes forever for some examples like : 34,190,502,682,717
+--run the following and explain why hundereds of skolem_1 are generated
+alchemy/bin/infer -i /tmp/temp-3270558921426446116.mln -e /tmp/temp-3666499365217559437.db -r /tmp/temp-8210559381267654219.res -ss -maxSeconds 5 -ssq /tmp/temp-2905646586885501927.q -q entailment_h,compnay_n_dh,guy_n_dh,own_v_dh,r_patient_dh,r_agent_dh,skolem_1  -focusGround 
+
+-Add the semantic role uniqueness constraint. PSL and MLN. 
+-Semantic role uniqueness constrain added to PSL but it is not working because weight of relation predicates is zero. Fix this
+-add a negation predicate in PSL-STS. 
+-Try multiple weights between relation predicates and entities predicates 
+Make PSL works for RTE. Negation in Premise is fine. Negation in hypothesis is very wrong
+-----
+Alchemy:
+-probably I will have to generate constants in the function "propagate"
+-predicates of more than two args are possible
+-intersection of possible constats is wrong. It does not handle ANY right
+-take source of consts into acount
+-why "all birds do not fly    no bird flies" should equal 1
+-generate negative evidence also for the negated existentially quantified variables. 
+-more negative evd can be generated or a^r1^b=>c^r2^d. Arrows have conjunction. 
+-make the application of the negative evidence prior to converting to CNF. May be this can be done with some manipulation of the typing system.
+-make sure it is strict subset
+-There is a case where picking the smaller-sized type is not enough. 
+-Do not forget the typing problem when handling existential quantifier
+-in progress two exp, condor/sick-rte-ir0-noIntro and condor/sick-rte-ir0-noIntroVerylong. Both Introduction is disabled(this messes negation and universal)
+-count univ and exist to decide negate or not
+-find the rule of everything, where NotExist is treated as Univ
+-Do not forget the unicorn. It has examples in the SICK ds
+-In sample search, it is better to go back to log10. No
+-What to do with relation predicates with one univ, one exist var. Ignore it.
+-Contradicting MLNs return Z=1 but it should return Z=0
+-How to do negation in text and hypothesis ? 
+-When to negate H and when not ? (for computational efficieny). Looks like always negate
+-Parsing bug in deallocation alchemy/src/parser/listobj.h. For now, deallocation disabled
+-FIXED: Why IR changes affects p(-H) and p(H) differently ? (They do not).
+-FIXED: Why p(H) not equal 1-p(-H) ?  Beucase of bug in parsing. Bug fixed
+-FIXED: try examples 24,25,27,28 for more bugs in alchemy. Done
+-FIXED: Infinite loop in HardAssumptionAsEvidenceProbabilisticTheoremProver in example 13. 
+-FIXED: wierd handling of a formula like a(x)^b(y).
+-FIXED: wrong handling of weights: infinity + w = 10 + w
 -----------
 SampleSearch:
 -GM::reduceDomains can be better by removing functions that are always true
 -what to do with LogFunction.h
 -what to do with CPT.h
 -what to do with SF.h
-
 -------------------
 -still, there are types problems in inference rules. I will disable recovering types for the current experiments
 -paraphrase to logic

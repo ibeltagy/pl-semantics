@@ -163,6 +163,7 @@ char* asamplesearchQueryFile	= NULL;
 int asamplesearchIBound		= -1;
 int asamplesearchRbBound 	= -1;
 int asamplesearchNumItr		= -1;
+bool afocusedGrounding		= false;
 
   // Gibbs params
 double agibbsDelta           = 0.05;

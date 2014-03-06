@@ -98,7 +98,7 @@ struct GM {
 	void removeIrrelevantNetwork(vector<int>& evidence);
 	void setEvidenceBeliefsUAI08(vector<int>& evidence);
 	void reduce(int i_bound);
-	void reduceDomains();
+	bool reduceDomains();
 	//void reduceSAT(const char* satfilename);
 	//void eliminate(int i_bound);
 	void getMinFillOrdering(vector<int>& order, vector<set<int> >& clusters,

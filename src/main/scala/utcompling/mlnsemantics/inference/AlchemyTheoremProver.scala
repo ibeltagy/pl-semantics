@@ -77,12 +77,13 @@ class AlchemyTheoremProver{
     }
     f.write("\n")
 
+    /*
     evidence.foreach {
         case e @ FolAtom(pred, args @ _*) if (!pred.name.startsWith("skolem_")) => f.write (convert(e) + ".\n");
         case e @ FolAtom(pred, args @ _*) => ;
         case e @ FolNegatedExpression(FolAtom(pred, args @ _*)) => f.write (convert(e) + ".\n");
         case e => throw new RuntimeException("Only atoms or negated atoms may be evidence.  '%s' is not an atom.".format(e))
-      }
+      }*/
     
     f.write("\n//begin assumptions\n")
 
@@ -114,15 +115,17 @@ class AlchemyTheoremProver{
             	var usedWeight = min(weight, 0.999);
 	            usedWeight = max(usedWeight, 0.001);
 	            usedWeight = SetPriorPTP.predPrior + log(usedWeight) - log(1-usedWeight);
-	            if (usedWeight  > 0)
-	            {
+
+	            //include all rules even the ones with negative weights 
+	            //if (usedWeight  > 0)
+	            //{
 	              //This is a nasty hack to inverse what alchamy does when it splits a formula into smaller formulas
 	              var count = folExpString.split("=>").apply(1).count(_ == '^') + 1;
 	              if (!Sts.opts.scaleW) 
 				    count = 1;
 	              usedWeight = usedWeight * count;
 	              f.write("%.5f %s\n".format(usedWeight, folExpString))
-	            }
+	            //}
 
 	            //val usedWeight = 10 * weight // 5 * (pow(weight, 10)) //DONE: Set these parameters!!
 	            // DONE: we want to design a function `f` such that, for the simplest examples (only one weighted clause), mln(f(s)) == s
@@ -141,8 +144,9 @@ class AlchemyTheoremProver{
     val tempFile = FileUtils.mktemp(suffix = ".db")
     FileUtils.writeUsing(tempFile) { f =>
       f.write("//\n");
-      evidence.foreach {
-        case e @ FolAtom(pred, args @ _*) if (pred.name.startsWith("skolem_"))=> f.write (convert(e) + "\n");
+      evidence.sortBy(x => x.toString() ).foreach {  //sorting is just for readability
+        case e @ FolAtom(pred, args @ _*) /*if (pred.name.startsWith("skolem_")) */=> f.write (convert(e) + "\n");
+        case e @ FolNegatedExpression(a) => f.write ("!" + convert(a) + "\n");
         case e => //throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
       }
     }
@@ -159,7 +163,9 @@ class AlchemyTheoremProver{
     //val allArgs = "-bp" :: "-lifted" :: "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
     //Dunno, but it seems that MC-SAT is better
     //val allArgs = "-ptpe" :: "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
-    val allArgs = "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
+    var allArgs = "-i" :: mln :: "-e" :: evidence :: "-r" :: result :: args;
+    if(Sts.opts.focusGround)
+      allArgs = allArgs  ++  List(("-focusGround"));
     val tStart = Platform.currentTime;
 	 //println("start time %s".format(tStart));
     var caller = new SubprocessCallable(binary);
@@ -184,13 +190,13 @@ class AlchemyTheoremProver{
     	  if (outer != null && outer.isInstanceOf[FolExistsExpression])
     	    ", " + variable.name + _convert(term, bound + variable, input)
     	  else
-    		 "(exist " + variable.name + _convert(term, bound + variable, input) + ")" 
+    		 "(exist " + variable.name + " " + _convert(term, bound + variable, input) + ")" 
       }
       case FolAllExpression(variable, term) => {
        	  if (outer != null && outer.isInstanceOf[FolAllExpression])
     	    ", " + variable.name + _convert(term, bound + variable, input)
     	  else
-    		 "(forall " + variable.name + _convert(term, bound + variable, input) + ")" 
+    		 "(forall " + variable.name + " " +  _convert(term, bound + variable, input) + ")" 
       }
       case FolNegatedExpression(term) => "!(" + _convert(term, bound) + ")"
       case FolAndExpression(first, second) => "(" + _convert(first, bound) + " ^ " + _convert(second, bound) + ")"

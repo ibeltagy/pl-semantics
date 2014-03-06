@@ -10,25 +10,16 @@ import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 import utcompling.mlnsemantics.run.Sts
 import scala.collection.mutable.MutableList
 import utcompling.mlnsemantics.inference.support.GoalExpression
-import scala.actors.Futures._  
+import scala.actors.Futures._
 import scala.actors.threadpool.TimeoutException
+import utcompling.mlnsemantics.inference.support.GoalExpression
 
 
-class HardAssumptionAsEvidenceProbabilisticTheoremProver(
+class NoExistProbabilisticTheoremProver(
   delegate: ProbabilisticTheoremProver[FolExpression])
   extends ProbabilisticTheoremProver[FolExpression] {
-
-  private var newConstants: Map[String, Set[String]] = null;
-  private var oldConstants: Map[String, Set[String]] = null;
-  private var newDeclarations: Map[FolExpression, Seq[String]] = null;
-  private var extraEvid: List[FolExpression] = List();
-  private var skolemFunctionsCounter:Int = 0;
-  private var skolemConstCounter:Int = 0; 
-  private var extraUnivVars: Set[String] = null;
-  
-  object PermutTimesout extends Exception { }
-
   	  
+  object PermutTimesout extends Exception { }
   /**
    * Return the proof, or None if the proof failed
    */
@@ -39,38 +30,23 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
     assumptions: List[WeightedExpression[FolExpression]],
     goal: FolExpression): Seq[Double] = {
     
-    newConstants = constants;
-    oldConstants = constants;
-    newDeclarations = declarations;
-    extraEvid = List();
-  	skolemFunctionsCounter = 0;
-  	skolemConstCounter = 0; 
-  	extraUnivVars = null;
-
     try 
     {
-	    val newAssumptions:List[WeightedExpression[FolExpression]] =  if(Sts.opts.fixDCA == false) assumptions //if no-fixDCA, then do nothing
-	    else //fixDCA: handle skolem functions 
-	      assumptions
-	        .flatMap {
-	          case HardWeightedExpression(e) => {
-	        	  extraUnivVars = Set();
-	        	  var exp = goUniv(e, List(), List(), false);
-	        	  if(Sts.opts.softLogicTool == "psl")
-	        	  {
-	        	    conjToEvd(exp);
-	        	    List()
-	        	  }
-	        	  else
-	        		  List(HardWeightedExpression(exp))
+	    val newAssumptions:List[WeightedExpression[FolExpression]] =  
+	      assumptions.map 
+	      {
+	          case GoalExpression(e, w) => 
+	          {
+	        	  var exp = e//goUniv(e, List(), List(), false);
+	        	  GoalExpression(exp, w)
 	          }
-	          case a @ _ => List(a)
+	          case a @ _ => a
 	        }
-			println("done skolem")
+	    
 	    delegate.prove(
-	      newConstants,
-	      newDeclarations,
-	      (evidence.toSet ++ extraEvid.toSet).toList,  //toSet to remove duplicate evidences
+	      constants,
+	      declarations,
+	      evidence,
 	      newAssumptions,
 	      goal)
     }catch {
@@ -78,20 +54,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
     }
     
   }
-  
-  private def conjToEvd(e: FolExpression): Any = 
-  {
-      e match 
-      {
-        case FolAtom(pred, args @ _*) => extraEvid = e :: extraEvid;
-        case _ => e.visit(conjToEvd, (x:List[Any])=> 0)
-      }
-  }
-      
-      
-  private def addConst(varName: String) =
-		newConstants += (varName.substring(0, 2) -> (newConstants.apply(varName.substring(0, 2)) + varName))
-  
+        
   //generate permutations
   private def permut[A](as: List[A], k: Int): List[List[A]] = 
     (List.fill(k)(as)).flatten.combinations(k).toList
@@ -103,7 +66,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
   def runWithTimeout[T](timeoutMs: Long, default: T)(f: => T) : T = {
     runWithTimeout(timeoutMs)(f).getOrElse(default)
   }
-    
+/*    
   private def goExist(e: FolExpression, univVars: List[String], existVars: List[String], isNegated: Boolean): FolExpression =
   {
 	  e match 
@@ -219,27 +182,10 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
       	case FolIffExpression(first, second) => throw new RuntimeException("not reachable")
         case FolEqualityExpression(first, second) => FolEqualityExpression(goUniv(first,univVars, existVars, isNegated)
         															, goUniv(second,univVars, existVars, isNegated))
-        case FolAtom(pred, args @ _*) => //FolAtom(pred, args:_*);
-		        FolAtom(pred, args.map(arg=>{
-		          goUniv(arg, univVars, existVars, isNegated)
-		        }):_*)
-		case FolVariableExpression(v) => //FolVariableExpression(v) 
-				FolVariableExpression(goUniv(v, univVars, existVars, isNegated));
+        case FolAtom(pred, args @ _*) => e
         case _ => throw new RuntimeException("not reachable")
       }
   }
-  private def goUniv(v: Variable, univVars: List[String], existVars: List[String], isNegated: Boolean): Variable =
-  {
-    if (univVars.size == 0 && existVars.contains(v.name))
-    {
-      addConst(v.name)
-      /*val newVarName = v.name
-      val varType = v.name.substring(0, 2);
-      newConstants += (varType -> (newConstants.apply(varType) + newVarName))
-      * 
-      */
-    }
-    v
-  }
-
+  * 
+  */
 }
