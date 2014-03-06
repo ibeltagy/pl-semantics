@@ -1,3 +1,4 @@
+#!/bin/bash
 #This script should be called from the folder: mln-semantic using the command bin/condor
 CMD=$1
 

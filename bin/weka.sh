@@ -1,3 +1,4 @@
+#!/bin/bash
 read line
 wekaJarPath="/u/beltagy/workspace/deft/weka/weka.jar"
 act=$line
