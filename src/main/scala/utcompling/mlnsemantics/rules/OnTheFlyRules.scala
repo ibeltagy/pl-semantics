@@ -16,6 +16,7 @@ import scala.collection.mutable.HashMap
 import scala.collection.mutable.MultiMap
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerDrs
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerVariable
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerIndex
 
 class OnTheFlyRules extends Rules {
 
@@ -29,7 +30,7 @@ class OnTheFlyRules extends Rules {
       val allPredsAndContexts = List.concat(assumPredsAndContexts, goalPredsAndContexts);
       val vectorspace = vecspaceFactory(allPredsAndContexts.flatMap {
         case (pred, context) => {
-          val l = List(pred.name + (Sts.opts.vectorspaceFormatWithPOS match {
+          val l = List(pred.name + (/*Sts.opts.vectorspaceFormatWithPOS*/ false match {
             case true => "-" + pred.pos;
             case false => "";
           })) ++ context
@@ -113,13 +114,20 @@ class OnTheFlyRules extends Rules {
 	return rules;
     }
   
+  private def indicesToIndex(l:List[BoxerIndex]):Int = 
+  {
+    if( l.length != 1)
+      0 // index is not unique or does not exist 
+    else
+      l.head.wordIndex+1 //index starts from 1 
+  }
   
   private def getAllPredsAndContexts(e: BoxerExpression): Seq[(BoxerPred, Seq[String])] =
     {
       val preds = e.getPredicates();
       val predsAndContexts = preds.zipWithIndex.map { case (p, i) => p -> (preds.take(i) ++ preds.drop(i + 1)) }
       val newPredsAndContexts = predsAndContexts.mapVals(_.map(p => (p.name + (Sts.opts.vectorspaceFormatWithPOS match {
-        case true => "-" + p.pos;
+        case true => "-" + p.pos + "-" + indicesToIndex(p.indices);
         case false => "";
       }))));
       val newPredsAndContextsSplit = newPredsAndContexts.mapVals(l => {
@@ -175,7 +183,7 @@ class OnTheFlyRules extends Rules {
             //string for vector building  
             val w = predPairList._2.foldLeft("")((words, predPair) => {
               val word = Sts.opts.vectorspaceFormatWithPOS match {
-                case true => predPair._1.name + "-" + predPair._1.pos;
+                case true => predPair._1.name + "-" + predPair._1.pos + "-" + indicesToIndex(predPair._1.indices);
                 case false => predPair._1.name;
               }
               if (words == "")
@@ -227,7 +235,9 @@ class OnTheFlyRules extends Rules {
 
             var words = Sts.opts.vectorspaceFormatWithPOS match {
               //use space to split between words of a phrase
-              case true => arg1._1.name + "-" + arg1._1.pos + " " + arg2._1.name + "-" + arg2._1.pos;
+              case true => arg1._1.name + "-" + arg1._1.pos + "-" + indicesToIndex(arg1._1.indices) + " " + 
+            		  		arg2._1.name + "-" + arg2._1.pos + "-" + indicesToIndex(arg2._1.indices) + " " +
+            		  		r.name  + "-" + "rel" + "-" +  indicesToIndex(r.indices);            		  		
               case false => arg1._1.name + " " + arg2._1.name;
             }
 
@@ -245,7 +255,7 @@ class OnTheFlyRules extends Rules {
       (if (Sts.opts.duplicatePhraselAndLexicalRule) preds else notUsedPred).map(p => (
         BoxerDrs(List(List() -> BoxerVariable("x0")) ++ List(List() -> BoxerVariable("x1")), List(BoxerPred(p._1.discId, p._1.indices, BoxerVariable(if (p._1.pos == "v") "x0" else "x1"), p._1.name, p._1.pos, p._1.sense))),
         p._2,
-        Sts.opts.vectorspaceFormatWithPOS match { case true => p._1.name + "-" + p._1.pos; case false => p._1.name; }))
+        Sts.opts.vectorspaceFormatWithPOS match { case true => p._1.name + "-" + p._1.pos + "-" + indicesToIndex(p._1.indices); case false => p._1.name; }))
   }
   val VariableRe = """^([a-z])\d*$""".r
   private def variableType(pred: BoxerPred): String =

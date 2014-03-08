@@ -17,9 +17,8 @@ case class SimpleCompositeVectorMaker() extends CompositeVectorMaker {
     println(Sts.textLemma)
     println(Sts.hypothesis)
     println(Sts.hypothesisLemma)
-    */    
-    
-    val toCombine = preds.flatMap(vectorspace.get)
+    */
+    val toCombine = preds.map(_.split("-").head).flatMap(vectorspace.get)
     if (toCombine.isEmpty)
       new SparseBowVector(numDims = vectorspace.head._2.size)
     else
@@ -29,7 +28,7 @@ case class SimpleCompositeVectorMaker() extends CompositeVectorMaker {
 
 case class MultiplicationCompositeVectorMaker() extends CompositeVectorMaker {
   override def make(preds: Iterable[String], vectorspace: Map[String, BowVector]): BowVector = {
-    preds.flatMap(vectorspace.get).reduce(_ :* _)
+    preds.map(_.split("-").head).flatMap(vectorspace.get).reduce(_ :* _)
   }
 }
 
