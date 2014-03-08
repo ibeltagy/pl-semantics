@@ -4,6 +4,7 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerPred
 import utcompling.mlnsemantics.vecspace.BowVector
 import opennlp.scalabha.util.CollectionUtils._
 import utcompling.mlnsemantics.vecspace._
+import org.apache.commons.logging.LogFactory
 import utcompling.mlnsemantics.run.Sts
 
 trait CompositeVectorMaker {
@@ -11,7 +12,9 @@ trait CompositeVectorMaker {
 }
 
 case class SimpleCompositeVectorMaker() extends CompositeVectorMaker {
+  private val LOG = LogFactory.getLog(classOf[SimpleCompositeVectorMaker])
   override def make(preds: Iterable[String], vectorspace: Map[String, BowVector]): BowVector = {
+    LOG.info("Making phrase: " + ( preds mkString " "))
     /*
     println(Sts.text)
     println(Sts.textLemma)
