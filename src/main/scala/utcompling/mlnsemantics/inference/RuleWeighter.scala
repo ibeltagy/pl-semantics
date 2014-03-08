@@ -4,6 +4,7 @@ import utcompling.mlnsemantics.vecspace._
 import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.CollectionUtil._
 import math.min
+import utcompling.mlnsemantics.run.Sts
 
 trait RuleWeighter {
   def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: Map[String, BowVector]): Iterable[(String, Option[Double])]
@@ -67,6 +68,12 @@ case class AwithCvecspaceWithSpellingSimilarityRuleWeighter(
       return 0;
   }
   override def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: Map[String, BowVector]) = {
+    /*
+    println(Sts.text)
+    println(Sts.textLemma)
+    println(Sts.hypothesis)
+    println(Sts.hypothesisLemma)
+    */
     val pv = compositeVectorMaker.make (antecedent.split(" "), vectorspace);
     consequentAndContexts.map {
       case (consequent, consequentContext) =>
