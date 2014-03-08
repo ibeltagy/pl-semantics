@@ -118,6 +118,22 @@ class Config(opts: Map[String, String] = Map()) {
     case _ => 0.20;
   }
 
+  val lexicalInferenceModelFile: String = opts.get("-lexInferModelFile") match {
+    case Some(x) => x
+    case _ => ""
+  }
+
+
+  // lexical inference method
+  val lexicalInferenceMethod: utcompling.mlnsemantics.vecspace.LexEntailmentModel = opts.get("-lexInferMethod") match {
+    case Some("cosine") => new utcompling.mlnsemantics.vecspace.CosineLexEntailmentModel
+    case Some("asym") => new utcompling.mlnsemantics.vecspace.LogRegLexEntailmentModel(lexicalInferenceModelFile)
+    case Some("maxsuperasym") => new utcompling.mlnsemantics.vecspace.LogRegSupersenseLexEntailment(lexicalInferenceModelFile, "max")
+    case Some("minsuperasym") => new utcompling.mlnsemantics.vecspace.LogRegSupersenseLexEntailment(lexicalInferenceModelFile, "min")
+    case Some("avgsuperasym") => new utcompling.mlnsemantics.vecspace.LogRegSupersenseLexEntailment(lexicalInferenceModelFile, "avg")
+    case _ => new utcompling.mlnsemantics.vecspace.CosineLexEntailmentModel
+  }
+
   
   //-------------------------------------------task
     
@@ -152,7 +168,6 @@ class Config(opts: Map[String, String] = Map()) {
     case _ => true;
   }
 
-  
   //-------------------------------------------logic and inference
 
   val logicFormSource = opts.get("-logic") match {

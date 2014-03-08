@@ -25,7 +25,7 @@ case class ACtxWithCVecspaceRuleWeighter(
     consequentAndContexts.map {
       case (consequent, consequentContext) =>
         consequent -> Some(vectorspace.get(consequent) match {
-          case Some(cv) => pv cosine cv
+          case Some(cv) => Sts.opts.lexicalInferenceMethod.entails(pv, cv)
           case None => 0
         })
     }
@@ -42,9 +42,9 @@ case class AwithCvecspaceRuleWeighter(
       case (consequent, consequentContext) =>
         consequent -> Some(vectorspace.get(consequent) match {
           case Some(cv) => pv match {
-    		case Some(pv) => pv cosine cv
-    		case None => 0  //it is 0 not Double.NegativeInfinity
-          	}
+            case Some(pv) => Sts.opts.lexicalInferenceMethod.entails(pv, cv)
+            case None => 0  //it is 0 not Double.NegativeInfinity
+          }
           case None => 0  //it is 0 not Double.NegativeInfinity
         })
     }
@@ -84,7 +84,7 @@ case class AwithCvecspaceWithSpellingSimilarityRuleWeighter(
             case pv => { /*println(antecedent + " -> " + consequent + "   " + (pv cosine cv))
                          println(pv)
                          println(cv)*/
-                         pv cosine cv } 
+                         Sts.opts.lexicalInferenceMethod.entails(pv, cv) } 
     		//case None => w  //if vector space does not work, use spelling
           	}
           //case None => w  //if vector space does not work, use spelling
@@ -128,7 +128,7 @@ case class AwithCtxCwithCtxVecspaceRuleWeighter(
     consequentAndContexts.map {
       case (consequent, consequentContext) =>
         val cv = compositeVectorMaker.make(consequent +: consequentContext.toSeq, vectorspace)
-        consequent -> Some(pv cosine cv)
+        consequent -> Some(Sts.opts.lexicalInferenceMethod.entails(pv, cv))
     }
   }
 }

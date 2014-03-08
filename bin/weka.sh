@@ -1,3 +1,4 @@
+#!/bin/bash
 read line
 wekaJarPath="/u/beltagy/workspace/deft/weka/weka.jar"
 libsvmPath="/u/beltagy/wekafiles/packages/LibSVM/lib/libsvm.jar:/u/beltagy/wekafiles/packages/LibSVM/LibSVM.jar"
