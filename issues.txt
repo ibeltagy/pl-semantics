@@ -1,3 +1,7 @@
+There is a problem similar to the unicorn case in (prb-23-h|NotT)
+Output of pairs: 20-32 showing errors: [1.0000,0.0000  1.0000,0.0000  1.0000,0.0000  1.0000,-1.0000  -3.0000,0.0000  -3.0000,-1.0000  1.0000,0.0000  1.0000,-3.0000  1.0000,-3.0000  1.0000,0.0000  1.0000,0.0000  1.0000,0.0000  1.0000,0.0000]
+I think equalities are messed up in NoExistProbabilisticTheoremProver
+PositiveEqEliminatingProbabilisticTheoremProver has to be removed. THen, equality handling goes into SetGoal 
 -P(H|-T) takes forever for some examples like : 34,190,502,682,717
 --run the following and explain why hundereds of skolem_1 are generated
 alchemy/bin/infer -i /tmp/temp-3270558921426446116.mln -e /tmp/temp-3666499365217559437.db -r /tmp/temp-8210559381267654219.res -ss -maxSeconds 5 -ssq /tmp/temp-2905646586885501927.q -q entailment_h,compnay_n_dh,guy_n_dh,own_v_dh,r_patient_dh,r_agent_dh,skolem_1  -focusGround 

@@ -13,6 +13,7 @@ import utcompling.mlnsemantics.inference.support.GoalExpression
 import scala.actors.Futures._
 import scala.actors.threadpool.TimeoutException
 import utcompling.mlnsemantics.inference.support.GoalExpression
+import scala.dbc.datatype.Character
 
 
 class NoExistProbabilisticTheoremProver(
@@ -20,6 +21,10 @@ class NoExistProbabilisticTheoremProver(
   extends ProbabilisticTheoremProver[FolExpression] {
   	  
   object PermutTimesout extends Exception { }
+  private var allConstants: Map[String, Set[String]] = null;
+  private var allEvidence: List[FolExpression] = null;
+  private val trueFolExp:FolExpression = FolVariableExpression(Variable("true"));
+  private val falseFolExp:FolExpression = FolVariableExpression(Variable("false"));  
   /**
    * Return the proof, or None if the proof failed
    */
@@ -30,6 +35,8 @@ class NoExistProbabilisticTheoremProver(
     assumptions: List[WeightedExpression[FolExpression]],
     goal: FolExpression): Seq[Double] = {
     
+    allConstants = constants;
+    allEvidence = evidence;
     try 
     {
 	    val newAssumptions:List[WeightedExpression[FolExpression]] =  
@@ -37,7 +44,8 @@ class NoExistProbabilisticTheoremProver(
 	      {
 	          case GoalExpression(e, w) => 
 	          {
-	        	  var exp = e//goUniv(e, List(), List(), false);
+	        	  val expVarRenamed = rename(e); //all variables have to be renamed to avoid conflict between variables and constants. 
+	              var exp = goUniv(expVarRenamed, List(), List(), false);
 	        	  GoalExpression(exp, w)
 	          }
 	          case a @ _ => a
@@ -50,7 +58,7 @@ class NoExistProbabilisticTheoremProver(
 	      newAssumptions,
 	      goal)
     }catch {
-      case PermutTimesout => Seq(-4.0)
+      case PermutTimesout => Seq(-6.0)
     }
     
   }
@@ -66,7 +74,10 @@ class NoExistProbabilisticTheoremProver(
   def runWithTimeout[T](timeoutMs: Long, default: T)(f: => T) : T = {
     runWithTimeout(timeoutMs)(f).getOrElse(default)
   }
-/*    
+    
+  var varToReplace: List[String] = null;
+  var replaceWith: List[String]  = null;
+  
   private def goExist(e: FolExpression, univVars: List[String], existVars: List[String], isNegated: Boolean): FolExpression =
   {
 	  e match 
@@ -74,85 +85,185 @@ class NoExistProbabilisticTheoremProver(
       	case FolExistsExpression(v, term) => goExist(term, univVars, existVars:+v.name, isNegated)
       	case FolAllExpression(v, term) if (isNegated) => goExist(term, univVars, existVars:+v.name, isNegated)      	
         case _ => {
-          if(univVars.size == 0)
-          {
-        	  goUniv(e, univVars, existVars, isNegated)
-          }
-          else
-          {
-	          skolemFunctionsCounter = skolemFunctionsCounter + 1;
-	          var skolemPred : FolExpression = FolVariableExpression(Variable("skolem_"+skolemFunctionsCounter));
-	          var skolemPredVarTypes:List[String] = List();
-	          var univConst: List[List[String]] = List();
-	          var maxUnivConstListLen:Int = 0;
-	          univVars.foreach(univVar =>{
-	            skolemPred = FolApplicationExpression(skolemPred, FolVariableExpression(Variable(univVar)));
-	            skolemPredVarTypes = skolemPredVarTypes  ++ List((univVar.substring(0, 2)))
-	            val constList = oldConstants .get(univVar.substring(0, 2)).get;
-	            univConst = univConst ++ List(constList.toList)
-	            maxUnivConstListLen = scala.math.max(maxUnivConstListLen, constList.size);
-	            println( oldConstants .get(univVar.substring(0, 2)))
-	          })
-	          existVars.foreach(existVar =>{
-	            skolemPred = FolApplicationExpression(skolemPred, FolVariableExpression(Variable(existVar)));
-	            skolemPredVarTypes = skolemPredVarTypes  ++ List((existVar.substring(0, 2)))
-	          })
-	          
-              
-	          def genPermutes = {
-					//println ("in")
-	            permut(List.range (0, maxUnivConstListLen), univVars.size).foreach(p => {
-					//println("inner");
-	        	  var skolemEvd: FolExpression = FolVariableExpression(Variable("skolem_"+skolemFunctionsCounter));
-	        	  object AllDone extends Exception { }
-	        	  try
+          var existConst: List[List[String]] = List();
+          var maxUnivConstListLen:Int = 0;
+          existVars.foreach(existVar =>{
+            val constList = allConstants.get(existVar.substring(0, 2)).get;
+            existConst = existConst ++ List(constList.toList)
+            maxUnivConstListLen = scala.math.max(maxUnivConstListLen, constList.size);
+            println( allConstants .get(existVar.substring(0, 2)))
+          })
+          
+          var newExp: FolExpression = null;
+          def genPermutes = {
+            permut(List.range (0, maxUnivConstListLen), existVars.size).foreach(p => {
+        	  object AllDone extends Exception { }
+        	  try
+        	  {
+	        	  replaceWith = List();
+        	      for(i <- 0 to p.length-1)
 	        	  {
-		        	  for(i <- 0 to p.length-1)
-		        	  {
-		        	    val idx = p.apply(i)
-		        	    val constListForI = univConst.apply(i);
-		        	    if (constListForI.size <= idx)
-		        	      throw AllDone;
-		        		skolemEvd = FolApplicationExpression(skolemEvd, FolVariableExpression(Variable(constListForI.apply(idx))));        	    
-		        	  }
-		        	  existVars.foreach(existVar =>{
-		        	    val newConstName = existVar +"_" + skolemConstCounter;
-		        	    skolemConstCounter = skolemConstCounter + 1;
-		        	    addConst(newConstName);
-			            skolemEvd = FolApplicationExpression(skolemEvd, FolVariableExpression(Variable(newConstName)));
-			          })
-			          extraEvid = skolemEvd :: extraEvid;
-	        	  }catch{
-	        	      case AllDone =>//do nothing
+	        	    val idx = p.apply(i)
+	        	    val constListForI = existConst.apply(i);
+	        	    if (constListForI.size <= idx)
+	        	      throw AllDone;
+	        	    replaceWith = replaceWith :+ constListForI.apply(idx);
 	        	  }
-	            })
-	          }
-				 println ("before permute");
-	          //Sts.opts.timeout match  //regardless of the timeout parameter, timeout here is always inforced to 30 seconds 
-	          //{
-	          // case Some(t) => 
-	              	val finish = runWithTimeout(30000, false) { genPermutes;  true }
-	              	if(!finish)
-	              		throw PermutTimesout
-	          //  case _ => genPermutes; 
-	          //}
-				//genPermutes;
-				println("after permute");
-	          
-	          extraUnivVars = extraUnivVars ++ existVars;  
-	          newDeclarations = newDeclarations  ++ Map(skolemPred->skolemPredVarTypes)
-	          var exp = (skolemPred->e).asInstanceOf[FolExpression];
-
-	          //generate evidence
-	          exp = goUniv(exp, univVars, existVars, isNegated)
-
-	          existVars.foreach(v =>{
-	        	  exp = FolAllExpression(Variable(v), exp);
-        	  })
-
-        	  exp
+        	      varToReplace = existVars;
+        	      val oneNewExp = replaceSimplify(e, univVars.toSet);
+        	      if(newExp == null)
+        	        newExp = oneNewExp;
+        	      else if(isNegated)
+        	        newExp = FolAndExpression(newExp, oneNewExp);
+        	      else
+        	        newExp = FolOrExpression(newExp, oneNewExp);
+        	      println(oneNewExp);
+        	  }catch{
+        	      case AllDone =>//do nothing
+        	  }
+            })
           }
+	      val finish = runWithTimeout(300000, false) { genPermutes;  true }
+	      if(!finish)
+	    	  throw PermutTimesout
+
+	       replaceWith = List();
+	       varToReplace = List();
+	       newExp = replaceSimplify(newExp, univVars.toSet);
+	       //Done removing EXIST, let's continue scanning the expression for other EXISTs 
+	       goUniv(newExp, univVars, existVars, isNegated)
+
         }
+      }
+  }
+  private def replaceSimplify(v: Variable, quantifiers: Set[String]): Variable =
+  {
+    if(!quantifiers.contains(v.name) && varToReplace.contains(v.name))
+    {
+      val i = varToReplace.indexOf(v.name);
+      Variable(replaceWith(i))
+    }
+    else 
+      v
+  }
+  private def getBoolean3(e:FolExpression) : Char = 
+  {
+    if(e == trueFolExp)
+    	't';
+    else if(e == falseFolExp)
+    	'f';
+    else 
+    	'd';
+  }
+  
+  private def rename(v: Variable): Variable =
+	Variable(v.name + "_q")	  
+    
+  private def rename(e: FolExpression): FolExpression =
+  {
+    e match {
+    	case FolExistsExpression(v, term) => FolExistsExpression(rename(v), rename(term))	
+    	case FolAllExpression(v, term) => FolAllExpression(rename(v), rename(term))
+    	case FolAtom(pred, args @ _*) => FolAtom(pred, args.map(rename(_)) :_ * )	
+    	case FolVariableExpression(v) => FolVariableExpression(rename(v)) 
+    	case _=>e.visitStructured(rename, e.construct)
+    }
+  }
+  private def replaceSimplify(e: FolExpression, quantifiers: Set[String]): FolExpression =
+  {
+      e match 
+      {
+      	case FolExistsExpression(v, term) => 
+            val mTerm = replaceSimplify(term, quantifiers + v.name)
+      		getBoolean3(mTerm)  match 
+      		{
+      		  case 't' => trueFolExp
+      		  case 'f' => falseFolExp
+      		  case 'd' => FolExistsExpression(v, mTerm);
+      		} 
+        case FolAllExpression(v, term) =>
+            val mTerm = replaceSimplify(term, quantifiers + v.name)
+      		getBoolean3(mTerm)  match 
+      		{
+      		  case 't' => trueFolExp
+      		  case 'f' => falseFolExp
+      		  case 'd' => FolAllExpression(v, mTerm);
+      		}
+        case FolNegatedExpression(term) => 
+            val mTerm = replaceSimplify(term, quantifiers) 
+      		getBoolean3(mTerm)  match 
+      		{
+      		  case 't' => falseFolExp
+      		  case 'f' => trueFolExp
+      		  case 'd' => FolNegatedExpression(mTerm);
+      		}            
+        case FolAndExpression(first, second) =>
+            val mFirst = replaceSimplify(first, quantifiers) 
+      		val mSecond = replaceSimplify(second, quantifiers)
+      		(getBoolean3(mFirst),getBoolean3(mSecond)) match 
+      		{
+      		  case ('t', 't') => trueFolExp
+      		  case ('t', 'f') => falseFolExp
+      		  case ('t', 'd') => mSecond
+      		  case ('f', 't') => falseFolExp
+      		  case ('f', 'f') => falseFolExp
+      		  case ('f', 'd') => falseFolExp
+      		  case ('d', 't') => mFirst
+      		  case ('d', 'f') => falseFolExp
+      		  case ('d', 'd') => FolAndExpression(mFirst, mSecond);      		    
+      		}
+      	case FolOrExpression(first, second) =>
+      	    val mFirst = replaceSimplify(first, quantifiers) 
+      		val mSecond = replaceSimplify(second, quantifiers)
+      		(getBoolean3(mFirst),getBoolean3(mSecond)) match 
+      		{
+      		  case ('t', 't') => trueFolExp
+      		  case ('t', 'f') => trueFolExp
+      		  case ('t', 'd') => trueFolExp
+      		  case ('f', 't') => trueFolExp
+      		  case ('f', 'f') => falseFolExp
+      		  case ('f', 'd') => mSecond
+      		  case ('d', 't') => trueFolExp
+      		  case ('d', 'f') => mFirst
+      		  case ('d', 'd') => FolOrExpression(mFirst, mSecond);      		    
+      		}
+      	case FolIfExpression(first, second) => 
+      		val mFirst = replaceSimplify(first, quantifiers) 
+      		val mSecond = replaceSimplify(second, quantifiers)
+      		(getBoolean3(mFirst),getBoolean3(mSecond)) match 
+      		{
+      		  case ('t', 't') => trueFolExp
+      		  case ('t', 'f') => falseFolExp
+      		  case ('t', 'd') => mSecond
+      		  case ('f', 't') => trueFolExp
+      		  case ('f', 'f') => trueFolExp
+      		  case ('f', 'd') => trueFolExp
+      		  case ('d', 't') => trueFolExp
+      		  case ('d', 'f') => FolNegatedExpression(mFirst)
+      		  case ('d', 'd') => FolIfExpression(mFirst, mSecond);      		    
+      		}
+      		
+      	case FolIffExpression(first, second) => throw new RuntimeException("not reachable")
+        case FolEqualityExpression(first, second) => FolEqualityExpression(replaceSimplify(first, quantifiers), 
+        													replaceSimplify(second, quantifiers));
+        case FolAtom(pred, args @ _*) => 
+          val changedArgs = args.map(replaceSimplify(_, quantifiers))
+          val changedE = FolAtom(pred,changedArgs:_*);
+          
+          if( (changedArgs.map(_.name).toSet & quantifiers).isEmpty )
+          { //all constants
+            if(allEvidence.contains(changedE))
+              trueFolExp
+            else if (allEvidence.contains(FolNegatedExpression(changedE)))
+              falseFolExp
+            else 
+              changedE
+          }else 
+            changedE //some variables
+        
+        case FolVariableExpression(v) => FolVariableExpression(replaceSimplify(v, quantifiers));
+
+        case _ => throw new RuntimeException("not reachable")
       }
   }
     
@@ -186,6 +297,4 @@ class NoExistProbabilisticTheoremProver(
         case _ => throw new RuntimeException("not reachable")
       }
   }
-  * 
-  */
 }

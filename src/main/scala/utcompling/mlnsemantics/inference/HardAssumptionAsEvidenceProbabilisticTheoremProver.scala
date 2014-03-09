@@ -184,7 +184,10 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 	          exp = goUniv(exp, univVars, existVars, isNegated)
 
 	          existVars.foreach(v =>{
-	        	  exp = FolAllExpression(Variable(v), exp);
+	            if(isNegated)
+	            	exp = FolExistsExpression(Variable(v), exp);
+	            else
+	            	exp = FolAllExpression(Variable(v), exp);
         	  })
 
         	  exp

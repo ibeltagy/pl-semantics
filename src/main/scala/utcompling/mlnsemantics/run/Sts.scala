@@ -26,6 +26,7 @@ import utcompling.mlnsemantics.datagen.Tokenize
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
 import utcompling.scalalogic.drt.expression.DrtApplicationExpression
 import scala.math.{sqrt, pow, min, ceil}
+import utcompling.mlnsemantics.inference.NoExistProbabilisticTheoremProver
 
 /**
  *
@@ -210,8 +211,9 @@ object Sts {
 		                   new SetPriorPTP( //
 		                    new SetGoalPTP( //
 		                      new HardAssumptionAsEvidenceProbabilisticTheoremProver( // 15<== Generate evidence from premise.
-		                        new AutoTypingPTP(
-		                        softLogicTool)))))))))))))) // 16<== run Alchemy or PSL
+		                        new AutoTypingPTP( //generate negative evidence
+		                         new NoExistProbabilisticTheoremProver( //
+		                        softLogicTool))))))))))))))) // 16<== run Alchemy or PSL
 
           val p = ttp.prove(Tokenize(txt).mkString(" "), Tokenize(hyp).mkString(" "))
           println("Some(%s) [actual: %s, gold: %s]".format(p.mkString(":"), p.map(probOfEnt2simScore).mkString(":"), goldSim))

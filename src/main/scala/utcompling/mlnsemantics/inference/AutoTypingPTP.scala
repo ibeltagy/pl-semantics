@@ -101,7 +101,7 @@ class AutoTypingPTP(
       val finish = runWithTimeout(30000, false) { findApply ;  true }
 
       if(!finish)
-			return Seq(-4.0)
+			return Seq(-5.0)
       	
 	    
 	    //applyArrows();
