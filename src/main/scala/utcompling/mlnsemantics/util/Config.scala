@@ -224,7 +224,13 @@ class Config(opts: Map[String, String] = Map()) {
  val withNegT = opts.get("-withNegT") match {
     case Some("false") => false;
     case _ => true;
-  } 
+  }
+ 
+ //ground EXIST before calling alchemy
+ val groundExist = opts.get("-groundExist") match {
+    case Some("true") => true;
+    case _ => false;
+  }
  
  //Enable focus grounding. It does full grounding taking 
  //wrong types into account  
