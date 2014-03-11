@@ -37,14 +37,14 @@ class TextualTheoremProver(
   
   def prove(text: String, hyp: String): Seq[Double] =
     prove(List(text), List(hyp))
-
+    
   def prove(text: List[String], hyp: List[String]): Seq[Double] = {
 
     LOG.trace(text)
     LOG.trace(hyp)
     val List(t, h) = discourseIterpreter.batchInterpretMultisentence(List(text, hyp), Some(List("t", "h")), false, false)
 
-	 var parseError = false;
+	var parseError = false;
     var txtEx  = (t match {
       case Some(txt) => txt;
       case _ => {
@@ -71,7 +71,9 @@ class TextualTheoremProver(
    		  return Seq.fill(Sts.opts.kbest * Sts.opts.kbest * 2)(-2); //check GivenNotTextProbabilisticTheoremProver for details
 	   else return Seq.fill(Sts.opts.kbest * Sts.opts.kbest)(-2);
 	 }
-
+    
+    hypEx = BoxerPrs(hypEx.asInstanceOf[BoxerPrs].exps.map( e=> (removeThere(e._1), e._2 )))
+    txtEx = BoxerPrs(txtEx.asInstanceOf[BoxerPrs].exps.map( e=> (removeThere(e._1), e._2 )))
     
     val constants:Map[String, Set[String]] = Map();
     val declarations:Map[BoxerExpression, Seq[String]] = Map();
@@ -79,6 +81,42 @@ class TextualTheoremProver(
     val assumptions = List(HardWeightedExpression(txtEx))
     val goal = hypEx
     probabilisticTheoremProver.prove(constants, declarations, evidence, assumptions, goal)
-
   }
+  
+  def removeThere(e:BoxerExpression) : BoxerExpression = 
+  {
+	  e match 
+	  {
+	    case BoxerDrs(ref, cond) if(cond.length == 2)=> {
+	      var thereVar:BoxerVariable = null;
+	      var negatedDrs:BoxerDrs = null;
+	      var eqIndex = -1;
+	      var notDiscId =  "";
+	      var notIndices: List[BoxerIndex] = null;
+	      (cond.head, cond.last) match 
+	      {
+	        case (BoxerPred(discId1, indices1, variable1, "there", pos, sense), 
+	              BoxerProp(discId2, indices2, variable2, BoxerDrs(ref, List(BoxerNot(discId3, indices3, drs)))))
+	              =>thereVar = variable1;  negatedDrs = drs.asInstanceOf[BoxerDrs];	notDiscId = discId3 ; notIndices = indices3
+	        case (BoxerProp(discId2, indices2, variable2, BoxerDrs(ref, List(BoxerNot(discId3, indices3, drs)))),
+	              BoxerPred(discId1, indices1, variable1, "there", pos, sense))
+	              =>thereVar = variable1;  negatedDrs = drs.asInstanceOf[BoxerDrs];	notDiscId = discId3 ; notIndices = indices3             
+	        case _ => return e;
+	      }
+	      negatedDrs.conds.indices.foreach(i=>
+	      {
+	          negatedDrs.conds(i) match 
+	          {
+	            case BoxerEq(discId, indices, first, second) => if(first == thereVar || second == thereVar) eqIndex = i;
+	            case _ => 
+	          }
+	      })
+	      if(eqIndex != -1)
+	        return BoxerNot(notDiscId, notIndices, BoxerDrs(negatedDrs.refs, negatedDrs.conds.filterNot(_ == negatedDrs.conds(eqIndex))))
+	    }
+	    case _ => return e;
+	  }
+	  return e;
+  }
+  
 }
