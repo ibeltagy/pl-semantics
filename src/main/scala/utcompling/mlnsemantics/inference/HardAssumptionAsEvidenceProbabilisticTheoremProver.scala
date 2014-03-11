@@ -66,7 +66,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 	          }
 	          case a @ _ => List(a)
 	        }
-			println("done skolem")
+		 //println("done skolem")
 	    delegate.prove(
 	      newConstants,
 	      newDeclarations,
@@ -137,9 +137,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 	          
               
 	          def genPermutes = {
-					//println ("in")
 	            permut(List.range (0, maxUnivConstListLen), univVars.size).foreach(p => {
-					//println("inner");
 	        	  var skolemEvd: FolExpression = FolVariableExpression(Variable("skolem_"+skolemFunctionsCounter));
 	        	  object AllDone extends Exception { }
 	        	  try

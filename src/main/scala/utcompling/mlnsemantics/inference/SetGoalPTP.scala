@@ -178,7 +178,7 @@ class SetGoalPTP(
   private var quantifiers: Map[String, (String, Boolean)] = null;
   private var constantsCounter = 0;
   private var isQuery = true; 
-  private var parent: FolExpression = null;
+  //private var parent: FolExpression = null;
   
   private def introduction(expr: FolExpression, isNegated:Boolean, parent:FolExpression): Option[FolExpression] =
   {
@@ -205,15 +205,16 @@ class SetGoalPTP(
 		  else return  Some(FolAndExpression(f.get, s.get));
       }
       case FolAtom(pred, args @ _*) =>{
-    	if(isIntroduction(args, isNegated) )
+    	if(isIntroduction(args, isNegated, parent) )
     	{
-    	  if(parent.isInstanceOf[FolAndExpression])
+    	   Some(FolAtom.apply(pred, args.map(arg => introduction(arg, isNegated) ) :_ *));
+    	  /*if(parent.isInstanceOf[FolAndExpression])
     		  Some(FolAtom.apply(pred, args.map(arg => introduction(arg, isNegated) ) :_ *));
     	  else
     	  {
     		System.err.println(">>>>>>The unicorn case<<<<<<");
     	    None
-    	  }
+    	  }*/
     	}
     	else 
     	  None
@@ -221,16 +222,11 @@ class SetGoalPTP(
 	  case FolVariableExpression(v) => Some(FolVariableExpression(introduction(v, isNegated)));
 	  case FolNegatedExpression(term) => introduction(term, !isNegated, expr);
       case FolEqualityExpression(first, second) => {
-        if(isNegated)
-        	None
-        else
-        {
-        	if(isIntroduction(Seq(first.asInstanceOf[FolVariableExpression].variable, 
-        						   second.asInstanceOf[FolVariableExpression].variable), isNegated))
+        	if(!isNegated && isIntroduction(Seq(first.asInstanceOf[FolVariableExpression].variable, 
+        						   second.asInstanceOf[FolVariableExpression].variable), isNegated, parent))
         		Some(FolEqualityExpression(introduction(first, isNegated, expr).get, introduction(second, isNegated, expr).get));
         	else 
         	  None
-        }
       }
       case FolIffExpression(first, second) => throw new RuntimeException(expr + " is not a valid expression")      
 	  case _ => throw new RuntimeException(expr + " is not a valid expression")
@@ -254,18 +250,54 @@ class SetGoalPTP(
           addConst(newVarName);
           return Variable(newVarName);
   }
-  private def isIntroduction (args: Seq[Variable], isNegated:Boolean): Boolean = 
+  private def isIntroduction (args: Seq[Variable], isNegated:Boolean, parent:FolExpression): Boolean = 
   {
         var univCount = 0;
+        var notExistCount = 0;
         args.forall(arg=>{
           require(quantifiers.contains(arg.name));
           val q = quantifiers(arg.name);
           if (q._1 == "A" && q._2 == false || q._1 == "E" && q._2 == true)
             univCount = univCount + 1;
+          if (q._1 == "E" && q._2 == true)
+        	  notExistCount = notExistCount + 1;          
           true
         })
         if(univCount == args.length ) // all variables are universally quantified
-        	return true;
+        {
+        	/*if(notExistCount == args.length )
+        	{
+        		parent match 
+        		{
+        			case FolAndExpression(first, second) => {
+        				var count = 0;
+        				first match 
+        				{
+        					case FolAtom(pred, args @ _*) => count = count + 1; 
+        					case FolAndExpression(f,s) => count = count + 1;
+        					case _ =>;
+        				}	
+        				second match 
+        				{
+        					case FolAtom(pred, args @ _*) => count = count + 1; 
+        					case FolAndExpression(f,s) => count = count + 1;
+        					case _ =>;        					
+        				}
+        				if(count != 2)
+        					return false
+        			}
+        			case _=> 
+        					System.out.println(">>>>>>The unicorn case<<<<<<");
+        					return false;
+        		}
+        	}*/
+        	if(parent.isInstanceOf[FolAndExpression])
+        		return true;
+        	else {
+				System.out.println(">>>>>>The unicorn case<<<<<<");
+				return false;
+        	}
+        }
         else
         {
         	if(univCount  != 0)

@@ -160,7 +160,7 @@ class NoExistProbabilisticTheoremProver(
         	  }
             })
           }
-	      val finish = runWithTimeout(300000, false) { genPermutes;  true }
+	      val finish = runWithTimeout(30000, false) { genPermutes;  true }
 	      if(!finish)
 	    	  throw PermutTimesout
 

@@ -51,8 +51,7 @@ class AutoTypingPTP(
     autoConst = scala.collection.mutable.Map(); //predName#varIndx -> HX1, HX2 ....
     //arrows =  scala.collection.mutable.Set(); //an x -> y means all constants of x should be propagated to y
     repeat = true;
-	 first = true;
-    println("in auto const");
+	first = true;
     if(Sts.opts.negativeEvd && Sts.opts.task == "rte" && (Sts.opts.softLogicTool == "mln"|| Sts.opts.softLogicTool == "ss"))
     {
 	    
@@ -92,22 +91,13 @@ class AutoTypingPTP(
 	         }
 	    	   first = false;
 			}//Repeat
-	      println ("after findApply");
-         genNegativeEvd(declarations);
+            genNegativeEvd(declarations);
 		}
 	
-
-		println ("before findApply");
       val finish = runWithTimeout(30000, false) { findApply ;  true }
 
       if(!finish)
 			return Seq(-5.0)
-      	
-	    
-	    //applyArrows();
-	    
-	    //genNegativeEvd(declarations);
-		 println("leaving autoconst");
     }
     
     delegate.prove(
@@ -290,6 +280,7 @@ class AutoTypingPTP(
       {
       	case FolExistsExpression(v, term) => quantifiedVars += v.name; findConstVarsQuantif(term);  
         case FolAllExpression(v, term) => quantifiedVars += v.name; findConstVarsQuantif(term);
+        case FolEqualityExpression(first, second) => Set()
         case FolAtom(pred, args @ _*) =>
         	if(quantifiedVars.contains(args.head.name) && quantifiedVars.contains(args.last.name))
         	{

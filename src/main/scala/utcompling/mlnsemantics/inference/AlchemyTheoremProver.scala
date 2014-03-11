@@ -214,9 +214,8 @@ class AlchemyTheoremProver{
 	        	// dummy exp
 	        	"(" + _convert(first, bound) + " = " + _convert(second, bound) + ")";
 	        */
-      case FolAtom(pred, args @ _*) => pred.name.replace("'", "") + "(" + args.map(v => if (bound(v)) v.name.toLowerCase() else quote(v.name)).mkString(",") + ")"
-//      case FolVariableExpression(v) => if (bound(v)) v.name.toLowerCase() else quote(v.name)
-	case FolVariableExpression(v) => v.name.toLowerCase()
+      case FolAtom(pred, args @ _*) => pred.name + "(" + args.map(v => if (bound(v)) v.name.toLowerCase() else quote(v.name)).mkString(",") + ")"
+      case FolVariableExpression(v) => if (bound(v)) v.name.toLowerCase() else quote(v.name)
     }
 
   protected def quote(s: String) = '"' + s + '"'

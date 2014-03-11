@@ -9,68 +9,58 @@ import opennlp.scalabha.util.CollectionUtil._
 import support.HardWeightedExpression
 import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 import utcompling.mlnsemantics.run.Sts
-import utcompling.scalalogic.discourse.candc.boxer.expression._
 import org.apache.commons.logging.LogFactory
-import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.Boxer2DrtExpressionInterpreter
 
 class PositiveEqEliminatingProbabilisticTheoremProver(
-  delegate: ProbabilisticTheoremProver[BoxerExpression])
-  extends ProbabilisticTheoremProver[BoxerExpression] {
+  delegate: ProbabilisticTheoremProver[FolExpression])
+  extends ProbabilisticTheoremProver[FolExpression] {
 
   private val LOG = LogFactory.getLog(classOf[PositiveEqEliminatingProbabilisticTheoremProver])
-  private var extraEvd:List[BoxerExpression] = List();
+  private val removeFolExp:FolExpression = FolVariableExpression(Variable("remove"));
 
   override def prove(
     constants: Map[String, Set[String]],
-    declarations: Map[BoxerExpression, Seq[String]],
-    evidence: List[BoxerExpression],
-    assumptions: List[WeightedExpression[BoxerExpression]],
-    goal: BoxerExpression): Seq[Double] = {
+    declarations: Map[FolExpression, Seq[String]],
+    evidence: List[FolExpression],
+    assumptions: List[WeightedExpression[FolExpression]],
+    goal: FolExpression): Seq[Double] = {
 
     newConstants = constants;//extra constants are added by skolemConstAsEvd
-    extraEvd = List();
-    evdBeforeEqRemove = List();
     equalities = List();
-    inNot = false;
-    negatedConstCount = 0;
-
     
     //Remove it only from the Text because that help generating the evidence.
     //No need to do it for the hypothesis 
-    val newAssumptions:List[WeightedExpression[BoxerExpression]] = assumptions.map
+    val newAssumptions:List[WeightedExpression[FolExpression]] = assumptions.map
     {
           case HardWeightedExpression(e) => {
-	        	inNot = false;
 	        	equalities = List();
-	        	evdBeforeEqRemove = List()
-	        	//var newExpr = skolemConstAsEvd(e, true, true, false)
-	        	var newExpr = findRemoveEq(e, false);
+	        	var newExpr = findRemoveEq(e, Set(), false);
 				equalities = groupEqvClasses(equalities);
 				LOG.trace(equalities)
-				extraEvd = extraEvd ++ evdBeforeEqRemove.map(applyEq);
-				newExpr = applyEq(newExpr); 
+				newExpr = applyEq(newExpr);
+				newConstants = newConstants.map(constant=>{
+				  (constant._1, constant._2.map(applyEq(_)).toSet )
+				}).toMap
 	        	HardWeightedExpression(newExpr)
-	        }
+	        }          
 	        case a @ _ => a
     }
     
     delegate.prove(
       newConstants,
       declarations,
-      evidence ++ extraEvd.toSet, //toSet to remove duplicates
+      evidence,
       newAssumptions,
       goal)
   }
   
-  private var evdBeforeEqRemove:List[BoxerExpression] = List();
   private var equalities:List[Set[String]] = List();
-  private var inNot = false;
-  private var negatedConstCount = 0;
   private var newConstants: Map[String, Set[String]] = null;
   
   def addConst(varName: String) =
 		newConstants += (varName.substring(0, 2) -> (newConstants.apply(varName.substring(0, 2)) + varName))
-    	
+
+/*		
   private def skolemConstAsEvd(e: BoxerExpression, outer: Boolean, remove: Boolean, isNegated: Boolean): BoxerExpression = 
   {
     if(!outer) //no need to continue if not in the outer most existentially quantified variables 
@@ -196,8 +186,106 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
       case _ => throw new RuntimeException(e + " is not possible")
     }
   }
+  */
+  private def getBoolean2(e:FolExpression) : Char = 
+  {
+    if(e == removeFolExp)
+    	'r';
+    else 
+    	'o';
+  }
+    
+  private def findRemoveEq(e: FolExpression, quantifiers: Set[String], isNegated: Boolean): FolExpression =
+  {
+      e match 
+      {
+      	case FolExistsExpression(v, term) => 
+            val mTerm = findRemoveEq(term, quantifiers + (v.name), isNegated)
+      		getBoolean2(mTerm)  match 
+      		{
+      		  case 'r' => removeFolExp
+      		  case 'o' => FolExistsExpression(v, mTerm);
+      		} 
+        case FolAllExpression(v, term) =>
+        	val mTerm = findRemoveEq(term, quantifiers + (v.name), isNegated)
+      		getBoolean2(mTerm)  match 
+      		{
+      		  case 'r' => removeFolExp
+      		  case 'o' => FolAllExpression(v, mTerm);
+      		}
+        case FolNegatedExpression(term) => 
+            val mTerm = findRemoveEq(term, quantifiers, !isNegated) 
+      		getBoolean2(mTerm)  match 
+      		{
+      		  case 'r' => removeFolExp
+      		  case 'o' => FolNegatedExpression(mTerm); 
+      		}            
+        case FolAndExpression(first, second) =>
+            val mFirst = findRemoveEq(first, quantifiers, isNegated) 
+      		val mSecond = findRemoveEq(second, quantifiers, isNegated)
+      		(getBoolean2(mFirst),getBoolean2(mSecond)) match 
+      		{
+      		  case ('r', 'r') => removeFolExp
+      		  case ('r', 'o') => mSecond
+      		  case ('o', 'r') => mFirst
+      		  case ('o', 'o') => FolAndExpression(mFirst, mSecond);      		    
+      		}
+      	case FolOrExpression(first, second) =>
+      	    val mFirst = findRemoveEq(first, quantifiers, isNegated) 
+      		val mSecond = findRemoveEq(second, quantifiers, isNegated)
+      		(getBoolean2(mFirst),getBoolean2(mSecond)) match 
+      		{
+      		  case ('r', 'r') => removeFolExp
+      		  case ('r', 'o') => mSecond
+      		  case ('o', 'r') => mFirst
+      		  case ('o', 'o') => FolOrExpression(mFirst, mSecond);      		    
+      		}
+      	case FolIfExpression(first, second) =>
+      	    val mFirst = findRemoveEq(first, quantifiers, !isNegated) 
+      		val mSecond = findRemoveEq(second, quantifiers, isNegated)
+      		(getBoolean2(mFirst),getBoolean2(mSecond)) match 
+      		{
+      		  case ('r', 'r') => removeFolExp
+      		  case ('r', 'o') => mSecond
+      		  case ('o', 'r') => mFirst
+      		  case ('o', 'o') => FolIfExpression(mFirst, mSecond);      		    
+      		}      		
+      	case FolIffExpression(first, second) => throw new RuntimeException("not reachable")
+        case FolEqualityExpression(first, second) => {
+          val vFirst = first.asInstanceOf[FolVariableExpression].variable.name;
+          val vSecond = second.asInstanceOf[FolVariableExpression].variable.name;
+          if(quantifiers.contains(vFirst) && quantifiers.contains(vSecond))
+          {
+        	  if(!isNegated)
+        		  equalities = equalities ++ List(Set(vFirst, vSecond));
+        	  removeFolExp
+          }
+		  else
+			  e
+        }
+          
+        case FolAtom(pred, args @ _*) => e 
+        case _ => throw new RuntimeException("not reachable")
+      }
+  }
+    
   
-  private def findRemoveEq(e:BoxerExpression, isNegated: Boolean) : BoxerExpression = 
+  /*
+  private def findRemoveEq(e: FolExpression, isNegated: Boolean, quantifiers: Set[String]): FolExpression =
+  {
+    e match {
+    	case FolExistsExpression(v, term) => FolExistsExpression(v, findRemoveEq(term, isNegated, quantifiers  +  v.name ))
+    	case FolAllExpression(v, term) => FolAllExpression(v, findRemoveEq(term, isNegated, quantifiers  +  v.name ))
+    	case FolNegatedExpression(term) => FolNegatedExpression(findRemoveEq(term, !isNegated, quantifiers))
+    	case FolIfExpression(first, second) => FolIfExpression(findRemoveEq(first, !isNegated, quantifiers), findRemoveEq(second, !isNegated, quantifiers))
+    	case FolAtom(pred, args @ _*) => FolAtom(pred, args.map(rename(_)) :_ * )	
+    	case FolVariableExpression(v) => FolVariableExpression(rename(v)) 
+    	case _=>e.visitStructured(rename, e.construct)
+    }
+  }
+    */
+  /*
+  private def findRemoveEq(e:FolExpression, isNegated: Boolean) : FolExpression = 
   {
     e match {
       case BoxerAlfa(variable, first, second) => BoxerAlfa(variable, findRemoveEq(first, isNegated),
@@ -243,7 +331,7 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
     } 
   }
   
-  
+  */
   /*private def findRemoveEq(e: BoxerExpression): BoxerExpression = 
   {
     e match {
@@ -307,16 +395,29 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
     return groupedEq;
   }
   
-  private def applyEq(e: BoxerExpression): BoxerExpression = {
+  private def applyEq(v: String): String =
+  {
+	equalities.foreach(eq => {
+    	if (eq.contains(v))
+  		  return eq.head;
+  	})
+	v	
+  }
+  
+  private def applyEq(v: Variable): Variable =
+  {
+	Variable(applyEq(v.name))
+  }
+  
+  private def applyEq(e: FolExpression): FolExpression = 
+  {
     e match {
-      case BoxerVariable(v) => {
-	    equalities.foreach(eq => {
-	    	if (eq.contains(v))
-	  		  return BoxerVariable(eq.head);
-	  	})
-		BoxerVariable(v)
-      }
-      case _ => e.visitConstruct(applyEq)
+    	case FolExistsExpression(v, term) => FolExistsExpression(applyEq(v), applyEq(term))	
+    	case FolAllExpression(v, term) => FolAllExpression(applyEq(v), applyEq(term))
+    	case FolAtom(pred, args @ _*) => FolAtom(pred, args.map(applyEq(_)) :_ * )	
+    	case FolVariableExpression(v) => FolVariableExpression(applyEq(v)) 
+    	case _=>e.visitStructured(applyEq, e.construct)
     }
   }
+  
 }
