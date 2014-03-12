@@ -1,4 +1,11 @@
--A false sub-formula in Q should not be removed. Try pair 39 with and without NoExist. 
+-"repeat" in AutoConst is wrong. Fix it <<<<<<<<<<<
+-Introduction in SetGoal should reduce number of constants somehow <<<<<< 
+-AutoConst is missing a case <<<<<<<<
+-There are more "there" to be removed <<<<<<<
+-pair 790 throws StackOverflow exception
+-pairs 67,260,368,3197 throw StackOverflow exception
+-A false sub-formula in Q should not be removed. Try pair 1356 with and without NoExist. Done. Alchemy breaks in this case, and NoExist supposed to be avoiding these cases.
+-Check the case in AutoConst where agent propagates evidence to predicates then these predicates mistakenly propagate more evidnece back to agent <<<
 -Get latest vesrion of Boxer for handling of "there"
 -Again, it seems that the handling of negation is wrong again. Try pair 2324
 -There is a problem similar to the unicorn case in (prb-23-h|NotT)

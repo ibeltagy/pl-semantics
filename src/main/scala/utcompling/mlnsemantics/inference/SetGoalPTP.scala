@@ -291,6 +291,12 @@ class SetGoalPTP(
         					return false;
         		}
         	}*/
+
+		   //if(notExistCount > 1 )  
+			//	return false;
+
+			//TODO: try not to generate constants for relations that are NotExist. (Line above)
+			//TODO: still some causes generate inconsistant MLNs. Also, not sure if the handling below is correct
         	if(parent.isInstanceOf[FolAndExpression])
         		return true;
         	else {
@@ -302,7 +308,7 @@ class SetGoalPTP(
         {
         	if(univCount  != 0)
         	  LOG.trace("found %s variables, only %s of them is/are universlly quantified".format(args.length, univCount)) 
-            return false
+         return false
         }
   }
   

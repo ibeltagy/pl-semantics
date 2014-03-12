@@ -112,7 +112,10 @@ class TextualTheoremProver(
 	          }
 	      })
 	      if(eqIndex != -1)
-	        return BoxerNot(notDiscId, notIndices, BoxerDrs(negatedDrs.refs, negatedDrs.conds.filterNot(_ == negatedDrs.conds(eqIndex))))
+			{
+				println ("<<<<< THERE removed >>>>>")
+				return BoxerNot(notDiscId, notIndices, BoxerDrs(negatedDrs.refs, negatedDrs.conds.filterNot(_ == negatedDrs.conds(eqIndex))))
+			}
 	    }
 	    case _ => return e;
 	  }

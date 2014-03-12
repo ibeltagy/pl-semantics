@@ -228,8 +228,8 @@ class Config(opts: Map[String, String] = Map()) {
  
  //ground EXIST before calling alchemy
  val groundExist = opts.get("-groundExist") match {
-    case Some("true") => true;
-    case _ => false;
+    case Some("false") => false;
+    case _ => true;
   }
  
  //Enable focus grounding. It does full grounding taking 

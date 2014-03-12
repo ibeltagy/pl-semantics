@@ -91,6 +91,7 @@ class SampleSearchTheoremProver
   			}
 	      }
 	      case -3 => Seq(-3.0); 
+			case 7 => Seq(-7.0); //inconsistant MLN
 	      case x  => Seq(-1.0); 
 		}    
   }
