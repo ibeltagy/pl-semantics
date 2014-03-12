@@ -60,58 +60,58 @@ class OnTheFlyRules extends Rules {
 
       //create rules
       var rules = List[(BoxerDrs, BoxerDrs, Double)]() ;
-	 if (Sts.opts.inferenceRulesLevel > 0){ //if > 0, add lexical and phrasal distrbutional rules
-		
-			//findRelPred handels if inferenceRulesLevel is 1 or 2
-		  val assumRelPred = findRelPred(assumPredsAndContexts, assumRel);
-		  val goalRelPred = findRelPred(goalPredsAndContexts, goalRel);
-				
-			for (goalEntry <- goalRelPred )
-			{
-				  for (assumEntry <- assumRelPred )
-				  {
-					  //DO not add rules if the word is the same??? Why?
-					  //Words should have the same POS and same entity type (individual or event)
-					  
-					 if (//assumPred._1.pos == goalPred._1.pos && 
-							assumEntry._3 != goalEntry._3 )
-							//no need to check for the variable anymore before all of them are INDV now. 
-							//assumPred._1.variable.name.charAt(0) == goalPred._1.variable.name.charAt(0))
-					  {
-						val rw = ruleWeighter.weightForRules(assumEntry._3, assumEntry._2, Seq((goalEntry._3 , goalEntry._2)).toMap, vectorspace);
-						
-						var assumEntryExp = assumEntry._1
-						var goalEntryExp = goalEntry._1
-						
-						val assumEntryPreds = assumEntryExp.getPredicates()
-						val goalEntryPreds = goalEntryExp.getPredicates()
-						
-						//If LHS and RHS are both single predicates, use the same variable name for both of them
-						if(assumEntryPreds.length == 1 && goalEntryPreds.length == 1)
-						{
-						  val assumPred = assumEntryPreds.head match {
-						  	case BoxerPred(discId, indices, variable, name, pos, sense)=>
-						  	  BoxerPred(discId, indices, BoxerVariable("x0"), name, pos, sense)
-						  }
-						  val goalPred = goalEntryPreds.head match {
-						  	case BoxerPred(discId, indices, variable, name, pos, sense)=>
-						  	  BoxerPred(discId, indices, BoxerVariable("x0"), name, pos, sense)
-						  }
-						  assumEntryExp = BoxerDrs(List(List() -> BoxerVariable("x0")), List(assumPred));
-						  goalEntryExp = BoxerDrs(List(List() -> BoxerVariable("x0")), List(goalPred));
-						}
-						
-						val assumeVarTypeMap = assumEntryExp.getPredicates().map(pred => (pred.variable.name, predTypeMap(pred.name))).toMap
-						val goalVarTypeMap = goalEntryExp.getPredicates().map(pred => (pred.variable.name, predTypeMap(pred.name))).toMap
-					
-					    if (rw.head._2.get > 0 && checkCompatibleType(assumeVarTypeMap, goalVarTypeMap))
-					    	rules = rules ++ List((assumEntryExp, goalEntryExp, rw.head._2.get))
-						  
-					  }
-				  }
-			 } 
-	}
-	return rules;
+   if (Sts.opts.inferenceRulesLevel > 0){ //if > 0, add lexical and phrasal distrbutional rules
+    
+      //findRelPred handels if inferenceRulesLevel is 1 or 2
+      val assumRelPred = findRelPred(assumPredsAndContexts, assumRel);
+      val goalRelPred = findRelPred(goalPredsAndContexts, goalRel);
+        
+      for (goalEntry <- goalRelPred )
+      {
+          for (assumEntry <- assumRelPred )
+          {
+            //DO not add rules if the word is the same??? Why?
+            //Words should have the same POS and same entity type (individual or event)
+            
+           if (//assumPred._1.pos == goalPred._1.pos && 
+              assumEntry._3 != goalEntry._3 )
+              //no need to check for the variable anymore before all of them are INDV now. 
+              //assumPred._1.variable.name.charAt(0) == goalPred._1.variable.name.charAt(0))
+            {
+            val rw = ruleWeighter.weightForRules(assumEntry._3, assumEntry._2, Seq((goalEntry._3 , goalEntry._2)).toMap, vectorspace);
+            
+            var assumEntryExp = assumEntry._1
+            var goalEntryExp = goalEntry._1
+            
+            val assumEntryPreds = assumEntryExp.getPredicates()
+            val goalEntryPreds = goalEntryExp.getPredicates()
+            
+            //If LHS and RHS are both single predicates, use the same variable name for both of them
+            if(assumEntryPreds.length == 1 && goalEntryPreds.length == 1)
+            {
+              val assumPred = assumEntryPreds.head match {
+                case BoxerPred(discId, indices, variable, name, pos, sense)=>
+                  BoxerPred(discId, indices, BoxerVariable("x0"), name, pos, sense)
+              }
+              val goalPred = goalEntryPreds.head match {
+                case BoxerPred(discId, indices, variable, name, pos, sense)=>
+                  BoxerPred(discId, indices, BoxerVariable("x0"), name, pos, sense)
+              }
+              assumEntryExp = BoxerDrs(List(List() -> BoxerVariable("x0")), List(assumPred));
+              goalEntryExp = BoxerDrs(List(List() -> BoxerVariable("x0")), List(goalPred));
+            }
+            
+            val assumeVarTypeMap = assumEntryExp.getPredicates().map(pred => (pred.variable.name, predTypeMap(pred.name))).toMap
+            val goalVarTypeMap = goalEntryExp.getPredicates().map(pred => (pred.variable.name, predTypeMap(pred.name))).toMap
+          
+              if (rw.head._2.get > 0 && checkCompatibleType(assumeVarTypeMap, goalVarTypeMap))
+                rules = rules ++ List((assumEntryExp, goalEntryExp, rw.head._2.get))
+              
+            }
+          }
+       } 
+  }
+  return rules;
     }
   
   private def indicesToIndex(l:List[BoxerIndex]):Int = 
@@ -236,8 +236,8 @@ class OnTheFlyRules extends Rules {
             var words = Sts.opts.vectorspaceFormatWithPOS match {
               //use space to split between words of a phrase
               case true => arg1._1.name + "-" + arg1._1.pos + "-" + indicesToIndex(arg1._1.indices) + " " + 
-            		  		arg2._1.name + "-" + arg2._1.pos + "-" + indicesToIndex(arg2._1.indices) + " " +
-            		  		r.name  + "-" + "rel" + "-" +  indicesToIndex(r.indices);            		  		
+                      arg2._1.name + "-" + arg2._1.pos + "-" + indicesToIndex(arg2._1.indices) + " " +
+                      r.name  + "-" + "rel" + "-" +  indicesToIndex(r.indices);                      
               case false => arg1._1.name + " " + arg2._1.name;
             }
 
