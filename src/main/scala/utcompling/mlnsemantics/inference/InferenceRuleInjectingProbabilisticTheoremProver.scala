@@ -4,7 +4,7 @@ import edu.mit.jwi.item.POS
 import scala.collection.JavaConversions._
 import utcompling.mlnsemantics.inference.support.HardWeightedExpression
 import utcompling.mlnsemantics.inference.support.WeightedExpression
-import utcompling.mlnsemantics.vecspace.BowVector
+import utcompling.mlnsemantics.vecspace.{BowVector, BowVectorSpace}
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.Boxer2DrtExpressionInterpreter
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerDrs
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
@@ -30,7 +30,7 @@ import utcompling.mlnsemantics.rules.OnTheFlyRules
 
 class InferenceRuleInjectingProbabilisticTheoremProver(
 
-  vecspaceFactory: ((String => Boolean) => Map[String, BowVector]),
+  vecspaceFactory: ((String => Boolean) => BowVectorSpace),
   ruleWeighter: RuleWeighter,
  
   delegate: ProbabilisticTheoremProver[BoxerExpression])

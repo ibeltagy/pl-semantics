@@ -63,8 +63,7 @@ object Baseline {
     //
     //
 
-    val singletonVector = new DenseBowVector(Array(1.0))
-    val vsf1 = (words: (String => Boolean)) => Map[String, BowVector]().withDefaultValue(singletonVector)
+    val vsf1 = (words: (String => Boolean)) => BowVectorSpace.nullVectorSpace
     val vsf2 = (words: (String => Boolean)) => BowVectorSpace("resources/nytgiga.lem.1m.vc.f2000.m50.wInf", words)
 
     val ttp =

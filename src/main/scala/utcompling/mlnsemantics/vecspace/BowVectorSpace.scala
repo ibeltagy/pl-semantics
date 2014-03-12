@@ -9,15 +9,44 @@ import scala.collection.mutable.Buffer
 import breeze.linalg.{DenseVector, SparseVector, Vector => BrVector}
 import collection.mutable.{MutableList => MList, HashMap => MHashMap}
 
+class BowVectorWithDistances(val self: BowVector) {
+  def norm2: Double = self.norm(2)
+  def cosine(other: BowVector): Double = {
+    (self dot other) / (self.norm2 * other.norm(2))
+  }
+  def euclid(other: BowVector): Double = {
+    (self - other).norm(2)
+  }
+}
+
+class DenseBowVector(vals: TraversableOnce[Double]) extends DenseVector[Double](vals.toArray, 0)
+
+class SparseBowVector(vals: TraversableOnce[Double], indx: TraversableOnce[Int], numDims: Int) extends SparseVector[Double](indx.toArray, vals.toArray, numDims) {
+  def this(numDims: Int) = this(Array[Double](), Array[Int](), numDims)
+}
+
+
+
+class BowVectorSpace(vectorMap: Map[String, BowVector]) {
+  def get(word: String): Option[BowVector] = vectorMap.get(word)
+
+  def numDims: Int = vectorMap.head._2.size
+}
+
 object BowVectorSpace {
   def apply(filename: String): BowVectorSpace = {
-    readSpace(filename)
+    new BowVectorSpace(readSpace(filename))
   }
 
   def apply(filename: String, fltr: String => Boolean): BowVectorSpace = {
-    val res = readSpace(filename)
-      .filter(sv => fltr(sv._1))
-    res
+    val res = readSpace(filename).filter(sv => fltr(sv._1))
+    new BowVectorSpace(res)
+  }
+
+  def nullVectorSpace: BowVectorSpace = {
+    val singleton = new DenseBowVector(Array(1.0))
+    val defaultMap = Map[String, BowVector]().withDefaultValue(singleton)
+    new BowVectorSpace(defaultMap)
   }
 
   private def isDouble(s: String): Boolean = {
@@ -29,7 +58,7 @@ object BowVectorSpace {
     }
   }
 
-  def readSpace(filename: String): BowVectorSpace = {
+  def readSpace(filename: String): Map[String, BowVector] = {
     val reader = detectFormat(filename)
     val res = reader(filename)
     res
@@ -37,7 +66,7 @@ object BowVectorSpace {
 
   // auto-detects between the dhg format, a dense space and a sparse space
   // using the first line
-  def detectFormat(filename: String): (String => BowVectorSpace) = {
+  def detectFormat(filename: String): (String => Map[String, BowVector]) = {
     val firstLine = readLines(filename).next
     val Array(word, fields @ _*) = firstLine.split("\t", -1)
     if (isDouble(fields(0))) {
@@ -54,7 +83,7 @@ object BowVectorSpace {
     }
   }
 
-  def readDhgSpace(filename: String): BowVectorSpace = {
+  def readDhgSpace(filename: String): Map[String, SparseBowVector] = {
     readLines(filename)
       .map(_.split("\t", -1))
       .collect {
@@ -93,7 +122,7 @@ object BowVectorSpace {
       }
   }
 
-  def readSparseSpace(filename: String): BowVectorSpace = {
+  def readSparseSpace(filename: String): Map[String, SparseBowVector] = {
     val dim2index: Map[String,Int] = readSparseColumns(filename)
 
     val vectors = MHashMap[String, MList[(Int, Double)]]()
@@ -116,33 +145,11 @@ object BowVectorSpace {
       .toMap
   }
 
-  def readDenseSpace(filename: String): BowVectorSpace = {
+  def readDenseSpace(filename: String): Map[String, DenseBowVector] = {
     readLines(filename)
       .map(_.split("\t"))
       .collect { case Array(word, vector @ _*) => (word, new DenseBowVector(vector.map(_.toDouble))) }
       .toMap
   }
 }
-
-class BowVectorWithDistances(val self: BowVector) {
-  def norm2: Double = {
-    self.norm(2)
-  }
-
-  def cosine(other: BowVector): Double = {
-    (self dot other) / (self.norm2 * other.norm(2))
-  }
-
-  def euclid(other: BowVector): Double = {
-    (self - other).norm(2)
-  }
-}
-
-class SparseBowVector(vals: TraversableOnce[Double], indx: TraversableOnce[Int], numDims: Int) extends SparseVector[Double](indx.toArray, vals.toArray, numDims) {
-  def this(numDims: Int) = this(Array[Double](), Array[Int](), numDims)
-}
-
-
-
-class DenseBowVector(vals: TraversableOnce[Double]) extends DenseVector[Double](vals.toArray, 0)
 

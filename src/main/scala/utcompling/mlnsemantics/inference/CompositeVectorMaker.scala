@@ -8,12 +8,12 @@ import org.apache.commons.logging.LogFactory
 import utcompling.mlnsemantics.run.Sts
 
 trait CompositeVectorMaker {
-  def make(preds: Iterable[String], vectorspace: Map[String, BowVector]): BowVector
+  def make(preds: Iterable[String], vectorspace: BowVectorSpace): BowVector
 }
 
 case class SimpleCompositeVectorMaker() extends CompositeVectorMaker {
   private val LOG = LogFactory.getLog(classOf[SimpleCompositeVectorMaker])
-  override def make(preds: Iterable[String], vectorspace: Map[String, BowVector]): BowVector = {
+  override def make(preds: Iterable[String], vectorspace: BowVectorSpace): BowVector = {
     LOG.info("Making phrase: " + ( preds mkString " "))
     /*
     println(Sts.text)
@@ -23,14 +23,14 @@ case class SimpleCompositeVectorMaker() extends CompositeVectorMaker {
     */
     val toCombine = preds.map(_.split("-").head).flatMap(vectorspace.get)
     if (toCombine.isEmpty)
-      new SparseBowVector(numDims = vectorspace.head._2.size)
+      new SparseBowVector(numDims = vectorspace.numDims)
     else
       toCombine.reduce(_ + _)
   }
 }
 
 case class MultiplicationCompositeVectorMaker() extends CompositeVectorMaker {
-  override def make(preds: Iterable[String], vectorspace: Map[String, BowVector]): BowVector = {
+  override def make(preds: Iterable[String], vectorspace: BowVectorSpace): BowVector = {
     preds.map(_.split("-").head).flatMap(vectorspace.get).reduce(_ :* _)
   }
 }

@@ -9,7 +9,7 @@ import utcompling.mlnsemantics.run.Sts
 import scala.Array.canBuildFrom
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerPred
-import utcompling.mlnsemantics.vecspace.BowVector
+import utcompling.mlnsemantics.vecspace.{BowVector, BowVectorSpace}
 import utcompling.mlnsemantics.inference.RuleWeighter
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerRel
 import scala.collection.mutable.HashMap
@@ -23,7 +23,7 @@ class OnTheFlyRules extends Rules {
   private val LOG = LogFactory.getLog(classOf[OnTheFlyRules])
 
   def getRules(text: BoxerExpression, hypothesis: BoxerExpression, ruleWeighter: RuleWeighter,
-    vecspaceFactory: ((String => Boolean) => Map[String, BowVector])): List[(BoxerDrs, BoxerDrs, Double)] =
+    vecspaceFactory: ((String => Boolean) => BowVectorSpace)): List[(BoxerDrs, BoxerDrs, Double)] =
     {
       val assumPredsAndContexts = getAllPredsAndContexts(text)
       val goalPredsAndContexts = getAllPredsAndContexts(hypothesis)

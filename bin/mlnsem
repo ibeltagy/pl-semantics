@@ -29,7 +29,7 @@ case $CMD in
   compile)
 	$SBT add-start-script-tasks start-script
 	make -C alchemy/src/ infer
-	ant -buildfile psl/build.xml
+	#ant -buildfile psl/build.xml
 	exit 0
    ;;
   boxer)

@@ -6,7 +6,7 @@ import edu.mit.jwi.item.POS
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
 
 class InferenceRuleGenerator(
-  vecspace: Map[String, BowVector]) {
+  vecspace: BowVectorSpace) {
 
   def generate(from: Set[(String, String)], to: Set[(String, String)]): Iterable[DrtExpression] = {
 

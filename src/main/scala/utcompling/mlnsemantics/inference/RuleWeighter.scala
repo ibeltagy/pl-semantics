@@ -7,11 +7,11 @@ import math.min
 import utcompling.mlnsemantics.run.Sts
 
 trait RuleWeighter {
-  def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: Map[String, BowVector]): Iterable[(String, Option[Double])]
+  def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: BowVectorSpace): Iterable[(String, Option[Double])]
 }
 
 case class UniformHardRuleWeighter() extends RuleWeighter {
-  override def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: Map[String, BowVector]) = {
+  override def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: BowVectorSpace) = {
     consequentAndContexts.map(_._1 -> None)
   }
 }
@@ -20,7 +20,7 @@ case class ACtxWithCVecspaceRuleWeighter(
   compositeVectorMaker: CompositeVectorMaker)
   extends RuleWeighter {
 
-  override def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: Map[String, BowVector]) = {
+  override def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: BowVectorSpace) = {
     val pv = compositeVectorMaker.make(antecedentContext, vectorspace)
     consequentAndContexts.map {
       case (consequent, consequentContext) =>
@@ -36,7 +36,7 @@ case class AwithCvecspaceRuleWeighter(
   compositeVectorMaker: CompositeVectorMaker)
   extends RuleWeighter {
 
-  override def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: Map[String, BowVector]) = {
+  override def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: BowVectorSpace) = {
     val pv = vectorspace.get(antecedent)
     consequentAndContexts.map {
       case (consequent, consequentContext) =>
@@ -67,7 +67,7 @@ case class AwithCvecspaceWithSpellingSimilarityRuleWeighter(
     else
       return 0;
   }
-  override def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: Map[String, BowVector]) = {
+  override def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: BowVectorSpace) = {
     /*
     println(Sts.text)
     println(Sts.textLemma)
@@ -99,7 +99,7 @@ case class CompositionalRuleWeighter(
 
   val ruleWeighter = AwithCvecspaceWithSpellingSimilarityRuleWeighter(compositeVectorMaker);
   
-  override def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: Map[String, BowVector]) = {
+  override def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: BowVectorSpace) = {
 	val antecedentWords =  antecedent.split(" ")
     consequentAndContexts.map {
       case (consequent, consequentContext) =>{
@@ -123,7 +123,7 @@ case class AwithCtxCwithCtxVecspaceRuleWeighter(
   compositeVectorMaker: CompositeVectorMaker)
   extends RuleWeighter {
 
-  override def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: Map[String, BowVector]) = {
+  override def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: BowVectorSpace) = {
     val pv = compositeVectorMaker.make(antecedent +: antecedentContext.toSeq, vectorspace)
     consequentAndContexts.map {
       case (consequent, consequentContext) =>
@@ -134,7 +134,7 @@ case class AwithCtxCwithCtxVecspaceRuleWeighter(
 }
 
 class SameLemmaHardClauseRuleWeighter(delegate: RuleWeighter) extends RuleWeighter {
-  def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: Map[String, BowVector]): Iterable[(String, Option[Double])] = {
+  def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: BowVectorSpace): Iterable[(String, Option[Double])] = {
     val (same, diff) = consequentAndContexts.partition(_._1 == antecedent)
     same.map(_._1).mapToVal(Some(Double.PositiveInfinity)) ++ delegate.weightForRules(antecedent, antecedentContext, diff, vectorspace)
   }
@@ -144,7 +144,7 @@ case class RankingRuleWeighter(
   delegate: RuleWeighter)
   extends RuleWeighter {
 
-  override def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: Map[String, BowVector]) = {
+  override def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: BowVectorSpace) = {
     val weighted = delegate.weightForRules(antecedent, antecedentContext, consequentAndContexts, vectorspace)
     val unoptionedWeighted = weighted.mapVals(_.getOrElse(Double.PositiveInfinity))
     val sortedGroupedWeighted = unoptionedWeighted.map(_.swap).groupByKey.toSeq.sortBy(-_._1).map(_._2)
@@ -163,7 +163,7 @@ case class TopRuleWeighter(
   delegate: RuleWeighter)
   extends RuleWeighter {
 
-  override def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: Map[String, BowVector]) = {
+  override def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: BowVectorSpace) = {
     val weighted = delegate.weightForRules(antecedent, antecedentContext, consequentAndContexts, vectorspace)
     if (weighted.nonEmpty)
       Iterable(weighted.maxBy(_._2.getOrElse(Double.PositiveInfinity)))
