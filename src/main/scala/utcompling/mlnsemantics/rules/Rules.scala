@@ -183,7 +183,7 @@ object Rules {
       val diff = rhsSet -- lhsSet; 
       if( ! diff.isEmpty )
       {
-        println ("Rule ignored: " + leftFOL + " => " + rightFOL )
+        //println ("Rule ignored: " + leftFOL + " => " + rightFOL )
         return None //RHS has variables that are not in the LHS
       }
 

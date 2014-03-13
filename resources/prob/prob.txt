@@ -1,4 +1,4 @@
-The kids are wearing bathing suits and water is splashing around	The kids are not wearing suits and water is splashing around
+A man is climbing a rope	There is no man holding a mask in his raised hand
 A snake is being fed a mouse by a man	No snake is being fed a mouse by a man
 There is no woman using an eye pencil and applying eye liner to her eyelid	A woman is applying cosmetics to her eyelid
 a bird flies	a bird flies

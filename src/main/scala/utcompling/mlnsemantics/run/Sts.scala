@@ -38,7 +38,7 @@ class Sts{
 object Sts {
 
   private val LOG = LogFactory.getLog(classOf[Sts])
-  val Range(defaultRange) = "1-2000"
+  val Range(defaultRange) = "1-5000"
   val SomeRe = """Some\((.*)\)""".r
 
   //Global variables used by other classes
