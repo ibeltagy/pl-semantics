@@ -178,13 +178,21 @@ object Rules {
 
   private def createWeightedExpression(leftFOL: BoxerDrs, rightFOL: BoxerDrs, discId: String, score: Double): Option[WeightedExpression[BoxerExpression]] =
     {
-      if(leftFOL.conds.length < rightFOL.conds.length)
-        return None
+      val lhsSet = leftFOL.refs.map(_._2).toSet
+      val rhsSet = rightFOL.refs.map(_._2).toSet
+      val diff = rhsSet -- lhsSet; 
+      if( ! diff.isEmpty )
+      {
+        println ("Rule ignored: " + leftFOL + " => " + rightFOL )
+        return None //RHS has variables that are not in the LHS
+      }
+
       val changedLHS = changeExpDirection(leftFOL);
+      var lhs = changedLHS.asInstanceOf[BoxerDrs]();      
       var rhs = rightFOL
+      val allRefs = (lhs.refs ++ rhs.refs).toSet.toList
       rhs = BoxerDrs(List(), rhs.conds);
-      var lhs = changedLHS.asInstanceOf[BoxerDrs]();
-      lhs = BoxerDrs((lhs.refs ++ rhs.refs).toSet.toList, lhs.conds);
+      lhs = BoxerDrs(allRefs, lhs.conds);
       val unweightedRule = BoxerImp(discId, List(), lhs, rhs)
       return Some(SoftWeightedExpression(unweightedRule, score))
     }

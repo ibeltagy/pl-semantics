@@ -82,7 +82,11 @@ class SampleSearchTheoremProver
   			{
 	  			try 
 	  			{
-	  				val score = results(0).toDouble;
+	  				var score = results(0).toDouble;
+	  				if(score < 0.001 && score > -0.01) 
+	  				  score = 0.0
+	  				else if(score > 0.999 && score < 1.01) 
+	  				  score = 1.0
 	  				Seq(score);
 	  			}catch {
 	  			  case e: Exception => LOG.error("result file is corrupted");
