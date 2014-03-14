@@ -20,11 +20,12 @@ class AutoTypingPTP(
   extends ProbabilisticTheoremProver[FolExpression] {
 
   private var allConstants: Map[String, Set[String]] = null;
-  private var autoConst : scala.collection.mutable.Map[String, (Seq[String], scala.collection.mutable.Set[Seq[String]])] = null; //predName#varIndx -> (type, H
+  private var autoConst : scala.collection.mutable.Map[String, (Seq[String], scala.collection.mutable.Set[(String, Seq[String])])] = null; //predName#varIndx -> (type, H
 
   //private var arrows : scala.collection.mutable.Set[(Set[String], String)] = null; //predName#varIndx#varIndx -> predName#varIndx#varIndx 
   private var extraEvid: List[FolExpression] = null;
   private var quantifiedVars: scala.collection.mutable.Set[String] = null;
+  private var isHardRule = true;
   private var repeat = true;
   private var first = true;
   def runWithTimeout[T](timeoutMs: Long)(f: => T) : Option[T] = {
@@ -77,7 +78,8 @@ class AutoTypingPTP(
 				repeat = false;
 				assumptions.foreach{
 	          case HardWeightedExpression(e) => {
-	            quantifiedVars.clear(); 
+	            quantifiedVars.clear();
+	            isHardRule = true;
 	            val vars = findConstVarsQuantif(e);
 	            //generate arrows from vars
 	   			vars.foreach(rhsVar => {
@@ -86,7 +88,7 @@ class AutoTypingPTP(
 	      			)
 	      		})	            
 	          }
-	          case SoftWeightedExpression(e, w) => quantifiedVars.clear(); findArrowsIR (e)
+	          case SoftWeightedExpression(e, w) => quantifiedVars.clear(); isHardRule = false; findArrowsIR (e)
 	          case _ => ;
 	         }
 	    	   first = false;
@@ -94,7 +96,7 @@ class AutoTypingPTP(
             genNegativeEvd(declarations);
 		}
 	
-      val finish = runWithTimeout(30000, false) { findApply ;  true }
+      val finish = runWithTimeout(300000, false) { findApply ;  true }
 
       if(!finish)
 			return Seq(-5.0)
@@ -122,7 +124,7 @@ class AutoTypingPTP(
               if (args.length == 1)
               {
             	  //Map[String, (Seq[String], scala.collection.mutable.Set[Seq[String]])]
-            	  val possibleConst = t._2.map(_.head);
+            	  val possibleConst = t._2.map(_._2.head);
             	  allConstants(t._1.head).foreach(c=>
             	  {
             	      if(!possibleConst.contains(c))
@@ -136,7 +138,7 @@ class AutoTypingPTP(
             	  
               }else if (args.length == 2)
               {
-            	  val possibleConst =  t._2.map(e=>(e.head, e.last));
+            	  val possibleConst =  t._2.map(e=>(e._2.head, e._2.last));
             	  allConstants(t._1.head).foreach(c1=>
             	  {
             		  allConstants(t._1.last).foreach(c2=>
@@ -185,7 +187,7 @@ class AutoTypingPTP(
 	  if((quantifiedVars & rhs._2.toSet).isEmpty) //intersection is empty, so all variables are not quantified
 	     return //if both rhs variables are Constants
 	  
-	  var allExtraConst:Set[Seq[String]] = null; 
+	  var allExtraConst:Set[(String, Seq[String])] = null; 
 		  
 	  lhs.toList.sortBy( l => -l._2.length).foreach(lhsEntry=>{   //sorting to make predicates of multiple arguments come first. 
 		  														//this is important for the intersection
@@ -199,20 +201,32 @@ class AutoTypingPTP(
 			  lhsEntry._2.indices.foreach(lhsVarIdx=>{
 			    val lhsVar = lhsEntry._2(lhsVarIdx);
 			    if(!quantifiedVars.contains(lhsVar)) //Constant not variable
-				  lhsConstSet = lhsConstSet.map(c=>c.updated(lhsVarIdx, lhsVar));
+				  lhsConstSet = lhsConstSet.map(c=>(c._1, c._2.updated(lhsVarIdx, lhsVar)));
 			  })
 
-			  val lhsConstSetPropagated = lhsConstSet.map(lhsConst=>
+ 
+			  val lhsConstSetPropagated = lhsConstSet.flatMap(lhsConst=>
 			  {
-			      val lhsConstPropagated = rhs._2.map(rhsVar=>{
-			        if(lhsEntry._2.contains(rhsVar))
-			        {
-			    	  val idx = lhsEntry._2.indexOf(rhsVar)
-			    	  lhsConst(idx);
-			        }
-			        else "any";
-			      })//end rhsConst
-			      lhsConstPropagated;
+    			  //TODO: if lhsConst._1 does not match the conditions, return None
+			      //if(isHardRule && lhsConst._1 == rhs._1)
+			      if(isHardRule && lhsConst._1 != "")
+			      {
+			        //println("CONST propagation canceled")
+			        None
+			      }
+			      else
+			      {
+				      val lhsConstPropagated = rhs._2.map(rhsVar=>{
+				        if(lhsEntry._2.contains(rhsVar))
+				        {
+				    	  val idx = lhsEntry._2.indexOf(rhsVar)
+				    	  lhsConst._2(idx);
+				        }
+				        else "any";
+				      })//end rhsConst
+				      //Some((if(isHardRule) lhsEntry._1 else lhsConst._1, lhsConstPropagated));
+				      Some((if(isHardRule) lhsEntry._1 else "", lhsConstPropagated));
+			      }
 			  }).toSet//end lhsConst
 			  
 			  if(allExtraConst ==  null)
@@ -225,8 +239,8 @@ class AutoTypingPTP(
 			      else
 			      {
 			        var found = false;
-			        e.indices.foreach(idx=>{
-			          if(lhsConstSetPropagated.contains(e.updated(idx, "any")))
+			        e._2.indices.foreach(idx=>{
+			          if(lhsConstSetPropagated.unzip._2.contains(e._2.updated(idx, "any")))
 			            found = true
 			        })
 			        if(found)
@@ -291,9 +305,9 @@ class AutoTypingPTP(
         	  if(first) //add constants only in the first iteration
         	  {
 				 //repeat = true;   //TODO: this should be uncommented but after reducing constatns from SetGoal, and fix AutoTyping
-        	    autoConst(pred.name)._2  += args.map(arg=>{
+        	     autoConst(pred.name)._2  +=  (("", args.map(arg=>{
         	      if(quantifiedVars.contains(arg.name)) "any" else arg.name
-        	      })
+        	      })))
         	  }
         	}
         	Set((pred.name, args.map(_.name)));
