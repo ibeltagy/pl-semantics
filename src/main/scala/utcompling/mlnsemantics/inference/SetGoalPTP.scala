@@ -292,8 +292,8 @@ class SetGoalPTP(
         		}
         	}*/
 
-		   //if(notExistCount > 1 )  
-			//	return false;
+		   if(notExistCount > 1 )  
+				return false;
 
 			//TODO: try not to generate constants for relations that are NotExist. (Line above)
 			//TODO: still some causes generate inconsistant MLNs. Also, not sure if the handling below is correct

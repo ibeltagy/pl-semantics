@@ -165,7 +165,7 @@ class Config(opts: Map[String, String] = Map()) {
   //MLN splits weights on formulas. If scaleW is true, reverse this default MLN behaviour (only on mln)
   val scaleW = opts.get("-scaleW") match {
     case Some(s) => s.toBoolean
-    case _ => true;
+    case _ => false;
   }
 
   //-------------------------------------------logic and inference

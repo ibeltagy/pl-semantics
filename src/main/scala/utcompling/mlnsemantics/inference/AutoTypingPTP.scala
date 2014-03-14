@@ -96,7 +96,7 @@ class AutoTypingPTP(
             genNegativeEvd(declarations);
 		}
 	
-      val finish = runWithTimeout(300000, false) { findApply ;  true }
+      val finish = runWithTimeout(30000, false) { findApply ;  true }
 
       if(!finish)
 			return Seq(-5.0)
@@ -304,7 +304,7 @@ class AutoTypingPTP(
         	{
         	  if(first) //add constants only in the first iteration
         	  {
-				 //repeat = true;   //TODO: this should be uncommented but after reducing constatns from SetGoal, and fix AutoTyping
+				  //repeat = true;   //TODO: this should be uncommented but after reducing constatns from SetGoal, and fix AutoTyping
         	     autoConst(pred.name)._2  +=  (("", args.map(arg=>{
         	      if(quantifiedVars.contains(arg.name)) "any" else arg.name
         	      })))
