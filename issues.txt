@@ -1,3 +1,4 @@
+Things to try: fixed AutoType, repeat, noRelIntro, IR W * 3
 -"repeat" in AutoConst is wrong. Fix it <<<<<<<<<<<
 -Introduction in SetGoal should reduce number of constants somehow <<<<<< 
 -AutoConst is missing a case <<<<<<<<

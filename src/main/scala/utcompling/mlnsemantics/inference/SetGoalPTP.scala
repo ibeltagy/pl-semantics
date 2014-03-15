@@ -111,7 +111,7 @@ class SetGoalPTP(
       }
       extraExpressions = List(GoalExpression(expr.asInstanceOf[FolExpression], Double.PositiveInfinity));
       goalExist match {
-        case Some(g) => extraExpressions = extraExpressions :+ HardWeightedExpression(g); 
+        case Some(g) => extraExpressions = HardWeightedExpression(g) :: extraExpressions; 
         case _ =>
       }
       //----------------------
@@ -127,7 +127,7 @@ class SetGoalPTP(
 	    	  				else 
 	    	  					introduction(e, false, null);
 		      textExit match {
-		        case Some(t) => extraExpressions = extraExpressions :+ HardWeightedExpression(t); true; 
+		        case Some(t) => extraExpressions = HardWeightedExpression(t) :: extraExpressions; true; 
 		        case _ => false;
 		      }
           }
@@ -163,7 +163,7 @@ class SetGoalPTP(
     else
       throw new RuntimeException("Not possible to reach this point")
 
-    val res = delegate.prove(newConstants, declarations, evidence, assumptions ++ extraExpressions, null)
+    val res = delegate.prove(newConstants, declarations, evidence, extraExpressions ++ assumptions, null)
     if (negatedGoal)
     {
       require(res.size == 1);

@@ -26,7 +26,7 @@ class AutoTypingPTP(
   private var extraEvid: List[FolExpression] = null;
   private var quantifiedVars: scala.collection.mutable.Set[String] = null;
   private var isHardRule = true;
-  private var repeat = true;
+  //private var repeat = true;
   private var first = true;
   def runWithTimeout[T](timeoutMs: Long)(f: => T) : Option[T] = {
           awaitAll(timeoutMs, future(f)).head.asInstanceOf[Option[T]]
@@ -48,10 +48,10 @@ class AutoTypingPTP(
     
     allConstants = constants;
     extraEvid = List();
-  	 quantifiedVars = scala.collection.mutable.Set();
+  	quantifiedVars = scala.collection.mutable.Set();
     autoConst = scala.collection.mutable.Map(); //predName#varIndx -> HX1, HX2 ....
     //arrows =  scala.collection.mutable.Set(); //an x -> y means all constants of x should be propagated to y
-    repeat = true;
+    //repeat = true;
 	first = true;
     if(Sts.opts.negativeEvd && Sts.opts.task == "rte" && (Sts.opts.softLogicTool == "mln"|| Sts.opts.softLogicTool == "ss"))
     {
@@ -73,30 +73,67 @@ class AutoTypingPTP(
 
 		def findApply = 
 		{
-		   while (repeat)
-		   {
-				repeat = false;
-				assumptions.foreach{
-	          case HardWeightedExpression(e) => {
+		   //while (repeat)
+		   //{
+				//repeat = false;
+		  
+		   //1)collect constants, and propagate them according to the Text
+		    first = true;
+			assumptions.foreach 
+			{
+	          case HardWeightedExpression(e) => 
+	          {
 	            quantifiedVars.clear();
 	            isHardRule = true;
 	            val vars = findConstVarsQuantif(e);
 	            //generate arrows from vars
-	   			vars.foreach(rhsVar => {
+	   			vars.foreach(rhsVar => 
+	   			{
 	   				vars.foreach(lhsVar =>
 	   					propagate(Set(lhsVar), rhsVar)
 	      			)
 	      		})	            
-	          }
-	          case SoftWeightedExpression(e, w) => quantifiedVars.clear(); isHardRule = false; findArrowsIR (e)
+	           }
 	          case _ => ;
-	         }
-	    	   first = false;
-			}//Repeat
+			}
+
+			//2)apply infernece rules 
+			assumptions.foreach 
+			{			
+	          case SoftWeightedExpression(e, w) => 
+	          {
+	            quantifiedVars.clear(); 
+	            isHardRule = false; 
+	            findArrowsIR (e)
+	          }
+	          case _ => ;
+	        }
+			
+		   //3)propagate collected constants again according to the Text (if any)
+			first = false;
+			assumptions.foreach 
+			{
+	          case HardWeightedExpression(e) => 
+	          {
+	            quantifiedVars.clear();
+	            isHardRule = true;
+	            val vars = findConstVarsQuantif(e);
+	            //generate arrows from vars
+	   			vars.foreach(rhsVar => 
+	   			{
+	   				vars.foreach(lhsVar =>
+	   					propagate(Set(lhsVar), rhsVar)
+	      			)
+	      		})	            
+	           }
+	          case _ => ;
+			}
+	    	 
+			//}//Repeat
             genNegativeEvd(declarations);
 		}
 	
-      val finish = runWithTimeout(30000, false) { findApply ;  true }
+      val finish = runWithTimeout(300000, false) { findApply ;  true }
 
       if(!finish)
 			return Seq(-5.0)
@@ -209,11 +246,18 @@ class AutoTypingPTP(
 			  {
     			  //TODO: if lhsConst._1 does not match the conditions, return None
 			      //if(isHardRule && lhsConst._1 == rhs._1)
-			      if(isHardRule && lhsConst._1 != "")
+			      if(isHardRule && lhsConst._1 == "TEXT") //do not propagate if in TEXT and source of the constant is   
+			    	  								//a former propagation step in the TEXT
 			      {
-			        //println("CONST propagation canceled")
+			        //println("CONST propagation canceled (TEXT)")
 			        None
 			      }
+			      else if(!isHardRule && lhsConst._1 == "IR") //do not propagate is in IR and the const is resulting from 
+			    	  										//a former application of IR
+			      {
+			        //println("CONST propagation canceled (IR)")
+			        None
+			      }			      
 			      else
 			      {
 				      val lhsConstPropagated = rhs._2.map(rhsVar=>{
@@ -225,7 +269,7 @@ class AutoTypingPTP(
 				        else "any";
 				      })//end rhsConst
 				      //Some((if(isHardRule) lhsEntry._1 else lhsConst._1, lhsConstPropagated));
-				      Some((if(isHardRule) lhsEntry._1 else "", lhsConstPropagated));
+				      Some((if(isHardRule) "TEXT" /*lhsEntry._1*/ else "IR", lhsConstPropagated));
 			      }
 			  }).toSet//end lhsConst
 			  
@@ -282,8 +326,8 @@ class AutoTypingPTP(
 	      }
 	      * 
 	      */
-	      if(! (allExtraConst -- autoConst(rhs._1)._2).isEmpty )
-	        repeat = true;
+	      //if(! (allExtraConst -- autoConst(rhs._1)._2).isEmpty )
+	      // repeat = true;
 		  autoConst(rhs._1)._2 ++= allExtraConst;
 	  }
   }
@@ -304,8 +348,8 @@ class AutoTypingPTP(
         	{
         	  if(first) //add constants only in the first iteration
         	  {
-				  //repeat = true;   //TODO: this should be uncommented but after reducing constatns from SetGoal, and fix AutoTyping
-        	     autoConst(pred.name)._2  +=  (("", args.map(arg=>{
+				 //repeat = true;   //TODO: this should be uncommented but after reducing constatns from SetGoal, and fix AutoTyping
+        	     autoConst(pred.name)._2  +=  (("CONST", args.map(arg=>{
         	      if(quantifiedVars.contains(arg.name)) "any" else arg.name
         	      })))
         	  }
