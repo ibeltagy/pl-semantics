@@ -78,7 +78,7 @@ class AutoTypingPTP(
 				//repeat = false;
 		  
 		   //1)collect constants, and propagate them according to the Text
-		    first = true;
+		   first = true;
 			assumptions.foreach 
 			{
 	          case HardWeightedExpression(e) => 
@@ -93,10 +93,16 @@ class AutoTypingPTP(
 	   					propagate(Set(lhsVar), rhsVar)
 	      			)
 	      		})	            
-	           }
+	          }
+             case SoftWeightedExpression(e, w) =>
+             {
+               quantifiedVars.clear();
+               isHardRule = false;
+               findArrowsIR (e)
+             }
 	          case _ => ;
 			}
-
+/*
 			//2)apply infernece rules 
 			assumptions.foreach 
 			{			
@@ -128,7 +134,7 @@ class AutoTypingPTP(
 	           }
 	          case _ => ;
 			}
-	    	 
+*/	    	 
 			//}//Repeat
             genNegativeEvd(declarations);
 		}
