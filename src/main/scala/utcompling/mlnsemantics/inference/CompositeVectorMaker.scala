@@ -8,19 +8,14 @@ import org.apache.commons.logging.LogFactory
 import utcompling.mlnsemantics.run.Sts
 
 trait CompositeVectorMaker {
-  def make(preds: Iterable[String], vectorspace: BowVectorSpace): BowVector
+  def make(preds: Iterable[String], vectorspace: BowVectorSpace, sentence: String, lemmatizedSent: String): BowVector
 }
 
 case class SimpleCompositeVectorMaker() extends CompositeVectorMaker {
   private val LOG = LogFactory.getLog(classOf[SimpleCompositeVectorMaker])
-  override def make(preds: Iterable[String], vectorspace: BowVectorSpace): BowVector = {
+  override def make(preds: Iterable[String], vectorspace: BowVectorSpace, sentence: String, lemmatizedSent: String): BowVector = {
     LOG.info("Making phrase: " + ( preds mkString " "))
-    /*
-    println(Sts.text)
-    println(Sts.textLemma)
-    println(Sts.hypothesis)
-    println(Sts.hypothesisLemma)
-    */
+    LOG.info("Sentence: '" + sentence + "' / '" + lemmatizedSent)
     val toCombine = preds.map(_.split("-").head).flatMap(vectorspace.get)
     if (toCombine.isEmpty)
       new SparseBowVector(numDims = vectorspace.numDims)
@@ -30,7 +25,7 @@ case class SimpleCompositeVectorMaker() extends CompositeVectorMaker {
 }
 
 case class MultiplicationCompositeVectorMaker() extends CompositeVectorMaker {
-  override def make(preds: Iterable[String], vectorspace: BowVectorSpace): BowVector = {
+  override def make(preds: Iterable[String], vectorspace: BowVectorSpace, sentence: String, lemmatizedSent: String): BowVector = {
     preds.map(_.split("-").head).flatMap(vectorspace.get).reduce(_ :* _)
   }
 }

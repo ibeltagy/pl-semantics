@@ -87,7 +87,7 @@ class Config(opts: Map[String, String] = Map()) {
   //The case of "with POS", is not well tested. Expect it to break 
   val vectorspaceFormatWithPOS = opts.get("-vsWithPos") match {
     case Some(vst) => vst.toBoolean;
-    case _ => false;
+    case _ => true;
   }
    
   //generate distributional phrasel inference rules for phrases including ones with agent and patient relations=

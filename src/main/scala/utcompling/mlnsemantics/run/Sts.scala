@@ -129,7 +129,7 @@ object Sts {
     def run(stsFile: String, boxFile: String, lemFile: String, vsFile: String, goldSimFile: String, outputSimFile: String, allLemmas: String => Boolean, includedPairs: Int => Boolean) {
     	val pairs = readLines(stsFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
 		val lemPairs = readLines(lemFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
-      val vectorSpace = BowVectorSpace(vsFile, x => allLemmas(x))
+      val vectorSpace = BowVectorSpace(vsFile)
 
 
 		val boxPairs =

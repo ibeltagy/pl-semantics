@@ -21,7 +21,7 @@ case class ACtxWithCVecspaceRuleWeighter(
   extends RuleWeighter {
 
   override def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: BowVectorSpace) = {
-    val pv = compositeVectorMaker.make(antecedentContext, vectorspace)
+    val pv = compositeVectorMaker.make(antecedentContext, vectorspace, Sts.text, Sts.textLemma)
     consequentAndContexts.map {
       case (consequent, consequentContext) =>
         consequent -> Some(vectorspace.get(consequent) match {
@@ -74,21 +74,12 @@ case class AwithCvecspaceWithSpellingSimilarityRuleWeighter(
     println(Sts.hypothesis)
     println(Sts.hypothesisLemma)
     */
-    val pv = compositeVectorMaker.make (antecedent.split(" "), vectorspace);
-    consequentAndContexts.map {
+    val pv = compositeVectorMaker.make(antecedent.split(" "), vectorspace, Sts.text, Sts.textLemma);
+    consequentAndContexts.collect {
       case (consequent, consequentContext) =>
         val w = spellingSimilarity(antecedent, consequent);
-        val v = compositeVectorMaker.make (consequent.split(" "), vectorspace);
-        consequent -> Some(v match {
-          case cv => pv match {
-            case pv => { /*println(antecedent + " -> " + consequent + "   " + (pv cosine cv))
-                         println(pv)
-                         println(cv)*/
-                         Sts.opts.lexicalInferenceMethod.entails(pv, cv) } 
-    		//case None => w  //if vector space does not work, use spelling
-          	}
-          //case None => w  //if vector space does not work, use spelling
-        })
+        val cv = compositeVectorMaker.make(consequent.split(" "), vectorspace, Sts.hypothesis, Sts.hypothesisLemma);
+        consequent -> Some(Sts.opts.lexicalInferenceMethod.entails(pv, cv))
     }
   }
 }
@@ -98,17 +89,17 @@ case class CompositionalRuleWeighter(
   extends RuleWeighter {
 
   val ruleWeighter = AwithCvecspaceWithSpellingSimilarityRuleWeighter(compositeVectorMaker);
-  
+
   override def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: BowVectorSpace) = {
-	val antecedentWords =  antecedent.split(" ")
+    val antecedentWords =  antecedent.split(" ")
     consequentAndContexts.map {
       case (consequent, consequentContext) =>{
         val consequentWords = consequent.split(" ")
         var totalW = 0.0;
-        
+
         antecedentWords.foreach(aw =>{
            consequentWords.foreach(cw =>{
-        	 totalW = totalW + ruleWeighter.weightForRules(aw, antecedentContext, Map(cw->consequentContext), vectorspace).head._2.get;
+           totalW = totalW + ruleWeighter.weightForRules(aw, antecedentContext, Map(cw->consequentContext), vectorspace).head._2.get;
            });
         });
         totalW = totalW/(antecedentWords.size * consequentWords.size) 
@@ -124,10 +115,10 @@ case class AwithCtxCwithCtxVecspaceRuleWeighter(
   extends RuleWeighter {
 
   override def weightForRules(antecedent: String, antecedentContext: Iterable[String], consequentAndContexts: Map[String, Iterable[String]], vectorspace: BowVectorSpace) = {
-    val pv = compositeVectorMaker.make(antecedent +: antecedentContext.toSeq, vectorspace)
+    val pv = compositeVectorMaker.make(antecedent +: antecedentContext.toSeq, vectorspace, Sts.text, Sts.textLemma)
     consequentAndContexts.map {
       case (consequent, consequentContext) =>
-        val cv = compositeVectorMaker.make(consequent +: consequentContext.toSeq, vectorspace)
+        val cv = compositeVectorMaker.make(consequent +: consequentContext.toSeq, vectorspace, Sts.hypothesis, Sts.hypothesisLemma)
         consequent -> Some(Sts.opts.lexicalInferenceMethod.entails(pv, cv))
     }
   }
