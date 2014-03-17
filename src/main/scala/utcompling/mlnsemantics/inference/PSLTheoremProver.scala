@@ -99,7 +99,7 @@ class PSLTheoremProver(
     	//498,517,664,960,1431   (memroy)
     	//InnerJoin, OuterJoin, OuterJoinWithDummy;
     	//var resultScore = callPSL(mlnFile, "InnerJoin", timeout);
-    	var resultScore = callPSL(mlnFile, "OuterJoin", Sts.opts.timeout, Sts.opts.groundLimit);
+    	var resultScore = callPSL(mlnFile, "OuterJoin");
     	
     	//if (resultScore == 0 )
     	//	resultScore = callPSL(mlnFile, "OuterJoin", timeout);
@@ -125,17 +125,19 @@ class PSLTheoremProver(
   }
   
   //mode: InnerJoin, OuterJoin, OuterJoinWithDummy
-  private def callPSL (mlnFile: String, mode: String, timeout: Option[Long] = None, groundLimit: Int = 0/*0 means infinity*/):Seq[Double] = { 
+  private def callPSL (mlnFile: String, mode: String):Seq[Double] = { 
     var entailmentLine = "";
-	 var entailmentHLine = "";
+	var entailmentHLine = "";
     var entailmentTLine = "";
-    val timeoutVal = timeout match {
+    val timeoutVal = Sts.opts.timeout match {
       case Some(time) => time.toString();
       case _ =>"0";
     };
     //val proc = Process("java", Seq("-cp", PSLTheoremProver.cp, "psl.TextInterface", mlnFile, mode, timeoutVal)).run(
-    LOG.trace("Calling: ant -buildfile psl/build.xml run -Darg0=%s -Darg1=%s -Darg2=%s -Darg3=%s".format(mlnFile, mode, timeoutVal, groundLimit));
-    val proc = Process("ant", Seq("-buildfile", "psl/build.xml", "run", "-Darg0="+mlnFile, "-Darg1="+mode, "-Darg2="+timeoutVal, "-Darg3="+groundLimit)).run(
+    LOG.trace("Calling: ant -buildfile psl/build.xml run -Darg0=%s -Darg1=%s -Darg2=%s -Darg3=%s -Darg4=%s -Darg5=%s".format(mlnFile, mode, 
+    											timeoutVal, Sts.opts.groundLimit, Sts.opts.metaW, Sts.opts.relW));
+    val proc = Process("ant", Seq("-buildfile", "psl/build.xml", "run", "-Darg0="+mlnFile, "-Darg1="+mode, "-Darg2="+timeoutVal, 
+    										"-Darg3="+Sts.opts.groundLimit, "-Darg4="+Sts.opts.metaW, "-Darg5="+Sts.opts.relW)).run(
     ProcessLogger(l=>{
           System.out.println(l)
           if (l.startsWith("     [java] entailment() V="))
@@ -148,7 +150,7 @@ class PSLTheoremProver(
       }, System.err.println(_)))
     
     var exitcode = 1;
-	timeout match {
+	Sts.opts.timeout match {
 	  case Some(time) => {
 	    val t = new Thread { override def run() { exitcode = proc.exitValue() } }
 	    t.start()
@@ -263,6 +265,8 @@ class PSLTheoremProver(
       	pslFile.write("predicate,all_t,1\n")
       	pslFile.write("predicate,all,1\n")
       	pslFile.write("predicate,dummyPred,1\n")
+      	pslFile.write("predicate,negationPred_n_dh,1\n")
+      	pslFile.write("predicate,negationPred_n_dt,1\n")
       	declarationNames.foreach {
       	    case ("entailment_h", varTypes) => pslFile.write("predicate,%s,%s\n".format("entailment_h", 0))
       	    case ("entailment_t", varTypes) => pslFile.write("predicate,%s,%s\n".format("entailment_t", 0))

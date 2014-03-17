@@ -251,6 +251,20 @@ class Config(opts: Map[String, String] = Map()) {
      case Some("true") => true;
      case _ => false;
   }
+  
+  //weight of meta predicates, they are negationPred and dummyPred. 
+  //"-1" means they should be treated as any other unary predicate.  
+  val metaW = opts.get("-metaW") match {
+     case Some(w) => w.toDouble;
+     case _ => -1;
+  }
+  
+  //weight of relation predicates like agent, patient, of ....  
+  //"-1" means they should be treated as any other unary predicate.  
+  val relW = opts.get("-relW") match {
+     case Some(w) => w.toDouble;
+     case _ => -1;
+  }
 
   //-------------------------------------------multiple parses
 

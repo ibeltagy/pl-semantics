@@ -20,7 +20,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
-
 import edu.umd.cs.psl.model.atom.Atom;
 import edu.umd.cs.psl.model.formula.Conjunction;
 import edu.umd.cs.psl.model.formula.Formula;
@@ -34,6 +33,7 @@ import edu.umd.cs.psl.model.kernel.Kernel;
 import edu.umd.cs.psl.reasoner.function.ConstantNumber;
 import edu.umd.cs.psl.reasoner.function.FunctionSum;
 import edu.umd.cs.psl.reasoner.function.FunctionSummand;
+import edu.umd.cs.psl.util.config.PSLConfiguration;
 
 /**
  * Currently, we assume that the body of the rule is a conjunction and the head of the rule is
@@ -81,29 +81,66 @@ abstract public class AbstractGroundRule implements GroundKernel {
 		return true;
 	}
 	
+	private int isMetaSingleRel(Atom a)
+	{
+		if ((a.getName().contains("negationPred")  || a.getName().contains("dummyPred")) && PSLConfiguration.metaW != -1)
+			return 0;
+		else if (a.getArity() == 2 && PSLConfiguration.relW != -1)
+			return 2;
+		else return 1;
+	}
+	
 	protected FunctionSum getFunction(double multiplier) {
 		Formula f;
 		Atom a;
 		double constant = 0.0;
 		FunctionSum sum = new FunctionSum();
 		int noFormulas = formula.getNoFormulas();
-		boolean headFound = false;
-		
+		//boolean headFound = false;
+
+		int noZeroVarPred = 0;
 		int noSingleVarPred = 0;
-		for (int i = 0; i < noFormulas; i++) {
-			f = formula.get(i);
-		
-			if (f instanceof Atom) {
-				a = (Atom) f;
-				if (a.getArity() == 1)
-					noSingleVarPred ++;
-			}else if (f instanceof Negation) {
-				a = (Atom) ((Negation) f).getFormula();
-				if (a.getArity() == 1)
-					noSingleVarPred ++;
+		int noDoubleVarPred = 0;
+		if (formula.conjType == ConjunctionTypes.avg)
+		{
+			for (int i = 0; i < noFormulas; i++) {
+				f = formula.get(i);
+			
+				if (f instanceof Atom) {
+					a = (Atom) f;
+					switch (isMetaSingleRel(a))
+					{
+					case 0: noZeroVarPred++; break; 
+					case 1: noSingleVarPred++; break;
+					case 2: noDoubleVarPred++; break;
+					default: throw new RuntimeException("not supported predicate " + a + "of arity" + a.getArity() + " in formula " + this);
+					}
+ 
+				}else if (f instanceof Negation) {
+					a = (Atom) ((Negation) f).getFormula();
+					if (i == formula.headPos ) //always use Strong AND for the head
+						continue;
+					switch (isMetaSingleRel(a))
+					{
+					case 0: noZeroVarPred++; break; 
+					case 1: noSingleVarPred++; break;
+					case 2: noDoubleVarPred++; break;
+					default: throw new RuntimeException("not supported predicate " + a + "of arity" + a.getArity() + " in formula " + this);
+					}
+				}
 			}
+	
+			assert(noZeroVarPred + noSingleVarPred + noDoubleVarPred + 1 == noFormulas);
 		}
-		
+		double zeroVarPredsW = PSLConfiguration.metaW;
+		if(zeroVarPredsW<0)
+			zeroVarPredsW = 0;
+		double doubleVarPredsW = PSLConfiguration.relW;
+		if(doubleVarPredsW<0)
+			doubleVarPredsW = 0;		
+		double singleVarPredsW = 1 - zeroVarPredsW - doubleVarPredsW;
+		assert(singleVarPredsW >=0 && singleVarPredsW <=1 );
+
 		for (int i = 0; i < noFormulas; i++) {
 			f = formula.get(i);
 		
@@ -118,10 +155,18 @@ abstract public class AbstractGroundRule implements GroundKernel {
 					break;
 				case avg: 
 					//sum.add(new FunctionSummand(multiplier/(noFormulas-1), a.getVariable()));
-					if (a.getArity() == 1)
-						sum.add(new FunctionSummand(multiplier/noSingleVarPred, a.getVariable()));
-					//else
-					//	sum.add(new FunctionSummand(0.001, a.getVariable()));
+					switch (isMetaSingleRel(a))
+					{
+					case 0: if(zeroVarPredsW != 0)
+								sum.add(new FunctionSummand(multiplier*zeroVarPredsW/noZeroVarPred, a.getVariable()));
+							break; 
+					case 1: if(singleVarPredsW != 0)
+								sum.add(new FunctionSummand(multiplier*singleVarPredsW/noSingleVarPred, a.getVariable()));
+							break;
+					case 2: if(doubleVarPredsW != 0)
+								sum.add(new FunctionSummand(multiplier*doubleVarPredsW/noDoubleVarPred, a.getVariable()));
+							break;
+					}
 					break;
 				case min: 
 					throw new RuntimeException("not supported combiner MIN");
@@ -140,7 +185,7 @@ abstract public class AbstractGroundRule implements GroundKernel {
 				if (i == formula.headPos ) //always use Strong AND for the head
 				{
 					sum.add(new FunctionSummand(-1*multiplier, a.getVariable()));
-					headFound = true;
+					//headFound = true;
 				}
 				else //for the body, use ConjunctionTypes
 				{
@@ -151,10 +196,18 @@ abstract public class AbstractGroundRule implements GroundKernel {
 						break;
 					case avg: 
 						//sum.add(new FunctionSummand(-1*multiplier/(noFormulas-1), a.getVariable()));
-						if (a.getArity() == 1)
-							sum.add(new FunctionSummand(-1*multiplier/noSingleVarPred, a.getVariable()));
-						//else
-						//	sum.add(new FunctionSummand(-0.001, a.getVariable()));						
+						switch (isMetaSingleRel(a))
+						{
+						case 0: if(zeroVarPredsW != 0)
+									sum.add(new FunctionSummand(-multiplier*zeroVarPredsW/noZeroVarPred, a.getVariable()));
+								break; 
+						case 1: if(singleVarPredsW != 0)
+									sum.add(new FunctionSummand(-multiplier*singleVarPredsW/noSingleVarPred, a.getVariable()));
+								break;
+						case 2: if(doubleVarPredsW != 0)
+									sum.add(new FunctionSummand(-multiplier*doubleVarPredsW/noDoubleVarPred, a.getVariable()));
+								break;
+						}						
 						constant++;
 						break;
 					case min: 
@@ -188,6 +241,10 @@ abstract public class AbstractGroundRule implements GroundKernel {
 				throw new RuntimeException("conjunction combiner is not set");
 		}
 		
+		//if(formula.conjType ==ConjunctionTypes.avg)
+		//{
+		//	System.out.println(this + "==>" + sum );
+		//}
 		//if (!headFound)
 		//	throw new RuntimeException("NO head found");
 		return sum;
