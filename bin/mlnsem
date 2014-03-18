@@ -62,6 +62,7 @@ case $DS in
   frc) dsPath="$RES/fracas/fracas" ;;
   sick-rte) dsPath="$RES/sick/sick-rte" ;;
   sick-sts) dsPath="$RES/sick/sick-sts" ;;
+  sick-test) dsPath="$RES/sick/sick-test" ;;
   rte) 
 	rte_ver=$1	#rte 1, 2, 3, 4, 5, 6, 7
 	shift
