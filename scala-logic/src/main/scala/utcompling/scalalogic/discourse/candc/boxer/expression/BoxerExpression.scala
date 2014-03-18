@@ -47,4 +47,11 @@ abstract class BoxerExpression {
       case _ => e.visit(getRelations, (parts: List[Seq[BoxerRel]]) => parts.flatten, Seq.empty[BoxerRel])
     }
 
+  def getEqualities() : Seq[BoxerEq] = getEqualities(this);
+  private def getEqualities(e: BoxerExpression): Seq[BoxerEq] =
+    e match {
+      case p: BoxerEq => Seq(p)
+      case _ => e.visit(getEqualities, (parts: List[Seq[BoxerEq]]) => parts.flatten, Seq.empty[BoxerEq])
+    }
+
 }

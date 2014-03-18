@@ -38,7 +38,7 @@ class NoExistProbabilisticTheoremProver(
     allEvidence = evidence;
     try 
     {
-	    val newAssumptions:List[WeightedExpression[FolExpression]] = if(!Sts.opts.groundExist) assumptions
+        val newAssumptions:List[WeightedExpression[FolExpression]] = if(! (Sts.opts.groundExist && Sts.opts.task == "rte" && Sts.opts.softLogicTool == "ss") ) assumptions
 	    else
 	      assumptions.map 
 	      {
@@ -124,7 +124,7 @@ class NoExistProbabilisticTheoremProver(
         	      else if(isNegated)
 					{
         	           //newExp = FolAndExpression(newExp, oneNewExp);
-					     (getBoolean3(newExp),getBoolean3(oneNewExp)) match
+					     newExp = (getBoolean3(newExp),getBoolean3(oneNewExp)) match
 						  {
 							 case ('t', 't') => trueFolExp
 							 case ('t', 'f') => falseFolExp
@@ -140,7 +140,7 @@ class NoExistProbabilisticTheoremProver(
         	      else
 					{
         	           //newExp = FolOrExpression(newExp, oneNewExp);
-						  (getBoolean3(newExp),getBoolean3(oneNewExp)) match
+						  newExp = (getBoolean3(newExp),getBoolean3(oneNewExp)) match
 						  {
 							 case ('t', 't') => trueFolExp
 							 case ('t', 'f') => trueFolExp

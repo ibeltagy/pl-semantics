@@ -202,6 +202,12 @@ bool Clause::createAndAddUnknownClause(
     }
     if (unknownClauses == NULL) delete clause;
   }
+  else 
+  {
+	  cerr << "Unsatisfiable clause found with weight: " << wt_ << endl;
+	  exit(7);
+  }
+
   return false;
 }
 

@@ -94,7 +94,7 @@ class FromEntToEqvProbabilisticTheoremProver(
            		//This may result in a completely empty expression, which should be replaced with a single dummy predicate
            else
              //remove negation, or add a predicate of Negation. For now, just remove negation  
-   	  		  goFlat(drs)
+   	  		   BoxerDrs(List(), List(goFlat(drs), BoxerPred(discId, indices, BoxerVariable("z0"), "negationPred", "n", 0)));
 	     case _ => e.visitConstruct(goFlat)
       }
     }

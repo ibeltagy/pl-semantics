@@ -53,7 +53,7 @@ case $CMD in
 			 par) 
 				dsSize=1500
 				task=sts
-            gs="resources/sts/STS.MSRpar.gs"
+				gs="resources/sts/STS.MSRpar.gs"
 				;;
 			 sick-rte)
 				dsSize=5000
@@ -63,7 +63,19 @@ case $CMD in
 			 sick-sts) 
 				dsSize=5000
 				task=sts
-            gs="resources/sick/sick-sts.gs"
+				gs="resources/sick/sick-sts.gs"
+				;;
+			 sick-rte-test) 
+				dsSize=4927
+				task=rte
+				gs="resources/sick/sick-test.gs"
+				DS=sick-test
+				;;
+			 sick-sts-test) 
+				dsSize=4927
+				task=sts
+				gs="resources/sick/sick-test.gs"
+				DS=sick-test
 				;;
 			 *)
 				echo "$DS dataset is not supported"

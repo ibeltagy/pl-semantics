@@ -202,7 +202,7 @@ class OnTheFlyRules extends Rules {
             //predicates list
             var cond = predPairList._2.map(predPair =>
               BoxerPred(predPair._1.discId, predPair._1.indices, BoxerVariable("x1"), predPair._1.name, predPair._1.pos, predPair._1.sense)).toList
-            val vars = List(List() -> BoxerVariable("x0")) ++ List(List() -> BoxerVariable("x1"));
+            val vars = /*List(List() -> BoxerVariable("x0")) ++*/ List(List() -> BoxerVariable("x1"));
             val exp = BoxerDrs(vars, cond);
 
             Some(exp, context.toList, w)
@@ -253,7 +253,7 @@ class OnTheFlyRules extends Rules {
       sameVarList ++
       //lexical predicates
       (if (Sts.opts.duplicatePhraselAndLexicalRule) preds else notUsedPred).map(p => (
-        BoxerDrs(List(List() -> BoxerVariable("x0")) ++ List(List() -> BoxerVariable("x1")), List(BoxerPred(p._1.discId, p._1.indices, BoxerVariable(if (p._1.pos == "v") "x0" else "x1"), p._1.name, p._1.pos, p._1.sense))),
+        BoxerDrs(List(List() -> BoxerVariable(if (p._1.pos == "v") "x0" else "x1")) /*++ List(List() -> BoxerVariable("x1"))*/, List(BoxerPred(p._1.discId, p._1.indices, BoxerVariable(if (p._1.pos == "v") "x0" else "x1"), p._1.name, p._1.pos, p._1.sense))),
         p._2,
         Sts.opts.vectorspaceFormatWithPOS match { case true => p._1.name + "-" + p._1.pos + "-" + indicesToIndex(p._1.indices); case false => p._1.name; }))
   }

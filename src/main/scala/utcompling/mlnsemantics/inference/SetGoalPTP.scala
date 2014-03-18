@@ -111,7 +111,9 @@ class SetGoalPTP(
       }
       extraExpressions = List(GoalExpression(expr.asInstanceOf[FolExpression], Double.PositiveInfinity));
       goalExist match {
-        case Some(g) => extraExpressions = extraExpressions :+ HardWeightedExpression(g); 
+//TODO
+//        case Some(g) => extraExpressions = HardWeightedExpression(g) :: extraExpressions; 
+        case Some(g) => extraExpressions = extraExpressions :+  HardWeightedExpression(g);
         case _ =>
       }
       //----------------------
@@ -127,7 +129,9 @@ class SetGoalPTP(
 	    	  				else 
 	    	  					introduction(e, false, null);
 		      textExit match {
-		        case Some(t) => extraExpressions = extraExpressions :+ HardWeightedExpression(t); true; 
+//TODO
+//		        case Some(t) => extraExpressions = HardWeightedExpression(t) :: extraExpressions; true; 
+              case Some(t) => extraExpressions = extraExpressions :+ HardWeightedExpression(t); true;
 		        case _ => false;
 		      }
           }
@@ -163,7 +167,7 @@ class SetGoalPTP(
     else
       throw new RuntimeException("Not possible to reach this point")
 
-    val res = delegate.prove(newConstants, declarations, evidence, assumptions ++ extraExpressions, null)
+    val res = delegate.prove(newConstants, declarations, evidence, assumptions ++ extraExpressions /*extraExpressions ++ assumptions*/, null)
     if (negatedGoal)
     {
       require(res.size == 1);
@@ -291,6 +295,12 @@ class SetGoalPTP(
         					return false;
         		}
         	}*/
+
+		   if(notExistCount > 1 )  
+				return false;
+
+			//TODO: try not to generate constants for relations that are NotExist. (Line above)
+			//TODO: still some causes generate inconsistant MLNs. Also, not sure if the handling below is correct
         	if(parent.isInstanceOf[FolAndExpression])
         		return true;
         	else {
@@ -302,7 +312,7 @@ class SetGoalPTP(
         {
         	if(univCount  != 0)
         	  LOG.trace("found %s variables, only %s of them is/are universlly quantified".format(args.length, univCount)) 
-            return false
+         return false
         }
   }
   

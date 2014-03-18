@@ -1,4 +1,13 @@
--A false sub-formula in Q should not be removed. Try pair 39 with and without NoExist. 
+
+Things to try: fixed AutoType, repeat, noRelIntro, IR W * 3
+-"repeat" in AutoConst is wrong. Fix it <<<<<<<<<<<
+-Introduction in SetGoal should reduce number of constants somehow <<<<<< 
+-AutoConst is missing a case <<<<<<<<
+-There are more "there" to be removed <<<<<<<
+-pair 790 throws StackOverflow exception <<<<<<<<<<,
+-pairs 67,260,368,3197 throw StackOverflow exception
+-A false sub-formula in Q should not be removed. Try pair 1356 with and without NoExist. Done. Alchemy breaks in this case, and NoExist supposed to be avoiding these cases.
+-Check the case in AutoConst where agent propagates evidence to predicates then these predicates mistakenly propagate more evidnece back to agent <<<
 -Get latest vesrion of Boxer for handling of "there"
 -Again, it seems that the handling of negation is wrong again. Try pair 2324
 -There is a problem similar to the unicorn case in (prb-23-h|NotT)
@@ -10,6 +19,7 @@
 alchemy/bin/infer -i /tmp/temp-3270558921426446116.mln -e /tmp/temp-3666499365217559437.db -r /tmp/temp-8210559381267654219.res -ss -maxSeconds 5 -ssq /tmp/temp-2905646586885501927.q -q entailment_h,compnay_n_dh,guy_n_dh,own_v_dh,r_patient_dh,r_agent_dh,skolem_1  -focusGround 
 
 -Add the semantic role uniqueness constraint. PSL and MLN. 
+-Semantic role uniqueness constraint is not enough. We actually need a NotEqual in many places in the hypothesis, in both RTE and STS. 
 -Semantic role uniqueness constrain added to PSL but it is not working because weight of relation predicates is zero. Fix this
 -add a negation predicate in PSL-STS. 
 -Try multiple weights between relation predicates and entities predicates 

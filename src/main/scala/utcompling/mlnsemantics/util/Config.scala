@@ -166,7 +166,7 @@ class Config(opts: Map[String, String] = Map()) {
   //MLN splits weights on formulas. If scaleW is true, reverse this default MLN behaviour (only on mln)
   val scaleW = opts.get("-scaleW") match {
     case Some(s) => s.toBoolean
-    case _ => true;
+    case _ => false;
   }
 
   //-------------------------------------------logic and inference
@@ -229,8 +229,8 @@ class Config(opts: Map[String, String] = Map()) {
  
  //ground EXIST before calling alchemy
  val groundExist = opts.get("-groundExist") match {
-    case Some("true") => true;
-    case _ => false;
+    case Some("false") => false;
+    case _ => true;
   }
  
  //Enable focus grounding. It does full grounding taking 
@@ -249,8 +249,22 @@ class Config(opts: Map[String, String] = Map()) {
   
   //partial functional  constraint on the agent and patient predicates
   val funcConst = opts.get("-funcConst") match {
-     case Some("true") => true;
-     case _ => false;
+     case Some("false") => false;
+     case _ => true;
+  }
+  
+  //weight of meta predicates, they are negationPred and dummyPred. 
+  //"-1" means they should be treated as any other unary predicate.  
+  val metaW = opts.get("-metaW") match {
+     case Some(w) => w.toDouble;
+     case _ => 0.33;  //-1
+  }
+  
+  //weight of relation predicates like agent, patient, of ....  
+  //"-1" means they should be treated as any other unary predicate.  
+  val relW = opts.get("-relW") match {
+     case Some(w) => w.toDouble;
+     case _ => 0.01;  //-1
   }
 
   //-------------------------------------------multiple parses

@@ -60,6 +60,32 @@ if (this.args.length != 0 && this.args[0].endsWith(".psl") )
 
       }
    }
+   if(this.args.length >= 5 ) {
+	   
+		 try{
+			PSLConfiguration.metaW = this.args[4].toDouble();
+			assert(PSLConfiguration.metaW<=1 && (PSLConfiguration.metaW >=0 || PSLConfiguration.metaW == -1))
+		 }catch(Exception e){
+   
+		 }
+   }
+   if(this.args.length >= 6 ) {
+	   
+		 try{
+			PSLConfiguration.relW = this.args[5].toDouble();
+			assert(PSLConfiguration.relW<=1 && (PSLConfiguration.relW >=0 || PSLConfiguration.relW == -1))
+			double w1 = 0;
+			double w2 = 0;
+			if(PSLConfiguration.metaW >= 0)
+				w1 = PSLConfiguration.metaW;
+			if(PSLConfiguration.relW >= 0)
+				w2 = PSLConfiguration.relW;
+			assert(w1 + w2 <= 1);
+		 }catch(Exception e){
+   
+		 }
+	}
+   
 }
 
 println "### Pair " + pslFilePath.substring(pslFilePath.lastIndexOf('/')+1, pslFilePath.lastIndexOf('.'))
