@@ -79,7 +79,7 @@ if (this.args.length != 0 && this.args[0].endsWith(".psl") )
 			if(PSLConfiguration.metaW >= 0)
 				w1 = PSLConfiguration.metaW;
 			if(PSLConfiguration.relW >= 0)
-				w2 = PSLConfiguration.metaW;
+				w2 = PSLConfiguration.relW;
 			assert(w1 + w2 <= 1);
 		 }catch(Exception e){
    

@@ -1,3 +1,4 @@
+
 Things to try: fixed AutoType, repeat, noRelIntro, IR W * 3
 -"repeat" in AutoConst is wrong. Fix it <<<<<<<<<<<
 -Introduction in SetGoal should reduce number of constants somehow <<<<<< 
@@ -18,6 +19,7 @@ Things to try: fixed AutoType, repeat, noRelIntro, IR W * 3
 alchemy/bin/infer -i /tmp/temp-3270558921426446116.mln -e /tmp/temp-3666499365217559437.db -r /tmp/temp-8210559381267654219.res -ss -maxSeconds 5 -ssq /tmp/temp-2905646586885501927.q -q entailment_h,compnay_n_dh,guy_n_dh,own_v_dh,r_patient_dh,r_agent_dh,skolem_1  -focusGround 
 
 -Add the semantic role uniqueness constraint. PSL and MLN. 
+-Semantic role uniqueness constraint is not enough. We actually need a NotEqual in many places in the hypothesis, in both RTE and STS. 
 -Semantic role uniqueness constrain added to PSL but it is not working because weight of relation predicates is zero. Fix this
 -add a negation predicate in PSL-STS. 
 -Try multiple weights between relation predicates and entities predicates 
