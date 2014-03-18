@@ -28,9 +28,18 @@ class SparseBowVector(vals: TraversableOnce[Double], indx: TraversableOnce[Int],
 
 
 class BowVectorSpace(vectorMap: Map[String, BowVector]) {
+  val numDims: Int = vectorMap.head._2.length
+  val zero: BowVector = new DenseBowVector(new Array[Double](numDims))
+
   def get(word: String): Option[BowVector] = vectorMap.get(word)
 
-  def numDims: Int = vectorMap.head._2.size
+  def getOrZero(word: String): BowVector = {
+    get(word) match {
+      case Some(v) => v
+      case None => zero
+    }
+  }
+
 }
 
 object BowVectorSpace {

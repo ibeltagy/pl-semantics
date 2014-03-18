@@ -168,6 +168,7 @@ object Sts {
 			val compositeVectorMaker = opts.compositeVectorMaker match {
 				case "mul" => MultiplicationCompositeVectorMaker();
 				case "add" => SimpleCompositeVectorMaker();
+        case "ngram" => NgramCompositeVectorMaker(4, 0.5);
 			}			  
 			val logicFormSource: DiscourseInterpreter[BoxerExpression] = opts.logicFormSource match {
 				case "dep" => new DependencyParsedBoxerDiscourseInterpreter(depParser);

@@ -79,6 +79,7 @@ class Config(opts: Map[String, String] = Map()) {
   
   //vector composition, addition or multiplication 
   val compositeVectorMaker = opts.get("-vectorMaker") match {
+    case Some("ngram") => "ngram";
     case Some("mul") => "mul";
     case _ => "add";
   }

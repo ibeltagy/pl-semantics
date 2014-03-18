@@ -12,15 +12,53 @@ trait CompositeVectorMaker {
 }
 
 case class SimpleCompositeVectorMaker() extends CompositeVectorMaker {
-  private val LOG = LogFactory.getLog(classOf[SimpleCompositeVectorMaker])
   override def make(preds: Iterable[String], vectorspace: BowVectorSpace, sentence: String, lemmatizedSent: String): BowVector = {
-    LOG.info("Making phrase: " + ( preds mkString " "))
-    LOG.info("Sentence: '" + sentence + "' / '" + lemmatizedSent)
     val toCombine = preds.map(_.split("-").head).flatMap(vectorspace.get)
     if (toCombine.isEmpty)
       new SparseBowVector(numDims = vectorspace.numDims)
     else
       toCombine.reduce(_ + _)
+  }
+}
+
+case class NgramCompositeVectorMaker(n: Int, alpha: Double) extends CompositeVectorMaker {
+
+  private def extractWordPosInd(pred: String): (String, String, Int) = {
+    val Array(word, pos, ind) = pred.split("-")
+    (word, pos, ind.toInt)
+  }
+
+  private def extractNgramVector(phrase: Array[String], vectorspace: BowVectorSpace): BowVector = {
+    vectorspace.getOrZero(phrase mkString " ")
+  }
+
+  private def tokenize(phrase: String): Array[String] = {
+    phrase.toLowerCase
+          .replace(".", " .")
+          .replace(",", " ,")
+          .replace("n't", " n't")
+          .split(" ")
+  }
+
+  private val LOG = LogFactory.getLog(classOf[NgramCompositeVectorMaker])
+  override def make(preds: Iterable[String], vectorspace: BowVectorSpace, sentence: String, lemmatizedSent: String): BowVector = {
+    assert(utcompling.mlnsemantics.run.Sts.opts.vectorspaceFormatWithPOS, "NgramCompositeVectorMaker requires pos tags.")
+
+    val sent_a = tokenize(sentence)
+    val wordPosInds = preds.map(extractWordPosInd _).filter(_._3 > 0)
+    val pred_words = wordPosInds.map(_._1)
+    val positions = wordPosInds.map(_._3)
+    println("Lemmas: ", lemmatizedSent)
+    println("Indices: ", positions)
+    println("Ctx: ", sent_a mkString " ")
+    val subsentence = sent_a.slice(positions.min-1, positions.max)
+    LOG.info("We want a vector for '" + (preds mkString ",") + "' in '" + (subsentence mkString " ") + "'.")
+    var finalV: BowVector = vectorspace.zero
+    for (n_ <- (1 until (math.min(n, subsentence.length) + 1))) {
+      val piece: BowVector = subsentence.sliding(n_).map(extractNgramVector(_, vectorspace)).reduce(_ + _)
+      finalV = piece * alpha + finalV * (1 - alpha)
+    }
+    finalV
   }
 }
 
