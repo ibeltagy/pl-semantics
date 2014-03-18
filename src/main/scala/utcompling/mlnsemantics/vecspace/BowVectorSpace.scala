@@ -11,11 +11,21 @@ import collection.mutable.{MutableList => MList, HashMap => MHashMap}
 
 class BowVectorWithDistances(val self: BowVector) {
   def norm2: Double = self.norm(2)
+
+  def normalized: BowVector = {
+    val n2 = self.norm2
+    if (n2 == 0) {
+      self
+    } else {
+      self / n2
+    }
+  }
+
   def cosine(other: BowVector): Double = {
-    (self dot other) / (self.norm2 * other.norm(2))
+    self.normalized dot other.normalized
   }
   def euclid(other: BowVector): Double = {
-    (self - other).norm(2)
+    (self - other).norm2
   }
 }
 

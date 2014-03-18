@@ -24,7 +24,10 @@ case class SimpleCompositeVectorMaker() extends CompositeVectorMaker {
 case class NgramCompositeVectorMaker(n: Int, alpha: Double) extends CompositeVectorMaker {
 
   private def extractWordPosInd(pred: String): (String, String, Int) = {
-    val Array(word, pos, ind) = pred.split("-")
+    val items = pred.split("-").toArray
+    val word = items.slice(0, items.length - 2) mkString "-"
+    val pos = items(items.length - 2)
+    val ind = items(items.length - 1)
     (word, pos, ind.toInt)
   }
 
@@ -47,18 +50,23 @@ case class NgramCompositeVectorMaker(n: Int, alpha: Double) extends CompositeVec
     val sent_a = tokenize(sentence)
     val wordPosInds = preds.map(extractWordPosInd _).filter(_._3 > 0)
     val pred_words = wordPosInds.map(_._1)
-    val positions = wordPosInds.map(_._3)
+    val positions = wordPosInds.map(_._3).toArray
     println("Lemmas: ", lemmatizedSent)
     println("Indices: ", positions)
     println("Ctx: ", sent_a mkString " ")
-    val subsentence = sent_a.slice(positions.min-1, positions.max)
-    LOG.info("We want a vector for '" + (preds mkString ",") + "' in '" + (subsentence mkString " ") + "'.")
-    var finalV: BowVector = vectorspace.zero
-    for (n_ <- (1 until (math.min(n, subsentence.length) + 1))) {
-      val piece: BowVector = subsentence.sliding(n_).map(extractNgramVector(_, vectorspace)).reduce(_ + _)
-      finalV = piece * alpha + finalV * (1 - alpha)
+
+    if (positions.length == 0) {
+      vectorspace.zero
+    } else {
+      val subsentence = sent_a.slice(positions.min-1, positions.max)
+      LOG.info("We want a vector for '" + (preds mkString ",") + "' in '" + (subsentence mkString " ") + "'.")
+      var finalV: BowVector = vectorspace.zero
+      for (n_ <- (1 until (math.min(n, subsentence.length) + 1))) {
+        val piece: BowVector = subsentence.sliding(n_).map(extractNgramVector(_, vectorspace)).reduce(_ + _)
+        finalV = piece * alpha + finalV * (1 - alpha)
+      }
+      finalV
     }
-    finalV
   }
 }
 

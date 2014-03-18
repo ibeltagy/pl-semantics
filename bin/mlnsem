@@ -4,7 +4,7 @@ export CANDCHOME=candc/bin
 #export ALCHEMYHOME=alchemy/bin
 export WORDNETHOME=resources/wordnet
 
-SBT="java -Dfile.encoding=UTF8 -Xdebug -Xmx1536M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=256m -jar bin/sbt-launch-*.jar"
+SBT="java -Dfile.encoding=UTF8 -Xdebug -Xmx2048M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=256m -jar bin/sbt-launch-*.jar"
 START="target/start"
 RES="resources"
 
