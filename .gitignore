@@ -21,3 +21,4 @@ psl/run
 *~
 lib/ws4j-1.0.1.jar
 temp-*.mln
+*.arff
