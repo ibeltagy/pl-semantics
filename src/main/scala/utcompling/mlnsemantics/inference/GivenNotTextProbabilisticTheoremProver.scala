@@ -28,6 +28,8 @@ class GivenNotTextProbabilisticTheoremProver(
     	val hGivenT = delegate.prove(constants, declarations, evidence, assumptions, goal);
     	assert(hGivenT.length == 1)
     	val newAssumptions = assumptions.map{
+          case HardWeightedExpression(BoxerAlfa(variable, first, second)) => first
+        		  HardWeightedExpression (BoxerDrs (List(), List(first,  BoxerNot("h", List(), second))).asInstanceOf[BoxerExpression])
           case HardWeightedExpression(e) =>
         		  HardWeightedExpression(BoxerNot("h", List(), e).asInstanceOf[BoxerExpression])
           case a @ _ => a
