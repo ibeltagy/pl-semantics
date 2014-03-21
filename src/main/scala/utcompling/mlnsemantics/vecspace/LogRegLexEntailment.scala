@@ -16,6 +16,7 @@ class CosineLexEntailmentModel extends LexEntailmentModel {
   }
 }
 
+/*
 class LogRegSupersenseLexEntailment(model_folder: String, resolveMethod: String) extends LexEntailmentModel {
   val model_folder_f = new File(model_folder)
   val model_files = model_folder_f.listFiles.filter(_.isFile)
@@ -31,9 +32,10 @@ class LogRegSupersenseLexEntailment(model_folder: String, resolveMethod: String)
     est
   }
 }
+*/
 
 class LogRegLexEntailmentModel(model_file: String) extends LexEntailmentModel {
-  val entailing_relations = List("synonym", "hyper", "mero")
+  val entailing_relations = List("syn", "hyper", "mero")
 
   val lines = readLines(model_file).map(_.split("\t"))
   val klasses = lines.collect{
@@ -48,9 +50,12 @@ class LogRegLexEntailmentModel(model_file: String) extends LexEntailmentModel {
     val word2n = (word2 / word2.norm2).toDenseVector
     val diff = (word1n - word2n).toDenseVector
     val difft = DenseVector.vertcat(diff, (diff :* diff).toDenseVector)
+    /*
     val v1t = DenseVector.vertcat(word1n, (word1n :* word1n).toDenseVector)
     val v2t = DenseVector.vertcat(word2n, (word2n :* word2n).toDenseVector)
     val feature_vector = DenseVector.vertcat(one, DenseVector.vertcat(v1t, DenseVector.vertcat(v2t, difft)))
+    */
+    val feature_vector = DenseVector.vertcat(difft, one)
     val raw = klasses.map(x => (x._1 -> logistic(feature_vector.dot(x._2))))
     val summed = raw.values.sum
     val probs = raw.map(x => (x._1 -> x._2 / summed))

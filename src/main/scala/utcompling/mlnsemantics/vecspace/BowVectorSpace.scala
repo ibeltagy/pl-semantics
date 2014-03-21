@@ -1,5 +1,6 @@
 package utcompling.mlnsemantics.vecspace
 
+import org.apache.commons.logging.LogFactory
 import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.CollectionUtil._
 import opennlp.scalabha.util.FileUtils._
@@ -40,13 +41,24 @@ class SparseBowVector(vals: TraversableOnce[Double], indx: TraversableOnce[Int],
 class BowVectorSpace(vectorMap: Map[String, BowVector]) {
   val numDims: Int = vectorMap.head._2.length
   val zero: BowVector = new DenseBowVector(new Array[Double](numDims))
+  private val LOG = LogFactory.getLog(classOf[BowVectorSpace])
 
-  def get(word: String): Option[BowVector] = vectorMap.get(word)
+  def get(word: String): Option[BowVector] = {
+    val res = vectorMap.get(word)
+    res match {
+      case Some(v) => {}
+      case None => LOG.warn("Couldn't find '" + word + "'. Returning None.")
+    }
+    res
+  }
 
   def getOrZero(word: String): BowVector = {
     get(word) match {
       case Some(v) => v
-      case None => zero
+      case None => {
+        LOG.warn("Couldn't find '" + word + "'. Returning zero vector.")
+        zero
+      }
     }
   }
 
@@ -78,6 +90,7 @@ object BowVectorSpace {
   }
 
   def readSpace(filename: String): Map[String, BowVector] = {
+    println("READING VS: ", filename)
     val reader = detectFormat(filename)
     val res = reader(filename)
     res

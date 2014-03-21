@@ -60,7 +60,8 @@ class AlchemyTheoremProver{
         case FolVariableExpression(Variable(pred)) => pred
       }
 
-    val tempFile = FileUtils.mktemp(prefix="temp/temp-", suffix = ".mln")
+    val tempFile = FileUtils.mktemp(suffix = ".mln")
+    LOG.info("tempfile: " + tempFile)
     FileUtils.writeUsing(tempFile) { f =>
     constants.foreach {
     	case (name, tokens) => {

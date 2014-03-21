@@ -95,7 +95,7 @@ object Sts {
         FileUtils.writeUsing(stsVsFile) { f =>
           for (line <- readLines(fullVsFile)) {
             val word = line.split("-.\t|\t")(0)
-            if (allLemmas(word) || allLemmas(word.toLowerCase))
+            if (true || allLemmas(word) || allLemmas(word.toLowerCase))
               f.write(line + "\n")
           }
         }
@@ -168,8 +168,8 @@ object Sts {
 			val compositeVectorMaker = opts.compositeVectorMaker match {
 				case "mul" => MultiplicationCompositeVectorMaker();
 				case "add" => SimpleCompositeVectorMaker();
-        case "ngram" => NgramCompositeVectorMaker(4, 0.5);
-			}			  
+        case "ngram" => NgramCompositeVectorMaker(opts.ngramN, opts.ngramAlpha);
+			}
 			val logicFormSource: DiscourseInterpreter[BoxerExpression] = opts.logicFormSource match {
 				case "dep" => new DependencyParsedBoxerDiscourseInterpreter(depParser);
 				case "box" => new PreparsedBoxerDiscourseInterpreter(boxPair, new PassthroughBoxerExpressionInterpreter());

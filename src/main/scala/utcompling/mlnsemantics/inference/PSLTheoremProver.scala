@@ -216,7 +216,7 @@ class PSLTheoremProver(
     //val pslFilePath = "psl/run/%s.psl".format(Sts.pairIndex);
     //val tempFile = FileUtils.mktemp(suffix = ".mln") 
     //val pslFilePath = System.getProperty("user.dir")+"/psl/run/%s.psl".format(Sts.pairIndex);
-    val pslFilePath = FileUtils.mktemp(prefix="temp/temp-", suffix = ".psl") 
+    val pslFilePath = FileUtils.mktemp(suffix = ".psl") 
     val pslFile = new java.io.PrintWriter(new File(pslFilePath))
     try { 
 

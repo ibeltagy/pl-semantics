@@ -126,10 +126,7 @@ class OnTheFlyRules extends Rules {
     {
       val preds = e.getPredicates();
       val predsAndContexts = preds.zipWithIndex.map { case (p, i) => p -> (preds.take(i) ++ preds.drop(i + 1)) }
-      val newPredsAndContexts = predsAndContexts.mapVals(_.map(p => (p.name + (Sts.opts.vectorspaceFormatWithPOS match {
-        case true => "-" + p.pos + "-" + indicesToIndex(p.indices);
-        case false => "";
-      }))));
+      val newPredsAndContexts = predsAndContexts.mapVals(_.map(p => (p.name + "-" + p.pos + "-" + indicesToIndex(p.indices))));
       val newPredsAndContextsSplit = newPredsAndContexts.mapVals(l => {
         var flatL: List[String] = List();
         l.foreach(e => {
@@ -182,10 +179,7 @@ class OnTheFlyRules extends Rules {
           if (predPairList._2.size > 1) {
             //string for vector building  
             val w = predPairList._2.foldLeft("")((words, predPair) => {
-              val word = Sts.opts.vectorspaceFormatWithPOS match {
-                case true => predPair._1.name + "-" + predPair._1.pos + "-" + indicesToIndex(predPair._1.indices);
-                case false => predPair._1.name;
-              }
+              val word = predPair._1.name + "-" + predPair._1.pos + "-" + indicesToIndex(predPair._1.indices)
               if (words == "")
                 word
               else
@@ -233,13 +227,11 @@ class OnTheFlyRules extends Rules {
 
             val context = (arg1._2 ++ arg2._2).toList.diff(List(arg1._1.name)).diff(List(arg2._1.name)).toSet;
 
-            var words = Sts.opts.vectorspaceFormatWithPOS match {
+            var words =
               //use space to split between words of a phrase
-              case true => arg1._1.name + "-" + arg1._1.pos + "-" + indicesToIndex(arg1._1.indices) + " " + 
-                      arg2._1.name + "-" + arg2._1.pos + "-" + indicesToIndex(arg2._1.indices) + " " +
-                      r.name  + "-" + "rel" + "-" +  indicesToIndex(r.indices);                      
-              case false => arg1._1.name + " " + arg2._1.name;
-            }
+              arg1._1.name + "-" + arg1._1.pos + "-" + indicesToIndex(arg1._1.indices) + " " + 
+                    arg2._1.name + "-" + arg2._1.pos + "-" + indicesToIndex(arg2._1.indices) + " " +
+                    r.name  + "-" + "rel" + "-" +  indicesToIndex(r.indices);
 
             val vars = List(List() -> BoxerVariable("x0")) ++ List(List() -> BoxerVariable("x1"));
             val cond = List(arg1Changed) ++ List(arg2Changed) ++ List(rChanged);
@@ -255,7 +247,7 @@ class OnTheFlyRules extends Rules {
       (if (Sts.opts.duplicatePhraselAndLexicalRule) preds else notUsedPred).map(p => (
         BoxerDrs(List(List() -> BoxerVariable(if (p._1.pos == "v") "x0" else "x1")) /*++ List(List() -> BoxerVariable("x1"))*/, List(BoxerPred(p._1.discId, p._1.indices, BoxerVariable(if (p._1.pos == "v") "x0" else "x1"), p._1.name, p._1.pos, p._1.sense))),
         p._2,
-        Sts.opts.vectorspaceFormatWithPOS match { case true => p._1.name + "-" + p._1.pos + "-" + indicesToIndex(p._1.indices); case false => p._1.name; }))
+        p._1.name + "-" + p._1.pos + "-" + indicesToIndex(p._1.indices)))
   }
   val VariableRe = """^([a-z])\d*$""".r
   private def variableType(pred: BoxerPred): String =

@@ -87,10 +87,20 @@ class Config(opts: Map[String, String] = Map()) {
   //vector space has POS or not. The one I am using now is without POS. Gemma has ones with POS
   //The case of "with POS", is not well tested. Expect it to break 
   val vectorspaceFormatWithPOS = opts.get("-vsWithPos") match {
-    case Some(vst) => vst.toBoolean;
+    case Some(vst) => vst.toBoolean
     case _ => true;
   }
-   
+
+  val ngramAlpha = opts.get("-alpha") match {
+    case Some(v) => v.toDouble
+    case _ => 0.8
+  }
+
+  val ngramN = opts.get("-ngramN") match {
+    case Some(v) => v.toInt
+    case _ => 4
+  }
+
   //generate distributional phrasel inference rules for phrases including ones with agent and patient relations=
   //Not used anymore. Always include agent/patient rules
   //val withPatientAgentInferenceRules = opts.get("-peInf") match {
@@ -129,9 +139,6 @@ class Config(opts: Map[String, String] = Map()) {
   val lexicalInferenceMethod: utcompling.mlnsemantics.vecspace.LexEntailmentModel = opts.get("-lexInferMethod") match {
     case Some("cosine") => new utcompling.mlnsemantics.vecspace.CosineLexEntailmentModel
     case Some("asym") => new utcompling.mlnsemantics.vecspace.LogRegLexEntailmentModel(lexicalInferenceModelFile)
-    case Some("maxsuperasym") => new utcompling.mlnsemantics.vecspace.LogRegSupersenseLexEntailment(lexicalInferenceModelFile, "max")
-    case Some("minsuperasym") => new utcompling.mlnsemantics.vecspace.LogRegSupersenseLexEntailment(lexicalInferenceModelFile, "min")
-    case Some("avgsuperasym") => new utcompling.mlnsemantics.vecspace.LogRegSupersenseLexEntailment(lexicalInferenceModelFile, "avg")
     case _ => new utcompling.mlnsemantics.vecspace.CosineLexEntailmentModel
   }
 
