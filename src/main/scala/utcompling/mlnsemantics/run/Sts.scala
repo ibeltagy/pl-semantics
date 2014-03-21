@@ -95,7 +95,7 @@ object Sts {
         FileUtils.writeUsing(stsVsFile) { f =>
           for (line <- readLines(fullVsFile)) {
             val word = line.split("-.\t|\t")(0)
-            if (true || allLemmas(word) || allLemmas(word.toLowerCase))
+            if (allLemmas(word) || allLemmas(word.toLowerCase))
               f.write(line + "\n")
           }
         }
