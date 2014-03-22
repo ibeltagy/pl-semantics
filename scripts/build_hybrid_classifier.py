@@ -22,7 +22,7 @@ def read_mln_output(directory):
             results = [map(float, r.split(",")) for r in results]
             return results
 
-    sys.stderr.write("Couldn't find the results line in '%s/result'. Double check it's a valid directory and you've run collect.\n")
+    sys.stderr.write("Couldn't find the results line in '%s/result'. Double check it's a valid directory and you've run collect.\n" % directory)
     sys.exit(1)
 
 def output_train_arff(feats, golds, outf, mode="classify"):

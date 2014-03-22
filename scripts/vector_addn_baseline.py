@@ -20,6 +20,9 @@ def load_vectorspace(filename):
 def extract_features(left_sent, right_sent, vectorspace, combiner):
     left_vectors = [vectorspace.get_row(w).mat.A[0] for w in left_sent if w in vectorspace.row2id]
     right_vectors = [vectorspace.get_row(w).mat.A[0] for w in right_sent if w in vectorspace.row2id]
+    for w in left_sent + right_sent:
+        if w not in vectorspace.row2id:
+            sys.stderr.write("Couldn't find '%s' in vs...\n" % w)
     if not left_vectors and not right_vectors:
         return [1]
     elif not left_vectors or not right_vectors:
