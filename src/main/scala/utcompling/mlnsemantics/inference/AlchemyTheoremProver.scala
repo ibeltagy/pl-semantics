@@ -61,6 +61,7 @@ class AlchemyTheoremProver{
       }
 
     val tempFile = FileUtils.mktemp(suffix = ".mln")
+    LOG.info("tempfile: " + tempFile)
     FileUtils.writeUsing(tempFile) { f =>
     constants.foreach {
     	case (name, tokens) => {

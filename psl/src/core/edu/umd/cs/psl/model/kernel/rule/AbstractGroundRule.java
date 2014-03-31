@@ -133,10 +133,10 @@ abstract public class AbstractGroundRule implements GroundKernel {
 			assert(noZeroVarPred + noSingleVarPred + noDoubleVarPred + 1 == noFormulas);
 		}
 		double zeroVarPredsW = PSLConfiguration.metaW;
-		if(zeroVarPredsW<0)
+		if(zeroVarPredsW<0 ||noZeroVarPred == 0)
 			zeroVarPredsW = 0;
 		double doubleVarPredsW = PSLConfiguration.relW;
-		if(doubleVarPredsW<0)
+		if(doubleVarPredsW<0 || noDoubleVarPred == 0)
 			doubleVarPredsW = 0;		
 		double singleVarPredsW = 1 - zeroVarPredsW - doubleVarPredsW;
 		assert(singleVarPredsW >=0 && singleVarPredsW <=1 );

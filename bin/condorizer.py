@@ -11,7 +11,7 @@ CondorScript = """
 universe = vanilla
 
 Executable = %s
-
+Requirements = (machine =!= "nasil-8.cs.utexas.edu")
 %s
 
 +Group   = "GRAD"

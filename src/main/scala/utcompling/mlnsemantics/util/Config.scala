@@ -79,6 +79,7 @@ class Config(opts: Map[String, String] = Map()) {
   
   //vector composition, addition or multiplication 
   val compositeVectorMaker = opts.get("-vectorMaker") match {
+    case Some("ngram") => "ngram";
     case Some("mul") => "mul";
     case _ => "add";
   }
@@ -86,10 +87,20 @@ class Config(opts: Map[String, String] = Map()) {
   //vector space has POS or not. The one I am using now is without POS. Gemma has ones with POS
   //The case of "with POS", is not well tested. Expect it to break 
   val vectorspaceFormatWithPOS = opts.get("-vsWithPos") match {
-    case Some(vst) => vst.toBoolean;
-    case _ => false;
+    case Some(vst) => vst.toBoolean
+    case _ => true;
   }
-   
+
+  val ngramAlpha = opts.get("-alpha") match {
+    case Some(v) => v.toDouble
+    case _ => 0.8
+  }
+
+  val ngramN = opts.get("-ngramN") match {
+    case Some(v) => v.toInt
+    case _ => 4
+  }
+
   //generate distributional phrasel inference rules for phrases including ones with agent and patient relations=
   //Not used anymore. Always include agent/patient rules
   //val withPatientAgentInferenceRules = opts.get("-peInf") match {
@@ -128,9 +139,6 @@ class Config(opts: Map[String, String] = Map()) {
   val lexicalInferenceMethod: utcompling.mlnsemantics.vecspace.LexEntailmentModel = opts.get("-lexInferMethod") match {
     case Some("cosine") => new utcompling.mlnsemantics.vecspace.CosineLexEntailmentModel
     case Some("asym") => new utcompling.mlnsemantics.vecspace.LogRegLexEntailmentModel(lexicalInferenceModelFile)
-    case Some("maxsuperasym") => new utcompling.mlnsemantics.vecspace.LogRegSupersenseLexEntailment(lexicalInferenceModelFile, "max")
-    case Some("minsuperasym") => new utcompling.mlnsemantics.vecspace.LogRegSupersenseLexEntailment(lexicalInferenceModelFile, "min")
-    case Some("avgsuperasym") => new utcompling.mlnsemantics.vecspace.LogRegSupersenseLexEntailment(lexicalInferenceModelFile, "avg")
     case _ => new utcompling.mlnsemantics.vecspace.CosineLexEntailmentModel
   }
 
@@ -248,22 +256,22 @@ class Config(opts: Map[String, String] = Map()) {
   
   //partial functional  constraint on the agent and patient predicates
   val funcConst = opts.get("-funcConst") match {
-     case Some("true") => true;
-     case _ => false;
+     case Some("false") => false;
+     case _ => true;
   }
   
   //weight of meta predicates, they are negationPred and dummyPred. 
   //"-1" means they should be treated as any other unary predicate.  
   val metaW = opts.get("-metaW") match {
      case Some(w) => w.toDouble;
-     case _ => -1;
+     case _ => 0.33;  //-1
   }
   
   //weight of relation predicates like agent, patient, of ....  
   //"-1" means they should be treated as any other unary predicate.  
   val relW = opts.get("-relW") match {
      case Some(w) => w.toDouble;
-     case _ => -1;
+     case _ => 0.01;  //-1
   }
 
   //-------------------------------------------multiple parses

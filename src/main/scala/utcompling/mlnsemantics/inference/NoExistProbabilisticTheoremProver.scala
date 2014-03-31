@@ -67,6 +67,7 @@ class NoExistProbabilisticTheoremProver(
 	      goal)
     }catch {
       case PermutTimesout => Seq(-6.0)
+		case _  => Seq(-5.0)
     }
     
   }
@@ -303,7 +304,7 @@ class NoExistProbabilisticTheoremProver(
         
         case FolVariableExpression(v) => FolVariableExpression(replaceSimplify(v, quantifiers));
 
-        case _ => throw new RuntimeException("not reachable")
+        case _ => println (e); throw new RuntimeException("not reachable")
       }
   }
     
