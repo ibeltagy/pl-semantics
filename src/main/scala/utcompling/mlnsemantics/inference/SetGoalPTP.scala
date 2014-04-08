@@ -112,8 +112,8 @@ class SetGoalPTP(
       extraExpressions = List(GoalExpression(expr.asInstanceOf[FolExpression], Double.PositiveInfinity));
       goalExist match {
 //TODO
-//        case Some(g) => extraExpressions = HardWeightedExpression(g) :: extraExpressions; 
-        case Some(g) => extraExpressions = extraExpressions :+  HardWeightedExpression(g);
+        case Some(g) => extraExpressions = HardWeightedExpression(g) :: extraExpressions; 
+//        case Some(g) => extraExpressions = extraExpressions :+  HardWeightedExpression(g);
         case _ =>
       }
       //----------------------
@@ -130,8 +130,8 @@ class SetGoalPTP(
 	    	  					introduction(e, false, null);
 		      textExit match {
 //TODO
-//		        case Some(t) => extraExpressions = HardWeightedExpression(t) :: extraExpressions; true; 
-              case Some(t) => extraExpressions = extraExpressions :+ HardWeightedExpression(t); true;
+ 	          case Some(t) => extraExpressions = HardWeightedExpression(t) :: extraExpressions; true; 
+//              case Some(t) => extraExpressions = extraExpressions :+ HardWeightedExpression(t); true;
 		        case _ => false;
 		      }
           }
@@ -167,7 +167,7 @@ class SetGoalPTP(
     else
       throw new RuntimeException("Not possible to reach this point")
 
-    val res = delegate.prove(newConstants, declarations, evidence, assumptions ++ extraExpressions /*extraExpressions ++ assumptions*/, null)
+    val res = delegate.prove(newConstants, declarations, evidence,/*TODO*/ /*assumptions ++ extraExpressions*/  extraExpressions ++ assumptions, null)
     if (negatedGoal)
     {
       require(res.size == 1);
@@ -296,7 +296,7 @@ class SetGoalPTP(
         		}
         	}*/
 
-		   if(notExistCount > 1 )  
+		   if(notExistCount > 1/*any negated existntially quantitied relation*/ || (!isQuery && notExistCount != 0 /*any negated existentially quantitied predicate in the TEXT*/) )  
 				return false;
 
 			//TODO: try not to generate constants for relations that are NotExist. (Line above)
