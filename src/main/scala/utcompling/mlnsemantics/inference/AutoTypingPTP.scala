@@ -139,7 +139,7 @@ class AutoTypingPTP(
             genNegativeEvd(declarations);
 		}
 	
-      val finish = runWithTimeout(300000, false) { findApply ;  true }
+      val finish = runWithTimeout(30000, false) { findApply ;  true }
 
       if(!finish)
 			return Seq(-5.0)

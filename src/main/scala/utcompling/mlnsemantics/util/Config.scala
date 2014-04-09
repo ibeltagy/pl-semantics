@@ -29,7 +29,7 @@ class Config(opts: Map[String, String] = Map()) {
   //log levels as defined by log4j
   val loglevel = opts.get("-log").map(Level.toLevel).getOrElse(Level.OFF);
   
-  val timeout = opts.get("-timeout") match {
+  var timeout = opts.get("-timeout") match {
   	case Some("-1") => None;  //no timeout 
   	case Some(t) => Some(t.toLong);
     case _ => Some(120000L); //by default, timeout is 5 minutes
@@ -184,9 +184,11 @@ class Config(opts: Map[String, String] = Map()) {
   }
 
   //do all the changes required to fix the problems resulting from the Domain Closure Assumption
+  //Setting it to "true" enables an old, wrong attempt to handle DCA
+  //false means using the new correct code of handling DCA
   val fixDCA = opts.get("-fixDCA") match {
-    case Some("false") => false;
-    case _ => true;
+    case Some("true") => true;
+    case _ => false;
   }
 
   //if fixDCA is true, noHMinus ignores H- and set negative prior on all predicates
@@ -223,6 +225,7 @@ class Config(opts: Map[String, String] = Map()) {
   }
   
   //recover event variables and prop variables or not
+  //either generate negative evidnece (modified close-world assumption), or negative prior everywhere
  val negativeEvd = opts.get("-negativeEvd") match {
     case Some("false") => false;
     case _ => true;

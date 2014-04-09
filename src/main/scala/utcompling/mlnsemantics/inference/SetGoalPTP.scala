@@ -83,8 +83,25 @@ class SetGoalPTP(
         val expr_h = GoalExpression((universalifyGoalFormula(modifiedGoal -> ent_h )).asInstanceOf[FolExpression], Double.PositiveInfinity);
         extraExpressions = List(expr_h);
     }
+    //---------------------RTE - Fix DCA (OLD WRONG code)--------------------------
+    else if (Sts.opts.task == "rte" && Sts.opts.fixDCA == true && Sts.opts.softLogicTool == "mln")
+    {	
+      //H+, H-
+      flipQ = false;
+      univVars = List();
+      var hPlusExp = skolemNew(goal -> SetVarBindPTP.entPred_h);
+      univVars.foreach (v => hPlusExp = FolAllExpression (v, hPlusExp));   //apply univVars
+      val hPlus = GoalExpression(hPlusExp, Double.PositiveInfinity);
+      flipQ = true;
+      val hMinus = GoalExpression(skolemNew(SetVarBindPTP.entPred_h -> goal, List(), true), Double.PositiveInfinity)
+		if(Sts.opts.noHMinus)
+	      extraExpressions = List(hPlus); // hMinus is disabled because of the computational overhead. 
+		else 
+			extraExpressions = List(hPlus, hMinus);
+    } 
+
     //---------------------RTE on SampleSearch--------------------------
-    else if (Sts.opts.task == "rte" && Sts.opts.softLogicTool == "ss")
+    else if (Sts.opts.task == "rte" && (Sts.opts.softLogicTool == "ss" || Sts.opts.softLogicTool == "mln") )
     {
       //simple conjunction, one goal, no entailment predicate
       quantifiers = Map();
@@ -103,13 +120,20 @@ class SetGoalPTP(
           countUniv = countUniv + 1;
       })
       
-      //if(!goal.isInstanceOf[FolNegatedExpression]) //if it is not already negated, negate it
-      if (2*countUniv < quantifiers.size) //if Univs are less than Exists, negate
+      if(Sts.opts.softLogicTool == "ss")
       {
-        expr = -goal;
-        negatedGoal = true;
+	      if (2*countUniv < quantifiers.size) //if Univs are less than Exists, negate
+	      {
+	        expr = -goal;
+	        negatedGoal = true;
+	      }
       }
+      else
+      {
+    	  expr = goal <-> SetVarBindPTP.entPred_h;  
+      }      
       extraExpressions = List(GoalExpression(expr.asInstanceOf[FolExpression], Double.PositiveInfinity));
+      
       goalExist match {
 //TODO
         case Some(g) => extraExpressions = HardWeightedExpression(g) :: extraExpressions; 
@@ -118,7 +142,8 @@ class SetGoalPTP(
       }
       //----------------------
       assumptions //apply the same introduction procedure to the Text. 
-        .forall {
+        .foreach
+        {
           case HardWeightedExpression(e) => {
 		      quantifiers = Map();
 		      constantsCounter = 0;
@@ -140,31 +165,17 @@ class SetGoalPTP(
 
     }
     //---------------------RTE - no Fix DCA--------------------------
-    else if (Sts.opts.task == "rte" && Sts.opts.fixDCA == false)
+/*    else if (Sts.opts.task == "rte" && Sts.opts.fixDCA == false)
     {
       //simple conjunction, one goal
       val expr = goal -> SetVarBindPTP.entPred_h;
       extraExpressions = List(GoalExpression(expr.asInstanceOf[FolExpression], Double.PositiveInfinity));
     }
-    //---------------------RTE - Fix DCA--------------------------
-    else if (Sts.opts.task == "rte" && Sts.opts.fixDCA == true)
-    {
-      //H+, H-
-      flipQ = false;
-      univVars = List();
-      var hPlusExp = skolemNew(goal -> SetVarBindPTP.entPred_h);
-      univVars.foreach (v => hPlusExp = FolAllExpression (v, hPlusExp));   //apply univVars
-      val hPlus = GoalExpression(hPlusExp, Double.PositiveInfinity);
-      flipQ = true;
-      val hMinus = GoalExpression(skolemNew(SetVarBindPTP.entPred_h -> goal, List(), true), Double.PositiveInfinity)
-		if(Sts.opts.noHMinus)
-	      extraExpressions = List(hPlus); // hMinus is disabled because of the computational overhead. 
-		else 
-			extraExpressions = List(hPlus, hMinus);
-    } 
-
+    * 
+*/
+    
     //===================== ERROR =============================
-    else
+    else if (Sts.opts.softLogicTool != "none")
       throw new RuntimeException("Not possible to reach this point")
 
     val res = delegate.prove(newConstants, declarations, evidence,/*TODO*/ /*assumptions ++ extraExpressions*/  extraExpressions ++ assumptions, null)
@@ -296,7 +307,7 @@ class SetGoalPTP(
         		}
         	}*/
 
-		   if(notExistCount > 1/*any negated existntially quantitied relation*/ || (!isQuery && notExistCount != 0 /*any negated existentially quantitied predicate in the TEXT*/) )  
+		   if(notExistCount > 1/*any negated existntially quantitied relation*/ /*|| (!isQuery && notExistCount != 0 *//*any negated existentially quantitied predicate in the TEXT*//*)*/ )  
 				return false;
 
 			//TODO: try not to generate constants for relations that are NotExist. (Line above)

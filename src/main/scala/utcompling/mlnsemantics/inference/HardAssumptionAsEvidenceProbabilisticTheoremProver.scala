@@ -49,8 +49,8 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 
     try 
     {
-	    val newAssumptions:List[WeightedExpression[FolExpression]] =  if(Sts.opts.fixDCA == false) assumptions //if no-fixDCA, then do nothing
-	    else //fixDCA: handle skolem functions 
+	    val newAssumptions:List[WeightedExpression[FolExpression]] =  //if(Sts.opts.fixDCA == false) assumptions //if no-fixDCA, then do nothing
+//	    else //fixDCA: handle skolem functions 
 	      assumptions
 	        .flatMap {
 	          case HardWeightedExpression(e) => {
