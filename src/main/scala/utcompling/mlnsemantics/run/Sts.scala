@@ -51,6 +51,8 @@ object Sts {
   var luceneDistPhrases:Lucene = null;	// Lucene repository of precompiled distributional phrases 
   var luceneParaphrases:Lucene = null;	// Lucene repository of precompiled paraphrases
 
+  var resultOnePair: Seq[Double] = Seq(); //passing result to the adept code
+
   def main(args: Array[String]) {
     val (newArgs, optPairs) =
       ("" +: args.toSeq).sliding2.foldLeft((Vector[String](), Vector[(String, String)]())) {
@@ -67,6 +69,46 @@ object Sts {
     Logger.getRootLogger.setLevel(opts.loglevel)
 
     newArgs.toSeq match {
+      case Seq("sen", sen1, sen2) =>
+      {
+    	  println(sen1);
+    	  println(sen2);
+    	  val lemmatized = new CncLemmatizeCorpusMapper().parseToLemmas(Array(sen1, sen2))
+    	  val lemmas = lemmatized.map(_.map(_.map(_._2).mkString(" ")).getOrElse("______parse_failed______"))
+    	  println(lemmas);
+	      val sentences = Array(sen1, sen2).map(Tokenize.separateTokens).toList
+	      val di = new ModalDiscourseInterpreter
+	      val boxes = di.batchInterpret(sentences);
+	      println(boxes);
+	      val allLemmas = lemmas.flatMap(_.split("\\s+")).toSet
+	      val fullVsFile = opts.vectorSpace
+          val tempVSFile = FileUtils.mktemp();
+	      FileUtils.writeUsing(tempVSFile) { f =>
+          	for (line <- readLines(fullVsFile)) {
+          		val word = line.split("-.\t|\t")(0)
+          		if (allLemmas(word) || allLemmas(word.toLowerCase))
+          			f.write(line + "\n")
+          	}
+	      }
+	      val vectorSpace = BowVectorSpace("resources/prob/prob.vs")
+	      // Index distributional phrases into Lucene repository
+	      luceneDistPhrases = new Lucene(opts.phrasesFile )
+	      // Index paraphrase rules into Lucene repository
+	      luceneParaphrases = new Lucene (opts.rulesFile)
+	      def depParser = DepParser.load();
+	      Sts.pairIndex = 1;
+	      Sts.text = sen1;
+	      Sts.hypothesis = sen2;
+	      Sts.textLemma = lemmas(0);
+	      Sts.hypothesisLemma = lemmas(1);
+	      println(Sts.text)
+	      println(Sts.hypothesis)
+	      val boxPair = boxes.map(x => Option(x.get.toString()));      
+    	   val result = runOnePair(boxPair, vectorSpace, depParser);
+    	   println(result)
+			resultOnePair = result;
+      }
+      
       case Seq("lem", stsFile, lemFile) =>
         val sentences = readLines(stsFile).flatMap(_.split("\t")).toVector
         val step = 500;  //file is large. It should be partitioned before passed to the parser
@@ -126,49 +168,13 @@ object Sts {
 
     }
     
-    def run(stsFile: String, boxFile: String, lemFile: String, vsFile: String, goldSimFile: String, outputSimFile: String, allLemmas: String => Boolean, includedPairs: Int => Boolean) {
-    	val pairs = readLines(stsFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
-		val lemPairs = readLines(lemFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
-      val vectorSpace = BowVectorSpace(vsFile)
+    
+    def runOnePair(boxPair:List[Option[String]], vectorSpace:BowVectorSpace, depParser:DepParser):Seq[Double] = {
 
-
-		val boxPairs =
-		FileUtils.readLines(boxFile)
-          .map { case SomeRe(drsString) => Some(drsString); case "None" => None }
-          .toList
-          .grouped(2)
-        val goldSims = FileUtils.readLines(goldSimFile).map(_.toDouble)
-      
-	    def probOfEnt2simScore(p: Double) = {
-			if(opts.task == "sts")
-				p * 5;
-			else p;
-		}
-		// Index distributional phrases into Lucene repository
-		luceneDistPhrases = new Lucene(opts.phrasesFile )
-	
-		// Index paraphrase rules into Lucene repository
-		luceneParaphrases = new Lucene (opts.rulesFile)
-	
-		def depParser = DepParser.load();
-		
-		val results =
-	    for ((((((txt, hyp), boxPair), goldSim), (lemTxt, lemHyp)), i) <- (pairs zipSafe boxPairs zipSafe goldSims zipSafe lemPairs).zipWithIndex if includedPairs(i + 1)) yield {
-	
-			Sts.pairIndex = i+1;
-			Sts.text = txt;
-			Sts.hypothesis = hyp;
-			Sts.textLemma = lemTxt;
-			Sts.hypothesisLemma = lemHyp;
-			
-			println("=============\n  Pair %s\n=============".format(i + 1))
-			println(txt)
-			println(hyp)
-		
 			val compositeVectorMaker = opts.compositeVectorMaker match {
 				case "mul" => MultiplicationCompositeVectorMaker();
 				case "add" => SimpleCompositeVectorMaker();
-        case "ngram" => NgramCompositeVectorMaker(opts.ngramN, opts.ngramAlpha);
+				case "ngram" => NgramCompositeVectorMaker(opts.ngramN, opts.ngramAlpha);
 			}
 			val logicFormSource: DiscourseInterpreter[BoxerExpression] = opts.logicFormSource match {
 				case "dep" => new DependencyParsedBoxerDiscourseInterpreter(depParser);
@@ -217,10 +223,53 @@ object Sts {
 		                         new NoExistProbabilisticTheoremProver( //
 		                        softLogicTool)))))))))))))))) // 16<== run Alchemy or PSL
 
-          val p = ttp.prove(Tokenize(txt).mkString(" "), Tokenize(hyp).mkString(" "))
-          println("Some(%s) [actual: %s, gold: %s]".format(p.mkString(":"), p.map(probOfEnt2simScore).mkString(":"), goldSim))
-          i -> (p.map(probOfEnt2simScore), goldSim)
-        }
+          val p = ttp.prove(Tokenize(Sts.text).mkString(" "), Tokenize(Sts.hypothesis).mkString(" "))
+          return p;
+    }
+    
+    def run(stsFile: String, boxFile: String, lemFile: String, vsFile: String, goldSimFile: String, outputSimFile: String, allLemmas: String => Boolean, includedPairs: Int => Boolean) {
+    	val pairs = readLines(stsFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
+		val lemPairs = readLines(lemFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
+        val vectorSpace = BowVectorSpace(vsFile)
+
+
+		val boxPairs =
+		FileUtils.readLines(boxFile)
+          .map { case SomeRe(drsString) => Some(drsString); case "None" => None }
+          .toList
+          .grouped(2)
+        val goldSims = FileUtils.readLines(goldSimFile).map(_.toDouble)
+      
+	    def probOfEnt2simScore(p: Double) = {
+			if(opts.task == "sts")
+				p * 5;
+			else p;
+		}
+		// Index distributional phrases into Lucene repository
+		luceneDistPhrases = new Lucene(opts.phrasesFile )
+	
+		// Index paraphrase rules into Lucene repository
+		luceneParaphrases = new Lucene (opts.rulesFile)
+	
+		def depParser = DepParser.load();
+		
+		val results =
+	    for ((((((txt, hyp), boxPair), goldSim), (lemTxt, lemHyp)), i) <- (pairs zipSafe boxPairs zipSafe goldSims zipSafe lemPairs).zipWithIndex if includedPairs(i + 1)) yield {
+	
+			Sts.pairIndex = i+1;
+			Sts.text = txt;
+			Sts.hypothesis = hyp;
+			Sts.textLemma = lemTxt;
+			Sts.hypothesisLemma = lemHyp;
+			println("=============\n  Pair %s\n=============".format(i + 1))
+			println(Sts.text)
+			println(Sts.hypothesis)
+			
+			val p = runOnePair(boxPair, vectorSpace, depParser)
+			println("Some(%s) [actual: %s, gold: %s]".format(p.mkString(":"), p.map(probOfEnt2simScore).mkString(":"), goldSim))
+			i -> (p.map(probOfEnt2simScore), goldSim)
+	    }
+			
 
       val (ps, golds) = results.map(_._2).unzip
       println("[" + ps.map( r=> { r.map("%1.4f".format(_)).mkString(",") }  ).mkString(" ") + "]")

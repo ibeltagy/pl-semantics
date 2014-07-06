@@ -35,10 +35,10 @@ import utcompling.mlnsemantics.run.Sts
 class ModalDiscourseInterpreter(
   delegate: DiscourseInterpreter[BoxerExpression] = new BoxerDiscourseInterpreter[BoxerExpression](
     new PassthroughBoxerExpressionInterpreter(),
-    CandcImpl.findBinary(),
-    BoxerImpl.findBinary(),
+    new CandcImpl (),
+    new BoxerImpl (),
     Sts.opts.kbest),
-  candcDiscourseParser: DiscourseParser[Discourse] = new CandcDiscourseParser(CandcImpl.findBinary()),
+  candcDiscourseParser: DiscourseParser[Discourse] = new CandcDiscourseParser(new CandcImpl()),
   polarityLexicon: PolarityLexicon = PolarityLexicon.fromFile("resources/polarity-lexicon/polarity_lexicon_expanded.txt"))
   extends DiscourseInterpreter[BoxerExpression] {
 

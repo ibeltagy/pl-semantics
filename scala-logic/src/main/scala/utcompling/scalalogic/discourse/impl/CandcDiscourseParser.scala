@@ -7,7 +7,7 @@ import utcompling.scalalogic.discourse.candc.parse.output.CandcOutputInterpreter
 import utcompling.scalalogic.discourse.candc.parse.output.impl.CandcOutputInterpreterImpl
 
 class CandcDiscourseParser[T](
-    private val candc: Candc = CandcImpl.findBinary(),
+    private val candc: Candc = new CandcImpl(),
     private val candcOutputInterpreter: CandcOutputInterpreter[T] = new CandcOutputInterpreterImpl(),
     private val defaultArgs: Map[String, String] = Map())
     extends DiscourseParser[T] {

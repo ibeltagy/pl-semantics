@@ -166,7 +166,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 	          //Sts.opts.timeout match  //regardless of the timeout parameter, timeout here is always inforced to 30 seconds 
 	          //{
 	          // case Some(t) => 
-	              	val finish = runWithTimeout(30000, false) { genPermutes;  true }
+	              	val finish = runWithTimeout(3000, false) { genPermutes;  true }
 	              	if(!finish)
 	              		throw PermutTimesout
 	          //  case _ => genPermutes; 

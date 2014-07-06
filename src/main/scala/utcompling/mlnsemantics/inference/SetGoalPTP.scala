@@ -179,6 +179,7 @@ class SetGoalPTP(
       throw new RuntimeException("Not possible to reach this point")
 
     val res = delegate.prove(newConstants, declarations, evidence,/*TODO*/ /*assumptions ++ extraExpressions*/  extraExpressions ++ assumptions, null)
+    //val res = Seq(0.0)
     if (negatedGoal)
     {
       require(res.size == 1);
@@ -313,7 +314,11 @@ class SetGoalPTP(
 			//TODO: try not to generate constants for relations that are NotExist. (Line above)
 			//TODO: still some causes generate inconsistant MLNs. Also, not sure if the handling below is correct
         	if(parent.isInstanceOf[FolAndExpression])
+        	{
+        		if(notExistCount == 0)
+        			System.out.println(">>>>>>INTRO<<<<<<" + args + ", " + parent);
         		return true;
+        	}
         	else {
 				System.out.println(">>>>>>The unicorn case<<<<<<");
 				return false;
