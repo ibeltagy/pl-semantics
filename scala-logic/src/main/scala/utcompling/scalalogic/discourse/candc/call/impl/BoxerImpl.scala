@@ -6,11 +6,12 @@ import utcompling.scalalogic.util.SubprocessCallable
 import scala.sys.process.Process
 import scala.sys.process.ProcessLogger
 import scala.collection.mutable.ListBuffer
+import utcompling.Resources
 
 //class BoxerImpl(override val binary: String, defaultArgs: Map[String, String] = Map()) extends SubprocessCallable(binary) with Boxer {
 class BoxerImpl extends  Boxer {
 
-	private val binary:String = FileUtils.findBinary("boxer", Some("candc/bin") , Some("CANDCHOME"))
+	private val binary:String = FileUtils.findBinary("boxer", Some(Resources.candc) , Some("CANDCHOME"))
 	private val defaultArgs: Map[String, String] = Map();
 	
     override def callBoxer(candcOut: String, args: Map[String, String] = Map(), verbose: Boolean = false): String/*(String, ListBuffer[String])*/ = {

@@ -1,6 +1,7 @@
 package utcompling.mlnsemantics.util
 
 import org.apache.log4j.Level
+import utcompling.Resources
 
 /**
  * Input parameters
@@ -38,9 +39,9 @@ class Config(opts: Map[String, String] = Map()) {
   //-------------------------------------------Precompiled distributional phrases (like Marco Baroni's phrases)
 
   // basic vector space
-  val vectorSpace = opts.get("-vectorSpace") match {
+  var vectorSpace = opts.get("-vectorSpace") match {
     case Some(filename) => filename
-    case _ => "resources/full.vs"
+    case _ => Resources.fullVectorSpace
   }
 
   // Scaling weights of distributional inference rules  

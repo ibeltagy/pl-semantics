@@ -27,6 +27,7 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
 import utcompling.scalalogic.drt.expression.DrtApplicationExpression
 import scala.math.{sqrt, pow, min, ceil}
 import utcompling.mlnsemantics.inference.NoExistProbabilisticTheoremProver
+import utcompling.Resources
 
 /**
  *
@@ -52,6 +53,11 @@ object Sts {
   var luceneParaphrases:Lucene = null;	// Lucene repository of precompiled paraphrases
 
   var resultOnePair: Seq[Double] = Seq(); //passing result to the adept code
+  
+  def callFromAdept(args: Array[String]): Array[Double] = {
+	  main(args);
+	  return resultOnePair.toArray;
+  }
 
   def main(args: Array[String]) {
     val (newArgs, optPairs) =
@@ -82,20 +88,20 @@ object Sts {
 	      println(boxes);
 	      val allLemmas = lemmas.flatMap(_.split("\\s+")).toSet
 	      val fullVsFile = opts.vectorSpace
-          val tempVSFile = FileUtils.mktemp();
+          /*val tempVSFile = FileUtils.mktemp();
 	      FileUtils.writeUsing(tempVSFile) { f =>
           	for (line <- readLines(fullVsFile)) {
           		val word = line.split("-.\t|\t")(0)
           		if (allLemmas(word) || allLemmas(word.toLowerCase))
           			f.write(line + "\n")
           	}
-	      }
-	      val vectorSpace = BowVectorSpace("resources/prob/prob.vs")
+	      }*/
+	      val vectorSpace = BowVectorSpace(/*tempVSFile*/"resources/prob/prob.vs")
 	      // Index distributional phrases into Lucene repository
 	      luceneDistPhrases = new Lucene(opts.phrasesFile )
 	      // Index paraphrase rules into Lucene repository
 	      luceneParaphrases = new Lucene (opts.rulesFile)
-	      def depParser = DepParser.load();
+	      //def depParser = DepParser.load();
 	      Sts.pairIndex = 1;
 	      Sts.text = sen1;
 	      Sts.hypothesis = sen2;
@@ -104,7 +110,7 @@ object Sts {
 	      println(Sts.text)
 	      println(Sts.hypothesis)
 	      val boxPair = boxes.map(x => Option(x.get.toString()));      
-    	   val result = runOnePair(boxPair, vectorSpace, depParser);
+    	   val result = runOnePair(boxPair, vectorSpace, null);
     	   println(result)
 			resultOnePair = result;
       }

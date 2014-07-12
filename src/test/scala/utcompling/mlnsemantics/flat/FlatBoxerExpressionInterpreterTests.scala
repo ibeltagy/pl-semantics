@@ -36,8 +36,8 @@ class FlatBoxerExpressionInterpreterTests {
     if (false) {
       val boxerDiscourseInterpreter = new BoxerDiscourseInterpreter[BoxerExpression](
         new PassthroughBoxerExpressionInterpreter(),
-        CandcImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin"))),
-        new BoxerImpl(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin/boxer")))
+        new CandcImpl(),
+        new BoxerImpl())
       println(boxerDiscourseInterpreter.interpretMultisentence(List("Fido is a Dog and Fido did not walk .")))
       println(boxerDiscourseInterpreter.interpretMultisentence(List("A dog did not walk .")))
       return

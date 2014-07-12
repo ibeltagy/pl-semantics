@@ -6,10 +6,11 @@ import opennlp.scalabha.util.CollectionUtil._
 import opennlp.scalabha.util.FileUtils
 import opennlp.scalabha.util.FileUtils.pathjoin
 import utcompling.scalalogic.util.SubprocessCallable
+import utcompling.Resources
 
 class CandcImpl	extends Candc {
     
-    private val binary:String = FileUtils.findBinary("candc", Some("candc/bin") , Some("CANDCHOME"))
+    private val binary:String = FileUtils.findBinary("candc", Some(Resources.candc) , Some("CANDCHOME"))
     private val modelsPath: String = pathjoin(binary.dropRight(5), "../models")
     private val defaultArgs: Map[String, String] = Map();
 

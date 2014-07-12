@@ -19,6 +19,7 @@ import opennlp.scalabha.util.CollectionUtil._
 import opennlp.scalabha.util.FileUtils
 import org.apache.commons.logging.LogFactory
 import utcompling.mlnsemantics.run.Sts
+import utcompling.Resources
 
 /**
  * Discourse Interpreter that decorates a logical form.
@@ -39,7 +40,7 @@ class ModalDiscourseInterpreter(
     new BoxerImpl (),
     Sts.opts.kbest),
   candcDiscourseParser: DiscourseParser[Discourse] = new CandcDiscourseParser(new CandcImpl()),
-  polarityLexicon: PolarityLexicon = PolarityLexicon.fromFile("resources/polarity-lexicon/polarity_lexicon_expanded.txt"))
+  polarityLexicon: PolarityLexicon = PolarityLexicon.fromFile(Resources.polarityLexicon))
   extends DiscourseInterpreter[BoxerExpression] {
 
   protected val LOG = LogFactory.getLog(classOf[ModalDiscourseInterpreter])
