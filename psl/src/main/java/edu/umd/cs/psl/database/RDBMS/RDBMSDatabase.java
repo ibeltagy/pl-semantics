@@ -144,6 +144,11 @@ public class RDBMSDatabase implements Database {
 	private final ArgumentFactory argFactory;
 	
 	public RDBMSDatabase(RDBMSDataStore parent, Connection con, Partition write, Partition[] reads) {
+
+		externalFunctions.clear();   //STATIC
+		externalFunctionCounter=0;					  //STATIC
+		Formula2SQL.varsTables.clear(); 	//STATIC
+
 		parentDataStore = parent;
 		db = con;
 		writePartition = write;

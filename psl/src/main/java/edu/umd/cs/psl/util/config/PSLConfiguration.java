@@ -27,7 +27,7 @@ import de.mathnbits.config.Configuration;
 
 public class PSLConfiguration extends Configuration {
 
-	public static final long startTime = System.currentTimeMillis();
+	public static long startTime = System.currentTimeMillis();
 	public static long timeout = 120000; //2 minutes
 	public static int groundLimit = 10000; //grounding limit when using AVG. 0 means: no limit. Take care that "no limit" may not work for long sentences
 	public static double metaW = -1; //weight of meta predicates, they are negationPred and dummyPred. "-1" means they should be treated as any other unary predicate.

@@ -49,7 +49,8 @@ implements DataStore {
 	
 	RelationalDataStore(Map<String, String> args) {
 		super();
-		
+		writeIDCounter = foldIDUpperBound;  //STATIC
+
 		if (args.get("valuecol")!=null) {
 			if (args.get("valuecol") instanceof String) valueColumnSuffix = args.get("valuecol");
 			else throw new IllegalArgumentException("Expected STRING argument for value column name, but got: " + args.get("valuecol"));

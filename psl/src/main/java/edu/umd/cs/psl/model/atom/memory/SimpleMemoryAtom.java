@@ -36,7 +36,7 @@ public class SimpleMemoryAtom extends MemoryAtom {
 		super(p,args,status);
 		Preconditions.checkArgument(p.getNumberOfValues()==1);
 		assert p.validValue(0, softval);
-		assert ConfidenceValues.isValidValue(confidence);
+		//assert ConfidenceValues.isValidValue(confidence);  //Looks like this assert it wrong
 		softValue = softval;
 		confidenceValue = confidence;
 	}

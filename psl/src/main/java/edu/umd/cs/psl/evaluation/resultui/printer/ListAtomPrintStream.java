@@ -32,8 +32,6 @@ public class ListAtomPrintStream implements AtomPrintStream {
 		System.out.println("--- Atoms: ");
 		if(values == null)
 			values = new HashMap<String, Double>();
-		else
-			values.clear();
 	}
 	
 	@Override
@@ -51,5 +49,11 @@ public class ListAtomPrintStream implements AtomPrintStream {
 	public HashMap<String, Double> getValues()
 	{
 		return values;
+	}
+
+	public void clear () //STATIC
+	{
+		if(values != null)
+			values.clear();
 	}
 }

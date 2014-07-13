@@ -88,15 +88,15 @@ object Sts {
 	      println(boxes);
 	      val allLemmas = lemmas.flatMap(_.split("\\s+")).toSet
 	      val fullVsFile = opts.vectorSpace
-          /*val tempVSFile = FileUtils.mktemp();
+         val tempVSFile = FileUtils.mktemp();
 	      FileUtils.writeUsing(tempVSFile) { f =>
           	for (line <- readLines(fullVsFile)) {
           		val word = line.split("-.\t|\t")(0)
           		if (allLemmas(word) || allLemmas(word.toLowerCase))
           			f.write(line + "\n")
           	}
-	      }*/
-	      val vectorSpace = BowVectorSpace(/*tempVSFile*/"resources/prob/prob.vs")
+	      }
+	      val vectorSpace = BowVectorSpace(tempVSFile /* "resources/prob/prob.vs"*/)
 	      // Index distributional phrases into Lucene repository
 	      luceneDistPhrases = new Lucene(opts.phrasesFile )
 	      // Index paraphrase rules into Lucene repository

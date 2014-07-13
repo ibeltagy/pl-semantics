@@ -59,6 +59,7 @@ public class MemoryAtom extends StatusAtom {
 		super(p,args,status);
 		
 		dependentKernels=null;
+		//emptyGroundKernels.clear();  //STATIC
 		
 	}
 	

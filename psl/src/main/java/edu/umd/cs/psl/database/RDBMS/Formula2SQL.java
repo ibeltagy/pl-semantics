@@ -71,7 +71,8 @@ public class Formula2SQL extends FormulaTraverser {
 	
 	private static final String tablePrefix = "t";
 	
-	private static final Set<String> varsTables = new HashSet<String>();
+	public static final Set<String> varsTables = new HashSet<String>(); //STATIC: clear this table 
+																							//on the creation of a new databse. 
 	
 	private final List<Variable> projection;
 	private final VariableAssignment partialGrounding;
@@ -96,6 +97,7 @@ public class Formula2SQL extends FormulaTraverser {
 	
 	
 	public Formula2SQL(VariableAssignment pg, List<Variable> proj, RDBMSDatabase db) {
+		
 		partialGrounding = pg;
 		projection = proj;
 		joins = new HashMap<Variable,String>();

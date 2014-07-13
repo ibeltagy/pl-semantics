@@ -16,6 +16,7 @@ import edu.umd.cs.psl.groovy.syntax.GenericVariable;
 import edu.umd.cs.psl.database.RDBMS.DatabaseDriver;
 import edu.umd.cs.psl.database.RDBMS.Formula2SQL;
 import edu.umd.cs.psl.database.RDBMS.Formula2SQL.QueryJoinMode;
+import edu.umd.cs.psl.database.Database;
 import edu.umd.cs.psl.evaluation.resultui.UIFullInferenceResult;
 import edu.umd.cs.psl.evaluation.resultui.printer.ListAtomPrintStream;
 import edu.umd.cs.psl.model.DistanceNorm;
@@ -61,6 +62,7 @@ public class TextInterface {
 	public void CallPSLTextInterface(String[] args) 
 	{
 		String pslFilePath = "run/test.psl";
+	   PSLConfiguration.startTime = System.currentTimeMillis(); //STATIC
 
 		if (args.length != 0 && args[0].endsWith(".psl")) {
 			pslFilePath = args[0];
@@ -227,29 +229,19 @@ public class TextInterface {
 					// pred = predicates.get(splits[1])
 					ConfigManager cm = ConfigManager.getManager();
 					ConfigBundle exampleBundle = cm.getBundle("example");
+					Database db = data.getDatabase();
 					UIFullInferenceResult result = m.mapInference(
-							data.getDatabase(), exampleBundle);
+							db, exampleBundle);
 
-					ListAtomPrintStream queryAtomsList = new ListAtomPrintStream(); // collect
-																					// atoms
-																					// in
-																					// a
-																					// static
-																					// list
-																					// to
-																					// pass
-																					// it
-																					// to
-																					// the
-																					// scala
-																					// code
+					ListAtomPrintStream queryAtomsList = new ListAtomPrintStream();
+					queryAtomsList.clear(); //STATIC
 					result.printAtoms(m.getPredicate("entailment_h"),
 							queryAtomsList, false);
 					result.printAtoms(m.getPredicate("entailment_t"),
 							queryAtomsList, false);
 					result.printAtoms(m.getPredicate("entailment"),
 							queryAtomsList, false);
-					data.getDatabase().close();			
+					db.close();			
 					data.close();
 
 					/*

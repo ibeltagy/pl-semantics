@@ -134,10 +134,10 @@ class PSLTheoremProver(
       case Some(time) => time.toString();
       case _ =>"0";
     };
-   
+
+    val l:ListAtomPrintStream = new ListAtomPrintStream();
     PSLInterface.call(Array(mlnFile, mode, timeoutVal, Sts.opts.groundLimit.toString, Sts.opts.metaW.toString, Sts.opts.relW.toString));
     //TextInterface.main(mlnFile, mode, timeoutVal, Sts.opts.groundLimit.toString, Sts.opts.metaW.toString, Sts.opts.relW.toString);
-    val l:ListAtomPrintStream = new ListAtomPrintStream();
     val values = l.getValues(); //(entailment_h, entailment_t, entailment)
     LOG.trace(values);
     
