@@ -1,11 +1,16 @@
-name := "PSL"
+name := "psl"
 
 version := "0.0.1"
+
+autoScalaLibrary := false
+
+crossPaths := false
+
+EclipseKeys.projectFlavor := EclipseProjectFlavor.Java
 
 resolvers ++= Seq(
   "PSL Third Party" at "https://scm.umiacs.umd.edu/maven/lccd/content/repositories/psl-thirdparty/"
 )
-
 
 libraryDependencies ++= Seq(
 	"edu.emory.mathcs" % "parallelcolt" % "0.9.4",
@@ -25,5 +30,3 @@ libraryDependencies ++= Seq(
 	"org.slf4j" % "slf4j-api" % "1.5.8",
 	"org.slf4j" % "slf4j-log4j12" % "1.5.8"
 )
-
-
