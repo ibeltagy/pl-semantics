@@ -39,6 +39,7 @@ class Lucene(rulesFileName: String) {
       new NIOFSDirectory(file);  //File-System index 
     }
   }
+  var reader:DirectoryReader = null;  
   val fieldName = "text"
   val maxNumReturns = 1000000
   val analyzer = new SimpleAnalyzer(Version.LUCENE_41)
@@ -95,7 +96,8 @@ class Lucene(rulesFileName: String) {
    * This function returns entries exactly matching the query string
    */
   def read(query: String): Seq[String] = {
-    val reader = DirectoryReader.open(index)
+    if(reader == null)
+       reader = DirectoryReader.open(index);
     val searcher = new IndexSearcher(reader)
     // The maximum number of returned rules is set to maxNumReturns
     val collector = TopScoreDocCollector.create(maxNumReturns, true)
@@ -116,7 +118,7 @@ class Lucene(rulesFileName: String) {
 	val r = this.read(query);
 	val end = System.nanoTime
 	LOG.debug("Searching time: " + (end - start) / 1e9 + " s")       
-	LOG.debug("# returned rules: " + r.size)	
+	LOG.debug("# returned rules: " + r.size)
 	r;
   }  
 
