@@ -19,6 +19,7 @@ import scala.sys.process.Process
 import scala.sys.process.ProcessLogger
 import java.io.File
 import edu.umd.cs.psl.evaluation.resultui.printer.ListAtomPrintStream
+import util.PSLInterface
 
 class PSLTheoremProver(
   )

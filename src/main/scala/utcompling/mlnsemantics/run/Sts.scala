@@ -257,7 +257,10 @@ object Sts {
 		// Index paraphrase rules into Lucene repository
 		luceneParaphrases = new Lucene (opts.rulesFile)
 	
-		def depParser = DepParser.load();
+		def depParser:DepParser = opts.logicFormSource match {
+			case "dep" => DepParser.load();
+			case "box" => null;
+		}	 
 		
 		val results =
 	    for ((((((txt, hyp), boxPair), goldSim), (lemTxt, lemHyp)), i) <- (pairs zipSafe boxPairs zipSafe goldSims zipSafe lemPairs).zipWithIndex if includedPairs(i + 1)) yield {

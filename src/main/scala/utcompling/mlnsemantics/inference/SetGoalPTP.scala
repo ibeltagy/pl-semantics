@@ -111,7 +111,7 @@ class SetGoalPTP(
     	  				None  //handling a very special case of parsing error
     	  						//where the expression is just an empty box
 				      else 
-				    	introduction(goal, false, null);
+				    	  lhsOnlyIntroduction(goal, false, List());
       var expr = goal;
       negatedGoal = false;
       var countUniv = 0;
@@ -136,7 +136,7 @@ class SetGoalPTP(
       
       goalExist match {
 //TODO
-        case Some(g) => extraExpressions = HardWeightedExpression(g) :: extraExpressions; 
+        case Some(g) => extraExpressions = HardWeightedExpression(g) :: extraExpressions;   //<<--- this is correct 
 //        case Some(g) => extraExpressions = extraExpressions :+  HardWeightedExpression(g);
         case _ =>
       }
@@ -152,10 +152,10 @@ class SetGoalPTP(
 	    	  					None  //handling a very special case of parsing error
 	    	  						//where the expression is just an empty box
 	    	  				else 
-	    	  					introduction(e, false, null);
+	    	  					lhsOnlyIntroduction(e, false, List());
 		      textExit match {
 //TODO
- 	          case Some(t) => extraExpressions = HardWeightedExpression(t) :: extraExpressions; true; 
+ 	          case Some(t) => extraExpressions = HardWeightedExpression(t) :: extraExpressions; true;	//<<--- this is correct 
 //              case Some(t) => extraExpressions = extraExpressions :+ HardWeightedExpression(t); true;
 		        case _ => false;
 		      }
@@ -178,7 +178,7 @@ class SetGoalPTP(
     else if (Sts.opts.softLogicTool != "none")
       throw new RuntimeException("Not possible to reach this point")
 
-    val res = delegate.prove(newConstants, declarations, evidence,/*TODO*/ /*assumptions ++ extraExpressions*/  extraExpressions ++ assumptions, null)
+    val res = delegate.prove(newConstants, declarations, evidence,/*TODO*/ /*(This is wrong)-->*/ /*assumptions ++ extraExpressions  */  /*(This is correct)-->*/ extraExpressions ++ assumptions, null)
     //val res = Seq(0.0)
     if (negatedGoal)
     {
@@ -196,6 +196,82 @@ class SetGoalPTP(
   private var isQuery = true; 
   //private var parent: FolExpression = null;
   
+  private def lhsOnlyIntroduction(expr: FolExpression, inLhs:Boolean, univs:List[String]): Option[FolExpression] =
+  {
+	expr match {
+      case FolExistsExpression(variable, term) => lhsOnlyIntroduction(term, inLhs, univs)
+      case FolAllExpression(variable, term) => lhsOnlyIntroduction(term, inLhs, univs :+ (variable.name))
+	  case FolNegatedExpression(term) => lhsOnlyIntroduction(term, false, univs);      
+      case FolOrExpression(first, second) => lhsOnlyIntroduction(FolAndExpression(first, second), inLhs, univs);
+      case FolIfExpression(first, second) => {
+          val f = lhsOnlyIntroduction(first, true, univs);
+ 		  val s = lhsOnlyIntroduction(second, false, univs);
+ 		  if (f.isEmpty && s.isEmpty)
+ 			  return None;
+ 		  else if (f.isEmpty)
+ 			  return s;
+ 		  else if (s.isEmpty)
+ 			  return f;
+ 		  else return  Some(FolAndExpression(f.get, s.get));
+      }
+      case FolAndExpression(first, second) =>  {
+         val f = lhsOnlyIntroduction(first, inLhs, univs);
+		  val s = lhsOnlyIntroduction(second, inLhs, univs);
+		  if (f.isEmpty && s.isEmpty)
+			  return None;
+		  else if (f.isEmpty)
+			  return s;
+		  else if (s.isEmpty)
+			  return f;
+		  else return  Some(FolAndExpression(f.get, s.get));
+      }
+      case FolAtom(pred, args @ _*) =>{
+    	  
+    	if(inLhs && isLhsOnlyIntroduction(args, inLhs, univs) )
+    	{
+			System.out.println(">>>>>>LHS Intro<<<<<<");
+    		Some(FolAtom.apply(pred, args.map(arg => lhsOnlyIntroduction(arg, univs) ) :_ *));
+    	}
+    	else 
+    	  None
+      }
+	  case FolVariableExpression(v) => Some(FolVariableExpression(lhsOnlyIntroduction(v, univs)));
+
+      case FolEqualityExpression(first, second) => {
+    	       	if(inLhs && isLhsOnlyIntroduction(Seq(first.asInstanceOf[FolVariableExpression].variable, 
+        						   second.asInstanceOf[FolVariableExpression].variable), inLhs, univs))
+        		{
+    				System.out.println(">>>>>>LHS Intro<<<<<<");
+    	       		Some(FolEqualityExpression(lhsOnlyIntroduction(first, inLhs, univs).get, introduction(second, inLhs, expr).get));
+        		}
+        	else 
+        	  None
+      }
+      case FolIffExpression(first, second) => throw new RuntimeException(expr + " is not a valid expression")      
+	  case _ => throw new RuntimeException(expr + " is not a valid expression")
+	}
+  }
+  private def lhsOnlyIntroduction(v: Variable, univs:List[String]): Variable =
+  {
+		  require(univs.contains(v.name));
+          var newVarName = v.name;  
+          if(isQuery)
+            newVarName = newVarName + "_hPlus";
+          addConst(newVarName);
+          return Variable(newVarName);
+  }
+  private def isLhsOnlyIntroduction (args: Seq[Variable], inLhs:Boolean, univs:List[String]): Boolean = 
+  {
+        require(inLhs);
+        
+        args.forall(arg=>{
+          if (!univs.contains(arg.name))
+        	  return false;
+          true;
+        })
+        return true;
+  }
+  //---------------------------
   private def introduction(expr: FolExpression, isNegated:Boolean, parent:FolExpression): Option[FolExpression] =
   {
 	expr match {

@@ -41,8 +41,17 @@ class NoExistProbabilisticTheoremProver(
     val startTime = DateTimeUtils.currentTimeMillis()
     val res = try 
     {
+		  var constCount :Integer = 0;
+		  allConstants.forall(c=>{
+				println(c);
+				constCount = constCount + c._2.size
+				true
+		  })
+		  println("const count = " + constCount);
+
         val newAssumptions:List[WeightedExpression[FolExpression]] = 
-        if(! (Sts.opts.groundExist && Sts.opts.task == "rte" && Sts.opts.negativeEvd/*this is only useful if there are negative evd*/ ) ) 
+        if(! (Sts.opts.groundExist 	&& Sts.opts.task == "rte" && Sts.opts.negativeEvd/*this is only useful if there are negative evd*/ 
+												&& constCount > 1/*in case of no constants in the domain, skip this step*/) ) 
           assumptions
 	    else
 	      assumptions.map 

@@ -1,4 +1,5 @@
 target/
+condor/
 project/project/
 .project
 .classpath

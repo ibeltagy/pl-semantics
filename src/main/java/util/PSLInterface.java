@@ -1,4 +1,4 @@
-package utcompling.mlnsemantics.inference;
+package util;
 import edu.umd.cs.psl.groovy.TextInterface;
 
 
