@@ -111,7 +111,7 @@ class SetGoalPTP(
     	  				None  //handling a very special case of parsing error
     	  						//where the expression is just an empty box
 				      else 
-				    	  lhsOnlyIntroduction(goal, false, List());
+				    	  introduction(goal, false, null);
       var expr = goal;
       negatedGoal = false;
       var countUniv = 0;
@@ -152,7 +152,7 @@ class SetGoalPTP(
 	    	  					None  //handling a very special case of parsing error
 	    	  						//where the expression is just an empty box
 	    	  				else 
-	    	  					lhsOnlyIntroduction(e, false, List());
+	    	  					introduction(e, false, null);
 		      textExit match {
 //TODO
  	          case Some(t) => extraExpressions = HardWeightedExpression(t) :: extraExpressions; true;	//<<--- this is correct 
@@ -242,7 +242,7 @@ class SetGoalPTP(
         						   second.asInstanceOf[FolVariableExpression].variable), inLhs, univs))
         		{
     				System.out.println(">>>>>>LHS Intro<<<<<<");
-    	       		Some(FolEqualityExpression(lhsOnlyIntroduction(first, inLhs, univs).get, introduction(second, inLhs, expr).get));
+    	       		Some(FolEqualityExpression(lhsOnlyIntroduction(first, inLhs, univs).get, lhsOnlyIntroduction(second, inLhs, univs).get));
         		}
         	else 
         	  None
