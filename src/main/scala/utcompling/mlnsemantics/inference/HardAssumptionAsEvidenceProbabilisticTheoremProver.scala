@@ -137,7 +137,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 	          
               
 	          def genPermutes = {
-	            permut(List.range (0, maxUnivConstListLen), univVars.size).foreach(p => {
+	            permut(List.range (0, maxUnivConstListLen), univVars.size).foreach(c => { c.permutations.foreach( p=> {
 	        	  var skolemEvd: FolExpression = FolVariableExpression(Variable("skolem_"+skolemFunctionsCounter));
 	        	  object AllDone extends Exception { }
 	        	  try
@@ -160,7 +160,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 	        	  }catch{
 	        	      case AllDone =>//do nothing
 	        	  }
-	            })
+	            }) /*END P*/ }) /*END C*/
 	          }
 				 println ("before permute");
 	          //Sts.opts.timeout match  //regardless of the timeout parameter, timeout here is always inforced to 30 seconds 

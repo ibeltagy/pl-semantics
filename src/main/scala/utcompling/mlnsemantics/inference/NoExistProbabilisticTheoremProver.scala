@@ -137,7 +137,7 @@ class NoExistProbabilisticTheoremProver(
           
           var newExp: FolExpression = null;
           def genPermutes = {
-            permut(List.range (0, maxUnivConstListLen), existVars.size).foreach(p => {
+            permut(List.range (0, maxUnivConstListLen), existVars.size).foreach(c => { c.permutations.foreach(p=>{
         	  object AllDone extends Exception { }
         	  try
         	  {
@@ -191,7 +191,7 @@ class NoExistProbabilisticTheoremProver(
         	  }catch{
         	      case AllDone =>//do nothing
         	  }
-            })
+            })/*END P*/ }) /*END C*/ 
           }
 	      val finish = runWithTimeout(Sts.opts.timeout.get, false) { genPermutes;  true }
 	      if(!finish)

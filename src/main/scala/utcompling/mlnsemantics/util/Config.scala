@@ -204,6 +204,12 @@ class Config(opts: Map[String, String] = Map()) {
     case _ => true;
   }
   
+  //Introduction for all UNVs, or for LHS only
+  val lhsOnlyIntro = opts.get("-lhsOnlyIntro") match {
+    case Some("true") => true;
+    case _ => false;
+  }
+  
   //What probabilistic logic tool to be used, PSL or MLN. NONE is a dummy inference that always returns 0. 
   val softLogicTool = opts.get("-softLogic") match {
     case Some("psl") => "psl"

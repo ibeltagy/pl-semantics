@@ -111,7 +111,8 @@ class SetGoalPTP(
     	  				None  //handling a very special case of parsing error
     	  						//where the expression is just an empty box
 				      else 
-				    	  introduction(goal, false, null);
+				        introductionEntry(goal);
+
       var expr = goal;
       negatedGoal = false;
       var countUniv = 0;
@@ -152,7 +153,7 @@ class SetGoalPTP(
 	    	  					None  //handling a very special case of parsing error
 	    	  						//where the expression is just an empty box
 	    	  				else 
-	    	  					introduction(e, false, null);
+	    	  					introductionEntry(e);
 		      textExit match {
 //TODO
  	          case Some(t) => extraExpressions = HardWeightedExpression(t) :: extraExpressions; true;	//<<--- this is correct 
@@ -196,16 +197,30 @@ class SetGoalPTP(
   private var isQuery = true; 
   //private var parent: FolExpression = null;
   
-  private def lhsOnlyIntroduction(expr: FolExpression, inLhs:Boolean, univs:List[String]): Option[FolExpression] =
+  private def introductionEntry(expr: FolExpression): Option[FolExpression] =
+  {
+    if (Sts.opts.lhsOnlyIntro )
+    	lhsOnlyIntroduction(expr, false, false, List());
+    else
+    	introduction(expr, false, null);
+  }
+  
+  private def lhsOnlyIntroduction(expr: FolExpression, inLhs:Boolean, isNegated:Boolean, univs:List[String]): Option[FolExpression] =
   {
 	expr match {
-      case FolExistsExpression(variable, term) => lhsOnlyIntroduction(term, inLhs, univs)
-      case FolAllExpression(variable, term) => lhsOnlyIntroduction(term, inLhs, univs :+ (variable.name))
-	  case FolNegatedExpression(term) => lhsOnlyIntroduction(term, false, univs);      
-      case FolOrExpression(first, second) => lhsOnlyIntroduction(FolAndExpression(first, second), inLhs, univs);
+      case FolExistsExpression(variable, term) => {
+        quantifiers = quantifiers 	++  Map( variable.name  ->  ("E", isNegated) );
+        lhsOnlyIntroduction(term, inLhs, isNegated, univs)
+      }
+      case FolAllExpression(variable, term) => {
+        quantifiers = quantifiers 	++  Map( variable.name  ->  ("A", isNegated) );
+        lhsOnlyIntroduction(term, inLhs, isNegated, univs :+ (variable.name))
+      }
+	  case FolNegatedExpression(term) => lhsOnlyIntroduction(term, false, !isNegated, univs);      
+      case FolOrExpression(first, second) => lhsOnlyIntroduction(FolAndExpression(first, second), inLhs, isNegated, univs);
       case FolIfExpression(first, second) => {
-          val f = lhsOnlyIntroduction(first, true, univs);
- 		  val s = lhsOnlyIntroduction(second, false, univs);
+          val f = lhsOnlyIntroduction(first, true, !isNegated, univs);
+ 		  val s = lhsOnlyIntroduction(second, false, isNegated, univs);
  		  if (f.isEmpty && s.isEmpty)
  			  return None;
  		  else if (f.isEmpty)
@@ -215,8 +230,8 @@ class SetGoalPTP(
  		  else return  Some(FolAndExpression(f.get, s.get));
       }
       case FolAndExpression(first, second) =>  {
-         val f = lhsOnlyIntroduction(first, inLhs, univs);
-		  val s = lhsOnlyIntroduction(second, inLhs, univs);
+         val f = lhsOnlyIntroduction(first, inLhs, isNegated, univs);
+		  val s = lhsOnlyIntroduction(second, inLhs, isNegated, univs);
 		  if (f.isEmpty && s.isEmpty)
 			  return None;
 		  else if (f.isEmpty)
@@ -242,7 +257,7 @@ class SetGoalPTP(
         						   second.asInstanceOf[FolVariableExpression].variable), inLhs, univs))
         		{
     				System.out.println(">>>>>>LHS Intro<<<<<<");
-    	       		Some(FolEqualityExpression(lhsOnlyIntroduction(first, inLhs, univs).get, lhsOnlyIntroduction(second, inLhs, univs).get));
+    	       		Some(FolEqualityExpression(lhsOnlyIntroduction(first, inLhs, isNegated, univs).get, lhsOnlyIntroduction(second, inLhs, isNegated, univs).get));
         		}
         	else 
         	  None
