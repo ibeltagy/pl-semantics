@@ -5,13 +5,17 @@ import argparse
 import cPickle
 import operator
 import numpy as np
+import math
 from util import tokenize
 
 def norm(v):
     return v / np.sqrt(v.dot(v))
 
 def cosine(v1, v2):
-    return norm(v1).dot(norm(v2))
+    val = norm(v1).dot(norm(v2))
+    if math.isnan(val):
+        return -1
+    return val
 
 def load_vectorspace(filename):
     with open(filename) as f:

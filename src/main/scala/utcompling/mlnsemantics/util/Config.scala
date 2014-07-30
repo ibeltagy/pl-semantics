@@ -264,14 +264,14 @@ class Config(opts: Map[String, String] = Map()) {
   //"-1" means they should be treated as any other unary predicate.  
   val metaW = opts.get("-metaW") match {
      case Some(w) => w.toDouble;
-     case _ => 0.33;  //-1
+     case _ => 0.30;  //-1
   }
   
   //weight of relation predicates like agent, patient, of ....  
   //"-1" means they should be treated as any other unary predicate.  
   val relW = opts.get("-relW") match {
      case Some(w) => w.toDouble;
-     case _ => 0.01;  //-1
+     case _ => 0.05;  //-1
   }
 
   //-------------------------------------------multiple parses
