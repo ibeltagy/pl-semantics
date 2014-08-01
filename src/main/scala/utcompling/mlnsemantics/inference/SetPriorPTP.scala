@@ -44,14 +44,16 @@ class SetPriorPTP(
     }
     SetPriorPTP.entPrior = SetPriorPTP.predPrior //entailment prior equals the other predicates priors
 
-    if (Sts.opts.softLogicTool == "ss")
+/*    if (Sts.opts.softLogicTool == "ss")
     {
       //No priors when using SS
       SetPriorPTP.predPrior = 0;
       SetPriorPTP.entPrior = 0;
     }
+    * 
+*/
     //Only prior on Entailment. It is a function of another Infernece Step   
-    else if (Sts.opts.fixDCA == true && Sts.opts.task == "rte" && Sts.opts.noHMinus == false /*ignoring H- for now until we fix inference*/) 
+     if (Sts.opts.fixDCA == true && Sts.opts.task == "rte" && Sts.opts.noHMinus == false /*ignoring H- for now until we fix inference*/) 
     {
       //Run inference for the first time to get the "default probability"
       SetPriorPTP.withText = false;
@@ -67,22 +69,26 @@ class SetPriorPTP(
       else return result;//if it does not work, return the result as it is. 
       
     }
+    else  if(Sts.opts.negativeEvd == true) //if modified close-world assumption
+    {
+    	//No need for priors
+        SetPriorPTP.predPrior = 0;
+        SetPriorPTP.entPrior = 0;
+
+    }
     else  //Prior on all predicates
     {
       //for all declarations, generate prior expressions
-      priorExpressions = declarations.map {
+      priorExpressions = declarations.flatMap {
       	case (expr, varTypes) => {
       	  
       	  val priorExp = predicateToPrior(expr);
       	  
-      	  //Different prior for the entailment predicate
-      	  val priorWeight = (
-      	      if (expr == SetVarBindPTP.entPred_h || expr == SetVarBindPTP.entPred_t) //if it is one of the entailment predicates  
-      	        SetPriorPTP.entPrior //use entailment prior
-      	      else
-      	        SetPriorPTP.predPrior
-      	  )
-      	  PriorExpression(priorExp.asInstanceOf[FolExpression], priorWeight);
+      	  //No prior on the entailment predicate
+      	  if (expr == SetVarBindPTP.entPred_h || expr == SetVarBindPTP.entPred_t) //if it is one of the entailment predicates
+      		  None
+      	  else
+      		  Some(PriorExpression(priorExp.asInstanceOf[FolExpression], SetPriorPTP.predPrior));
       	 }
       	}.toList
     }//end if/else.

@@ -13,6 +13,8 @@ import utcompling.mlnsemantics.inference.support.GoalExpression
 import scala.actors.Futures._
 import scala.actors.threadpool.TimeoutException
 import utcompling.mlnsemantics.inference.support.GoalExpression
+import org.joda.time.DateTimeUtils
+import org.joda.time.Duration
 
 
 class NoExistProbabilisticTheoremProver(
@@ -36,9 +38,21 @@ class NoExistProbabilisticTheoremProver(
     
     allConstants = constants;
     allEvidence = evidence;
-    try 
+    val startTime = DateTimeUtils.currentTimeMillis()
+    val res = try 
     {
-        val newAssumptions:List[WeightedExpression[FolExpression]] = if(! (Sts.opts.groundExist && Sts.opts.task == "rte" && Sts.opts.softLogicTool == "ss") ) assumptions
+		  var constCount :Integer = 0;
+		  allConstants.forall(c=>{
+				println(c);
+				constCount = constCount + c._2.size
+				true
+		  })
+		  println("const count = " + constCount);
+
+        val newAssumptions:List[WeightedExpression[FolExpression]] = 
+        if(! (Sts.opts.groundExist 	&& Sts.opts.task == "rte" && Sts.opts.negativeEvd/*this is only useful if there are negative evd*/ 
+												&& constCount > 1/*in case of no constants in the domain, skip this step*/) ) 
+          assumptions
 	    else
 	      assumptions.map 
 	      {
@@ -58,18 +72,36 @@ class NoExistProbabilisticTheoremProver(
 	          }
 	          case a @ _ => a
 	      }
+	    val beforeInfTime = DateTimeUtils.currentTimeMillis();
+	    val totalTimeout = Sts.opts.timeout;
+	    Sts.opts.timeout = Some(Sts.opts.timeout.get - (beforeInfTime - startTime))
 	    
-	    delegate.prove(
-	      constants,
-	      declarations,
-	      evidence,
-	      newAssumptions,
-	      goal)
+	    var infRes =  Seq(-6.0);
+	    
+	    if(Sts.opts.timeout.get > 0)
+	    {
+		    println("#Run infer for# " + Sts.opts.timeout.get)
+	        infRes = delegate.prove(
+		      constants,
+		      declarations,
+		      evidence,
+		      newAssumptions,
+		      goal)
+	    }
+	    Sts.opts.timeout = totalTimeout;
+	    
+	    infRes;
     }catch {
       case PermutTimesout => Seq(-6.0)
-		case _  => Seq(-5.0)
+	  //case _  => Seq(-5.0)
     }
     
+    var endTime = DateTimeUtils.currentTimeMillis()
+    if(res.head < 0 )
+    	println ("#Time# (timeout) (" + res.head + ") "+(endTime - startTime) )
+    else 
+        println ("#Time# (good) (" + res.head + ") "+(endTime - startTime)  )
+    res
   }
         
   //generate permutations
@@ -105,7 +137,7 @@ class NoExistProbabilisticTheoremProver(
           
           var newExp: FolExpression = null;
           def genPermutes = {
-            permut(List.range (0, maxUnivConstListLen), existVars.size).foreach(p => {
+            permut(List.range (0, maxUnivConstListLen), existVars.size).foreach(c => { c.permutations.foreach(p=>{
         	  object AllDone extends Exception { }
         	  try
         	  {
@@ -159,9 +191,9 @@ class NoExistProbabilisticTheoremProver(
         	  }catch{
         	      case AllDone =>//do nothing
         	  }
-            })
+            })/*END P*/ }) /*END C*/ 
           }
-	      val finish = runWithTimeout(30000, false) { genPermutes;  true }
+	      val finish = runWithTimeout(Sts.opts.timeout.get, false) { genPermutes;  true }
 	      if(!finish)
 	    	  throw PermutTimesout
 
@@ -331,7 +363,7 @@ class NoExistProbabilisticTheoremProver(
       														goUniv(second, univVars, existVars, isNegated))
       	case FolIfExpression(first, second) => FolIfExpression(goUniv(first, univVars, existVars, !isNegated),
       														goUniv(second, univVars, existVars, isNegated))
-      	case FolIffExpression(first, second) => throw new RuntimeException("not reachable")
+      	case FolIffExpression(first, second) => goUniv(FolAndExpression(FolIfExpression(first, second), FolIfExpression(second, first)), univVars, existVars, isNegated)
         case FolEqualityExpression(first, second) => e
         case FolAtom(pred, args @ _*) => e
         case _ => throw new RuntimeException("not reachable")

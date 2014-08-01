@@ -39,7 +39,6 @@ public class wordGramSimilarity {
 		// TODO Auto-generated method stub
 		String filePath = "/home/beltagy/workspace/deft/mln-semantics/resources/sts/STS.MSRpar.in.lem";
 		String stopWordsFilePath = "stopwords.txt";
-		
 		try {
 			BufferedReader swfr = new BufferedReader(new FileReader(stopWordsFilePath));
 			String sw;

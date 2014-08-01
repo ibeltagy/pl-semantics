@@ -20,6 +20,7 @@ import scala.sys.process.ProcessLogger
 import edu.mit.jwi.item.POS
 import scala.collection.JavaConversions._
 import scala.compat.Platform
+import utcompling.Resources
 
 class AlchemyTheoremProver{
   
@@ -27,7 +28,7 @@ class AlchemyTheoremProver{
 
   private val LOG = LogFactory.getLog(classOf[AlchemyTheoremProver])
   
-  private val binary:String = FileUtils.findBinary("infer", Some("alchemy/bin") , Some("ALCHEMYHOME"))
+  private val binary:String = FileUtils.findBinary("infer", Some(Resources.alchemy) , Some("ALCHEMYHOME"))
   
   protected def makeMlnFile(
     constants: Map[String, Set[String]],

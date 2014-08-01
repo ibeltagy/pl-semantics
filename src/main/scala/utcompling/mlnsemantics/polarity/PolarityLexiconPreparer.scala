@@ -81,9 +81,9 @@ object PolarityLexiconPreparer {
   class PrintingDiscourseInterpreter(
     boxerDiscourseInterpreter: DiscourseInterpreter[DrtExpression] = new BoxerDiscourseInterpreter(
       new Boxer2DrtExpressionInterpreter(),
-      CandcImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin"))),
-      BoxerImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin")))),
-    candcDiscourseParser: DiscourseParser[Discourse] = new CandcDiscourseParser(CandcImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin")))))
+      new CandcImpl(),
+      new BoxerImpl()),
+    candcDiscourseParser: DiscourseParser[Discourse] = new CandcDiscourseParser( new CandcImpl() ))
     extends DiscourseInterpreter[Null] {
 
     override def batchInterpretMultisentence(inputs: List[List[String]], discourseIds: Option[List[String]] = None, question: Boolean = false, verbose: Boolean = false): List[Option[Null]] = {

@@ -1,4 +1,11 @@
-
+New testing and development phase starts end of July 2014
+-Check the error code -7 in alchemy/src/logic/clause.cpp becuase it looks like it is not needed. For example, pair 9 in prb after disabling groundExist and negating hypothesis
+-Check the effect of combination-permutation vs combination only. combination only is wrong. It is applied in HardAssumptionAsEvidenceProbabilisticTheoremProver and NoExistProbabilisticTheoremProver. Disable it, run experiment, then enable it and test again
+-run experiment with -lhsOnlyIntro true
+-Implement the AutoTyping on the HardAssumptionAsEvidenceProbabilisticTheoremProver then run pair 25 in prb. 
+-Cases of domain with no constants but the default need a second look because they give none 0/1 answers. For exmple, sick-rte 4,6 and prb 29,31
+---------------------------
+===========================
 Things to try: fixed AutoType, repeat, noRelIntro, IR W * 3
 -"repeat" in AutoConst is wrong. Fix it <<<<<<<<<<<
 -Introduction in SetGoal should reduce number of constants somehow <<<<<< 

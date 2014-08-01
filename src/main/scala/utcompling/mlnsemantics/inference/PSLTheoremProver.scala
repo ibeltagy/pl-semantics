@@ -18,6 +18,8 @@ import utcompling.mlnsemantics.run.Sts
 import scala.sys.process.Process
 import scala.sys.process.ProcessLogger
 import java.io.File
+import edu.umd.cs.psl.evaluation.resultui.printer.ListAtomPrintStream
+import util.PSLInterface
 
 class PSLTheoremProver(
   )
@@ -133,7 +135,30 @@ class PSLTheoremProver(
       case Some(time) => time.toString();
       case _ =>"0";
     };
-    //val proc = Process("java", Seq("-cp", PSLTheoremProver.cp, "psl.TextInterface", mlnFile, mode, timeoutVal)).run(
+
+    val l:ListAtomPrintStream = new ListAtomPrintStream();
+    PSLInterface.call(Array(mlnFile, mode, timeoutVal, Sts.opts.groundLimit.toString, Sts.opts.metaW.toString, Sts.opts.relW.toString));
+    //TextInterface.main(mlnFile, mode, timeoutVal, Sts.opts.groundLimit.toString, Sts.opts.metaW.toString, Sts.opts.relW.toString);
+    val values = l.getValues(); //(entailment_h, entailment_t, entailment)
+    LOG.trace(values);
+    
+    val entHscore:Double = if(values.containsKey("entailment_h()"))
+    	  				values.get("entailment_h()")
+    	  			  else 0.0;
+    val entTscore:Double = if(values.containsKey("entailment_t()"))
+    	  				values.get("entailment_t()")
+    	  			  else 0.0;
+    
+    if(Sts.opts.task == "rte")
+	{
+    	return Seq(entHscore);
+	}
+	else
+	{
+		return Seq(entHscore, entTscore)
+	}  
+    
+    /*
     LOG.trace("Calling: ant -buildfile psl/build.xml run -Darg0=%s -Darg1=%s -Darg2=%s -Darg3=%s -Darg4=%s -Darg5=%s".format(mlnFile, mode, 
     											timeoutVal, Sts.opts.groundLimit, Sts.opts.metaW, Sts.opts.relW));
     val proc = Process("ant", Seq("-buildfile", "psl/build.xml", "run", "-Darg0="+mlnFile, "-Darg1="+mode, "-Darg2="+timeoutVal, 
@@ -167,6 +192,7 @@ class PSLTheoremProver(
     	  return Seq(-1);
     	else return Seq(-1, -1);
     }
+
 
 
 	def lineToScore (line: String) = 
@@ -203,6 +229,7 @@ class PSLTheoremProver(
 		var entTscore = lineToScore(entailmentTLine);
 	  return Seq(entHscore, entTscore)
 	 }
+    */
     
   }
 

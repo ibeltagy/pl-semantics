@@ -13,9 +13,9 @@ class BoxerDiscourseInterpreterTests {
   @Test
   def test() {
 
-    val binDir = Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin"))
-    val candc = CandcImpl.findBinary(binDir)
-    val boxer = BoxerImpl.findBinary(binDir)
+    //val binDir = Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin"))
+    val candc = new CandcImpl()
+    val boxer = new BoxerImpl()
     val bi = new BoxerDiscourseInterpreter(candc = candc, boxer = boxer)
 
     val fakeCandc = new FakeCandc(

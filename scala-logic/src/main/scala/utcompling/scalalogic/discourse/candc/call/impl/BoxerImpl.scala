@@ -6,9 +6,14 @@ import utcompling.scalalogic.util.SubprocessCallable
 import scala.sys.process.Process
 import scala.sys.process.ProcessLogger
 import scala.collection.mutable.ListBuffer
+import utcompling.Resources
 
-class BoxerImpl(override val binary: String, defaultArgs: Map[String, String] = Map()) extends SubprocessCallable(binary) with Boxer {
+//class BoxerImpl(override val binary: String, defaultArgs: Map[String, String] = Map()) extends SubprocessCallable(binary) with Boxer {
+class BoxerImpl extends  Boxer {
 
+	private val binary:String = FileUtils.findBinary("boxer", Some(Resources.candc) , Some("CANDCHOME"))
+	private val defaultArgs: Map[String, String] = Map();
+	
     override def callBoxer(candcOut: String, args: Map[String, String] = Map(), verbose: Boolean = false): String/*(String, ListBuffer[String])*/ = {
         val tempFilename = FileUtils.mktemp(prefix = "boxer-", suffix = ".in")
 
@@ -27,7 +32,8 @@ class BoxerImpl(override val binary: String, defaultArgs: Map[String, String] = 
 
         val defaultArgs = Map[String, String](
             "--input" -> tempFilename)
-        val stdout = this.call(None, (this.defaultArgs ++ defaultArgs ++ args).flatMap { case (k, v) => List(k, v) }.toList, true)
+        var caller = new SubprocessCallable(binary);
+        val stdout = caller.call(None, (this.defaultArgs ++ defaultArgs ++ args).flatMap { case (k, v) => List(k, v) }.toList, true)
         FileUtils.remove(tempFilename)
         //return (stdout, out)
         return stdout
@@ -37,7 +43,7 @@ class BoxerImpl(override val binary: String, defaultArgs: Map[String, String] = 
 
 object BoxerImpl {
 
-    def findBinary(binDir: Option[String] = None, envar: Option[String] = Some("CANDCHOME"), defaultArgs: Map[String, String] = Map(), verbose: Boolean = false) =
-        new BoxerImpl(FileUtils.findBinary("boxer", binDir, envar, verbose), defaultArgs)
+    //def findBinary(binDir: Option[String] = None, envar: Option[String] = Some("CANDCHOME"), defaultArgs: Map[String, String] = Map(), verbose: Boolean = false) =
+    //    new BoxerImpl(FileUtils.findBinary("boxer", binDir, envar, verbose), defaultArgs)
 
 }

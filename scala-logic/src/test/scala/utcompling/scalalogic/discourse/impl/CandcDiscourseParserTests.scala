@@ -27,7 +27,7 @@ id('0', [1, 2]).
 
 """
     println(new CandcDiscourseParser(new FakeCandc(single)).parseMultisentence(List("John is short .", "He is young .")))
-    println(new CandcDiscourseParser(new CandcImpl(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin/candc"))).parse("Every man loves a woman ."))
+    println(new CandcDiscourseParser(new CandcImpl()).parse("Every man loves a woman ."))
 
   }
 
