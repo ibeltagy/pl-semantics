@@ -20,23 +20,37 @@
 #include "parser/print_js.h"
 #include "parser/print_bankdeps.h"
 #include "parser/print_gold_deps.h"
+#include "parser/print_latex.h"
+
+static const char *PRINTERS[] = {"deps", "prolog", "boxer", "ccgbank", "grs", "xml", "debug", "js", "latex", "bankdeps", "gold_deps"};
 
 using namespace std;
 
 namespace NLP { namespace CCG {
 
 void
-PrinterFactory::check(const std::string &name){
-  if(name != "deps" && name != "prolog" && name != "boxer" &&
-     name != "ccgbank" && name != "grs" && name != "xml" &&
-     name != "debug" && name != "js" && name != "bankdeps" && 
-     name != "gold_deps")
-    throw NLP::Exception("unrecognised printer name '" + name +
-                         "' [deps, prolog, boxer, ccgbank, grs, xml, debug, js, bankdeps, gold_deps]");
+PrinterFactory::die_unknown_printer(const string &name) {
+  stringstream msg;
+  msg << "unrecognised printer name '" << name << "' [";
+  for (size_t i = 0; i != sizeof(PRINTERS)/sizeof(const char *); ++i) {
+    if (i != 0)
+      msg << ", ";
+    msg << PRINTERS[i];
+  }
+  msg << "]";
+  throw NLP::Exception(msg.str());
+}
+
+void
+PrinterFactory::check(const string &name){
+  for (size_t i = 0; i != sizeof(PRINTERS)/sizeof(const char *); ++i)
+    if (name == PRINTERS[i])
+      return;
+  die_unknown_printer(name);
 }
 
 StreamPrinter *
-PrinterFactory::create_printer(const std::string &name) const {
+PrinterFactory::create_printer(const string &name) const {
   if(name == "deps")
     return new DepsPrinter(cats, FORMAT, out, log);
   else if(name == "prolog")
@@ -57,14 +71,14 @@ PrinterFactory::create_printer(const std::string &name) const {
     return new BankDepsPrinter(cats, FORMAT, out, log);
   else if(name == "gold_deps")
     return new GoldDepsPrinter(cats, FORMAT, out, log);
-  else
-    throw NLP::Exception("unrecognised printer name '" + name + "'");
+  else if(name == "latex")
+    return new LatexPrinter(cats, FORMAT, out, log);
+  else {
+    die_unknown_printer(name);
+    return 0;
+  }
 }
 
-PrinterFactory::PrinterFactory(const std::string &name, IO::Output &out,
-                               IO::Log &log, Categories &cats,
-                               const StreamPrinter::Format FORMAT)
-  : StreamPrinter(cats, FORMAT, out, log),
-    printer(create_printer(name)){}
+PrinterFactory::PrinterFactory(const std::string &name, IO::Output &out, IO::Log &log, Categories &cats, const StreamPrinter::Format FORMAT) : StreamPrinter(cats, FORMAT, out, log), printer(create_printer(name)){}
 
 } }

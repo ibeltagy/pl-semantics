@@ -29,15 +29,10 @@ if ($timelimit > 0) {
 my %programs = ( 
  otter    => "ext/bin/otter",
  bliksem  => "$CPULimit ext/bin/bliksem",
-# vampire  => "ext/bin/vampire -t $timelimit -m 500 $tempdir/vampire.in",
- vampire  => "ext/bin/vampire1.0 -t $timelimit -m 500 < $tempdir/vampire.in",
+ vampire  => "ext/bin/vampire -t $timelimit -m 500 < $tempdir/vampire.in",
  zenon    => "ext/bin/zenon -p0 -itptp -",
- mace     => "nice $CPULimit ext/bin/mace -n$mindomsize -N$maxdomsize -P",
-# mace     => "ext/bin/mace -t$timelimit -n$mindomsize -N$maxdomsize -P",
- paradox1 => "ext/bin/paradox1 $tempdir/paradox1.in --sizes $mindomsize..$maxdomsize --print Model",
- paradox2 => "nice $CPULimit ext/bin/paradox2 $tempdir/paradox2.in --model",
-# paradox3 => "ext/bin/paradox3 $tempdir/paradox3.in --time $timelimit --model"
- paradox3 => "nice $CPULimit ext/bin/paradox3 $tempdir/paradox3.in --model"
+ mace     => "$CPULimit ext/bin/mace -n$mindomsize -N$maxdomsize -P",
+ paradox  => "$CPULimit ext/bin/paradox $tempdir/paradox.in --model"
 );
 
 # run any requested processes
@@ -85,42 +80,13 @@ while( (keys %pids) > 0) {
     if ($winner ne "") { last; }
   }
 
-  elsif ($pids{$pid} eq "paradox1") {
-      my $readparadoxmodel = 0;
-      open(OUTPUT,"$tempdir/paradox1.out");
-      while (<OUTPUT>) {
-          if (/== Result ======/ && $readparadoxmodel == 1) {
-	      $model = "$model dummy\n]).\n";
-	      $winner = "paradox1";
-	      $readparadoxmodel = 0;
-	  } elsif ($readparadoxmodel) {
-	      s/\n/,\n/;
-	      s/TRUE/1/;
-	      s/FALSE/0/;
-	      if (s/\'/d/g) {
-		  $model = "$model $_";
-	      }
-	  } elsif (/== Model =======/) {
-	      $model = "paradox([\n";
-	      $readparadoxmodel = 1;
-	  } elsif ($_ =~ /CONTRADICTION/) {
-	      $model = "paradox([]).\n";
-	      $readparadoxmodel = 0;
-	      $winner = "paradox1";
-	  }
-      }
-      close(OUTPUT);
-      delete $pids{$pid};
-      if ($winner ne "") { last; } else { next; }
-  }
-
-  elsif ($pids{$pid} eq "paradox2") {
+  elsif ($pids{$pid} eq "paradox") {
     my $readparadoxmodel = 0;
-    open(OUTPUT,"$tempdir/paradox2.out");
+    open(OUTPUT,"$tempdir/paradox.out");
     while (<OUTPUT>) {
             if (/END MODEL/ && $readparadoxmodel == 1) {
                $model = "$model dummy\n]).\n";
-	       $winner = "paradox2";
+	       $winner = "paradox";
 	       $readparadoxmodel = 0;
             }
             elsif ($readparadoxmodel == 1) {
@@ -136,38 +102,7 @@ while( (keys %pids) > 0) {
             }
             elsif ($_ =~ /Contradiction/) {
                $model = "paradox([]).\n";
-               $winner = "paradox2";
-               $readparadoxmodel = 0;
-            }
-    }
-    close(OUTPUT);
-    delete $pids{$pid};
-    if ($winner ne "") { last; }
-  }
-
-  elsif ($pids{$pid} eq "paradox3") {
-    my $readparadoxmodel = 0;
-    open(OUTPUT,"$tempdir/paradox3.out");
-    while (<OUTPUT>) {
-            if (/END MODEL/ && $readparadoxmodel == 1) {
-               $model = "$model dummy\n]).\n";
-	       $winner = "paradox3";
-	       $readparadoxmodel = 0;
-            }
-            elsif ($readparadoxmodel == 1) {
-               s/<=>/:/;
-               s/\$true/1,/;
-               s/\$false/0,/;
-               s/!/d/g;
-               $model = "$model $_" if (/,$/);
-            }
-            elsif (/BEGIN MODEL/) {
-               $model = "paradox([\n";
-               $readparadoxmodel = 1;
-            }
-            elsif ($_ =~ /Contradiction/) {
-               $model = "paradox([]).\n";
-               $winner = "paradox3";
+               $winner = "paradox";
                $readparadoxmodel = 0;
             }
     }

@@ -27,8 +27,6 @@
 
 #include "parser/statistics.h"
 
-#include "relations/morpha.h"
-
 namespace NLP {
 
   using namespace Config;

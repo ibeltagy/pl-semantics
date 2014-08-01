@@ -155,17 +155,9 @@ def next_test(file):
     die("unexpected end of file reading gold dependencies")
   if line == '\n':
     return (False, lexcats, deps, udeps, rule_ids)
-  elif line.startswith("<c>"):
-    #read past the two newlines  
-    line = file.readline()
-    line = file.readline()
-    return (False, lexcats, deps, udeps, rule_ids)
 
   while line:
     line = line.strip()
-    if line.startswith("score ="):
-        line = file.readline()
-        continue
     if not line or line.startswith('<c>'):
       break
     fields = line.split()
@@ -186,7 +178,6 @@ def next_test(file):
     (word, pos, cat) = token.split('|')
     lexcats.append((word, cat))
 
-  line = file.readline()
   line = file.readline()
   if line != '\n':
     die("expected a blank line between each sentence")

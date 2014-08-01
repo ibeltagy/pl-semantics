@@ -1,5 +1,5 @@
 
-:- module(miniWordNet,[compConcepts/1,
+:- module(miniWordNet,[compConcepts/2,
                        compISA/0,
                        graphMWN/2,
                        outputMWN/2,
@@ -37,6 +37,7 @@
 
 :- dynamic concept/2, % concept(Concept, ConceptId)
            isa/2,     % isa(ConceptId1, ConceptId2)
+           ant/2,     % ant(ConceptId1, ConceptId2)
            word/5.    % word(Word,Cat,Sense,Freq,ConceptId),
 
 
@@ -54,6 +55,7 @@ minFreq(0).
 clearMWN:-  
    retractall(word(_,_,_,_,_)),
    retractall(isa(_,_)),
+   retractall(ant(_,_)),
    retractall(concept(_,_)).
 
 
@@ -61,11 +63,11 @@ clearMWN:-
    Compute Concepts for one DRS
 ======================================================================== */
 
-compConcepts(DRS):-
+compConcepts(DRS,DRS):-
    findSymDrs(DRS,[]-_,[]-Concepts),
    selectConcepts(Concepts), !.
 
-compConcepts(_).
+compConcepts(DRS,DRS).
 
 
 /* ========================================================================
@@ -111,12 +113,7 @@ findSymConds([_:or(B1,B2)|L],X1-X2,R1-R4):- !,
    findSymDrs(B2,X1-_,R2-R3),   
    findSymConds(L,X1-X2,R3-R4).
 
-findSymConds([_:whq(B1,B2)|L],X1-X3,R1-R4):- !,
-   findSymDrs(B1,X1-X2,R1-R2),
-   findSymDrs(B2,X2-_,R2-R3),   
-   findSymConds(L,X1-X3,R3-R4).
-
-findSymConds([_:whq(_,B1,_,B2)|L],X1-X3,R1-R4):- !,
+findSymConds([_:duplex(_,B1,_,B2)|L],X1-X3,R1-R4):- !,
    findSymDrs(B1,X1-X2,R1-R2),
    findSymDrs(B2,X2-_,R2-R3),   
    findSymConds(L,X1-X3,R3-R4).
@@ -148,6 +145,16 @@ findSymConds(L1,X1-X2,R1-R2):-
    ( stoplist(Sym,v), !, findSymConds(L2,X1-X2,R1-R2) 
    ; findSymConds(L2,[Y|X1]-X2,[s(Sym,v,Sense),s(event,n,1)|R1]-R2) ).
 
+findSymConds(L1,X1-X2,R1-R2):-
+   select(_:pred(Y,Sym,a,Sense),L1,L2), !,
+   ( stoplist(Sym,a), !, findSymConds(L2,X1-X2,R1-R2) 
+   ; findSymConds(L2,[Y|X1]-X2,[s(Sym,a,Sense)|R1]-R2) ).
+
+findSymConds(L1,X1-X2,R1-R2):-
+   select(_:pred(Y,Sym,r,Sense),L1,L2), !,
+   ( stoplist(Sym,r), !, findSymConds(L2,X1-X2,R1-R2) 
+   ; findSymConds(L2,[Y|X1]-X2,[s(Sym,r,Sense)|R1]-R2) ).
+
 findSymConds([_:card(_,N,_)|L],X1-X2,R1-[s(Sym,cardinal,1),s(numeral,n,1)|R2]):- 
    option('--plural',false),
    integer(N), N > 0, !,
@@ -159,32 +166,9 @@ findSymConds([_:timex(Y1,T)|L],X1-X2,R1-[s(Sym,timex,1),s(time,n,5)|R2]):-
    timex(T,Sym),
    findSymConds(L,[Y1|X1]-X2,R1-R2).
 
-findSymConds(L1,X1-X2,R1-[c(Sym,[Sym1,Sym2,Sym3,Sym4],Cat,Sense)|R2]):- 
-   select(I1:named(Y1,Sym1,Cat,Sense),L1,L2),
-   select(I2:named(Y2,Sym2,Cat,Sense),L2,L3), Y1==Y2, adjacent(I1,I2),
-   select(I3:named(Y3,Sym3,Cat,Sense),L3,L4), Y2==Y3, adjacent(I2,I3),
-   select(I4:named(Y4,Sym4,Cat,Sense),L4,L5), Y3==Y4, adjacent(I3,I4),
-   \+ (member(Y0,X1), Y0==Y1), !,
-   atomic_list_concat([Sym1,Sym2,Sym3,Sym4],'_',Sym),
-   findSymConds(L5,[Y1|X1]-X2,R1-R2).
-
-findSymConds(L1,X1-X2,R1-[c(Sym,[Sym1,Sym2,Sym3],Cat,Sense)|R2]):- 
-   select(I1:named(Y1,Sym1,Cat,Sense),L1,L2),
-   select(I2:named(Y2,Sym2,Cat,Sense),L2,L3), Y1==Y2, adjacent(I1,I2),
-   select(I3:named(Y3,Sym3,Cat,Sense),L3,L4), Y2==Y3, adjacent(I2,I3),
-   \+ (member(Y0,X1), Y0==Y1), !,
-   atomic_list_concat([Sym1,Sym2,Sym3],'_',Sym),
-   findSymConds(L4,[Y1|X1]-X2,R1-R2).
-
-findSymConds(L1,X1-X2,R1-[c(Sym,[Sym1,Sym2],Cat,Sense)|R2]):- 
-   select(I1:named(Y1,Sym1,Cat,Sense),L1,L2),
-   select(I2:named(Y2,Sym2,Cat,Sense),L2,L3), Y1==Y2, adjacent(I1,I2),
-   \+ (member(Y0,X1), Y0==Y1), !,
-   atomic_list_concat([Sym1,Sym2],'_',Sym),
-   findSymConds(L3,[Y1|X1]-X2,R1-R2).
-
 findSymConds([_:named(Y1,Sym,Cat,Sense)|L],X1-X2,R1-[s(Sym,Cat,Sense)|R2]):-
-    \+ (member(Y0,X1), Y0==Y1), !,
+%  \+ (member(Y0,X1), Y0==Y1), 
+   !,
    findSymConds(L,[Y1|X1]-X2,R1-R2).
 
 findSymConds([_|L],X1-X2,R1-R2):-
@@ -203,8 +187,8 @@ selectConcepts([s(_,ttl,_)|L]):- !,       % ignore titles
 selectConcepts([s(X,Cat,0)|L]):- !,       % WSD (most frequent sense)
    selectConcepts([s(X,Cat,1)|L]).
 
-selectConcepts([c(X,Syms,Cat,0)|L]):- !,  % WSD (most frequent sense)
-   selectConcepts([c(X,Syms,Cat,1)|L]).
+%selectConcepts([c(X,Syms,Cat,0)|L]):- !,  % WSD (most frequent sense)
+%   selectConcepts([c(X,Syms,Cat,1)|L]).
 
 selectConcepts([s(X,Cat,Sense)|L]):- 
    word(X,Cat,Sense,_,ID), !,             % if word (token) is already
@@ -228,19 +212,19 @@ selectConcepts([s(X,Cat,Sense)|L]):- !,
    assert(concept([s(X,Cat,Sense)],ID)),
    selectConcepts(L).
 
-selectConcepts([c(X,_,Cat,Sense)|L]):-
-   word(X,Cat,Sense,_,ID), !,             % if name is already
-   retract(word(X,Cat,Sense,N1,ID)),      % in the database
-   N2 is N1 + 1,                          % then increase frequency
-   assert(word(X,Cat,Sense,N2,ID)),
-   selectConcepts(L).
+%selectConcepts([c(X,_,Cat,Sense)|L]):-
+%   word(X,Cat,Sense,_,ID), !,             % if name is already
+%   retract(word(X,Cat,Sense,N1,ID)),      % in the database
+%   N2 is N1 + 1,                          % then increase frequency
+%   assert(word(X,Cat,Sense,N2,ID)),
+%   selectConcepts(L).
 
-selectConcepts([c(X,Symbols,Cat,Sense)|L]):- !,
-   getConceptId(ID),
-   assert(word(X,Cat,Sense,1,ID)),
-   findall(s(Sym,Cat,Sense),member(Sym,Symbols),Syn),
-   assert(concept([s(X,Cat,Sense)|Syn],ID)),
-   selectConcepts(L).
+%selectConcepts([c(X,Symbols,Cat,Sense)|L]):- !,
+%   getConceptId(ID),
+%   assert(word(X,Cat,Sense,1,ID)),
+%   findall(s(Sym,Cat,Sense),member(Sym,Symbols),Syn),
+%   assert(concept([s(X,Cat,Sense)|Syn],ID)),
+%   selectConcepts(L).
 
 selectConcepts([_|L]):-
    selectConcepts(L).
@@ -255,6 +239,12 @@ syn(n,Sym1,Sense1,Sym2,Sense2):-
 
 syn(v,Sym1,Sense1,Sym2,Sense2):-
    synv(Sym1,Sense1,Sym2,Sense2), !.    %%% WordNet (verbs)
+
+syn(a,Sym1,Sense1,Sym2,Sense2):-
+   syna(Sym1,Sense1,Sym2,Sense2), !.    %%% WordNet (adjectives)
+
+syn(r,Sym1,Sense1,Sym2,Sense2):-
+   synr(Sym1,Sense1,Sym2,Sense2), !.    %%% WordNet (adverbs)
 
 syn(per,Sym1,Sense1,Sym2,Sense2):-
    synp(Sym1,Sense1,Sym2,Sense2), !.    %%% WordNet (names)
@@ -273,7 +263,8 @@ syn(org,Sym1,Sense1,Sym2,Sense2):-
 compISA:- 
    minFreq(Min),
    setof(s(X,Cat,Sense,ID),N^(word(X,Cat,Sense,N,ID),N>Min),L), !,
-   compISA(L).
+   compISA(L),
+   compISNOTA(L).
 
 compISA.
 
@@ -287,6 +278,7 @@ compISA([]).
 compISA([s(_,_,_,ID)|L]):-
    isa(ID,_), !,                         % already calculated superconcept
    compISA(L).
+
 
 /* ------------------------------------------------------------------------
    Time and Numeric Expressions
@@ -306,11 +298,11 @@ compISA([s(_,cardinal,1,ID1)|L]):- !,    % cardinal
    Locations
 ------------------------------------------------------------------------ */
 
-compISA([s(Sym1,loc,Sense1,ID1)|L]):-    % location in WordNet
-   isap(Sym1,Sense1,Sym2,Sense2), !,
-   addConcept(Sym2,n,Sense2,ID2),
-   assert(isa(ID1,ID2)),
-   compISA([s(Sym2,n,Sense2,ID2)|L]).
+%compISA([s(Sym1,loc,Sense1,ID1)|L]):-    % location in WordNet
+%   isap(Sym1,Sense1,Sym2,Sense2), !,
+%   addConcept(Sym2,n,Sense2,ID2),
+%   assert(isa(ID1,ID2)),
+%   compISA([s(Sym2,n,Sense2,ID2)|L]).
 
 compISA([s(_,loc,_,ID1)|L]):-            % location not in WordNet
    addConcept(location,n,1,ID2), !,
@@ -321,26 +313,26 @@ compISA([s(_,loc,_,ID1)|L]):-            % location not in WordNet
    Organisations
 ------------------------------------------------------------------------ */
 
-compISA([s(Sym1,org,Sense1,ID1)|L]):-    % organisation in WordNet
-   isap(Sym1,Sense1,Sym2,Sense2), !,
-   addConcept(Sym2,n,Sense2,ID2),
-   assert(isa(ID1,ID2)),
-   compISA([s(Sym2,n,Sense2,ID2)|L]).
+%compISA([s(Sym1,org,Sense1,ID1)|L]):-    % organisation in WordNet
+%   isap(Sym1,Sense1,Sym2,Sense2), !,
+%   addConcept(Sym2,n,Sense2,ID2),
+%   assert(isa(ID1,ID2)),
+%   compISA([s(Sym2,n,Sense2,ID2)|L]).
 
 compISA([s(_,org,_,ID1)|L]):-            % organisation not in WordNet
-   addConcept(location,n,1,ID2), !,
+   addConcept(organisation,n,1,ID2), !,
    assert(isa(ID1,ID2)),
-   compISA([s(location,n,1,ID2)|L]).
+   compISA([s(organisation,n,1,ID2)|L]).
 
 /* ------------------------------------------------------------------------
    Persons
 ------------------------------------------------------------------------ */
 
-compISA([s(Sym1,per,Sense1,ID1)|L]):-    % person in WordNet
-   isap(Sym1,Sense1,Sym2,Sense2), !,
-   addConcept(Sym2,n,Sense2,ID2),
-   assert(isa(ID1,ID2)),
-   compISA([s(Sym2,n,Sense2,ID2)|L]).
+%compISA([s(Sym1,per,Sense1,ID1)|L]):-    % person in WordNet
+%   isap(Sym1,Sense1,Sym2,Sense2), !,
+%   addConcept(Sym2,n,Sense2,ID2),
+%   assert(isa(ID1,ID2)),
+%   compISA([s(Sym2,n,Sense2,ID2)|L]).
 
 compISA([s(_,per,_,ID1)|L]):-            % person not in WordNet
    addConcept(somebody,n,1,ID2), !,
@@ -395,6 +387,23 @@ compISA([_|L]):-
    compISA(L).
 
 
+
+/*========================================================================
+   compISNOTA
+========================================================================*/
+
+compISNOTA([]).
+
+compISNOTA([s(Sym1,a,Sense1,ID1)|L]):-    
+   isnotaa(Sym1,Sense1,Sym2,Sense2), 
+   member(s(Sym2,a,Sense2,ID2),L), !,
+   assert(ant(ID1,ID2)),
+   compISNOTA(L).
+
+compISNOTA([_|L]):-    
+   compISNOTA(L).
+
+
 /*========================================================================
     Get a new concept Id
 ========================================================================*/
@@ -412,9 +421,22 @@ getConceptId(1).
 ========================================================================*/
 
 axiomsWN(Axioms):-
+   option('--modal',false), !,
    findall(isa(A,B),(isa(A,B),\+A=B,\+B=0),ISA),
-   findall(isnota(A,B),(isa(A,C),isa(B,C),A<B),ISNOTA),
+   findall(isnota(A,B),(isa(A,C), concept([s(_,T,_)|_],A),
+                        isa(B,C), concept([s(_,T,_)|_],B),
+                        A<B       ),ISNOTA),
    append(ISA,ISNOTA,Ax1),
+   findall(iseq(A,B),(concept([A|L],Id1),
+                      member(B,L),
+                      \+ (concept(Other,Id2), \+ Id1=Id2, member(B,Other))),ISEQ),
+   append(ISEQ,Ax1,Ax2),
+%  findall(antonym(A,B),(concept(
+   axiomsWN(Ax2,Axioms).
+
+axiomsWN(Axioms):-
+   option('--modal',true), !,
+   findall(isa(A,B),(isa(A,B),\+A=B,\+B=0),Ax1),
    findall(iseq(A,B),(concept([A|L],Id1),
                       member(B,L),
                       \+ (concept(Other,Id2), \+ Id1=Id2, member(B,Other))),ISEQ),
@@ -432,12 +454,16 @@ axiomsWN([isa(I1,I2)|L1],[Axiom|L2]):- !,
    isa2fol(I1,I2,Axiom), 
    axiomsWN(L1,L2).
 
-axiomsWN([isnota(I1,I2)|L1],[Axiom|L2]):- !,
+axiomsWN([isnota(I1,I2)|L1],[Axiom|L2]):-
+   option('--contradiction',true), !,
    isnota2fol(I1,I2,Axiom), 
    axiomsWN(L1,L2).
 
 axiomsWN([iseq(S1,S2)|L1],[Axiom|L2]):- !,
    iseq2fol(S1,S2,Axiom), 
+   axiomsWN(L1,L2).
+
+axiomsWN([_|L1],L2):- !,
    axiomsWN(L1,L2).
 
 
@@ -486,14 +512,6 @@ isnota2fol(I1,I2,Axiom):-
 /*========================================================================
    Translate IS-EQUAL to FOL 
 ========================================================================*/
-
-%iseq2fol(s(A1,per,S1),s(A2,per,S2),Axiom):-
-%   option('--modal',false), !,
-%   symbol(per,A1,S1,B1),
-%   symbol(per,A2,S2,B2),
-%   Axiom = all(X,imp(F1,F2)),
-%   F1 =.. [B1,X],
-%   F2 =.. [B2,X].
 
 iseq2fol(s(A1,T1,S1),s(A2,T2,S2),Axiom):-
    option('--modal',false), !,
@@ -622,7 +640,9 @@ addConcept(Sym,Cat,Sense,ID):-
 addConcept(Sym1,Cat,Sense1,ID):-
    concept(Concept,ID),
    member(s(Sym2,Cat,Sense2),Concept), 
-   syn(Cat,Sym1,Sense1,Sym2,Sense2), !.
+   syn(Cat,Sym1,Sense1,Sym2,Sense2),
+   retract(concept(Concepts,ID)),
+   assert(concept([s(Sym1,Cat,Sense1)|Concepts],ID)), !.  
 
 addConcept(Sym,Cat,Sense,ID):-
    getConceptId(ID),
@@ -710,7 +730,6 @@ addTopMWN1.
 ======================================================================== */
 
 sizeMWN(Size):-
-%  findall(X,(isa(X,_),\+ isa(_,X)),L),
    findall(X,isa(X,_),L),
    length(L,Size).
 
@@ -769,6 +788,12 @@ printTerminals(Stream):-
    format(Stream,'%~n% isa(+SubConceptID, +SuperConceptID).~n%~n',[]),
    isa(I,J),
    format(Stream,'~p.~n',[isa(I,J)]),
+   fail.
+
+printTerminals(Stream):-
+   format(Stream,'%~n% ant(+ConceptID, +ConceptID).~n%~n',[]),
+   ant(I,J),
+   format(Stream,'~p.~n',[ant(I,J)]),
    fail.
 
 printTerminals(_).
@@ -843,50 +868,6 @@ unknownWord(Sym1,n,Freq1):-
 
    
 /*------------------------------------------------------------------------
-   Unknown word is a URL
-
-unknownWord(Sym,n,Freq1):-
-   ( name(Sym,[104,116,116,112|_])           %%% name starts with 'http'
-   ; name(Sym,[119,119,119,46|_])            %%% name starts with 'www.'
-   ; name(Sym,Codes), 
-     \+ member(64,Codes),                    %%% name contains no @
-     append(_,[46,99,111,46,117,107],Codes)  %%% name ends with .co.uk
-   ; name(Sym,Codes), 
-     \+ member(64,Codes),                    %%% name contains no @
-     append(_,[46,99,111,109],Codes)         %%% name ends with .com
-   ), 
-   minFreq(Min),
-   word(website,Cat,Freq2,Id), 
-   Freq2 > Min,
-   getConceptId(NewId),
-   assert(word(Sym,Cat,Freq1,NewId)),
-   assert(concept([Sym],NewId)),
-   assert(isa(NewId,Id)), !,
-   true.
-%   format('Word ~p classified as web site~n',[Sym]).
-------------------------------------------------------------------------*/
-
-
-/*------------------------------------------------------------------------
-   Unknown word is an email
-
-unknownWord(Sym,n,Freq1):-
-   name(Sym,Codes),
-   member(64,Codes),                         %%% name features @
-   member(46,Codes),                         %%% name features .
-   minFreq(Min),
-   word(email_address,Cat,Freq2,Id), 
-   Freq2 > Min,
-   getConceptId(NewId),
-   assert(word(Sym,Cat,Freq1,NewId)),
-   assert(concept([Sym],NewId)),
-   assert(isa(NewId,Id)), !,
-   true.
-%   format('Word ~p classified as email address~n',[Sym]).
-------------------------------------------------------------------------*/
-
-
-/*------------------------------------------------------------------------
    Unknown compound word is hyponym of existing word
    E.g. winter_sport ISA sport
 
@@ -903,25 +884,6 @@ unknownWord(Sym1,n,Freq1):-
    assert(isa(NewId,Id)), !,
    true. 
 %   format('Hyponym word ~p of ~p~n',[Sym1,Sym2]).
-------------------------------------------------------------------------*/
-
-
-/*------------------------------------------------------------------------
-   Unknown compound word is title+name
-   E.g. Mr_Smith ISA Smith
-
-unknownWord(Sym1,p,Freq1):-
-   minFreq(Min),
-   name(Sym1,Codes1),
-   append(Codes0,[95|Codes2],Codes1),
-   title(_,Codes0),
-   name(Sym2,Codes2),
-   word(Sym2,Cat,Freq2,Id), 
-   Freq2 > Min,
-   getConceptId(NewId),
-   assert(word(Sym1,Cat,Freq1,NewId)),
-   assert(concept([Sym1],NewId)),
-   assert(isa(NewId,Id)), !.
 ------------------------------------------------------------------------*/
 
 
@@ -947,19 +909,6 @@ unknownWord(Sym1,Cat,Freq1):-
 
    
 
-/*------------------------------------------------------------------------
-   Unknown word is an abbreviation
-
-unknownWord(Sym1,N,N):-
-   name(Sym1,[C1,C2,C3]),
-   word(Sym2,_,_,_),
-   name(Sym2,[C1|Codes]),
-   append(_,[95,C2|Postfix],Codes),
-   append(_,[95,C3|_],Postfix), !,
- 
-   true.
-%   format('Similar word ~p might be abbreviation ~p~n',[Sym1,Sym2]).
-------------------------------------------------------------------------*/
 
 
 

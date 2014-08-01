@@ -1,490 +1,405 @@
 
-:- module(resolveDRT,[projectDrs/2]).
+:- module(resolveDRT,[resolveDrs/2,goldAntecedent/2]).
 
-:- use_module(boxer(mergeDRT),[mergeDrs/2]).
-:- use_module(boxer(bindingViolation),[bindingViolationDrs/1]).
-:- use_module(boxer(freeVarCheck),[freeVarCheckDrs/1]).
-:- use_module(boxer(sortalCheck),[sortalCheckDrs/2]).
+:- use_module(boxer(bindingViolation),[noBindingViolationDrs/1]).
+:- use_module(boxer(freeVarCheck),[boundVarCheckContext/2,drsCondition/2]).
 :- use_module(library(lists),[member/2,append/3,select/3]).
 :- use_module(semlib(options),[option/2]).
-:- use_module(semlib(errors),[warning/2]).
-
-/* ========================================================================
-   Main predicate: projectDrs/2
-======================================================================== */
-
-projectDrs(B1,B2):- option('--semantics',drs), !, B1 = B2.
-
-projectDrs(B1,B2):- option('--semantics',tacitus), !, B1 = B2.
-
-projectDrs(B1,B2):- resolveDrs(B1,B2,_).
+:- use_module(semlib(errors),[warning/2,gold/2]).
+:- use_module(boxer(categories),[att/3]).
+:- use_module(knowledge(antecedent),[score/4]).
 
 
 /* ========================================================================
-   Main predicate: resolveDrs/3 (DRS)
-
-resolveDrs(alfa(top,B1,B2),RDRS,Links):- 
-   option('--theory',drt), !,
-   resolveDrs(alfa(top,B1,B2),RDRS,[],Links).
-
-resolveDrs(smerge(alfa(top,B1,B2),B3),RDRS,Links):-
-   option('--theory',drt), !,
-   resolveDrs(alfa(top,B1,smerge(B2,B3)),RDRS,[],Links).
-
-resolveDrs(B,RDRS,Links):- 
-   option('--theory',drt), !,
-   resolveDrs(alfa(top,_:drs([],[]),B),RDRS,[],Links).
+   Dynamic Predicate
 ======================================================================== */
+
+:- dynamic antecedent/2.
 
 
 /* ========================================================================
-   Main predicate: resolveDrs/3 (SDRS)
-
-resolveDrs(B,SDRS,Links):- 
-   option('--theory',sdrt), 
-   \+ B = sdrs(_,_), !,
-   resolveDrs(sdrs([sub(lab(K1,_:drs([],[])),lab(K2,B))],[[]:rel(K1,K2,presupposition)]),SDRS,[],Links).
-
-resolveDrs(B,SDRS,Links):- 
-   option('--theory',sdrt), 
-   B = sdrs(_,Rel), \+ member(_:rel(_,_,presupposition),Rel), !, 
-   resolveDrs(sdrs([sub(lab(K1,_:drs([],[])),lab(K2,B))],[[]:rel(K1,K2,presupposition)]),SDRS,[],Links).
+   Managing Gold Standard Antecedents
 ======================================================================== */
 
-resolveDrs(B,SDRS,Links):- 
-%  option('--theory',sdrt), 
-   resolveDrs(B,SDRS,[],Links).
+goldAntecedent(Index,Att):-
+   att(Att,antecedent,Antecedent), 
+   number(Antecedent), !,
+%  write(antecedent(Index,Antecedent)),nl,
+   assert(antecedent(Index,Antecedent)).
+
+goldAntecedent(_,_).
 
 
 /* ========================================================================
-   Resolution
-
-   Resolves alpha-DRSs one by one until they are all resolved. The variable 
-   "Alfa" contains the anaphoric DRS, the variable "Type" the corresponding 
-   alpha-type.  The third and fourth argument of resolveDrs/4 represent the 
-   binding links. "Ac" holds a list of accommodation sites (represented as 
-   a/1 terms), and "Bi" a list of binding sites (represented as r/2 terms).
-
+   Main predicate: resolveDrs/1
 ======================================================================== */
 
-%resolveDrs(ADRS,DRS,L1,L3):-
-%   findAlfaDrs(ADRS,RDRS,alfa(Type,Alfa),Ac,[]-Bi), !,
-%   resolveAlfa(Alfa,Type,Ac,Bi,RDRS,L1,L2), 
-%   !, %%% Required for large DRSs (too many choice points)
-%   resolveDrs(RDRS,DRS,L2,L3).
+resolveDrs(B,Tags):- 
+   option('--resolve',true), !, 
+   copy_term(Tags,L-[]), 
+   setof(X,T^member(X:T,L),IDs),
+   resolveDRS(B,[]-_,[]-_,IDs).
 
-resolveDrs(RDRS,DRS,L0,L0):-
-   mergeDrs(RDRS,DRS), !.
+resolveDrs(_,_).
 
 
 /* ========================================================================
-   Find First Alfa-DRS (DRSs)
+   Main predicate: resolveDRS/4 (DRS)
+
+   Context is a difference list of pointed DRSs (i.e. a projection
+   path), ordered on recency (closest first).
 ======================================================================== */
 
-%findAlfaDrs(alfa(top,B1,B3),Res,Alfa,Ac,Bi1-Bi2):- !,
-%   mergeDrs(B1,M1),
-%   findAlfaDrs(B3,R2,Alfa,Ac0,[r(M1,R1)|Bi1]-Bi2),
-%   Res = alfa(top,merge(R1,A),R2),
-%   Ac = [a(A)|Ac0].
+resolveDRS(sdrs([],_),C-C,P-P,_):- !.
 
-findAlfaDrs(alfa(T,B1,B2),Res,Alfa,Ac,Bi1-Bi2):- !,
-   (  
-      findAlfaDrs(B1,R1,Alfa,Ac,Bi1-Bi2), !,
-      Res=alfa(T,R1,B2)
-   ;
-      Res=merge(A,B2),
-      mergeDrs(B1,M1),
-      Alfa=alfa(T,M1),
-      Ac=[a(A)],
-      Bi1=Bi2
-   ).
+resolveDRS(sdrs([lab(_,B)|L],C),C1-C3,P1-P3,IDs):- !,
+   resolveDRS(B,C1-C2,P1-P2,IDs),
+   resolveDRS(sdrs(L,C),C2-C3,P2-P3,IDs).
 
-findAlfaDrs(merge(B1,B2),Res,Alfa,Ac,Bi1-Bi2):- !,
-   (  
-      findAlfaDrs(B1,R1,Alfa,Ac,Bi1-Bi2), !,
-      Res = merge(R1,B2)
-   ;
-      mergeDrs(B1,M1),
-      findAlfaDrs(B2,R2,Alfa,Ac,[r(M1,R1)|Bi1]-Bi2),
-      Res = merge(R1,R2)
-   ). 
+resolveDRS(sdrs([sub(B1,B2)|L],C),C1-C3,P1-P4,IDs):- !,
+   resolveDRS(B1,C1-C2,P1-P2,IDs),
+   resolveDRS(B2,C2-_,P2-P3,IDs),
+   resolveDRS(sdrs(L,C),C2-C3,P3-P4,IDs).
 
-findAlfaDrs(smerge(B1,B2),Res,Alfa,Ac,Bi1-Bi2):- !,
-   (  
-      findAlfaDrs(B1,R1,Alfa,Ac,Bi1-Bi2), !,
-      Res = smerge(R1,B2)
-   ;
-      mergeDrs(B1,M1),
-      findAlfaDrs(B2,R2,Alfa,Ac,[r(M1,R1)|Bi1]-Bi2),
-      Res = smerge(R1,R2)
-   ). 
+resolveDRS(merge(B1,B2),C1-C3,P1-P3,IDs):- !,
+   resolveDRS(B1,C1-C2,P1-P2,IDs),
+   resolveDRS(B2,C2-C3,P2-P3,IDs).
 
-findAlfaDrs([sub(lab(K1,B1),lab(K2,B2))|C1],Res,Alfa,Ac,Bi1-Bi2):- !,
-   (  
-      findAlfaDrs(B1,R1,Alfa,Ac,Bi1-Bi2), !,
-      Res = [sub(lab(K1,R1),lab(K2,B2))|C1]
-   ;
-      mergeDrs(B1,M1),
-      (
-         findAlfaDrs(B2,R2,Alfa,Ac0,[r(M1,R1)|Bi1]-Bi2), !,
-         Res = [sub(lab(K1,merge(R1,A)),lab(K2,R2))|C1],
-         Ac = [a(A)|Ac0]
-      ;
-         findAlfaDrs(C1,R2,Alfa,Ac,[r(M1,R1)|Bi1]-Bi2),
-         Res = [sub(lab(K1,R1),lab(K2,B2))|R2]
-      )
-   ). 
+resolveDRS(lab(_,B),Context,P,IDs):- !,
+   resolveDRS(B,Context,P,IDs).
 
-findAlfaDrs([lab(K,B1)|C1],Res,Alfa,Ac,Bi1-Bi2):- !,
-   (  
-      findAlfaDrs(B1,R1,Alfa,Ac,Bi1-Bi2), !,
-      Res = [lab(K,R1)|C1]
-   ;
-      mergeDrs(B1,M1),
-      findAlfaDrs(C1,R2,Alfa,Ac,[r(M1,R1)|Bi1]-Bi2),
-      Res = [lab(K,R1)|R2]
-   ). 
+resolveDRS(K:B,C1-C2,P1-P3,IDs):-
+   anaphoric(K:B,ADRS,C1,P1), !,                                  %%% if there is a free pointer
+   project([K:B|C1],ADRS,P1,P1-P2,[K:B|C1],[],IDs),                %%% then resolve it
+   resolveDRS(K:B,C1-C2,P2-P3,IDs).
 
-findAlfaDrs(drs(D,C1),merge(A,R),Alfa,[a(A)|Ac],Bi1-Bi2):- !,
-   findAlfaConds(C1,C2,Alfa,Ac,[r(drs(D,C2),R)|Bi1]-Bi2).
+resolveDRS(K:drs(D,C),C1-[K:drs(D,C)|C1],P,IDs):- !,
+   resolveConds(C,[K:drs(D,C)|C1],P,IDs).
 
-findAlfaDrs(sdrs(D1,C),sdrs(D2,C),Alfa,Ac,Bi1-Bi2):-
-   findAlfaDrs(D1,D2,Alfa,Ac,Bi1-Bi2).
+resolveDRS(U,C-C,P-P,_):- 
+   warning('unknown DRS in resolveDRS/3: ~p',[U]).
 
 
 /* ========================================================================
-   Find First Alfa-DRS (DRS-Conditions)
+   Resolve Conditions
 ======================================================================== */
 
-findAlfaConds([I:X1|C1],[I:X2|C2],Alfa,Ac,Bi1-Bi2):- !,
-   findAlfaConds([X1|C1],[X2|C2],Alfa,Ac,Bi1-Bi2).
+resolveConds([],_,P-P,_):- !.
 
-findAlfaConds([imp(B1,B3)|C],Res,Alfa,Ac,Bi1-Bi2):- 
-   (
-      findAlfaDrs(B1,B2,Alfa,Ac,Bi1-Bi2), !,
-      Res = [imp(B2,B3)|C]
-   ;
-      mergeDrs(B1,M1),
-      findAlfaDrs(B3,R2,Alfa,Ac0,[r(M1,R1)|Bi1]-Bi2),
-      Res = [imp(merge(R1,A),R2)|C],
-      Ac = [a(A)|Ac0]
-   ), !.
+resolveConds([_:C|L],Context,P,IDs):- !, 
+   resolveConds([C|L],Context,P,IDs).
 
-findAlfaConds([whq(B1,B3)|C],Res,Alfa,Ac,Bi1-Bi2):-
-   (
-      findAlfaDrs(B1,B2,Alfa,Ac,Bi1-Bi2), !,
-      Res = [whq(B2,B3)|C]
-   ;
-      mergeDrs(B1,M1),
-      findAlfaDrs(B3,R2,Alfa,Ac0,[r(M1,R1)|Bi1]-Bi2),
-      Res = [whq(merge(R1,A),R2)|C],
-      Ac = [a(A)|Ac0]
-   ), !.
+resolveConds([not(B)|C],Context,P1-P3,IDs):- !,
+   resolveDRS(B,Context-_,P1-P2,IDs),
+   resolveConds(C,Context,P2-P3,IDs).
 
-findAlfaConds([whq(Type,B1,Var,B3)|C],Res,Alfa,Ac,Bi1-Bi2):- 
-   (
-      findAlfaDrs(B1,B2,Alfa,Ac,Bi1-Bi2), !,
-      Res = [whq(Type,B2,Var,B3)|C]
-   ;
-      mergeDrs(B1,M1),
-      findAlfaDrs(B3,R2,Alfa,Ac0,[r(M1,R1)|Bi1]-Bi2),
-      Ac = [a(A)|Ac0],
-      Res = [whq(Type,merge(R1,A),Var,R2)|C]
-   ), !.      
+resolveConds([nec(B)|C],Context,P,IDs):- !,
+   resolveConds([not(B)|C],Context,P,IDs).
 
-findAlfaConds([or(B1,B2)|C],Res,Alfa,Ac,Bi1-Bi2):-
-   (
-      findAlfaDrs(B1,B3,Alfa,Ac,Bi1-Bi2), !,
-      Res = [or(B3,B2)|C]
-   ;
-      findAlfaDrs(B2,B3,Alfa,Ac,Bi1-Bi2), 
-      Res = [or(B1,B3)|C]
-   ), !.
+resolveConds([pos(B)|C],Context,P,IDs):- !,
+   resolveConds([not(B)|C],Context,P,IDs).
 
-findAlfaConds([not(B1)|C],[not(B2)|C],Alfa,Ac,Bi1-Bi2):- 
-   findAlfaDrs(B1,B2,Alfa,Ac,Bi1-Bi2), !.
+resolveConds([prop(_,B)|C],Context,P,IDs):- !,
+   resolveConds([not(B)|C],Context,P,IDs).
 
-findAlfaConds([nec(B1)|C],[nec(B2)|C],Alfa,Ac,Bi1-Bi2):- 
-   findAlfaDrs(B1,B2,Alfa,Ac,Bi1-Bi2), !.
+resolveConds([imp(B1,B2)|C],C1,P1-P4,IDs):- !,
+   resolveDRS(B1,C1-C2,P1-P2,IDs),
+   resolveDRS(B2,C2-_,P2-P3,IDs),
+   resolveConds(C,C1,P3-P4,IDs).
 
-findAlfaConds([pos(B1)|C],[pos(B2)|C],Alfa,Ac,Bi1-Bi2):- 
-   findAlfaDrs(B1,B2,Alfa,Ac,Bi1-Bi2), !.
+resolveConds([duplex(_,B1,_,B2)|C],Context,P,IDs):- !,
+   resolveConds([imp(B1,B2)|C],Context,P,IDs).
 
-findAlfaConds([prop(X,B1)|C],[prop(X,B2)|C],Alfa,Ac,Bi1-Bi2):-
-   findAlfaDrs(B1,B2,Alfa,Ac,Bi1-Bi2), !.
+resolveConds([or(B1,B2)|C],C1,P1-P4,IDs):- !,
+   resolveDRS(B1,C1-_,P1-P2,IDs),
+   resolveDRS(B2,C1-_,P2-P3,IDs),
+   resolveConds(C,C1,P3-P4,IDs).
 
-findAlfaConds([Cond|C1],[Cond|C2],Alfa,Ac,Bi1-Bi2):-
-   findAlfaConds(C1,C2,Alfa,Ac,Bi1-Bi2).
+resolveConds([_|C],Context,P,IDs):- !,
+   resolveConds(C,Context,P,IDs).
 
 
 /* ========================================================================
-   Resolve alfa: binding or accommodation
+   Identify Anaphoric Material (free pointers)
+
+   K1 = K2:X K3:Y
+        K2:dog(X,Y)
+        K3:male(Y)
+        K1:walks(X)
 ======================================================================== */
 
-resolveAlfa(Alfa,Type,Ac,Bi,B,L1,L2):-
-   option('--presup',max),
-   bindAlfa(Type,Bi,Alfa,L1,L2),
-   dontResolve(Ac),
-   \+ bindingViolationDrs(B),
-   freeVarCheckDrs(B), !.
-
-resolveAlfa(Alfa,Type,Ac,Bi,B,L0,L0):-
-   accommodateAlfa(Type,Ac,Alfa),
-   dontResolve(Bi),
-   freeVarCheckDrs(B).
-
-
-/* ------------------------------------------------------------------------
-   Typology:   atype(Type, Global, Local, Binding)
------------------------------------------------------------------------- */
-
-atype(def,1,1,1). % definite descriptions
-atype(nam,1,0,1). % proper names
-atype(pro,1,0,1). % personal pronouns
-atype(dei,1,0,1). % anaphoric tense
-atype(ref,1,0,1). % reflexive pronouns
-atype(fac,1,1,0). % factives, clefts, "only"
-atype(ind,0,1,0). % indefinites
-
-
-/* ------------------------------------------------------------------------
-   Binding: select an antecedent, then merge the domain and the conditions
------------------------------------------------------------------------- */
-
-bindAlfa(Type,[a(drs([],[]))|P],Alfa,L1,L2):- 
-   !,  %%% cannot bind here, so try next level of DRS
-   bindAlfa(Type,P,Alfa,L1,L2).
-
-bindAlfa(_,[r(drs(D2,C2),DRS)|P],drs([AnaIndex:X|D1],C1),L,[bind(AnaIndex,AntIndex)|L]):-
-   input:coref(Ana,Ant), 
-   common(AnaIndex,Ana),                         % there is external coref info for this anaphor
-   member(AntIndex:X,D2),                        % select candidate antecedent discourse referent
-   common(AntIndex,Ant), !,
-   warning('using external coref info for anaphoric expression ~p',[AnaIndex]),
-   mergeDomains(D1,D2,D3), 
-   mergeConditions(C1,C2,C3),
-   DRS = drs(D3,C3),
-   dontResolve(P).
-
-bindAlfa(Type,[r(drs(D2,C2),DRS)|P],drs([AnaIndex:X|D1],C1),L,[bind(AnaIndex,AntIndex)|L]):-
-   \+ option('--semantics',tuple),
-   atype(Type,_,_,1),                            % check whether type permits binding
-   member(AntIndex:X,D2),                        % select candidate antecedent discourse referent
-   match(Type,C1,C2,X),                          % check if this candidate matches
-   coordinated(AnaIndex,AntIndex,L),
-   mergeDomains(D1,D2,D3), 
-   mergeConditions(C1,C2,C3),
-   DRS = drs(D3,C3),
-   sortalCheckDrs(DRS,X),
-   dontResolve(P).
-
-bindAlfa(Type,[r(drs(D2,C2),DRS)|P],drs([AnaIndex:X|D1],C1),L,[bind(AnaIndex,AntIndex)|L]):-
-   option('--semantics',tuple),
-   atype(Type,_,_,1),                            % check whether type permits binding
-   member(AntIndex:Y,D2),                        % select candidate antecedent discourse referent
-   coordinated(AnaIndex,AntIndex,L),             % copied material must have same antecedent
-   \+ \+ (Y=X, match(Type,C1,C2,X)),             % check if this candidate matches
-   mergeDomains(D1,D2,D3), 
-   mergeConditions(C1,C2,C3),
-   DRS = drs([AnaIndex:X|D3],[[]:eq(X,Y)|C3]),
-   \+ \+ (Y=X, sortalCheckDrs(drs(D3,C3),X)),
-   dontResolve(P).
-
-bindAlfa(Type,[r(R,R)|P],Alfa,L1,L2):-
-   bindAlfa(Type,P,Alfa,L1,L2).
-
-
-/* ------------------------------------------------------------------------
-   Check if two indices share a common element
------------------------------------------------------------------------- */
-
-common(Index1,Index2):- member(X,Index1), member(X,Index2), !.
-
-
-/* ------------------------------------------------------------------------
-   Check if coordinated items are resolved to the same antecedent 
------------------------------------------------------------------------- */
-
-coordinated(AnaIndex,AntIndex,Bound):-
-   \+ ( member(bind(AnaIndex,OtherIndex),Bound),
-        \+ AnaIndex=[], \+ OtherIndex=[],
-        \+ OtherIndex = AntIndex ).
-
-
-/*------------------------------------------------------------------------
-   Check for partial match 
-------------------------------------------------------------------------*/
-
-match(nam,C1,C2,X0):-
-   member(_:named(X1,Sym,Type,Sense),C1), X0==X1, \+ Type=ttl,
-   member(_:named(X2,Sym,Type,Sense),C2), X1==X2, !.
-
-match(nam,C1,C2,X0):-
-   member(_:timex(X1,date(_:D1,_:D2,_:D3,_:D4)),C1), X0==X1, 
-   member(_:timex(X2,date(_:D1,_:D2,_:D3,_:D4)),C2), X1==X2, !.
-
-match(def,C1,C2,X0):-
-   member(_:pred(X1,Sym,n,Sense),C1), X0==X1,
-   member(_:pred(X2,Sym,n,Sense),C2), X1==X2, !.
-
-match(def,C1,C2,X0):-
-   member(_:named(X1,Sym,Type,Sense),C1), X0==X1, \+ Type=ttl,
-   member(_:named(X2,Sym,Type,Sense),C2), X1==X2, !.
-
-match(def,C1,C2,X0):-
-   member(_:timex(X1,date(_:D1,_:D2,_:D3,_:D4)),C1), X0==X1, 
-   member(_:timex(X2,date(_:D1,_:D2,_:D3,_:D4)),C2), X1==X2, !.
-
-match(dei,C1,C2,X0):-
-   member(_:pred(X1,Sym,a,_),C1), X0==X1, 
-   member(_:pred(X2,Sym,a,_),C2), X1==X2, !.
-
-match(pro,C1,C2,X0):-
-   member(_:pred(X1,Sym,a,_),C1), X0==X1, 
-   member(_:pred(X2,Sym,a,_),C2), X1==X2, !.
-
-match(pro,C1,C2,X0):-
-   member(_:pred(X1,male,a,_),C1), X0==X1, 
-   member(_:named(X2,_,per,_),C2), X1==X2, !.
-
-match(pro,C1,C2,X0):-
-   member(_:pred(X1,female,a,_),C1), X0==X1, 
-   member(_:named(X2,_,per,_),C2),   X1==X2, !.
-
-match(pro,C1,C2,X0):-
-   member(_:pred(X1,neuter,a,_),C1), X0==X1, 
-   ( NE=org ; NE=loc; NE=art; NE=nat ), 
-   member(_:named(X2,_,NE,_),C2),    X1==X2, !.
-
-
-/* ------------------------------------------------------------------------
-   Forced local accommodation (option 'presup --min')
------------------------------------------------------------------------- */
-
-accommodateAlfa(_,[a(Alfa)],Alfa):- 
-   option('--presup',min), !. %%% force local accommodation
-
-accommodateAlfa(Type,[a(drs([],[]))|P],Alfa):- 
-   option('--presup',min), !, %%% force local accommodation
-   accommodateAlfa(Type,P,Alfa).
-
-
-/* ------------------------------------------------------------------------
-   Accommodation
-
-   P is a list of accommodation sites (represented as a/1 terms). The
-   order of the list corresponds to the level of the accommodation
-   site: the first a/1 term is the most global site, the last element
-   the most local accommodation site. 
------------------------------------------------------------------------- */
-
-accommodateAlfa(Type,[r(R,R)|P],Alfa):- !,
-   accommodateAlfa(Type,P,Alfa).
-
-accommodateAlfa(Type,[a(B)|P],Alfa):- 
-   atype(Type,1,0,_), !, B = Alfa,
-   dontResolve(P).
-
-accommodateAlfa(Type,[a(B)|P],Alfa):-
-   atype(Type,1,1,_), !,
-   ( dontResolve(P), B = Alfa
-   ; B = drs([],[]), accommodateAlfa(Type,P,Alfa) ).
-
-accommodateAlfa(Type,[a(B)],Alfa):- 
-   atype(Type,0,1,_), !, B = Alfa.
-
-accommodateAlfa(Type,[a(B)|P],Alfa):- 
-   atype(Type,0,1,_), !, B = drs([],[]),
-   accommodateAlfa(Type,P,Alfa).
-
-accommodateAlfa(Type,[a(B)|P],Alfa):-
-   warning('unknown alfa-type: ~p',[Type]), !, B = Alfa,
-   dontResolve(P).
+anaphoric(P:drs(PDom,PCon),F:drs(FDom,FCon),Context,Presups):-
+   member(F:_:_,PDom), \+ P==F,       % pick a free pointer (of DRS domain) 
+   \+ (member(K:_,Context), K==F),    % should not be in context (that would mean it's resolved already)
+   \+ (member(K:_,Presups), K==F),    % should not be in presuppositions (would mean it's resolved already)
+   anaphoricSet(PDom,F,FDom),
+   anaphoricSet(PCon,F,FCon),
+   noFreeVars(FCon,P,PDom), !.
 
 
 /* ========================================================================
-   Do not resolve remaining of projection path
+   Check for bound variable
 ======================================================================== */
 
-dontResolve([]):- !.
-
-dontResolve([a(drs([],[]))|L]):- !,
-   dontResolve(L).
-
-dontResolve([r(X,X)|L]):- !,
-   dontResolve(L).
+boundVar(X,P1,Dom):-
+   member(P2:_:Y,Dom), 
+   X==Y, !, \+ P1==P2.
+  
+boundVar(_,_,_).
 
 
 /* ========================================================================
-   Merge Domains - Check for Duplicates; Copy Indexes
+   Check if there are no free variables
 ======================================================================== */
 
-mergeDomains([],L,L):- !.
+noFreeVars([],_,_).
 
-%mergeDomains([I1:X|R],L1,L3):-
-%   option('--semantics',tuple),
-%   select(I2:Y,L1,L2), 
-%   X==Y, !,
-%   append(I1,I2,I3), sort(I3,I4),
-%   mergeDomains(R,[I4:X|L2],L3).
+noFreeVars([F:_:rel(X,Y,_,_)|L],P,Dom):- !,
+   (boundVar(X,P,Dom);boundVar(X,F,Dom)),
+   (boundVar(Y,P,Dom);boundVar(Y,F,Dom)),
+   noFreeVars(L,P,Dom).
 
-mergeDomains([_:X|R],L1,L3):-
-   select(I:Y,L1,L2), 
-   X==Y, !,
-   mergeDomains(R,[I:X|L2],L3).
-
-mergeDomains([X|R],L1,[X|L2]):-
-   option('--semantics',tuple), !,
-   mergeDomains(R,L1,L2).
-
-mergeDomains([_:X|R],L1,[[]:X|L2]):-
-   mergeDomains(R,L1,L2).
+noFreeVars([_|L],P,Dom):- !,
+  noFreeVars(L,P,Dom).
 
 
 /* ========================================================================
-   Merge Conditions - Check for Duplicates; Copy Indexes
+   Compute Anaphoric Material
 ======================================================================== */
 
-mergeConditions([],L,L):- !.
-
-%mergeConditions([_:named(X,Sym,_,Sense)|R],L1,L3):-      %%% merge names with
-%   select(I:named(Y,Sym,Type,Sense),L1,L2), X==Y, !,     %%% different types
-%   mergeConditions(R,[I:named(X,Sym,Type,Sense)|L2],L3).
-
-mergeConditions([_:X|R],L1,L3):-                         %%% merge identical
-   select(I:Y,L1,L2), X==Y, !,                           %%% conditions, keep
-   mergeConditions(R,[I:X|L2],L3).                       %%% index of antecedent
-
-%mergeConditions([I1:X|R],L1,L3):-
-%   option('--semantics',tuple),  
-%   select(I2:Y,L1,L2), 
-%   X==Y, !,
-%   append(I1,I2,I3), sort(I3,I4),
-%   mergeConditions(R,[I4:X|L2],L3).
-
-mergeConditions([I1:timex(X,date(D1,D2,D3,D4))|R],L1,L3):-
-   option('--semantics',tuple),
-   select(I2:timex(Y,date(E1,E2,E3,E4)),L1,L2), 
-   mergeConditions([D1],[E1],[F1]),
-   mergeConditions([D2],[E2],[F2]),
-   mergeConditions([D3],[E3],[F3]),
-   mergeConditions([D4],[E4],[F4]),
-   X==Y, !,
-   append(I1,I2,I3), sort(I3,I4),
-   mergeConditions(R,[I4:timex(X,date(F1,F2,F3,F4))|L2],L3).
-
-mergeConditions([_:timex(X,date(D1,D2,D3,D4))|R],L1,L3):-
-   select(I:timex(Y,date(E1,E2,E3,E4)),L1,L2), 
-   mergeConditions([D1],[E1],[F1]),
-   mergeConditions([D2],[E2],[F2]),
-   mergeConditions([D3],[E3],[F3]),
-   mergeConditions([D4],[E4],[F4]),
-   X==Y, !,
-   mergeConditions(R,[I:timex(X,date(F1,F2,F3,F4))|L2],L3).
-
-mergeConditions([X|R],L1,[X|L2]):-
-   mergeConditions(R,L1,L2).
+anaphoricSet([],_,[]).
+anaphoricSet([P:E|L1],F,[P:E|L2]):- P==F, !, anaphoricSet(L1,F,L2).
+anaphoricSet([_|L1],F,L2):- anaphoricSet(L1,F,L2).
 
 
+/* ========================================================================
+   Projection -- try to bind, else accommodate
+
+   project(+List of Context DRSs (Possible antecedents),
+           +Anaphoric DRS,
+           +List of presuppositions seen so far (could act as antecedents),
+           +Pair of Ingoing and Output List of Presuppositions
+           +List of DRSs (local DRS + context DRS, to check for binding violations)
+           -Accumulator of solution/4,
+           -List of IDs to compute proximity)
+======================================================================== */
+
+% No further context DRSs, no presupposed DRSs, but earlier binding
+% solutions; so pick most probable solution
+%
+project([],B,[],P1-P2,Bs,Solutions,_):-                        % Tried all possibilities
+   sort([solution(0.94,_,_,free)|Solutions],Sorted),           % Sort on score
+   best(Sorted,Bs,B,P1-P2), !.                                 % Add global accommodation as possibility (free)
+
+% No further context DRSs, try a presupposed DRS as antecedent
+%
+project([],K2:B2,[K1:drs([K0:_:X|D],C)|P],P1-P2,Bs,Solutions,IDs):-
+   K1==K0,                                 % Antecedent DRS from context
+   match(K1,C,X,B2,IDs,Y,Score,Ant), !,    % Match antecedent with anaphoric DRS
+   project([],K2:B2,[K1:drs(D,C)|P],P1-P2,Bs,[solution(Score,K1:X,K2:Y,Ant)|Solutions],IDs).
+
+% No further context DRSs, try accommodation in presupposition
+%
+project([],K2:B2,[K1:drs([],_)|P],P1-P2,Bs,Solutions,IDs):- !,
+   project([],K2:B2,P,P1-P2,Bs,[solution(0.91,K1:_,K2:_,global)|Solutions],IDs).
+
+% Try next presupposed DRS
+%
+project([],K,[_|P],P1-P2,Bs,Solutions,IDs):- !,
+   project([],K,P,P1-P2,Bs,Solutions,IDs).
+
+% Match antecedent with anaphoric DRS
+% Look in same DRS for other antecedent
+% 
+project([K1:drs([K0:_:X|D],C)|Context],K2:B2,P,P1-P2,Bs,Solutions,IDs):-      
+   K1==K0,
+   match(K1,C,X,B2,IDs,Y,Score,Source), !,
+   project([K1:drs(D,C)|Context],K2:B2,P,P1-P2,Bs,[solution(Score,K1:X,K2:Y,Source)|Solutions],IDs).
+
+% Try next discourse referent
+%
+project([K1:drs([_|D],C)|Context],A,P,P1-P2,Bs,Solutions,IDs):- !,
+   project([K1:drs(D,C)|Context],A,P,P1-P2,Bs,Solutions,IDs).
+
+% Tried all discourse referents, accommodate (non-global)
+% and go on with next context DRS
+%
+project([K1:drs([],_)|Context],K2:B2,P,P1-P2,Bs,Solutions,IDs):- !,
+   length(Context,Levels), Prob is 0.05/(Levels + 1), Score is 1-Prob,
+   project(Context,K2:B2,P,P1-P2,Bs,[solution(Score,K1:_,K2:_,local)|Solutions],IDs).
+
+% Try next context DRS (all other cases)
+%
+project([_|Context],A,P,P1-P2,Bs,Solutions,IDs):- !,  % first argument can be an SDRS?
+   project(Context,A,P,P1-P2,Bs,Solutions,IDs).
 
 
+/* ========================================================================
+   Best (sorted on score, the lower the better!)
+======================================================================== */   
+
+best([Solution|_],Bs,ADRS,P-[ADRS|P]):-         % DRS with free pointer
+   Solution = solution(_Score,_,_,free),        % hence add to list of presuppositions
+   append(Bs,[ADRS|P],Context),
+   boundVarCheckContext(Context,ADRS), !.
+
+best([Solution|_],Bs,ADRS,P-P):- 
+   Solution = solution(_Score,X,Y,Reason),
+   member(Reason,[local,global]),
+   append(Bs,P,Context),
+   \+ \+ (X=Y, boundVarCheckContext(Context,ADRS)), !, 
+   X=Y.
+
+best([Solution|_],Bs,ADRS,P1-P2):- 
+   Solution = solution(_Score,X,Y,Reason),
+   \+ member(Reason,[local,global,free]),
+   append(Bs,P1,Context),
+   \+ \+ (X=Y,                                  % if unifying X with Y doesn't
+          boundVarCheckContext(Context,ADRS),   % given any free variables
+          noBindingViolationDrs(Bs)), !,        % or binding violations
+   X=Y,                                         % then do so
+   updatePresups(P1,ADRS,P2).
+
+best([_|L],Bs,ADRS,P):- best(L,Bs,ADRS,P).
+
+
+updatePresups([],_,[]).
+updatePresups([K:drs(D1,C1)|L],P:drs(D2,C2),[K:drs(D3,C3)|L]):- P==K, !, append(D1,D2,D3), append(C1,C2,C3).
+updatePresups([B|L1],P,[B|L2]):- updatePresups(L1,P,L2).
+
+
+/* ========================================================================
+   Match antecedent with presupposition
+
+   match(+Label of Antecedent DRS,
+         +Conditions of Antecedent DRS,
+         +Referent of Antecedent DRS,
+         +Unlabeled Anaphoric DRS,
+         +List of Token IDs
+         -Referent of Anaphoric DRS,
+         -Matching Score,
+         -Matching Type)
+
+======================================================================== */   
+
+match(K1,C1,X,drs([_:_:Y|_],C2),IDs,Y,0,bow):-
+   antecedent(I2,AntInd),            % there is a gold antecedent
+   member( _:I2:_,C2),               % for the current anaphoric expression
+   member(K2:I1:Ant,C1), K1==K2,     % and the antecedent is part of the 
+   member(AntInd,I1), !,             % DRS under consideration
+   drsCondition(Z,Ant),   Z==X,      % make sure it really is an antecedent condition
+   antecedentConditions(X,C1,[]-Conds),
+   proximity(I1,I2,IDs,Prox),
+   gold('ana_ant(~q,~q,~p).',[C2,Conds,Prox]).
+
+match(K1,C1,X,drs(_,C2),IDs,Y,NewScore,new):-
+   option('--x',true),
+   member( _:I2:Ana,C2),             % get anaphor condition
+   drsCondition(Y,Ana),
+   member(K2:I1:Ant,C1), K1==K2,     % get antecedent condition
+   drsCondition(Z,Ant),   Z==X,      % make sure it really is an antecedent condition
+   antecedentConditions(X,C1,[]-Conds),
+   proximity(I1,I2,IDs,Prox), Prox > 0,
+   score(C2,Conds,Prox,Score),
+   noConflicts(Y,C2,X,C1), !,
+   NewScore is 1-Score.
+
+match(K1,C1,X,drs(_,C2),_IDs,Y,NewScore,P):-
+   member( _:_:Ana,C2),
+   member(K2:_:Ant,C1),          K1==K2, 
+   matching(Y^Ana,Z^Ant,Score,P), Z==X,
+   noConflicts(Y,C2,X,C1), !,
+   NewScore is 1-Score.              % inverse score for sorting purposes
+
+
+/* ========================================================================
+   Calculate Proximity
+======================================================================== */   
+
+proximity([X],[Y],IDs,P):- number(X), number(Y), X<Y, !, from(IDs,X,Y,P).
+proximity(_  ,_  ,_  ,0).
+
+from([],_,_,0).
+from([X|L],X,Y,D):- !, to(L,Y,0,D).
+from([_|L],X,Y,D):- from(L,X,Y,D).
+
+to([X|_],X,D1,D2):- !, D2 is D1 + 1.
+to([_|L],X,D1,D2):- D is D1 + 1, to(L,X,D,D2).
+
+
+/* ========================================================================
+   Get Conditions of Antecedent
+======================================================================== */   
+
+antecedentConditions(X,C1,L1-L2):-
+   select(_:_:C,C1,C2), 
+   member(C,[pred(Z,_,_,_),named(Z,_,_,_),role(_,Z,_,1),role(Z,_,_,-1)]), Z==X, !,
+   antecedentConditions(X,C2,[C|L1]-L2).
+
+antecedentConditions(X,C1,L1-L3):-
+   select(_:_:eq(Z,Y),C1,C2), Z==X, !,
+   antecedentConditions(X,C2,L1-L2),
+   antecedentConditions(Y,C2,L2-L3).
+    
+antecedentConditions(_,_,L-L).
+
+
+/* ========================================================================
+   Check for Conflicts
+======================================================================== */   
+
+noConflicts(X,_C1,Y,C2):-                          %%% resolving should
+    \+ \+ ( X=Y,                                   %%% not result in X=X
+            \+ ( member(_:_:not(_:drs(_,C0)),C2),  %%% in a negated DRS
+                 member(_:_:eq(A,B),C0),
+                 A==X, B==X ),
+            \+ ( member(_:_:pred(A,male,_,_),C2),
+                 member(_:_:pred(B,female,_,_),C2),
+                 A==X, B==X ) ).
+
+
+/* ========================================================================
+   Matching (anaphor, antecedent)
+======================================================================== */   
+
+% time
+matching(Y^pred(Y,now,a,1),Z^pred(Z,now,a,1),0.99,a:now).
+
+% he
+matching(Y^pred(Y,male,n,2),Z^named(Z,S,per,_),0.9,per:S).
+matching(Y^pred(Y,male,n,2),Z^named(Z,S,_,_),0.1,per:S).
+matching(Y^pred(Y,male,n,2),Z^pred(Z,male,n,2),0.99,n:male).
+matching(Y^pred(Y,male,n,2),Z^pred(Z,S,n,_),0.5,n:S):-  option('--x',false).
+matching(Y^pred(Y,male,n,2),Z^card(Z,_,_),0.1,card):- option('--x',false).
+
+% she
+matching(Y^pred(Y,female,n,2),Z^named(Z,S,per,_),0.9,per:S).
+matching(Y^pred(Y,female,n,2),Z^named(Z,S,_,_),0.1,per:S).
+matching(Y^pred(Y,female,n,2),Z^pred(Z,female,n,2),0.99,n:female).
+matching(Y^pred(Y,female,n,2),Z^pred(Z,S,n,_),0.5,n:S):-  option('--x',false).
+matching(Y^pred(Y,female,n,2),Z^card(Z,_,_),0.1,card):- option('--x',false).
+
+% it
+matching(Y^pred(Y,neuter,a,_),Z^named(Z,S,per,_),0.1,per:S).
+matching(Y^pred(Y,neuter,a,_),Z^named(Z,S,_,_),0.8,per:S).
+matching(Y^pred(Y,neuter,a,_),Z^pred(Z,neuter,a,_),0.99,a:neuter).
+matching(Y^pred(Y,neuter,a,_),Z^pred(Z,S,n,_),0.5,n:S).
+
+% they, them, theirs, this, that, those, these
+matching(Y^pred(Y,thing,n,12),Z^pred(Z,S,n,_),0.5,n:S):-  option('--x',false).
+matching(Y^pred(Y,thing,n,12),Z^named(Z,S,_,_),0.1,per:S):- option('--x',false).
+
+% I, me, mine, you, yours, we, us, ours, myself, yourself, ourselves
+matching(Y^pred(Y,person,n,1),Z^pred(Z,S,n,_),0.1,n:S):-    option('--x',false).
+matching(Y^pred(Y,person,n,1),Z^named(Z,S,per,_),0.8,per:S):- option('--x',false).
+matching(Y^pred(Y,person,n,1),Z^named(Z,S,_,_),0.5,per:S):-   option('--x',false).
+
+% the
+matching(Y^pred(Y,S,n,_),Z^pred(Z,S,n,_),0.9,n:S).
+
+% names
+matching(Y^named(Y,S,T,_),Z^named(Z,S,T,_),0.9,per:S).
+matching(Y^named(Y,S,_,_),Z^named(Z,S,_,_),0.7,per:S).
+
+% timex
+matching(Y^timex(Y,date(_:D1,_:D2,_:D3,_:D4)),Z^timex(Z,date(_:D1,_:D2,_:D3,_:D4)),0.9,timex).

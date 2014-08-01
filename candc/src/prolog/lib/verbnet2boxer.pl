@@ -309,6 +309,7 @@ process([File|L]):-
 planB:- 
    setof(X,A^B^verbnet(X,A,B),L), 
    format('~n%%% Most frequent roles for a particular CCG category.~n%%%~n',[]),
+   format('verbnet(_, ~p, [~q], []). % ~n',[s:adj\np,'Topic']),
    planB(L).
 
 planB([]).

@@ -1,12 +1,12 @@
 
 :- module(xdrs2xml,[drs2xml/2,
                     der2xml/3,
-                    xfdrs2xml/2,
                     xdrs2xml/2]).
 
 :- use_module(semlib(errors),[warning/2]).
 :- use_module(library(lists),[member/2,append/3]).
 :- use_module(boxer(betaConversionDRT),[betaConvert/2]).
+:- use_module(boxer(alphaConversionDRT),[alphaConvertDRS/2]).
 :- use_module(boxer(drs2fdrs),[instDrs/1]).
 
 
@@ -18,7 +18,7 @@ drs2xml(DRS,Stream):- drs2xml(DRS,Stream,1,[]).
 
 der2xml(Der,I,Stream):- 
    format(Stream,' <der id="~p">~n',[I]),
-   der2xml(Der,Stream,2,_),
+   deri2xml(Der,Stream,2),
    format(Stream,' </der>~n',[]).
 
 xdrs2xml(XDRS,Stream):-
@@ -28,21 +28,12 @@ xdrs2xml(XDRS,Stream):-
    write(Stream,' </taggedtokens>'), nl(Stream),
    drs2xml(DRS,Stream,1,Tags).
 
-xfdrs2xml(XDRS,Stream):-
-   XDRS=xdrs(Tags,Cons),
-   write(Stream,' <taggedtokens>'), nl(Stream),
-   tokentags2xml(Tags,Stream),
-   write(Stream,' </taggedtokens>'), nl(Stream),
-   write(Stream,' <cons>'), nl(Stream),
-   cons2xml(Cons,Stream),
-   write(Stream,' </cons>'), nl(Stream).
-
 
 /*========================================================================
    Converting CCG derivation to XML (with tab insertion)
 ========================================================================*/
 
-der2xml(t(Cat,Token,Sem,Att,Index),Stream,Tab,[Token]):- !,
+deri2xml(t(Cat,Token,Sem,Att,Index),Stream,Tab):- !,
    tab(Stream,Tab), format(Stream,'<lex id="~p">~n',[Index]),
    NewTab is Tab + 2,
    symbol(Token,NiceToken),
@@ -59,8 +50,8 @@ der2xml(t(Cat,Token,Sem,Att,Index),Stream,Tab,[Token]):- !,
    tab(Stream,Tab), format(Stream,' </sem>~n',[]),  
    tab(Stream,Tab), format(Stream,'</lex>~n',[]).
 
-der2xml(Der,Stream,Tab,Tokens):- 
-   Der =.. [Rule,Cat,_,Sem,_,Under], 
+deri2xml(Der,Stream,Tab):- 
+   Der =.. [Rule,Cat,_,Sem,_,Tokens,Under], 
    member(Rule,[tc,ftr,btr]), !,
    NewTab is Tab + 1,
    NextTab is Tab + 1,
@@ -74,14 +65,14 @@ der2xml(Der,Stream,Tab,Tokens):-
    \+ \+ (instDrs(Red),
           drs2xml(Red,Stream,NewTab,[])),
    tab(Stream,Tab), format(Stream,' </sem>~n',[]),  
-   der2xml(Under,Stream,NewTab,Tokens),
+   deri2xml(Under,Stream,NewTab),
    tab(Stream,NewTab), format(Stream,'<tokens>~n',[]),  
    tokens2xml(Tokens,NextTab,Stream),
    tab(Stream,NewTab), format(Stream,'</tokens>~n',[]),  
    tab(Stream,Tab), format(Stream,'</unaryrule>~n',[]).
 
-der2xml(Der,Stream,Tab,Tokens):- 
-   Der =.. [conj,Cat,_,Sem,_,Left,Right], !,
+deri2xml(Der,Stream,Tab):- 
+   Der =.. [conj,Cat,_,Sem,_,Tokens,Left,Right], !,
    NewTab is Tab + 1,
    NextTab is Tab + 2,
    tab(Stream,Tab), brule2xml(Stream,conj),
@@ -94,16 +85,15 @@ der2xml(Der,Stream,Tab,Tokens):-
    \+ \+ (instDrs(Red),
           drs2xml(Red,Stream,NewTab,[])),
    tab(Stream,NewTab), format(Stream,'</sem>~n',[]),  
-   der2xml(Left,Stream,NewTab,TokensLeft),   
-   der2xml(Right,Stream,NewTab,TokensRight),
-   append(TokensLeft,TokensRight,Tokens),
+   deri2xml(Left,Stream,NewTab),   
+   deri2xml(Right,Stream,NewTab),
    tab(Stream,NewTab), format(Stream,'<tokens>~n',[]),  
    tokens2xml(Tokens,NextTab,Stream),
    tab(Stream,NewTab), format(Stream,'</tokens>~n',[]), 
    tab(Stream,Tab),  format(Stream,'</binaryrule>~n',[]).
 
-der2xml(Der,Stream,Tab,Tokens):- 
-   Der =.. [Rule,Cat,Sem,_,Left,Right], !,
+deri2xml(Der,Stream,Tab):- 
+   Der =.. [Rule,Cat,Sem,_,Tokens,Left,Right], !,
    NewTab is Tab + 1,
    NextTab is Tab + 2,
    tab(Stream,Tab), brule2xml(Stream,Rule),
@@ -112,19 +102,19 @@ der2xml(Der,Stream,Tab,Tokens):-
    cat2xml(Cat,Stream,NextTab),
    tab(Stream,NewTab), format(Stream,'</cat>~n',[]),  
    tab(Stream,NewTab), format(Stream,'<sem>~n',[]),  
-   betaConvert(Sem,Red), 
+   betaConvert(Sem,Red1),
+   alphaConvertDRS(Red1,Red), % needed for functions introduced by NN compounds...
    \+ \+ (instDrs(Red),
           drs2xml(Red,Stream,NewTab,[])),
    tab(Stream,NewTab), format(Stream,'</sem>~n',[]),  
-   der2xml(Left,Stream,NewTab,TokensLeft),   
-   der2xml(Right,Stream,NewTab,TokensRight),
-   append(TokensLeft,TokensRight,Tokens),
+   deri2xml(Left,Stream,NewTab),   
+   deri2xml(Right,Stream,NewTab),
    tab(Stream,NewTab), format(Stream,'<tokens>~n',[]),  
    tokens2xml(Tokens,NextTab,Stream),
    tab(Stream,NewTab), format(Stream,'</tokens>~n',[]), 
    tab(Stream,Tab),  format(Stream,'</binaryrule>~n',[]).
 
-der2xml(Der,_,_,_):- write(der:Der),nl.
+deri2xml(_,_,_).
 
 
 /*========================================================================
@@ -242,8 +232,7 @@ getIDs([pos(B)|Conds],I3):- !, getIDs(B,I1), append(I1,I2,I3), getIDs(Conds,I2).
 getIDs([nec(B)|Conds],I3):- !, getIDs(B,I1), append(I1,I2,I3), getIDs(Conds,I2).
 getIDs([or(B1,B2)|Conds],I5):- !, getIDs(B1,I1), getIDs(B2,I2), append(I1,I2,I3), append(I3,I4,I5), getIDs(Conds,I4).
 getIDs([imp(B1,B2)|Conds],I5):- !, getIDs(B1,I1), getIDs(B2,I2), append(I1,I2,I3), append(I3,I4,I5), getIDs(Conds,I4).
-getIDs([whq(B1,B2)|Conds],I5):- !, getIDs(B1,I1), getIDs(B2,I2), append(I1,I2,I3), append(I3,I4,I5), getIDs(Conds,I4).
-getIDs([whq(_,B1,_,B2)|Conds],I5):- !, getIDs(B1,I1), getIDs(B2,I2), append(I1,I2,I3), append(I3,I4,I5), getIDs(Conds,I4).
+getIDs([duplex(_,B1,_,B2)|Conds],I5):- !, getIDs(B1,I1), getIDs(B2,I2), append(I1,I2,I3), append(I3,I4,I5), getIDs(Conds,I4).
 getIDs([_|Conds],I):- !, getIDs(Conds,I).
 getIDs(_,[]).
 
@@ -263,6 +252,9 @@ drs2xml(Var,Stream,Tab,_):-
 drs2xml(Var,Stream,Tab,_):- 
    Var =.. ['$VAR',_], !,
    tab(Stream,Tab), format(Stream,'<var>~p</var>~n',Var).
+
+drs2xml(drs(D,C),Stream,Tab,Words):- !,
+   drs2xml(l:drs(D,C),Stream,Tab,Words).
 
 drs2xml(Label:drs(D,C),Stream,Tab,[]):- !,
    NewTab is Tab + 1,
@@ -321,13 +313,6 @@ drs2xml(merge(B1,B2),Stream,Tab,_):- !,
    drs2xml(B1,Stream,NewTab,[]),
    drs2xml(B2,Stream,NewTab,[]),
    tab(Stream,Tab), format(Stream,'</merge>~n',[]).
-
-drs2xml(smerge(B1,B2),Stream,Tab,Words):- !,
-   tab(Stream,Tab), format(Stream,'<smerge>~n',[]),
-   NewTab is Tab + 1,
-   drs2xml(B1,Stream,NewTab,Words),
-   drs2xml(B2,Stream,NewTab,Words),
-   tab(Stream,Tab), format(Stream,'</smerge>~n',[]).
 
 drs2xml(sdrs(Labs,Rels),Stream,Tab,Words):- !,
    NewTab is Tab + 1,
@@ -401,6 +386,9 @@ dom2xml([Label:Index:X|L],Stream,Tab):- !,
    format(Stream,'</dr>~n',[]),
    dom2xml(L,Stream,Tab).
 
+dom2xml([Index:X|L],Stream,Tab):- !,
+   dom2xml([l:Index:X|L],Stream,Tab).
+
 dom2xml([X|L],Stream,Tab):-
    warning('cannot print referent in XML: ~p',[X]),
    dom2xml(L,Stream,Tab).
@@ -419,6 +407,9 @@ conds2xml([Label:Index:Cond|L],Stream,Tab):-
    cond2xml(Index:Cond,Stream,NewTab), !,
    tab(Stream,Tab), format(Stream,'</cond>~n',[]),
    conds2xml(L,Stream,Tab).
+
+conds2xml([Index:Cond|L],Stream,Tab):- !,
+   conds2xml([l:Index:Cond|L],Stream,Tab).
 
 conds2xml([X|L],Stream,Tab):-
    warning('cannot print condition in XML: ~p',[X]),
@@ -474,16 +465,13 @@ cond2xml(Index:imp(B1,B2),Stream,Tab):- !,
    drs2xml(B2,Stream,NewTab,[]),
    tab(Stream,Tab), format(Stream,'</imp>~n',[]).
 
-cond2xml(Index:whq(_,B1,_,B2),Stream,Tab):- !,
-   cond2xml(Index:whq(B1,B2),Stream,Tab).
-
-cond2xml(Index:whq(B1,B2),Stream,Tab):- !,
-   tab(Stream,Tab), format(Stream,'<whq>~n',[]),
+cond2xml(Index:duplex(Type,B1,Var,B2),Stream,Tab):- !,
+   tab(Stream,Tab), format(Stream,'<duplex type="~p" var="~p">~n',[Type,Var]),
    index2xml(Index,Stream,Tab),
    NewTab is Tab + 1,
    drs2xml(B1,Stream,NewTab,[]),
    drs2xml(B2,Stream,NewTab,[]),
-   tab(Stream,Tab), format(Stream,'</whq>~n',[]).
+   tab(Stream,Tab), format(Stream,'</duplex>~n',[]).
 
 cond2xml(Index:pred(Arg,X,Type,Sense),Stream,Tab):- !,
    symbol(X,Y),
@@ -505,6 +493,10 @@ cond2xml(Index:role(Arg1,Arg2,X,1),Stream,Tab):- !,
    tab(Stream,Tab),   
    format(Stream,'</rel>~n',[]).
 
+cond2xml(Index:rel(X,Y,Sym,0),Stream,Tab):-
+   symbol(Sym,=), !,
+   cond2xml(Index:eq(X,Y),Stream,Tab).
+
 cond2xml(Index:rel(Arg1,Arg2,X,Sense),Stream,Tab):- !,
    symbol(X,Y),
    tab(Stream,Tab), format(Stream,'<rel arg1="~p" arg2="~p" symbol="~w" sense="~p">~n',[Arg1,Arg2,Y,Sense]),
@@ -512,9 +504,9 @@ cond2xml(Index:rel(Arg1,Arg2,X,Sense),Stream,Tab):- !,
    tab(Stream,Tab),   
    format(Stream,'</rel>~n',[]).
 
-cond2xml(Index:named(Arg,X,Type,_),Stream,Tab):- !,
+cond2xml(Index:named(Arg,X,Class,Type),Stream,Tab):- !,
    symbol(X,Y),
-   tab(Stream,Tab), format(Stream,'<named arg="~p" symbol="~w" type="~p">~n',[Arg,Y,Type]),
+   tab(Stream,Tab), format(Stream,'<named arg="~p" symbol="~w" class="~p" type="~p">~n',[Arg,Y,Class,Type]),
    index2xml(Index,Stream,Tab),
    tab(Stream,Tab), format(Stream,'</named>~n',[]).
 
@@ -652,149 +644,6 @@ tags2xml([verbnet:Roles|L],Stream,Tab):- !,
 tags2xml([Feature:Value|L],Stream,Tab):-   
    tab(Stream,Tab), format(Stream,' <tag type="~p">~p</tag>~n',[Feature,Value]),  
    tags2xml(L,Stream,Tab).
-
-
-/*========================================================================
-   Flat DRSs
-========================================================================*/
-
-cons2xml([],_).
-
-cons2xml([Label:alfa(Type,L1,L2)|Cons],Stream):- !,
-   format(Stream,'  <alfa label="~p" type="~p"><label>~p</label><label>~p</label></alfa>~n',[Label,Type,L1,L2]),
-   cons2xml(Cons,Stream).
-
-cons2xml([Label:merge(L1,L2)|Cons],Stream):- !,
-   format(Stream,'  <merge label="~p"><label>~p</label><label>~p</label></merge>~n',[Label,L1,L2]),
-   cons2xml(Cons,Stream).
-
-cons2xml([Label:smerge(L1,L2)|Cons],Stream):- !,
-   format(Stream,'  <smerge label="~p"><label>~p</label><label>~p</label></smerge>~n',[Label,L1,L2]),
-   cons2xml(Cons,Stream).
-
-cons2xml([Label:drs(D,Labels)|Cons],Stream):- !,
-   format(Stream,'  <drs label="~p">~n',[Label]),
-   dom2xml(D,Stream,3),
-   labels2xml(Labels,Stream),
-   format(Stream,'  </drs>~n',[]),
-   cons2xml(Cons,Stream).
-
-cons2xml([Label:Index:named(Arg,X,Type,_)|Cons],Stream):- !,
-   symbol(X,Y),
-   format(Stream,'  <named label="~p" arg="~p" symbol="~w" type="~p">~n',[Label,Arg,Y,Type]),
-   index2xml(Index,Stream,2),
-   format(Stream,'  </named>~n',[]),
-   cons2xml(Cons,Stream).
-
-cons2xml([Label:Index:pred(Arg,X,Type,Sense)|Cons],Stream):- !,
-   symbol(X,Y),
-   format(Stream,'  <pred label="~p" arg="~p" symbol="~w" type="~p" sense="~p">~n',[Label,Arg,Y,Type,Sense]),
-   index2xml(Index,Stream,2),
-   format(Stream,'  </pred>~n',[]), 
-   cons2xml(Cons,Stream).
-
-cons2xml([Label:Index:rel(Arg1,Arg2,X,Sense)|Cons],Stream):- !,
-   symbol(X,Y),
-   format(Stream,'  <rel label="~p" arg1="~p" arg2="~p" symbol="~w" sense="~p">~n',[Label,Arg1,Arg2,Y,Sense]),
-   index2xml(Index,Stream,2),
-   format(Stream,'  </rel>~n',[]), 
-   cons2xml(Cons,Stream).
-
-cons2xml([Label:Index:role(Arg1,Arg2,X,1)|Cons],Stream):- !,
-   symbol(X,Y),
-   format(Stream,'  <rel label="~p" arg1="~p" arg2="~p" symbol="~w" sense="~p">~n',[Label,Arg1,Arg2,Y,1]),
-   index2xml(Index,Stream,2),
-   format(Stream,'  </rel>~n',[]), 
-   cons2xml(Cons,Stream).
-
-cons2xml([Label:Index:role(Arg2,Arg1,X,-1)|Cons],Stream):- !,
-   symbol(X,Y),
-   format(Stream,'  <rel label="~p" arg1="~p" arg2="~p" symbol="~w" sense="~p">~n',[Label,Arg1,Arg2,Y,1]),
-   index2xml(Index,Stream,2),
-   format(Stream,'  </rel>~n',[]), 
-   cons2xml(Cons,Stream).
-
-cons2xml([Label:Index:card(X,Y,Type)|Cons],Stream):- !,
-   format(Stream,'  <card label="~p" arg="~p" value="~p" type="~p">~n',[Label,X,Y,Type]),
-   index2xml(Index,Stream,2),
-   format(Stream,'  </card>~n',[]), 
-   cons2xml(Cons,Stream).
-
-cons2xml([Label:Index:timex(X,Y)|Cons],Stream):- !,
-   format(Stream,'  <timex label="~p" arg="~p">~n',[Label,X]),
-   timex2xml(Y,Stream,2),
-   index2xml(Index,Stream,2),
-   format(Stream,'  </timex>~n',[]),
-   cons2xml(Cons,Stream).
-
-cons2xml([Label:Index:eq(X,Y)|Cons],Stream):- !,
-   format(Stream,'  <eq label="~p" arg1="~p" arg2="~p">~n',[Label,X,Y]),
-   index2xml(Index,Stream,2),
-   format(Stream,'  </eq>~n',[]),
-   cons2xml(Cons,Stream).
-
-cons2xml([Label:Index:not(L)|Cons],Stream):- !,
-   format(Stream,'  <not label="~p">~n',[Label]),
-   format(Stream,'  <label>~p</label>~n',[L]),
-   index2xml(Index,Stream,2),
-   format(Stream,'  </not>~n',[]),
-   cons2xml(Cons,Stream).
-
-cons2xml([Label:Index:nec(L)|Cons],Stream):- !,
-   format(Stream,'  <nec label="~p">~n',[Label]),
-   format(Stream,'  <label>~p</label>~n',[L]),
-   index2xml(Index,Stream,2),
-   format(Stream,'  </nec>~n',[]),
-   cons2xml(Cons,Stream).
-
-cons2xml([Label:Index:pos(L)|Cons],Stream):- !,
-   format(Stream,'  <pos label="~p">~n',[Label]),
-   format(Stream,'  <label>~p</label>~n',[L]),
-   index2xml(Index,Stream,2),
-   format(Stream,'  </pos>~n',[]),
-   cons2xml(Cons,Stream).
-
-cons2xml([Label:Index:prop(X,L)|Cons],Stream):- !,
-   format(Stream,'  <prop label="~p" argument="~p">~n',[Label,X]),
-   format(Stream,'  <label>~p</label>~n',[L]),
-   index2xml(Index,Stream,2),
-   format(Stream,'  </prop>~n',[]),
-   cons2xml(Cons,Stream).
-
-cons2xml([Label:Index:or(L1,L2)|Cons],Stream):- !,
-   format(Stream,'  <or label="~p">~n',[Label]),
-   format(Stream,'  <label>~p</label>~n  <label>~p</label>~n',[L1,L2]),
-   index2xml(Index,Stream,2),
-   format(Stream,'  </or>~n',[]),
-   cons2xml(Cons,Stream).
-
-cons2xml([Label:Index:imp(L1,L2)|Cons],Stream):- !,
-   format(Stream,'  <imp label="~p">~n',[Label]),
-   format(Stream,'  <label>~p</label>~n  <label>~p</label>~n',[L1,L2]),
-   index2xml(Index,Stream,2),
-   format(Stream,'  </imp>~n',[]),
-   cons2xml(Cons,Stream).
-
-cons2xml([Label:Index:whq(_,L1,_,L2)|Cons],Stream):- !,
-   cons2xml([Label:Index:whq(L1,L2)|Cons],Stream).
-
-cons2xml([Label:Index:whq(L1,L2)|Cons],Stream):- !,
-   format(Stream,'  <whq label="~p">~n',[Label]),
-   format(Stream,'  <label>~p</label>~n  <label>~p</label>~n',[L1,L2]),
-   index2xml(Index,Stream,2),
-   format(Stream,'  </whq>~n',[]),
-   cons2xml(Cons,Stream).
-
-
-/*========================================================================
-   Labels
-========================================================================*/
-
-labels2xml([],_).
-
-labels2xml([Label|L],Stream):-
-   format(Stream,'   <label>~w</label>~n',[Label]),
-   labels2xml(L,Stream).
 
 
 /*========================================================================

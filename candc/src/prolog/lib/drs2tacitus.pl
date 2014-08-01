@@ -1,3 +1,4 @@
+
 :- module(drs2tacitus,[drs2tac/4,printTAC/2,label/4]).
 
 :- use_module(library(lists),[select/3,member/2]).
@@ -60,9 +61,6 @@ label(X,_,_,X).
 /* ========================================================================
    Translate DRSs into TACITUS formulas 
 ======================================================================== */
-
-drs2tac(smerge(B1,B2),P,T1,T2,N,H):- !, 
-   drs2tac(merge(B1,B2),P,T1,T2,N,H).
 
 drs2tac(alfa(_,B1,B2),P,T1,T2,N,H):- !, 
    drs2tac(merge(B1,B2),P,T1,T2,N,H).
@@ -145,7 +143,7 @@ adjustMods(_,T,T).
 ======================================================================== */
 
 roles([],[],[]).
-roles([_:R|L1],[R|Roles],L2):- R = role(_,_,_,_), !, roles(L1,Roles,L2).
+roles([_:R|L1],[R|Roles],L2):- R = rel(_,_,Role,_), member(Role,[topic,agent,patient,theme,recipient]), !, roles(L1,Roles,L2).
 roles([Cond|L1],Roles,[Cond|L2]):- roles(L1,Roles,L2).
 
 
@@ -183,7 +181,7 @@ cond2tac(I:whq(Drs1,Drs2),P,_,T1,[I:whq(E,H1,H2)|T3],N1-N4,complex:I:E):- !,
    drs2tac(Drs1,P,T1,T2,N2-N3,H1),
    drs2tac(Drs2,P,T2,T3,N3-N4,H2).
 
-cond2tac(I:whq(_,Drs1,_,Drs2),P,_,T1,[I:whq(E,H1,H2)|T3],N1-N4,complex:I:E):- !,
+cond2tac(I:duplex(_,Drs1,_,Drs2),P,_,T1,[I:whq(E,H1,H2)|T3],N1-N4,complex:I:E):- !,
    label(N1,e,E,N2),
    drs2tac(Drs1,P,T1,T2,N2-N3,H1),
    drs2tac(Drs2,P,T2,T3,N3-N4,H2).
@@ -207,7 +205,7 @@ cond2tac(I:timex(X,D1),_,_,T,[I:F|T],N1-N2,timex:I:E):-
 cond2tac(I:eq(X,Y),_,_,T,[I:equal(E,X,Y)|T],N1-N2,equal:I:E):- !,
    label(N1,e,E,N2).      
 
-cond2tac(I:pred(X,S1,a,_),L,_,T,[I:F|T],N1-N2,mod:I:E):- !,
+cond2tac(I:pred(X,S1,r,_),L,_,T,[I:F|T],N1-N2,mod:I:E):- !,
    pos(I,L,Pos),
    label(N1,e,E,N2),      
    atom_concat(S1,Pos,S2),
@@ -219,11 +217,29 @@ cond2tac(I:pred(X,S1,n,_),L,_,T,[I:F|T],N1-N2,noun:I:E):- !,
    atom_concat(S1,Pos,S2),
    F =.. [S2,E,X].
 
+cond2tac(I:pred(E,S1,v,_),L,Roles,T,[I:F|T],N,event:I:E):- 
+   pos(I,L,Pos), member(Pos,['-a','-r']), !,
+   atom_concat(S1,Pos,S2),
+   F =.. [S2,E,_,_,_],
+   addRoles(Roles,E,F,N).
+
 cond2tac(I:pred(E,S1,v,_),L,Roles,T,[I:F|T],N,event:I:E):- !, 
    pos(I,L,Pos),
    atom_concat(S1,Pos,S2),
    F =.. [S2,E,_,_,_],
    addRoles(Roles,E,F,N).
+
+cond2tac(I:pred(E,S1,a,_),L,Roles,T,[I:F|T],N,mod:I:E):- 
+   pos(I,L,Pos),
+   atom_concat(S1,Pos,S2),
+   F =.. [S2,E,_],
+   addRoles(Roles,E,F,N), !.
+
+cond2tac(I:pred(X,S1,a,_),L,_,T,[I:F|T],N1-N2,mod:I:E):- !,
+   pos(I,L,Pos),
+   label(N1,e,E,N2),      
+   atom_concat(S1,Pos,S2),
+   F =.. [S2,E,X].
 
 cond2tac(I:rel(X,Y,P1,_),L,_,T,[I:F|T],N1-N2,rel:I:E):- !,
    pos(I,L,Pos),
@@ -245,29 +261,39 @@ cond2tac(I:X,_,_,T,T,N-N,unknown:I:_):-
    Add roles as arguments
 ======================================================================== */
 
-addRoles([],_,F,N1-N4):- !,
-   F =.. [_,_,A1,A2,A3],
+addRoles([],_,F,N1-N4):- 
+   F =.. [_,_,A1,A2,A3], !,
    label(N1,u,A1,N2),   
    label(N2,u,A2,N3),   
    label(N3,u,A3,N4).
 
-addRoles([role(X,E,R,-1)|L],E,F,N):- !,
-   addRoles([role(E,X,R,1)|L],E,F,N).
+addRoles([],_,F,N1-N2):- 
+   F =.. [_,_,A], !,
+   label(N1,u,A,N2).
 
-addRoles([role(E,X,agent,1)|L],E,F,N):-
+addRoles([rel(E,X,agent,0)|L],E,F,N):-
    F =.. [_,E,X,_,_], !,
    addRoles(L,E,F,N).
 
-addRoles([role(E,X,patient,1)|L],E,F,N):-
+addRoles([rel(E,X,topic,0)|L],E,F,N):-
+   F =.. [_,E,X,_,_], !,
+   addRoles(L,E,F,N).
+
+addRoles([rel(E,X,patient,0)|L],E,F,N):-
    F =.. [_,E,_,X,_], !,
    addRoles(L,E,F,N).
 
-addRoles([role(E,X,theme,1)|L],E,F,N):-
+addRoles([rel(E,X,theme,0)|L],E,F,N):-
    F =.. [_,E,_,X,_], !,
    addRoles(L,E,F,N).
 
-addRoles([role(E,X,recipient,1)|L],E,F,N):-
+addRoles([rel(E,X,recipient,0)|L],E,F,N):-
    F =.. [_,E,_,_,X], !,
+   addRoles(L,E,F,N).
+
+addRoles([rel(E,X,Role,0)|L],E,F,N):-
+   member(Role,[topic,agent,patient,theme,recipient]),
+   F =.. [_,E,X], !,
    addRoles(L,E,F,N).
 
 addRoles([_|L],E,F,N):-

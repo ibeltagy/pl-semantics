@@ -3444,6 +3444,76 @@ verbnet(want, (s:_\np)/np, ['Theme','Agent'], [29,'.',1]).
 verbnet(name, (s:_\np)/np, ['Theme','Agent'], [29,'.',1]).
 verbnet(nominate, (s:_\np)/np, ['Theme','Agent'], [29,'.',1]).
 
+%%% File:    ext/VerbNet/approve-77.xml
+%%% Primary: NP v how S (approve-77)
+%%% Syntax:  [np:Agent,v,s:Proposition]
+%%% CCG:     (s:_\np)/s:_
+%%% Roles:   [Proposition,Agent]
+%%% Example: I accept how you do it.
+%%%
+verbnet(accept, (s:_\np)/s:_, ['Proposition','Agent'], [77]).
+verbnet(understand, (s:_\np)/s:_, ['Proposition','Agent'], [77]).
+verbnet(encourage, (s:_\np)/s:_, ['Proposition','Agent'], [77]).
+verbnet(discourage, (s:_\np)/s:_, ['Proposition','Agent'], [77]).
+verbnet(disprefer, (s:_\np)/s:_, ['Proposition','Agent'], [77]).
+verbnet(reject, (s:_\np)/s:_, ['Proposition','Agent'], [77]).
+
+%%% File:    ext/VerbNet/approve-77.xml
+%%% Primary: NP V NP (approve-77)
+%%% Syntax:  [np:Agent,v,np:Proposition]
+%%% CCG:     (s:_\np)/np
+%%% Roles:   [Proposition,Agent]
+%%% Example: I accepted it.
+%%%
+verbnet(accept, (s:_\np)/np, ['Proposition','Agent'], [77]).
+verbnet(understand, (s:_\np)/np, ['Proposition','Agent'], [77]).
+verbnet(encourage, (s:_\np)/np, ['Proposition','Agent'], [77]).
+verbnet(discourage, (s:_\np)/np, ['Proposition','Agent'], [77]).
+verbnet(disprefer, (s:_\np)/np, ['Proposition','Agent'], [77]).
+verbnet(reject, (s:_\np)/np, ['Proposition','Agent'], [77]).
+
+%%% File:    ext/VerbNet/approve-77.xml
+%%% Primary: NP V S_ING (approve-77)
+%%% Syntax:  [np:Agent,v,np:Proposition]
+%%% CCG:     (s:_\np)/np
+%%% Roles:   [Proposition,Agent]
+%%% Example: I accepted their writing novels.
+%%%
+verbnet(accept, (s:_\np)/np, ['Proposition','Agent'], [77]).
+verbnet(understand, (s:_\np)/np, ['Proposition','Agent'], [77]).
+verbnet(encourage, (s:_\np)/np, ['Proposition','Agent'], [77]).
+verbnet(discourage, (s:_\np)/np, ['Proposition','Agent'], [77]).
+verbnet(disprefer, (s:_\np)/np, ['Proposition','Agent'], [77]).
+verbnet(reject, (s:_\np)/np, ['Proposition','Agent'], [77]).
+
+%%% File:    ext/VerbNet/approve-77.xml
+%%% Primary: NP V that S (approve-77)
+%%% Syntax:  [np:Agent,v,s:Proposition]
+%%% CCG:     (s:_\np)/s:_
+%%% Roles:   [Proposition,Agent]
+%%% Example: I accepted that they wrote novels.
+%%%
+verbnet(accept, (s:_\np)/s:_, ['Proposition','Agent'], [77]).
+verbnet(understand, (s:_\np)/s:_, ['Proposition','Agent'], [77]).
+verbnet(encourage, (s:_\np)/s:_, ['Proposition','Agent'], [77]).
+verbnet(discourage, (s:_\np)/s:_, ['Proposition','Agent'], [77]).
+verbnet(disprefer, (s:_\np)/s:_, ['Proposition','Agent'], [77]).
+verbnet(reject, (s:_\np)/s:_, ['Proposition','Agent'], [77]).
+
+%%% File:    ext/VerbNet/approve-77.xml
+%%% Primary: NP V what S (approve-77)
+%%% Syntax:  [np:Agent,v,s:Proposition]
+%%% CCG:     (s:_\np)/s:_
+%%% Roles:   [Proposition,Agent]
+%%% Example: I accepted what they were doing.
+%%%
+verbnet(accept, (s:_\np)/s:_, ['Proposition','Agent'], [77]).
+verbnet(understand, (s:_\np)/s:_, ['Proposition','Agent'], [77]).
+verbnet(encourage, (s:_\np)/s:_, ['Proposition','Agent'], [77]).
+verbnet(discourage, (s:_\np)/s:_, ['Proposition','Agent'], [77]).
+verbnet(disprefer, (s:_\np)/s:_, ['Proposition','Agent'], [77]).
+verbnet(reject, (s:_\np)/s:_, ['Proposition','Agent'], [77]).
+
 %%% File:    ext/VerbNet/assessment-34.1.xml
 %%% Primary: NP V NP (assessment-34.1)
 %%% Syntax:  [np:Agent,v,np:Theme]
@@ -20011,6 +20081,511 @@ verbnet(engage, ((s:_\np)/pp)/np, ['Theme','Agent'], [107]).
 verbnet(relate, ((s:_\np)/pp)/np, ['Theme','Agent'], [107]).
 verbnet(include, ((s:_\np)/pp)/np, ['Theme','Agent'], [107]).
 verbnet(enroll, ((s:_\np)/pp)/np, ['Theme','Agent'], [107]).
+
+%%% File:    ext/VerbNet/judgement-33.xml
+%%% Primary: NP V NP (judgement-33)
+%%% Syntax:  [np:Agent,v,np:Theme]
+%%% CCG:     (s:_\np)/np
+%%% Roles:   [Theme,Agent]
+%%% Example: They praised the volunteers.
+%%%
+verbnet(acclaim, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(accurse, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(applaud, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(assail, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(assault, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(attack, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(belittle, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(blame, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(blaspheme, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(bless, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(celebrate, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(commend, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(compensate, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(compliment, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(condone, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(congratulate, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(curse, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(damn, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(doubt, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(eulogize, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(excoriate, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(excuse, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(extol, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(felicitate, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(forgive, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(gibe, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(glorify, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(greet, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(hail, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(herald, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(imprecate, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(incriminate, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(indict, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(lampoon, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(stigmatize, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(praise, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(honor, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(recommend, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(laud, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(pardon, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(recompense, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(remunerate, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(slander, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(stultify, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(repay, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(reward, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(salute, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(thank, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(toast, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(welcome, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(abuse, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(backbite, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(calumniate, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(castigate, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(censure, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(chasten, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(chastise, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(chide, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(condemn, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(criticize, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(decry, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(defame, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(denigrate, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(denounce, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(deprecate, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(deride, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(disparage, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(fault, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(impeach, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(insult, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(lambaste, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(malign, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(mock, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(penalize, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(persecute, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(prosecute, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(punish, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(rebuke, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(reprimand, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(reproach, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(reprove, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(revile, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(ridicule, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(scold, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(repudiate, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(scorn, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(shame, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(snub, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(upbraid, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(victimize, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(vilify, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(approve, (s:_\np)/np, ['Theme','Agent'], [33]).
+verbnet(sanction, (s:_\np)/np, ['Theme','Agent'], [33]).
+
+%%% File:    ext/VerbNet/judgement-33.xml
+%%% Primary: NP V NP PP.predicate (judgement-33)
+%%% Syntax:  [np:Agent,v,np:Theme,prep:for,np:Predicate]
+%%% CCG:     ((s:_\np)/pp)/np
+%%% Roles:   [Theme,Agent]
+%%% Example: They praised the volunteers for their dedication.
+%%%
+verbnet(acclaim, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(accurse, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(applaud, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(assail, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(assault, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(attack, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(belittle, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(blame, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(blaspheme, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(bless, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(celebrate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(commend, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(compensate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(compliment, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(condone, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(congratulate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(curse, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(damn, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(doubt, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(eulogize, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(excoriate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(excuse, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(extol, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(felicitate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(forgive, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(gibe, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(glorify, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(greet, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(hail, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(herald, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(imprecate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(incriminate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(indict, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(lampoon, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(stigmatize, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(praise, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(honor, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(recommend, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(laud, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(pardon, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(recompense, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(remunerate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(slander, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(stultify, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(repay, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(reward, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(salute, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(thank, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(toast, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(welcome, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(abuse, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(backbite, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(calumniate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(castigate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(censure, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(chasten, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(chastise, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(chide, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(condemn, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(criticize, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(decry, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(defame, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(denigrate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(denounce, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(deprecate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(deride, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(disparage, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(fault, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(impeach, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(insult, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(lambaste, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(malign, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(mock, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(penalize, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(persecute, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(prosecute, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(punish, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(rebuke, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(reprimand, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(reproach, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(reprove, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(revile, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(ridicule, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(scold, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(repudiate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(scorn, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(shame, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(snub, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(upbraid, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(victimize, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(vilify, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(approve, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(sanction, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+
+%%% File:    ext/VerbNet/judgement-33.xml
+%%% Primary: NP V NP.predicate (judgement-33)
+%%% Syntax:  [np:Agent,v,np:Theme,np:Predicate]
+%%% CCG:     ((s:_\np)/np)/np
+%%% Roles:   [Predicate,Theme,Agent]
+%%% Example: They praised the volunteer's dedication.
+%%%
+verbnet(acclaim, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(accurse, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(applaud, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(assail, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(assault, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(attack, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(belittle, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(blame, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(blaspheme, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(bless, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(celebrate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(commend, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(compensate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(compliment, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(condone, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(congratulate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(curse, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(damn, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(doubt, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(eulogize, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(excoriate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(excuse, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(extol, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(felicitate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(forgive, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(gibe, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(glorify, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(greet, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(hail, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(herald, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(imprecate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(incriminate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(indict, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(lampoon, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(stigmatize, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(praise, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(honor, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(recommend, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(laud, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(pardon, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(recompense, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(remunerate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(slander, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(stultify, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(repay, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(reward, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(salute, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(thank, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(toast, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(welcome, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(abuse, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(backbite, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(calumniate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(castigate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(censure, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(chasten, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(chastise, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(chide, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(condemn, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(criticize, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(decry, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(defame, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(denigrate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(denounce, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(deprecate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(deride, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(disparage, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(fault, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(impeach, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(insult, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(lambaste, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(malign, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(mock, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(penalize, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(persecute, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(prosecute, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(punish, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(rebuke, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(reprimand, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(reproach, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(reprove, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(revile, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(ridicule, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(scold, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(repudiate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(scorn, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(shame, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(snub, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(upbraid, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(victimize, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(vilify, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(approve, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(sanction, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+
+%%% File:    ext/VerbNet/judgement-33.xml
+%%% Primary: NP V NP PP.predicate (judgement-33)
+%%% Syntax:  [np:Agent,v,np:Theme,prep: (as),np:Predicate]
+%%% CCG:     ((s:_\np)/pp)/np
+%%% Roles:   [Theme,Agent]
+%%% Example: I judged him as a good man.
+%%%
+verbnet(acclaim, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(accurse, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(applaud, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(assail, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(assault, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(attack, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(belittle, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(blame, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(blaspheme, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(bless, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(celebrate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(commend, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(compensate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(compliment, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(condone, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(congratulate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(curse, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(damn, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(doubt, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(eulogize, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(excoriate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(excuse, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(extol, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(felicitate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(forgive, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(gibe, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(glorify, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(greet, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(hail, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(herald, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(imprecate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(incriminate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(indict, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(lampoon, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(stigmatize, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(praise, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(honor, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(recommend, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(laud, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(pardon, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(recompense, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(remunerate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(slander, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(stultify, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(repay, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(reward, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(salute, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(thank, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(toast, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(welcome, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(abuse, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(backbite, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(calumniate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(castigate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(censure, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(chasten, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(chastise, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(chide, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(condemn, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(criticize, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(decry, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(defame, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(denigrate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(denounce, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(deprecate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(deride, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(disparage, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(fault, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(impeach, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(insult, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(lambaste, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(malign, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(mock, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(penalize, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(persecute, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(prosecute, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(punish, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(rebuke, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(reprimand, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(reproach, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(reprove, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(revile, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(ridicule, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(scold, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(repudiate, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(scorn, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(shame, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(snub, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(upbraid, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(victimize, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(vilify, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(approve, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+verbnet(sanction, ((s:_\np)/pp)/np, ['Theme','Agent'], [33]).
+
+%%% File:    ext/VerbNet/judgement-33.xml
+%%% Primary: NP v NP to be NP (judgement-33)
+%%% Syntax:  [np:Agent,v,np:Theme,np:Predicate]
+%%% CCG:     ((s:_\np)/np)/np
+%%% Roles:   [Predicate,Theme,Agent]
+%%% Example: I judged him to be a good man.
+%%%
+verbnet(acclaim, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(accurse, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(applaud, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(assail, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(assault, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(attack, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(belittle, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(blame, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(blaspheme, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(bless, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(celebrate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(commend, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(compensate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(compliment, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(condone, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(congratulate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(curse, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(damn, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(doubt, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(eulogize, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(excoriate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(excuse, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(extol, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(felicitate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(forgive, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(gibe, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(glorify, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(greet, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(hail, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(herald, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(imprecate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(incriminate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(indict, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(lampoon, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(stigmatize, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(praise, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(honor, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(recommend, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(laud, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(pardon, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(recompense, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(remunerate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(slander, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(stultify, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(repay, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(reward, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(salute, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(thank, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(toast, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(welcome, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(abuse, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(backbite, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(calumniate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(castigate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(censure, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(chasten, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(chastise, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(chide, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(condemn, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(criticize, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(decry, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(defame, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(denigrate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(denounce, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(deprecate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(deride, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(disparage, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(fault, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(impeach, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(insult, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(lambaste, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(malign, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(mock, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(penalize, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(persecute, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(prosecute, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(punish, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(rebuke, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(reprimand, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(reproach, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(reprove, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(revile, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(ridicule, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(scold, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(repudiate, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(scorn, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(shame, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(snub, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(upbraid, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(victimize, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(vilify, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(approve, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
+verbnet(sanction, ((s:_\np)/np)/np, ['Predicate','Theme','Agent'], [33]).
 
 %%% File:    ext/VerbNet/judgment-33.xml
 %%% Primary: NP V NP (judgment-33)
@@ -40700,12 +41275,13 @@ verbnet(retire, (s:_\np)/pp, ['Agent'], [82,-,3]).
 
 %%% Most frequent roles for a particular CCG category.
 %%%
+verbnet(_, (s:adj\np), ['Topic'], []). % 
 verbnet(_, (((s:_\np)/pp)/np)/np , ['Result','Patient','Agent'], []). % n=81
 verbnet(_, (((s:_\np)/pp)/pp)/np , ['Patient','Agent'], []). % n=305
 verbnet(_, ((s:_\np)/np)/np , ['Result','Patient','Agent'], []). % n=626
 verbnet(_, ((s:_\np)/np)/pp , ['Topic','Agent'], []). % n=182
 verbnet(_, ((s:_\np)/np)/s:_ , ['Attribute','Theme','Agent'], []). % n=12
-verbnet(_, ((s:_\np)/pp)/np , ['Theme','Agent'], []). % n=2354
+verbnet(_, ((s:_\np)/pp)/np , ['Theme','Agent'], []). % n=2540
 verbnet(_, ((s:_\np)/pp)/pp , ['Agent'], []). % n=331
 verbnet(_, ((s:_\np)/s:_)/np , ['Topic','Recipient','Agent'], []). % n=193
 verbnet(_, ((s:_\np)/s:_)/pp , ['Topic','Agent'], []). % n=749
@@ -40713,7 +41289,7 @@ verbnet(_, ((s:_\np)/ (s:ng\np))/np , ['Instrument','Theme','Agent'], []). % n=8
 verbnet(_, ((s:_\lex:it)/s:_)/pp , ['Stimulus'], []). % n=2
 verbnet(_, ((s:_\lex:there)/np)/pp , ['Theme'], []). % n=227
 verbnet(_, ((s:_\lex:there)/pp)/np , ['Theme'], []). % n=412
-verbnet(_, (s:_\np)/np , ['Theme','Agent'], []). % n=2278
+verbnet(_, (s:_\np)/np , ['Theme','Agent'], []). % n=2371
 verbnet(_, (s:_\np)/pp , ['Agent'], []). % n=1269
 verbnet(_, (s:_\np)/s:_ , ['Topic','Agent'], []). % n=968
 verbnet(_, (s:_\np)/ (s:ng\np) , ['Theme','Agent'], []). % n=54

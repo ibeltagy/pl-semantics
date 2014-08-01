@@ -65,7 +65,7 @@ namespace NLP {
             lexical(sent);
 	    std::ostringstream sstr;
             sstr << metaLabel << "-'" << ret[i].score<<"'";
-	    meta(sstr.str(), nsentences*20 + i);
+	    meta(sstr.str(), nsentences*100 + i);
           }
         }else{
           sent.cats.clear();
@@ -73,7 +73,7 @@ namespace NLP {
             log.stream << nsentences << " parsed unary " << std::endl;
             unary(sent);
             lexical(sent);
-	    meta(metaLabel, nsentences*20);
+	    meta(metaLabel, nsentences*100);
           }else{
             log.stream << nsentences << " ignored unary " << std::endl;
           }

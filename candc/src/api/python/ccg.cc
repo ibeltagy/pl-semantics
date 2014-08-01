@@ -338,7 +338,7 @@ namespace pyCCG {
     DecoderWrap(void){}
     virtual ~DecoderWrap(void){ /* do nothing */ }
 
-    virtual double best_score(const NLP::CCG::SuperCat *sc) const {
+    virtual double best_score(const NLP::CCG::SuperCat *sc) {
       return get_override("best_score")(sc);
     }
   };

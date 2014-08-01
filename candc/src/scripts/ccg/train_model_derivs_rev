@@ -13,7 +13,7 @@ source src/scripts/ccg/common
 
 MODEL=$WORK/model_derivs_rev
 LOG=$MODEL/log
-FORESTS=/tmp/forests.nbest.rev
+FORESTS=/tmp/forests.rev
 
 echo "creating forest files in $FORESTS" | tee -a $LOG
 

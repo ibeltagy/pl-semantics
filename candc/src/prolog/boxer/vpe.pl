@@ -34,11 +34,6 @@ detectVPE(merge(B1,B2),merge(U1,U2),St1-St3):- !,
    window(St2,St4),
    detectVPE(B2,U2,St4-St3).
 
-detectVPE(smerge(B1,B2),smerge(U1,U2),St1-St3):- !, 
-   detectVPE(B1,U1,St1-St2), 
-   window(St2,St4),
-   detectVPE(B2,U2,St4-St3).
-
 detectVPE(alfa(T,B1,B2),alfa(T,U1,U2),St1-St3):- !, 
    detectVPE(B1,U1,St1-St2), 
    detectVPE(B2,U2,St2-St3).
@@ -84,7 +79,7 @@ detectVPEc([B:I:or(B1,B2)|L1],[B:I:or(U1,U2)|L2],St1-St4):- !,
    detectVPE(B2,U2,St2-St3), 
    detectVPEc(L1,L2,St3-St4).
 
-detectVPEc([B:I:whq(T,B1,V,B2)|L1],[B:I:whq(T,U1,V,U2)|L2],St1-St4):- !, 
+detectVPEc([B:I:duplex(T,B1,V,B2)|L1],[B:I:duplex(T,U1,V,U2)|L2],St1-St4):- !, 
    detectVPE(B1,U1,St1-St2), 
    detectVPE(B2,U2,St2-St3), 
    detectVPEc(L1,L2,St3-St4).

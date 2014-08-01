@@ -140,52 +140,20 @@ century('21th',    '20XX').
    Decades
 ========================================================================*/
 
-decade(Date,DID):-
+decade(Date,Decade):-
    atom(Date), 
-   atom_codes(Date,[39,C,48,115]), !,
-   atom_codes(Decade,[49,57,C,48,115]),
-   decade(Decade,DID).
+   atom_codes(Date,[39,C,48,115]), !,         %%%  '90s -> 199X
+   atom_codes(Decade,[49,57,C,88]).
 
-decade('1610s','161X').
-decade('1620s','162X').
-decade('1630s','163X').
-decade('1640s','164X').
-decade('1650s','165X').
-decade('1660s','166X').
-decade('1670s','167X').
-decade('1680s','168X').
-decade('1690s','169X').
-decade('1700s','170X').
-decade('1710s','171X').
-decade('1720s','172X').
-decade('1730s','173X').
-decade('1740s','174X').
-decade('1750s','175X').
-decade('1760s','176X').
-decade('1770s','177X').
-decade('1780s','178X').
-decade('1790s','179X').
-decade('1800s','180X').
-decade('1810s','181X').
-decade('1820s','182X').
-decade('1830s','183X').
-decade('1840s','184X').
-decade('1850s','185X').
-decade('1860s','186X').
-decade('1870s','187X').
-decade('1880s','188X').
-decade('1890s','189X').
-decade('1900s','190X').
-decade('1910s','191X').
-decade('1920s','192X').
-decade('1930s','193X').
-decade('1940s','194X').
-decade('1950s','195X').
-decade('1960s','196X').
-decade('1970s','197X').
-decade('1980s','198X').
-decade('1990s','199X').
-decade('2000s','200X').
+decade(Date,Decade):-
+   atom(Date), 
+   atom_codes(Date,[A,B,C,48,115]), !,        %%%  1990s -> 199X
+   atom_codes(Decade,[A,B,C,88]).
+
+decade(Date,Decade):-
+   atom(Date), 
+   atom_codes(Date,[A,B,C,48]), !,            %%%  1990 -> 199X
+   atom_codes(Decade,[A,B,C,88]).
 
 
 /*========================================================================

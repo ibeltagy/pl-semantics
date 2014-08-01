@@ -287,13 +287,13 @@ class Sentence:
                     if gr2.label == "ncsubj" and gr2.args[1] == that:
                         gr2.args[1] = gr.args[1]                    
 
-def read(input, OUTPUT, ADD374):
+def read(filename, OUTPUT, ADD374):
     grs = []
-    for line in input:
+    for line in open(filename):
         line = line.strip()
         if ADD374 and line == PLACE374:
             line = SENT374
-        elif not line or line.startswith('#') or line.startswith ("score =") or line.startswith("ID="):
+        elif not line or line.startswith('#'):
             if OUTPUT == '--ccgbank':
                 print line
             continue
@@ -324,12 +324,7 @@ elif OUTPUT == '--rasp-parse':
 
 ADD374 = OUTPUT in ['--text', '--pos']
 
-if FILENAME == "stdin":
-    input = sys.stdin
-else:
-    input = open(FILENAME)
-
-for i, s in enumerate(read(input, OUTPUT, ADD374)):
+for i, s in enumerate(read(FILENAME, OUTPUT, ADD374)):
     if POSTPROCESS:
         s.postprocess()
     

@@ -96,10 +96,12 @@ formatDrs(drs(Dom,Cond),[[32|Top],Refs3,[124|Line]|CondLines2],Width):- !,
 
 formatDrs(Complex,Lines3,Length):- 
    complexDrs(Complex,Op,Drs1,Drs2), !,
+   atom_codes(Op,OpCode),
+   length(OpCode,OpLen),
    formatDrs(Drs1,Lines1,N1),
    formatDrs(Drs2,Lines2,N2),
    combLinesDrs(Lines1,Lines2,Lines3,Op,N1,N2),
-   Length is N1 + N2 + 3.
+   Length is N1 + N2 + 2 + OpLen.
 
 formatDrs(lam(X,Drs),Lines3,Length):- !,
    formatLambda(X,Lines1,N1),
@@ -133,9 +135,8 @@ formatDrs(sub(Drs1,Drs2),Lines,Length):- !,
      Format Complex DRSs
 ========================================================================*/
 
-complexDrs(smerge(Drs1,Drs2),'+',Drs1,Drs2):- !.
-complexDrs(merge(Drs1,Drs2),';',Drs1,Drs2):- !.
-complexDrs(alfa(_,Drs1,Drs2),'A',Drs1,Drs2):- !.
+complexDrs(merge(Drs1,Drs2),'+',Drs1,Drs2):- !.
+complexDrs(alfa(_,Drs1,Drs2),'*',Drs1,Drs2):- !.
 complexDrs(app(Drs1,Drs2),'@',Drs1,Drs2):- !.
 
 
@@ -330,10 +331,13 @@ formatCond(timex(Arg,Timex),L-[Line|L],N0-N2):- !,
      Formatting Complex Conditions
 ========================================================================*/
 
-complexCond(imp(Drs1,Drs2),    '>' ,Drs1,Drs2).
-complexCond(whq(_,Drs1,_,Drs2),'?'  ,Drs1,Drs2).
-complexCond(whq(Drs1,Drs2),    '?'  ,Drs1,Drs2).
-complexCond(or(Drs1,Drs2),     'V'  ,Drs1,Drs2).
+complexCond(imp(Drs1,Drs2), '>' ,Drs1,Drs2).
+complexCond(or(Drs1,Drs2),  'V' ,Drs1,Drs2).
+complexCond(duplex(most, Drs1,_,Drs2), 'M' ,Drs1,Drs2).
+complexCond(duplex(two,  Drs1,_,Drs2), '2' ,Drs1,Drs2).
+complexCond(duplex(three,Drs1,_,Drs2), '3' ,Drs1,Drs2).
+complexCond(duplex(Type, Drs1,_,Drs2), '?' ,Drs1,Drs2):- 
+   \+ member(Type,[most,two,three]).
 
 
 /*========================================================================

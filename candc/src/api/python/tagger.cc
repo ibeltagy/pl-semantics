@@ -83,17 +83,14 @@ BOOST_PYTHON_MODULE_INIT(tagger){
     .def_readonly("tagdict_ratio", &T::Tagger::Config::tagdict_ratio);
 
   class_<T::POS::Config, bases<T::Tagger::Config> >("POSConfig", init<>())
-    .def(init<const C::OpPath *>())
-    .def(init<const C::OpPath *, bool>());
+    .def(init<const C::OpPath *>());
 
   class_<T::Chunk::Config, bases<T::Tagger::Config> >("ChunkConfig", init<>())
     .def(init<const C::OpPath *>())
-    .def(init<const C::OpPath *, bool>())
     .def_readonly("postags", &T::Chunk::Config::postags);
 
   class_<T::NER::Config, bases<T::Tagger::Config> >("NERConfig", init<>())
     .def(init<const C::OpPath *>())
-    .def(init<const C::OpPath *, bool>())
     .def_readonly("postags", &T::NER::Config::postags)
     .def_readonly("chunktags", &T::NER::Config::chunktags)
     .def_readonly("gazetteers", &T::NER::Config::gazetteers)
@@ -101,7 +98,6 @@ BOOST_PYTHON_MODULE_INIT(tagger){
 
   class_<T::Super::Config, bases<T::Tagger::Config> >("SuperConfig", init<>())
     .def(init<const C::OpPath *>())
-    .def(init<const C::OpPath *, bool>())
     .def_readonly("category_cutoff", &T::Super::Config::category_cutoff)
     .def_readonly("postags", &T::Super::Config::postags)
     .def_readonly("posdict", &T::Super::Config::posdict);

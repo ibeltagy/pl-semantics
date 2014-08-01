@@ -10,9 +10,9 @@
 
 :- dynamic inputDRS/2.
 
-:- multifile     sem/5, id/2.
-:- discontiguous sem/5, id/2.
-:- dynamic       sem/5, id/2.
+:- multifile     sem/3, id/2.
+:- discontiguous sem/3, id/2.
+:- dynamic       sem/3, id/2.
 
 
 /*------------------------------------------------------------------------
@@ -23,15 +23,15 @@ openInput(Dir):-
    retractall(inputDRS(_,_)),
 
    retractall(id(_,_)),
-   retractall(sem(_,_,_,_,_)),
+   retractall(sem(_,_,_)),
    openInputDrs(Dir,t),
 
    retractall(id(_,_)),
-   retractall(sem(_,_,_,_,_)),
+   retractall(sem(_,_,_)),
    openInputDrs(Dir,h),
 
    retractall(id(_,_)),
-   retractall(sem(_,_,_,_,_)),
+   retractall(sem(_,_,_)),
    openInputDrs(Dir,th).
 
 
@@ -82,7 +82,6 @@ checkInput(File):-
    fail.
 
 checkInput(File):-
-%   on_exception(_,load_files([File],[autoload(true)]),fail), !.
    catch(load_files([File],[autoload(true),encoding(utf8)]),_,fail), !.
 
 checkInput(File):-
@@ -95,7 +94,7 @@ checkInput(File):-
 
 loadDRS(D):-
    id(_,I),
-   sem(I,_A,_B,_C,D), !.
+   sem(I,_A,D), !.
 
 loadDRS(_):-
    \+ id(_,_), !,
@@ -103,8 +102,8 @@ loadDRS(_):-
    fail.
 
 loadDRS(_):-
-   \+ sem(_,_,_,_,_), !,
-   error('DRS input file contains no sem/2 terms',[]), 
+   \+ sem(_,_,_), !,
+   error('DRS input file contains no sem/3 terms',[]), 
    fail.
 
 

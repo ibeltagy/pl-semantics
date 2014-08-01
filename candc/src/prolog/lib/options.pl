@@ -172,17 +172,21 @@ option( tokkie, '--output',    -1, _, user_output).
 option( nutcracker, '--help',          0, _, dont      ).
 option( nutcracker, '--version',       0, _, dont      ).
 option( nutcracker, '--force',         1, V, false     ):- member(V,[true,false]).
+option( nutcracker, '--soap',          1, V, false     ):- member(V,[true,false]).
 option( nutcracker, '--modal',         1, V, false     ):- member(V,[true,false]).
 %option( nutcracker, '--vpe',           1, V, false     ):- member(V,[true,false]).
 option( nutcracker, '--plural',        1, V, false     ):- member(V,[true,false]).
 option( nutcracker, '--copula',        1, V, false     ):- member(V,[true,false]).
+option( nutcracker, '--resolve',       1, V, true      ):- member(V,[true,false]).
+option( nutcracker, '--nn',            1, V, false     ):- member(V,[true,false]).
+option( nutcracker, '--x',             1, V, false     ):- member(V,[true,false]).
 option( nutcracker, '--wordnet',       1, V, true      ):- member(V,[true,false]).
 option( nutcracker, '--warnings',      1, V, false     ):- member(V,[true,false]).
 option( nutcracker, '--info',          1, V, false     ):- member(V,[true,false]).
 option( nutcracker, '--graph',         1, V, false     ):- member(V,[true,false]).
 option( nutcracker, '--contradiction', 1, V, false     ):- member(V,[true,false]). % use theorem prover to check for contradictions
 option( nutcracker, '--wsd',           1, V, false     ):- member(V,[true,false]).
-option( nutcracker, '--roles',         1, V, proto     ):- member(V,[proto,verbnet,framenet]).
+option( nutcracker, '--roles',         1, V, proto     ):- member(V,[proto,verbnet]). % ,framenet]).
 option( nutcracker, '--language',      1, V, en        ):- member(V,[en,it]).
 option( nutcracker, '--inference',     1, V, yes       ):- member(V,[yes,no,only]).
 option( nutcracker, '--tp',            1, V, bliksem   ):- member(V,[vampire,bliksem,otter]).
@@ -205,7 +209,6 @@ option( boxer, '--resolve',    1, V, false      ):- member(V,[true,false]).
 option( boxer, '--integrate',  1, V, false      ):- member(V,[true,false]).
 option( boxer, '--warnings',   1, V, false      ):- member(V,[true,false]).
 option( boxer, '--instantiate',1, V, false      ):- member(V,[true,false]).
-option( boxer, '--flat',       1, V, false      ):- member(V,[true,false]).
 option( boxer, '--ccg',        1, V, false      ):- member(V,[true,false]).
 option( boxer, '--elimeq',     1, V, false      ):- member(V,[true,false]).
 option( boxer, '--box',        1, V, false      ):- member(V,[true,false]).
@@ -219,7 +222,7 @@ option( boxer, '--copula',     1, V, true       ):- member(V,[true,false]).
 option( boxer, '--tokid',      1, V, local      ):- member(V,[local,global]).
 option( boxer, '--presup',     1, V, max        ):- member(V,[min,max]).
 option( boxer, '--theory',     1, V, drt        ):- member(V,[drt,sdrt]).
-option( boxer, '--roles',      1, V, proto      ):- member(V,[proto,verbnet,framenet]).
+option( boxer, '--roles',      1, V, proto      ):- member(V,[proto,verbnet]).  % ,framenet]).
 option( boxer, '--format',     1, V, prolog     ):- member(V,[prolog,xml,latex,dot,no]).
 option( boxer, '--semantics',  1, V, drs        ):- member(V,[drs,pdrs,fol,drg,tacitus,der]).
 option( boxer, '--input',     -1, _, user_input ).

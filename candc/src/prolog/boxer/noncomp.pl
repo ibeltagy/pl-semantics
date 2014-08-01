@@ -13,32 +13,32 @@ noncomp(B1:I1:named(X1,Sym1,Type,_),B2:I2:named(X2,Sym2,Type,Sense),K):-
    X1 == X2, B1 == B2,!,
    atomic_list_concat([Sym1,Sym2],'_',Sym3), 
    append(I1,I2,I3), sort(I3,I),
-   K = drs([],[B1:I:named(X1,Sym3,Type,Sense)]).
+   K = B1:I:named(X1,Sym3,Type,Sense).
 
 noncomp(B1:I1:named(X1,Sym1,_Type1,_),B2:I2:named(X2,Sym2,Type2,Sense),K):- 
    X1 == X2, B1 == B2, !,
 %  warning('named entity type mismatch between ~p:~p ~p) and ~p:~p (~p)',[Sym1,Type1,I1,Sym2,Type2,I2]),
    atomic_list_concat([Sym1,Sym2],'_',Sym3), 
    append(I1,I2,I3), sort(I3,I),
-   K = drs([],[B1:I:named(X1,Sym3,Type2,Sense)]).
+   K = B1:I:named(X1,Sym3,Type2,Sense).
 
 noncomp(B1:I1:timex(X1,Date1),B2:I2:timex(X2,Date2),K):- 
    X1 == X2, B1 == B2, !,
    concat_dates(Date1,Date2,Date), 
    append(I1,I2,I3), sort(I3,I),
-   K = drs([],[B1:I:timex(X1,Date)]).
+   K = B1:I:timex(X1,Date).
 
 noncomp(B1:I1:card(X1,Num1,Type),B2:I2:card(X2,Num2,Type),K):- 
    X1 == X2, B1 == B2, number(Num1), number(Num2), Num2 < 10, !,
    Num is Num1 + Num2,
    append(I1,I2,I3), sort(I3,I),
-   K = drs([],[B1:I:card(X1,Num,Type)]).
+   K = B1:I:card(X1,Num,Type).
 
 noncomp(B1:I1:card(X1,Num1,Type),B2:I2:card(X2,Num2,Type),K):- 
    X1 == X2, B1 == B2, number(Num1), number(Num2), !,
    Num is Num1 * Num2,
    append(I1,I2,I3), sort(I3,I),
-   K = drs([],[B1:I:card(X1,Num,Type)]).
+   K = B1:I:card(X1,Num,Type).
 
 
 /*========================================================================

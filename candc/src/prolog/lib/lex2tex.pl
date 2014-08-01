@@ -169,7 +169,7 @@ cond2tex(whq(Drs1,Drs2),L,Stream,9):- !,
    write(Stream,'?'),
    drs2tex(Drs2,t,L1-_,Stream).
 
-cond2tex(whq(_,Drs1,_,Drs2),L,Stream,N):- !, 
+cond2tex(duplex(_,Drs1,_,Drs2),L,Stream,N):- !, 
    cond2tex(whq(Drs1,Drs2),L,Stream,N).
 
 cond2tex(card(X,C,_),L,Stream,1):- !,
@@ -607,7 +607,7 @@ similar(prop(_,A), prop(_,B)):- similar(A,B).
 similar(imp(A1,A2),     imp(B1,B2)):-     similar(A1,B1), similar(A2,B2).
 similar(or(A1,A2),      or(B1,B2)):-      similar(A1,B1), similar(A2,B2).
 similar(whq(A1,A2),     whq(B1,B2)):-     similar(A1,B1), similar(A2,B2).
-similar(whq(_,A1,_,A2), whq(_,B1,_,B2)):- similar(A1,B1), similar(A2,B2).
+similar(duplex(_,A1,_,A2), duplex(_,B1,_,B2)):- similar(A1,B1), similar(A2,B2).
 
 similar(card(_,_,_),    card(_,_,_)).
 similar(named(_,_,T,_), named(_,_,T,_)).

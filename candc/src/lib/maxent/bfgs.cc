@@ -61,7 +61,7 @@ BFGS::llhood(void){
     result += (*context)->llhood(p_classes);
   }
   // Add up the result values for all the contexts (distributed over the nodes)
-  assert(!isnan(result));
+  assert(!std::isnan(result));
 
   if(Cluster::USE_MPI)
     Cluster::sum(result);

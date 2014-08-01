@@ -91,7 +91,7 @@ addTypesCond(prop(X,B1),L,prop(Y,B2)):- !, addTypeVar(X,L,Y), addTypes(B1,t,L-_,
 addTypesCond(or(B1,B2),L,or(B3,B4)):- !, addTypes(B1,t,L-_,B3), addTypes(B2,t,L-_,B4).
 addTypesCond(imp(B1,B2),L,imp(B3,B4)):- !, addTypes(B1,t,L-L1,B3), addTypes(B2,t,L1-_,B4).
 addTypesCond(whq(B1,B2),L,whq(B3,B4)):- !, addTypes(B1,t,L-L1,B3), addTypes(B2,t,L1-_,B4).
-addTypesCond(whq(X,B1,Y,B2),L,whq(X,B3,Y,B4)):- !, addTypes(B1,t,L-L1,B3), addTypes(B2,t,L1-_,B4).
+addTypesCond(duplex(X,B1,Y,B2),L,duplex(X,B3,Y,B4)):- !, addTypes(B1,t,L-L1,B3), addTypes(B2,t,L1-_,B4).
 
 addTypesCond(card(X,A,B),L,card(Y,A,B)):- !, addTypeVar(X,L,Y).
 addTypesCond(named(X,A,B,C),L,named(Y,A,B,C)):- !, addTypeVar(X,L,Y).
@@ -217,7 +217,7 @@ cond2tex(whq(Drs1,Drs2),Stream,9):- !,
    write(Stream,'?'),
    drs2tex(Drs2,Stream).
 
-cond2tex(whq(_,Drs1,_,Drs2),Stream,N):- !, 
+cond2tex(duplex(_,Drs1,_,Drs2),Stream,N):- !, 
    cond2tex(whq(Drs1,Drs2),Stream,N).
 
 cond2tex(card(X,C,_),Stream,1):- !,
@@ -807,7 +807,7 @@ similar(prop(_,A), prop(_,B)):- similar(A,B).
 similar(imp(A1,A2),     imp(B1,B2)):-     similar(A1,B1), similar(A2,B2).
 similar(or(A1,A2),      or(B1,B2)):-      similar(A1,B1), similar(A2,B2).
 similar(whq(A1,A2),     whq(B1,B2)):-     similar(A1,B1), similar(A2,B2).
-similar(whq(_,A1,_,A2), whq(_,B1,_,B2)):- similar(A1,B1), similar(A2,B2).
+similar(duplex(_,A1,_,A2), duplex(_,B1,_,B2)):- similar(A1,B1), similar(A2,B2).
 
 similar(card(_,_,_),    card(_,_,_)).
 similar(timex(_,_),     timex(_,_)).

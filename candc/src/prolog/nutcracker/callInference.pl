@@ -47,26 +47,10 @@ initEngine(Opt,Temp,Axioms,Formula,mace):-
    fol2mace(Axioms,Formula,Stream),
    close(Stream).
 
-initEngine(Opt,Temp,Axioms,Formula,paradox1):- 
-   option(Opt,paradox1),
-   access_file('ext/bin/paradox1',execute), !,
-   atom_concat(Temp,'/paradox1.in',InFile),
-   open(InFile,write,Stream),
-   fol2tptpOld(Axioms,not(Formula),Stream),
-   close(Stream).
-
-initEngine(Opt,Temp,Axioms,Formula,paradox2):- 
-   option(Opt,paradox2),
-   access_file('ext/bin/paradox2',execute), !,
-   atom_concat(Temp,'/paradox2.in',InFile),
-   open(InFile,write,Stream),
-   fol2tptp(Axioms,not(Formula),Stream),
-   close(Stream).
-
-initEngine(Opt,Temp,Axioms,Formula,paradox3):- 
-   option(Opt,paradox3),
-   access_file('ext/bin/paradox3',execute), !,
-   atom_concat(Temp,'/paradox3.in',InFile),
+initEngine(Opt,Temp,Axioms,Formula,paradox):- 
+   option(Opt,paradox),
+   access_file('ext/bin/paradox',execute), !,
+   atom_concat(Temp,'/paradox.in',InFile),
    open(InFile,write,Stream),
    fol2tptp(Axioms,not(Formula),Stream),
    close(Stream).
@@ -259,6 +243,29 @@ paradox2f([Symbol:0|L],D1-D2):-
       paradox2f(L,[f(2,Functor,[])|D1]-D2)
    ).
 
+paradox2f([Symbol:1|L],D1-D2):-
+   functor(Symbol,Functor,3), 
+   \+ Functor = '$', !,
+   arg(1,Symbol,Arg1),
+   arg(2,Symbol,Arg2),
+   arg(3,Symbol,Arg3),
+   (
+      select(f(3,Functor,E),D1,D3), !,
+      paradox2f(L,[f(3,Functor,[(Arg1,Arg2,Arg3)|E])|D3]-D2)
+   ;
+      paradox2f(L,[f(3,Functor,[(Arg1,Arg2,Arg3)])|D1]-D2)
+   ).
+
+paradox2f([Symbol:0|L],D1-D2):-
+   functor(Symbol,Functor,3), 
+   \+ Functor = '$', !,
+   (
+      member(f(3,Functor,_),D1), !,
+      paradox2f(L,D1-D2)
+   ;
+      paradox2f(L,[f(3,Functor,[])|D1]-D2)
+   ).
+
 paradox2f([_|L],D1-D2):-
    paradox2f(L,D1-D2).
 
@@ -318,6 +325,13 @@ mace2f([predicate(Relation,V)|Terms],D,[f(2,Functor,X)|F]):-
 	Relation =.. [Functor,_,_], !,
 	length(D,Size),
 	positivePairValues(V,Size,1,1,X),
+	mace2f(Terms,D,F).
+
+mace2f([predicate(Relation,_V)|Terms],D,[f(3,Functor,X)|F]):-
+	Relation =.. [Functor,_,_,_], !,
+%	length(D,Size),
+%	positivePairValues(V,Size,1,1,X), 
+        X=[],   % hack for now
 	mace2f(Terms,D,F).
 
 mace2f([_|Terms],D,F):-

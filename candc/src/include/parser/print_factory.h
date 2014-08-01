@@ -13,8 +13,12 @@ namespace NLP {
   namespace CCG {
 
     class PrinterFactory: public StreamPrinter {
+    protected:
+      static void die_unknown_printer(const std::string &name);
+
     public:
       static void check(const std::string &name);
+
     protected:
       StreamPrinter *printer;
 
@@ -23,10 +27,9 @@ namespace NLP {
       virtual void lexical(Sentence &){}
 
       StreamPrinter *create_printer(const std::string &name) const;
+
     public:
-      PrinterFactory(const std::string &name, IO::Output &out,
-                    IO::Log &log, Categories &cats,
-                    const Format FORMAT);
+      PrinterFactory(const std::string &name, IO::Output &out, IO::Log &log, Categories &cats, const Format FORMAT);
 
       virtual ~PrinterFactory(void){
         delete printer;

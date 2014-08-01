@@ -61,7 +61,7 @@ Unify::_unify(const Cat *c1, const Cat *c2){
 
     if(c1->flags != c2->flags)
       return false;
-    if(c1->res->uhash != c2->res->uhash || 
+    if(c1->res->uhash != c2->res->uhash ||
        c1->arg->uhash != c2->arg->uhash)
       return false;
 
@@ -99,8 +99,7 @@ Unify::_matrix2trans(void){
         old2[nvariables] = j;
         ++nvariables;
         if(nvariables > Vars::NVARS)
-          NLP::Exception("too many variables created in unification");
-          
+          throw NLP::Exception("too many variables created in unification");
       }
 }
 
@@ -108,7 +107,7 @@ void
 Unify::add_var(VarID var, VarID trans[], VarID old[]){
   if(var && !trans[var]){
     if(nvariables >= Vars::NVARS)
-      NLP::Exception("too many variables added from result category");
+      throw NLP::Exception("too many variables added from result category");
 
     trans[var] = nvariables;
     old[nvariables] = var;

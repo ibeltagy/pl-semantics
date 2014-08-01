@@ -59,22 +59,6 @@ drs2html(merge(B1,B2),Stream,Tab):- !,
    drs2html(B2,Stream,NewTab),
    tab(Stream,Tab), format(Stream,'</td><td>)</td></tr></table>~n',[]).
 
-drs2html(smerge(B1,B2),Stream,Tab):- !,
-   NewTab is Tab + 2,
-   K1 = 'K1', K2 = 'K2',
-   tab(Stream,Tab), format(Stream,'<table>~n',[]),
-   tab(Stream,Tab), format(Stream,' <tr id="dom"><td>~p ~p</td></tr>~n',[K1,K2]),
-   tab(Stream,Tab), format(Stream,' <tr id="con"><td>~n',[]),
-   tab(Stream,Tab), format(Stream,' <table valign="top"><tr valign="top"><td>~p=</td><td>~n',[K1]),
-   drs2html(B1,Stream,NewTab),
-   tab(Stream,Tab), format(Stream,' </td>~n',[]),
-   tab(Stream,Tab), format(Stream,' <td>~p=</td><td>~n',[K2]),
-   drs2html(B2,Stream,NewTab),
-   tab(Stream,Tab), format(Stream,' </td></tr></table>',[]),
-   tab(Stream,Tab), format(Stream,' </td></tr>~n',[]),
-   tab(Stream,Tab), format(Stream,' <tr id="con"><td>elaboration(~p,~p)</td></tr>~n',[K1,K2]),
-   tab(Stream,Tab), format(Stream,'</table>~n',[]).
-
 
 /*========================================================================
    Converting DRS-domains to XML (with tab insertion)
@@ -158,18 +142,8 @@ conds2html([_Index:imp(B1,B2)|L],Stream,Tab):- !,
    tab(Stream,Tab), format(Stream,'</td></tr></table>~n',[]),
    conds2html(L,Stream,Tab).
 
-conds2html([_Index:whq(B1,B2)|L],Stream,Tab):- !,
-   NewTab is Tab + 1,
-   tab(Stream,Tab), format(Stream,'<table><tr><td>~n',[]),
-%  index2html(Index,Stream,Tab),
-   drs2html(B1,Stream,NewTab),
-   tab(Stream,Tab), format(Stream,'</td><td>?</td><td>~n',[]),
-   drs2html(B2,Stream,NewTab),
-   tab(Stream,Tab), format(Stream,'</td></tr></table>~n',[]),
-   conds2html(L,Stream,Tab).
-
-conds2html([Index:whq(_,B1,_,B2)|L],Stream,Tab):- !,
-   conds2html([Index:whq(B1,B2)|L],Stream,Tab).
+conds2html([Index:duplex(_,B1,_,B2)|L],Stream,Tab):- !,
+   conds2html([Index:imp(B1,B2)|L],Stream,Tab).
 
 conds2html([_Index:pred(Arg,X,_Type,_Sense)|L],Stream,Tab):- !,
    tab(Stream,Tab),   
@@ -293,10 +267,6 @@ cons2html([Label:merge(L1,L2)|Cons],Stream):- !,
    format(Stream,'  <merge label="~p"><label>~p</label><label>~p</label></merge>~n',[Label,L1,L2]),
    cons2html(Cons,Stream).
 
-cons2html([Label:smerge(L1,L2)|Cons],Stream):- !,
-   format(Stream,'  <smerge label="~p"><label>~p</label><label>~p</label></smerge>~n',[Label,L1,L2]),
-   cons2html(Cons,Stream).
-
 cons2html([Label:drs(D,Labels)|Cons],Stream):- !,
    format(Stream,'  <drs label="~p">~n',[Label]),
    dom2html(D,Stream,3),
@@ -400,15 +370,8 @@ cons2html([Label:Index:imp(L1,L2)|Cons],Stream):- !,
    format(Stream,'  </imp>~n',[]),
    cons2html(Cons,Stream).
 
-cons2html([Label:Index:whq(_,L1,_,L2)|Cons],Stream):- !,
-   cons2html([Label:Index:whq(L1,L2)|Cons],Stream).
-
-cons2html([Label:Index:whq(L1,L2)|Cons],Stream):- !,
-   format(Stream,'  <whq label="~p">~n',[Label]),
-   format(Stream,'  <label>~p</label>~n  <label>~p</label>~n',[L1,L2]),
-   index2html(Index,Stream,2),
-   format(Stream,'  </whq>~n',[]),
-   cons2html(Cons,Stream).
+cons2html([Label:Index:duplex(_,L1,_,L2)|Cons],Stream):- !,
+   cons2html([Label:Index:imp(L1,L2)|Cons],Stream).
 
 
 /*========================================================================

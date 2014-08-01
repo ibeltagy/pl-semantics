@@ -147,7 +147,7 @@ void
 BoxerPrinter::derivation(const KBest &root, Sentence &sent, const ushort rank){
   check_format(sent, FORMAT);
 
-  out.stream << "ccg(" << nsentences*20+rank << ',';
+  out.stream << "ccg(" << nsentences*100+rank << ',';
   if(FORMAT & FMT_WS)
     out.stream << '\n';
   recurse(root, Features::NONE, sent, 1);

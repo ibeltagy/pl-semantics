@@ -10,6 +10,7 @@
 
 #include "extract/_baseimpl.h"
 #include <unistd.h>
+
 using namespace std;
 
 namespace NLP { namespace Extract {

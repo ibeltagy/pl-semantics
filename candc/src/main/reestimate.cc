@@ -11,6 +11,8 @@
 
 #include "base.h"
 
+#include "cluster.h"
+
 #include "prob.h"
 
 #include "config/config.h"
@@ -75,6 +77,7 @@ run(int argc, char **argv){
 
   Timer timer("total");
 
+  NLP::Cluster::init(argc, argv, false);
   MaxEnt::GIS *solver = 0;
   if(model_cfg.model.solver() == "gis")
     solver = new MaxEnt::GIS(model_cfg.model, verbose());

@@ -2,7 +2,6 @@
 :- module(categories,
           [category/3,       %  +Type, +Cat, -Mood
            category/4,       %  +Type, +Cat, -Roles, -Mood
-           category/5,       %  +Type, +Cat, -Roles, +PoS, -Mood
            category_type/5,  %  +Cat, +Sym, -ArgStruc, -Roles, -Mood
            roles/4,
            sense/4,
@@ -44,10 +43,21 @@ rel(Rel,Att-[relation:Rel|Att],Rel).
 
 
 /* -------------------------------------------------------------------------
+   Thematic Roles introduced by PPs
+------------------------------------------------------------------------- */
+
+roles(_,((s:X\np)\(s:X\np))/np,Roles,A-A):- option('--roles',verbnet), att(A,verbnet,Roles), \+ Roles=[], !.
+roles(by,((s:X\np)\(s:X\np))/np,Roles,A-[verbnet:Roles|A]):- option('--roles',verbnet), !, Roles = ['Agent'].
+roles(_,((s:X\np)\(s:X\np))/np,Roles,A-[verbnet:Roles|A]):- option('--roles',verbnet), !, Roles = ['Instrument'].
+roles(_,((s:X\np)\(s:X\np))/np,Roles,A-A):- option('--roles',proto), !, Roles = [agent].
+
+
+/* -------------------------------------------------------------------------
    Thematic Roles: passive
 ------------------------------------------------------------------------- */
 
 roles(Verb,(s:pss\np)/np,[Role1,Role2],A):- roles(Verb,((s:dcl\np)/np)/np,[Role1,Role2,_],A), !.
+roles(Verb,(s:pss\np)/s:M,[Role1,Role2],A):- roles(Verb,((s:dcl\np)/s:M)/np,[Role1,Role2,_],A), !.
 roles(Verb,(s:pss\np)/pp,[Role],A):- roles(Verb,((s:dcl\np)/pp)/np,[Role,_],A), !.
 roles(Verb,((s:pss\np)/np)/pp,[Role1,Role2],A):- roles(Verb,(((s:dcl\np)/np)/pp)/np,[Role1,Role2,_],A), !.
 roles(Verb,s:pss\np,[Role],A):- roles(Verb,(s:dcl\np)/np,[Role,_],A), !.
@@ -66,6 +76,7 @@ roles(Verb,Cat,Roles,A-A):- option('--roles',proto), proto(Verb,Cat,Roles), !.
    Thematic Roles: fall-back rules
 ------------------------------------------------------------------------- */
 
+roles(Verb,(s:M\np)\np,Roles,A):- !, roles(Verb,(s:M\np)/np,Roles,A).
 roles(Verb,s:inv/np,Roles,A):- !, roles(Verb,s:dcl\np,Roles,A).
 roles(Verb,(s:q/np)/np,Roles,A):- !, roles(Verb,(s:dcl\np)/np,Roles,A).
 roles(Verb,(s:M\pp)/np,Roles,A):- !, roles(Verb,s:M\np,Roles,A).
@@ -74,26 +85,30 @@ roles(Verb,s:M/np,Roles,A):- !, roles(Verb,s:M\np,Roles,A).
 roles(Verb,C/pp,Roles,A):- !, roles(Verb,C,Roles,A).
 roles(Verb,(C/pp)/np,Roles,A):- !, roles(Verb,C/np,Roles,A).
 roles(Verb,(C/pp)/s:X,Roles,A):- !, roles(Verb,C/s:X,Roles,A).
+roles(Verb,(s:M\np)/(s:X\np),Roles,A):- !, roles(Verb,(s:M\np)/s:X,Roles,A).
 
 
 /* -------------------------------------------------------------------------
    Thematic Roles: no roles could be assigned
 ------------------------------------------------------------------------- */
 
-roles(Verb,Cat,[],A-A):- 
-   warning('role assignment failure for ~p with category ~p',[Verb,Cat]).
+roles(Verb,Cat,Roles,A-A):- 
+   warning('role assignment failure for ~p with category ~p',[Verb,Cat]),
+   Roles = [].
 
 
 /* -------------------------------------------------------------------------
    Proto (roles are listed in the order of arguments, not surface order!)
 ------------------------------------------------------------------------- */
 
+proto(_, s:adj\np,           [topic]):- !.
+proto(_, (s:adj\np)\np,      [theme,topic]):- !.
 proto(_, s:_\np,             [agent]):- !.
 proto(_, (s:_\np)/np,        [patient,agent]):- !.
 proto(_, (s:_\np)/s:_,       [theme,agent]):- !.
 proto(_, ((s:_\np)/np)/np,   [theme,recipient,agent]):- !.
 proto(_, ((s:_\np)/s:_)/np,  [recipient,theme,agent]):- !.
-proto(_, (s:_\np)/(s:_\np),  [theme,agent]):- !.
+
 
 
 %%%%%%%%%%%%%%%% OLD STUFF %%%%%%%%%%%%%%%%%%
@@ -381,22 +396,25 @@ category(socv, ((s:ng\np)/(s:pt\np))/np,     [agent,patient],  ng).
 %category(cv, (s:b\np)/(s:to\np),          [agent,theme], _,          b).
 
 %category(cv, (s:pt\np)/(s:ng\np),         [agent,theme], _,        pt).
-category(cv, (s:b\np)/(s:ng\np),          [agent,theme], _,          b).
-category(cv, (s:pss\np)/(s:ng\np),        [patient,theme], _,      pss).
 
-category(cv, (s:ng\np)/(s:dcl\np),        [agent,theme], _,         ng).
-category(cv, (s:pss\np)/(s:dcl\np),       [patient,theme], _,      pss).
+%category(cv, (s:b\np)/(s:ng\np),          [agent,theme], _,          b).
+%category(cv, (s:pss\np)/(s:ng\np),        [patient,theme], _,      pss).
 
-category(cv, (s:pss\np)/(s:b\np),         [patient,theme], _,      pss).
-category(cv, (s:ng\np)/(s:b\np),          [agent,theme], _,         ng).
-category(cv, (s:pt\np)/(s:b\np),          [agent,theme], _,         pt).
+%category(cv, (s:ng\np)/(s:dcl\np),        [agent,theme], _,         ng).
+%category(cv, (s:pss\np)/(s:dcl\np),       [patient,theme], _,      pss).
+
+%category(cv, (s:pss\np)/(s:b\np),         [patient,theme], _,      pss).
+%category(cv, (s:ng\np)/(s:b\np),          [agent,theme], _,         ng).
+%category(cv, (s:pt\np)/(s:b\np),          [agent,theme], _,         pt).
 
 %category(cv, (s:ng\np)/(s:ng\np),         [agent,theme], 'VBG',     ng).
 %category(cv, (s:b\np)/(s:b\np),           [agent,theme], 'VB',       b).  % e.g. will help draw
 
-category(cv, (s:ng\np)\(s:adj\np),        [agent,theme], _,         ng).
+%category(cv, (s:ng\np)/(s:adj\np),        [agent,theme], _,         ng).
+%category(cv, (s:pt\np)/(s:adj\np),        [agent,theme], _,         pt).
 
-category(cv, (s:pss\np)/(s:pt\np),        [patient,theme], _,      pss).
-category(cv, (s:pss\np)/(s:pss\np),       [patient,theme], 'VBN',  pss).
-category(cv, (s:pss\np)/(s:pss\np),       [patient,theme], 'VBD',  pss).
+%category(cv, (s:pss\np)/(s:pt\np),        [patient,theme], _,      pss).
+%category(cv, (s:pss\np)/(s:adj\np),        [patient,theme], _,      pss).
+%category(cv, (s:pss\np)/(s:pss\np),       [patient,theme], 'VBN',  pss).
+%category(cv, (s:pss\np)/(s:pss\np),       [patient,theme], 'VBD',  pss).
 

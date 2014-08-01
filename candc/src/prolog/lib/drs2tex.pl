@@ -102,7 +102,7 @@ cond2tex(whq(Drs1,Drs2),Stream,9):- !,
    write(Stream,'?'),
    drs2tex(Drs2,Stream).
 
-cond2tex(whq(_,Drs1,_,Drs2),Stream,N):- !, 
+cond2tex(duplex(_,Drs1,_,Drs2),Stream,N):- !, 
    cond2tex(whq(Drs1,Drs2),Stream,N).
 
 cond2tex(card(X,C,_),Stream,1):- !,

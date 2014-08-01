@@ -423,6 +423,7 @@ GIS::save(const std::string &PREFACE){
     throw IOException("could not open weights file for writing", model.weights());
 
   stream << PREFACE << '\n';
+  stream.precision(15);
 
   for(ulong attr = 0; attr != attributes.size() - 1; ++attr)
     for(Feature* feature = attributes[attr]; feature != attributes[attr + 1]; ++feature)

@@ -67,7 +67,8 @@ Model::check(void){
     throw ConfigError("the smoothing option must be one of [none, gaussian]", update.NAME);
 }
 
-Config::Config(const std::string &name, const std::string &desc, const OpPath *base, Mode mode, double SIGMA, ulong NITER)
+Config::Config(const std::string &name, const std::string &desc,
+	       const OpPath *base, Mode mode, double SIGMA, ulong NITER)
   : Directory(name, desc, base, mode == TRAIN ? IGNORE_MISSING : (mode == ESTIMATE ? IGNORE_ADDITIONAL : SHOW_ALL)),
     model(name, path, SIGMA, NITER, mode == DECODE ? (HIDE_HELP | HIDE_CONFIG) : SHOW_ALL){
   reg(model);

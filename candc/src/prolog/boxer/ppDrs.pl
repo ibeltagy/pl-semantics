@@ -77,12 +77,7 @@ ppConds(drs([],[I:or(A1,A2)|Conds1]),P,E,W,C,CD1-CD3,drs(D2,[I:or(A3,A4)|Conds2]
    ppDrs(A2,P,E,W,C,CD1-_,A4),
    ppConds(drs([],Conds1),P,E,W,C,CD1-CD3,drs(D2,Conds2)).
 
-ppConds(drs([],[I:whq(A1,A2)|Conds1]),P,E,W,C,CD1-CD3,drs(D2,[I:whq(A3,A4)|Conds2])):- !,
-   ppDrs(A1,P,E,W,C,CD1-CD2,A3),
-   ppDrs(A2,P,E,W,C,CD2-_,A4),
-   ppConds(drs([],Conds1),P,E,W,C,CD1-CD3,drs(D2,Conds2)).
-
-ppConds(drs([],[I:whq(Type,A1,Var,A2)|Conds1]),P,E,W,C,CD1-CD3,drs(D2,[I:whq(Type,A3,Var,A4)|Conds2])):- !,
+ppConds(drs([],[I:duplex(Type,A1,Var,A2)|Conds1]),P,E,W,C,CD1-CD3,drs(D2,[I:duplex(Type,A3,Var,A4)|Conds2])):- !,
    ppDrs(A1,P,E,W,C,CD1-CD2,A3),
    ppDrs(A2,P,E,W,C,CD2-_,A4),
    ppConds(drs([],Conds1),P,E,W,C,CD1-CD3,drs(D2,Conds2)).

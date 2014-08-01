@@ -19,21 +19,17 @@ sortalCheckDrs(B,Var):-
    Sortal Check (DRSs)
 ========================================================================*/
 
-sortalCheckDrs(drs([],C),Var,P1,P2):- !,
+sortalCheckDrs(_:drs([],C),Var,P1,P2):- !,
    sortalCheckConds(C,Var,P1,P2).
 
-sortalCheckDrs(drs([_:X|D],C),Var,P1,P2):- 
+sortalCheckDrs(K:drs([_:_:X|D],C),Var,P1,P2):- 
    X == Var, !,
-   sortalCheckDrs(drs(D,C),Var,[ref([])|P1],P2).
+   sortalCheckDrs(K:drs(D,C),Var,[ref([])|P1],P2).
 
 sortalCheckDrs(drs([_|D],C),Var,P1,P2):- !,
    sortalCheckDrs(drs(D,C),Var,P1,P2).
 
 sortalCheckDrs(merge(B1,B2),Var,P1,P3):- !,
-   sortalCheckDrs(B1,Var,P1,P2),
-   sortalCheckDrs(B2,Var,P2,P3).
-
-sortalCheckDrs(smerge(B1,B2),Var,P1,P3):- !,
    sortalCheckDrs(B1,Var,P1,P2),
    sortalCheckDrs(B2,Var,P2,P3).
 
@@ -75,12 +71,7 @@ sortalCheckConds([imp(B1,B2)|C],Var,P1,P4):- !,
    sortalCheckDrs(B2,Var,P2,P3),
    sortalCheckConds(C,Var,P3,P4).
 
-sortalCheckConds([whq(B1,B2)|C],Var,P1,P4):- !,
-   sortalCheckDrs(B1,Var,P1,P2),
-   sortalCheckDrs(B2,Var,P2,P3),
-   sortalCheckConds(C,Var,P3,P4).
-
-sortalCheckConds([whq(_,B1,_,B2)|C],Var,P1,P4):- !,
+sortalCheckConds([duplex(_,B1,_,B2)|C],Var,P1,P4):- !,
    sortalCheckDrs(B1,Var,P1,P2),
    sortalCheckDrs(B2,Var,P2,P3),
    sortalCheckConds(C,Var,P3,P4).
@@ -98,7 +89,7 @@ sortalCheckConds([pred(X,Sym,_,_)|C],Var,[ref(Ps)|P1],P2):-
 sortalCheckConds([pred(_,_,_,_)|C],Var,P1,P2):-  
    sortalCheckConds(C,Var,P1,P2).
 
-sortalCheckConds([named(X,Title,ttl,_)|C],Var,P1,P3):-  
+sortalCheckConds([named(X,Title,_,ttl)|C],Var,P1,P3):-  
    X == Var,
    title(_,Title,Sym),  
    select(ref(Ps),P1,P2), !,

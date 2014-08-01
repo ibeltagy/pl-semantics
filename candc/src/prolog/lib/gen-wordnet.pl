@@ -2,6 +2,7 @@
 :- ['ext/PrologWordNet/wn_s.pl'].    % synsets, s/6
 :- ['ext/PrologWordNet/wn_hyp.pl'].  % hyponyms, hyp/2
 :- ['ext/PrologWordNet/wn_ins.pl'].  % instances, ins/2
+:- ['ext/PrologWordNet/wn_ant.pl'].  % antonyms, ant/4
 
 :- use_module(library(lists),[member/2]).
 
@@ -20,11 +21,12 @@ main:-
 ========================================================================= */
 
 gen(Stream):-
-   member(POS,[n,v]),                   % Possible Values: n,v,a,r,s
+   member(POS,[n,v,a,r]),                   % Possible Values: n,v,a,r,s
    s(ID,_,Token,POS,Sense,_),        
    synonyms(ID,POS,[]-Syn),
    hypero(ID,POS,Hyp,Type),
-   print_rel(Stream,Token:Sense,Syn,Hyp,Type),
+   antonyms(ID,POS,Ant),
+   print_rel(Stream,Token:Sense,Syn,Hyp,Ant,Type),
    fail.
 
 gen(_).
@@ -43,6 +45,17 @@ hypero(ID1,Pos,S,Pos):-
    synonyms(ID2,Pos,[]-S).
 
 hypero(_,Pos,[],Pos).
+
+
+/* =========================================================================
+   Antonyms
+========================================================================= */
+
+antonyms(ID1,a,S):-
+   ant(ID1,1,ID2,1), !,
+   synonyms(ID2,a,[]-S).
+
+antonyms(_,_,[]).
 
 
 /* =========================================================================
@@ -65,9 +78,10 @@ synonyms(_,_,_,L-L).
    Output
 ========================================================================= */
 
-print_rel(Stream,Concept,Syn,Hyp,Type):-
+print_rel(Stream,Concept,Syn,Hyp,Ant,Type):-
    print_syn(Syn,Concept,Type,Stream),
-   print_hyp(Hyp,Concept,Type,Stream).
+   print_hyp(Hyp,Concept,Type,Stream),
+   print_ant(Ant,Concept,Type,Stream).
 
 
 /* =========================================================================
@@ -87,7 +101,7 @@ print_syn([X:XS|L],Tok:Sense,Type,Stream):-
 
 
 /* =========================================================================
-   Output
+   Output HYP
 ========================================================================= */
 
 print_hyp([],_,_,_).
@@ -99,6 +113,22 @@ print_hyp([Sym:Sense|L],Tok:Sense,Type,Stream):-
 print_hyp([X:XS|L],Tok:Sense,Type,Stream):-
    symbol(Tok,Sym),
    format(Stream,'isa~p(~q,~q,~q,~q).~n',[Type,Sym,Sense,X,XS]),
+   print_hyp(L,Tok:Sense,Type,Stream).
+
+
+/* =========================================================================
+   Output ANTONYM
+========================================================================= */
+
+print_ant([],_,_,_).
+
+print_ant([Sym:Sense|L],Tok:Sense,Type,Stream):- 
+   symbol(Tok,Sym), !,
+   print_ant(L,Tok:Sense,Type,Stream).
+
+print_ant([X:XS|L],Tok:Sense,Type,Stream):-
+   symbol(Tok,Sym),
+   format(Stream,'isnota~p(~q,~q,~q,~q).~n',[Type,Sym,Sense,X,XS]),
    print_hyp(L,Tok:Sense,Type,Stream).
 
 

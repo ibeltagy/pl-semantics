@@ -3,7 +3,7 @@
 
 %:- use_module(semlib(errors),[warning/2]).
 %:- use_module(semlib(options),[option/2]).
-:- use_module(library(lists),[select/3]).
+:- use_module(library(lists),[select/3,append/3]).
 
 
 /* ========================================================================
@@ -41,10 +41,6 @@ pdrs2drs(merge(B1,B2),G1,G3,merge(B3,B4)):- !,
    pdrs2drs(B1,G1,G2,B3),
    pdrs2drs(B2,G2,G3,B4).
 
-pdrs2drs(smerge(B1,B2),G1,G3,smerge(B3,B4)):- !,
-   pdrs2drs(B1,G1,G2,B3),
-   pdrs2drs(B2,G2,G3,B4).
-
 pdrs2drs(alfa(T,B1,B2),G1,G3,alfa(T,B3,B4)):- !,
    pdrs2drs(B1,G1,G2,B3),
    pdrs2drs(B2,G2,G3,B4).
@@ -69,8 +65,14 @@ pdrs2drs([],G,G,[]):- !.
 
 dom2drs([],G,G).
 
+dom2drs([B1:Ind1:Ref1|L],G1,G3):-                 
+   select(dom(B1),G1,G2,dom(B2):D1-D2),
+   select(Ind2:Ref2,D1,D3), Ref1 == Ref2, !,
+   append(Ind1,Ind2,Ind),
+   dom2drs(L,[dom(B2):[Ind:Ref1|D3]-D2|G2],G3).  
+
 dom2drs([B1:Ind:Ref|L],G1,G3):-                 
-   select(dom(B1),G1,G2,dom(B2):D1-D2),         
+   select(dom(B1),G1,G2,dom(B2):D1-D2),
    dom2drs(L,[dom(B2):[Ind:Ref|D1]-D2|G2],G3).  
 
 
@@ -79,6 +81,13 @@ dom2drs([B1:Ind:Ref|L],G1,G3):-
 ======================================================================== */
 
 cons2drs([],G,G).
+
+cons2drs([B1:Ind1:Con1|L],G1,G4):-        
+   con2drs(Con1,G1,G2,Con2),
+   select(con(B1),G2,G3,con(B2):C1-C2), 
+   select(Ind2:Con3,C1,C3), Con2 == Con3, !,
+   append(Ind1,Ind2,Ind),
+   cons2drs(L,[con(B2):[Ind:Con2|C3]-C2|G3],G4).  
 
 cons2drs([B1:Ind:Con1|L],G1,G4):-        
    con2drs(Con1,G1,G2,Con2),
@@ -114,7 +123,7 @@ con2drs(whq(B1,B2),G1,G3,whq(B3,B4)):- !,
    pdrs2drs(B1,G1,G2,B3),
    pdrs2drs(B2,G2,G3,B4).
 
-con2drs(whq(X,B1,Y,B2),G1,G3,whq(X,B3,Y,B4)):- !,
+con2drs(duplex(X,B1,Y,B2),G1,G3,duplex(X,B3,Y,B4)):- !,
    pdrs2drs(B1,G1,G2,B3),
    pdrs2drs(B2,G2,G3,B4).
 

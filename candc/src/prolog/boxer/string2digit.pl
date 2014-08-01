@@ -1,24 +1,43 @@
 
-:- module(string2digit,[string2digit/2]).
+:- module(string2digit,[string2digit/2,string2score/2]).
 
-:- use_module(library(lists),[append/3]).
+:- use_module(library(lists),[member/2,append/3]).
 
 /*========================================================================
    Converting strings to digits
 ========================================================================*/
 
-string2digit(X,Y):-
+string2digit(X,Y):-       %%% forty-five ==> 45
    atom(X),
-   ( atomic_list_concat([Tens,Ones],'-',X),
-     s2d(Tens,TensNum), TensNum < 91, TensNum > 19, 
-     s2d(Ones,OnesNum), OnesNum < 10, !,
-     Y is TensNum+OnesNum, !
-   ; s2d(X,Y) ), !.
+   member(Sep,['-','~']),
+   atomic_list_concat([Tens,Ones],Sep,X),
+   string2digit(Tens,TensNum), TensNum < 91, TensNum > 19, 
+   string2digit(Ones,OnesNum), OnesNum < 10, !,
+   Y is TensNum+OnesNum.
 
-string2digit(X,Y):-       %%% remove comma's from number expressions
+string2digit(X,Y):-       %%% two-thousand ==> 2000
+   atom(X),
+   member(Sep,['-','~']),
+   atomic_list_concat([Ones,Cens],Sep,X),
+   string2digit(Ones,OnesNum), 
+   string2digit(Cens,CensNum), OnesNum < CensNum, !,
+   Y is OnesNum*CensNum.
+
+string2digit(X,Y):-       %%% two ==> 2
+   atom(X),
+   s2d(X,Y), !.
+
+string2digit(X,Y):-       %%% remove two commas from number expressions
    name(X,Codes1), 
-   append(Codes0,[44,A,B,C],Codes1),
-   append(Codes0,[A,B,C],Codes2),
+   append(Codes0,[44,A,B,C,44,D,E,F],Codes1), 
+   append(Codes0,[A,B,C,D,E,F],Codes2), 
+   name(Y,Codes2),
+   number(Y), !.
+
+string2digit(X,Y):-       %%% remove one comma from number expressions
+   name(X,Codes1), 
+   append(Codes0,[44,A,B,C],Codes1), 
+   append(Codes0,[A,B,C],Codes2), 
    name(Y,Codes2),
    number(Y), !.
 
@@ -26,6 +45,17 @@ string2digit(X,Y):-       %%% trick to convert atoms into numbers
    name(X,Codes), 
    name(Y,Codes),
    number(Y), !.
+
+
+/*========================================================================
+   Converting strings to score
+========================================================================*/
+
+string2score(X,Y):-      
+   name(X,[N1|Codes]),
+   N1 > 47, N1 < 58,
+   append(_,[45,N2|_],Codes),
+   N2 > 47, N2 < 58, !, Y=X.
 
 
 /*========================================================================

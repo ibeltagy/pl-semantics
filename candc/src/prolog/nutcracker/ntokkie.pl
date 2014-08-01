@@ -1,5 +1,5 @@
 
-% tokkie.pl, by Johan Bos
+% the new tokkie.pl, by Johan Bos
 
 /* ========================================================================
    File Search Paths
@@ -43,7 +43,9 @@ tokkie:-
    read_stream_to_codes(InStream,Codes),
    close(InStream),
    initTokkie,
-   readLines(Codes,0,1,OutStream).
+   readLines(Codes,0,1,OutStream,Tokens),
+   outputIOB(Codes,Tokens,OutStream),
+   close(OutStream).
 
 tokkie:-
    setOption(tokkie,'--help',do), !,
@@ -54,17 +56,17 @@ tokkie:-
    Read lines
 ---------------------------------------------------------------------- */
 
-readLines(Codes1,I1,S1,Stream):-
+readLines(Codes1,I1,S1,Stream,[Tokens|L]):-
    begSent(Codes1,I1,Codes2,I2), !,       % determine begin of a new sentence
    endSent(Codes2,I2,Codes3,I3,Rest,[]),  % determine end of this sentence  
 %  format(Stream,'sen(~p,~p,~s).~n',[I2,I3,Codes3]),
 %  write(Codes3),nl,
    tokenise(Codes3,I2,I2,T-T,Tokens),     % split sentence into tokens
-   printTokens(Tokens,S1,1,Stream),
+   outputTokens(Tokens,S1,Stream),
    S2 is S1 + 1,                          % increase sentence counter
-   readLines(Rest,I3,S2,Stream).          % process remaining of document
+   readLines(Rest,I3,S2,Stream,L).        % process remaining of document
 
-readLines(_,_,_,Stream):- close(Stream).
+readLines(_,_,_,_,[]).
 
 
 /* ----------------------------------------------------------------------
@@ -113,8 +115,12 @@ endSent([C|C1],I1,[C|C2],I3,Rest,Last):-
    I2 is I1 + 1,
    endSent(C1,I2,C2,I3,Rest,[C|Last]).
 
-% Case 4: A full stop after a non-abbreviation 
+% Case 4: A full stop/question/exclemation mark after a non-abbreviation 
 %         --> sentence boundary
+endSent([End|Rest],I1,[End],I2,Rest,_):- 
+   member(End,[46,63,33]), !, 
+   I2 is I1 + 1.
+
 endSent([46|Rest],I1,[46],I2,Rest,_):- !, 
    I2 is I1 + 1.
 
@@ -202,10 +208,10 @@ tokenise(Input,CurrentPos,StartPos,OldSofar,Tokens):-
 %
 tokenise(Input,CurrentPos,StartPos,Sofar-Tail,[Token|Tokens]):-
    trysplit(Input,Left,Right,Rest,LenLeft,LenRight), !,
-%format('Input: ~s~n',[Input]),
-%format('Left: ~s~n',[Left]),
-%format('Right: ~s~n',[Right]),
-%format('Rest: ~s~n',[Rest]),
+%  format('Input: ~s~n',[Input]),
+%  format('Left: ~s~n',[Left]),
+%  format('Right: ~s~n',[Right]),
+%  format('Rest: ~s~n',[Rest]),
    Pos is CurrentPos + LenLeft,
    NewPos is Pos + LenRight,
    Tail = Left,
@@ -222,7 +228,79 @@ tokenise([X|Codes],CurrentPos,StartPos,Sofar-Tail,Tokens):-
 
 
 /* ----------------------------------------------------------------------
-   Ouptut Tokens
+   Output Tokens
+---------------------------------------------------------------------- */
+
+outputTokens(Tokens,S,Stream):-
+   option('--mode',poor), !,
+   printTokens(Tokens,S,1,Stream).
+
+outputTokens(Tokens,S,Stream):-
+   option('--mode',rich), !,
+   printTokens(Tokens,S,1,Stream).
+
+outputTokens(_,_,_).
+
+
+/* ----------------------------------------------------------------------
+   Wrapper IOB format
+---------------------------------------------------------------------- */
+
+outputIOB(Codes,Tokens,Stream):-
+   option('--mode',iob), !,
+   printIOB(Codes,0,Tokens,Stream).
+
+outputIOB(_,_,_).
+
+
+/* ----------------------------------------------------------------------
+   Output IOB format
+---------------------------------------------------------------------- */
+
+printIOB([],_,_,_).
+
+printIOB([X|L],N1,TokenSet,Stream):-
+   member([tok(N1,_,Tok)|_],TokenSet), !, Tag = 'S',
+   tupleIOB(N1,X,Tag,Tok,Stream),
+   N2 is N1 + 1,
+   printIOB(L,N2,TokenSet,Stream).
+
+printIOB([X|L],N1,TokenSet,Stream):-
+   member(Tokens,TokenSet),
+   member(tok(N1,_,Tok),Tokens), !, Tag = 'T',
+   tupleIOB(N1,X,Tag,Tok,Stream),
+   N2 is N1 + 1,
+   printIOB(L,N2,TokenSet,Stream).
+
+printIOB([X|L],N1,TokenSet,Stream):-
+   member(Tokens,TokenSet),
+   member(tok(Start,End,_),Tokens), N1 > Start, N1 < End, !, Tag = 'I',
+   tupleIOB(N1,X,Tag,[],Stream),
+   N2 is N1 + 1,
+   printIOB(L,N2,TokenSet,Stream).
+
+printIOB([X|L],N1,TokenSet,Stream):-
+   Tag = 'O',
+   tupleIOB(N1,X,Tag,[],Stream),
+   N2 is N1 + 1,
+   printIOB(L,N2,TokenSet,Stream).
+
+
+/* ----------------------------------------------------------------------
+   Tuple IOB format
+---------------------------------------------------------------------- */
+
+tupleIOB(_,X,Tag,_,Stream):- 
+   option('--format',txt), !,
+   format(Stream,'~p ~p~n',[X,Tag]).
+
+tupleIOB(N,X,Tag,Tok,Stream):- 
+   option('--format',prolog), !,
+   format(Stream,'tok(~p,\'~p\'). % ~p ~s~n',[X,Tag,N,Tok]).
+
+
+/* ----------------------------------------------------------------------
+   Print Tokens
 ---------------------------------------------------------------------- */
 
 printTokens([],_,_,_). 
@@ -258,9 +336,12 @@ printTokens([tok(_,_,Tok)|L],S,T,Stream):-
 ---------------------------------------------------------------------- */
 
 sep(10).    % new line
+sep(13).    % new line
 sep(32).    % space
 sep(9).     % tab
 sep(160).   % nbsp (non-breaking space)
+sep(8194).  % en space
+sep(8195).  % em space
 
 alphanum(X):- alpha(X), !.
 alphanum(X):- num(X), !.
@@ -269,10 +350,14 @@ alpha(62):- !.                         %%% '>' (end of markup)
 alpha(X):- upper(X), !.
 alpha(X):- lower(X), !.
 
-upper(X):- X > 64, X < 91, !.
-lower(X):- X > 96, X < 123, !.
+upper(X):- number(X), X > 64, X < 91, !.
+upper(X):- var(X), member(X,"ABCDEFGHIJKLMNOPQRSTUVWXYZ").
 
-num(X):- X > 47, X < 58, !.
+lower(X):- number(X), X > 96, X < 123, !.
+lower(X):- var(X), member(X,"abcdefghijklmnopqrstuvwxyz").
+
+num(X):- number(X), X > 47, X < 58, !.
+num(X):- var(X), member(X,"0123456789").
 
 
 /* ----------------------------------------------------------------------
@@ -280,6 +365,7 @@ num(X):- X > 47, X < 58, !.
    split(+Left,+ConditionsOnLeft,+Right,+ConditionsOnRight,+Context)
 ---------------------------------------------------------------------- */
 
+split("can",[], "not",[], []).
 split([_],[], "n't",[], []).
 split([_],[], "'ll",[], []).
 split([_],[], "'ve",[], []).
@@ -289,18 +375,24 @@ split([_],[], "'m",[], []).
 split([_],[], "'d",[], []).
 split([_],[], "'s",[], []).
 
-split([N],[num(N)], ",",[], [32]).
-split([A],[alpha(A)], [],[], ",").
+split([N],[num(N)],   [], [], "%").
+split("%",[],         ",",[],[]).
+split(")",[],         ",",[],[]).
+
+split([N],[num(N)],   ",",[], [32]).
+split([N],[num(N)],   ",",[], [10]).
+split([A],[alpha(A)], [], [], ",").
 split([_],[],         ";",[], []).
 split([_],[],         ":",[], []).
-split([_],[],         ")",[], []).
-
-split([N],[num(N)], "%",[],[]).
+split([_],[],         [],[], ")").
+%split([_],[],         ")",[], []).
+split([_],[],         "]",[], []).
 
 split("$",[],   [N],[num(N)], []).     % dollar
 split([163],[], [N],[num(N)], []).     % pound
 split([165],[], [N],[num(N)], []).     % yen
 split("(",[],   [X],[alphanum(X)], []).
+split("[",[],   [X],[alphanum(X)], []).
 
 split([_],[],         [Q],[quote(Q)], []).
 split([Q],[quote(Q)], [X],[alphanum(X)], []).
@@ -316,7 +408,8 @@ dontsplit(Input,Rest,N,Old-OldTail,Old-NewTail):-
    append(Left,NewTail,OldTail).
 
 nosplit("hi'it",5).
-nosplit("O'R",3).
+nosplit("e.g.",4).
+nosplit([79,Q,U],3):- rsq(Q), upper(U).   % Irish names
 
 
 /* ----------------------------------------------------------------------
@@ -376,163 +469,6 @@ checkConds([C|L]):- call(C), !, checkConds(L).
 
 
 /* ----------------------------------------------------------------------------------
-   Dot dot dot (end of line)
-   If the last token before the ... is an abbreviation, an extra . is preserved
----------------------------------------------------------------------------------- */
-
-pattern(D-[], Prev, [46,32,46,46,46|B]-B, [46,46,46]):- dots(D,A), end(A), abb(Prev), !. 
-pattern(D-[], Prev, B1-B2, [46,46,46]):- dots(D,A),end(A), !, insertSpace(Prev,[46,46,46|B2],B1).  
-
-/* ----------------------------------------------------------------------------------
-   Dot dot dot (not end of line)
----------------------------------------------------------------------------------- */
-
-pattern(D-[L|A], Prev, B1-B2,[]):- dots(D,[L|A]), lower(L), !, insertSpace(Prev,[46,46,46,32|B2],B1).
-pattern(D-[L|A], Prev, B1-B2,[]):- dots(D,[L|A]), upper(L), !, insertSpace(Prev,[46,46,46,10|B2],B1).
-pattern(D-A,     Prev, B1-B2,[]):- dots(D,A), !, insertSpace(Prev,[46,46,46,32|B2],B1).
-
-/* ----------------------------------------------------------------------------------
-   Full stop and bracket (end of line)
----------------------------------------------------------------------------------- */
-
-pattern([46,Q|A]-[], Prev, B1-B2, [Q]):- bracket(Q), end(A), !, insertSpace(Prev,[46,32,Q|B2],B1).   %%% X.) -> X . )
-
-/* ----------------------------------------------------------------------------------
-   Full stop and ending quotes (end of line)
----------------------------------------------------------------------------------- */
-
-pattern([46,Q|A]-[], Prev, B1-B2, [46]):- quote(Q),end(A),option('--quotes',delete), !, insertSpace(Prev,[46|B2],B1).      %%% X." -> X .
-pattern([46,Q|A]-[], Prev, B1-B2,  [Q]):- quote(Q),end(A),option('--quotes',keep), !, insertSpace(Prev,[46,32,Q|B2],B1).   %%% X." -> X . "
-
-pattern([46,Q,Q|A]-[], Prev, B1-B2, [46]):- quotes(Q),end(A),option('--quotes',delete), !, insertSpace(Prev,[46|B2],B1).       %%% X.'' -> X .
-pattern([46,Q,Q|A]-[], Prev, B1-B2,  [Q]):- quotes(Q),end(A),option('--quotes',keep), !, insertSpace(Prev,[46,32,Q,Q|B2],B1).  %%% X.'' -> X . ''
-
-pattern([46,32,Q1,Q2|A]-[], Prev, B1-B2,  [46]):- quote(Q1),quote(Q2),\+Q1=Q2,end(A),option('--quotes',delete), !, insertSpace(Prev,[46|B2],B1).            %%% X. '" -> X . ' "
-pattern([46,32,Q1,Q2|A]-[], Prev, B1-B2,  [Q2]):- quote(Q1),quote(Q2),\+Q1=Q2,end(A),option('--quotes',keep), !, insertSpace(Prev,[46,32,Q1,32,Q2|B2],B1).  %%% X. '" -> X . ' "
-
-/* ----------------------------------------------------------------------------------
-   Full stop and ending quotes (not end of line)
----------------------------------------------------------------------------------- */
-
-pattern([46,Q,32,U|A]-[U|A], Prev, B1-B2, []):- quote(Q),upper(U),option('--quotes',delete), !, insertSpace(Prev,[46,10|B2],B1). %%% X." U
-pattern([46,Q,32,U|A]-[U|A], Prev, B1-B2, []):- quote(Q),upper(U),option('--quotes',keep), !, insertSpace(Prev,[46,32,Q,10|B2],B1). %%% X." U
-pattern([46,Q,32,U|A]-[U|A], Prev, B1-B2, []):- closing_bracket(Q),upper(U), !, insertSpace(Prev,[46,32,Q,10|B2],B1). %%% X.) U
-
-/* ----------------------------------------------------------------------------------
-   Full stop (end of line)
-   If the last token before the . is an abbreviation, no extra . is produced.
----------------------------------------------------------------------------------- */
-
-pattern([46|A]-[], Prev, [46|B]-B, Prev):- end(A), title(Prev), !.                   %%% X. -> X. 
-pattern([46|A]-[], Prev, [46|B]-B, [46|Prev]):- end(A), abb(Prev), !.                %%% X. -> X. 
-pattern([46|A]-[], Prev, B1-B2, [46]):- end(A), !, insertSpace(Prev,[46|B2],B1).     %%% X. -> X . 
-
-/* ----------------------------------------------------------------------------------
-   Full stop, followed by opening quote
----------------------------------------------------------------------------------- */
-
-pattern([46,32,Q,115|A]-A, [_|_], [46,32,Q,115|B]-B, [115,Q]):- rsq(Q), !.   %% U.S. \'s
-pattern([46,32,Q,C|A]-[Q,C|A],     Prev, B1-B2, []):- quote(Q), upper(C), !, insertSpace(Prev,[46,10|B2],B1).
-pattern([46,32,Q,Q,C|A]-[Q,Q,C|A], Prev, B1-B2, []):- quotes(Q), upper(C), !, insertSpace(Prev,[46,10|B2],B1).
-pattern([46,32,Q,C|A]-[Q,C|A],     Prev, B1-B2, []):- opening_bracket(Q), upper(C), !, insertSpace(Prev,[46,10|B2],B1).
-
-/* ----------------------------------------------------------------------------------
-   Full stop (not end of line), next token starts with uppercase --- arhhhhh....
-   Case 1: A full stop after a space -> sentence boundary.
-   Case 2: A full stop after a one-character token --> initial, no sentence boundary
-   Case 3: A full stop after a title --> no sentence boundary
-   Case 4: A full stop after a non-abbreviation --> sentence boundary
-%  Case 5: A full stop after abbreviation --> no sentence boundary
----------------------------------------------------------------------------------- */
-
-pattern([46,32,U|A]-[U|A], [], [46,10|B]-B,   []):- upper(U), !.
-pattern([46,32,U|A]-[U|A], [_], [46,32|B]-B,  []):- upper(U), !.    %%% Initial
-pattern([46,32,U|A]-[U|A], Prev, [46,32|B]-B, []):- upper(U), title(Prev), !.
-pattern([46,32,U|A]-[U|A], Prev, [32,46,10|B]-B, []):- upper(U), \+ abb(Prev), !.
-%pattern([46,32,U|A]-[U|A], Prev, [46,10|B]-B, []):- upper(U), abb(Prev), !.
-
-pattern([46,32,32,U|A]-[U|A], [], [46,10|B]-B,   []):- upper(U), !.
-pattern([46,32,32,U|A]-[U|A], [_], [46,32|B]-B,  []):- upper(U), !.    %%% Initial
-pattern([46,32,32,U|A]-[U|A], Prev, [46,32|B]-B, []):- upper(U), title(Prev), !.
-pattern([46,32,32,U|A]-[U|A], Prev, [32,46,10|B]-B, []):- upper(U), \+ abb(Prev), !.
-
-/* ----------------------------------------------------------------------------------
-   The brackets
----------------------------------------------------------------------------------- */
-
-pattern([X|A]-[32|A], Prev, B1-B2, [X]):- bracket(X), !, insertSpace(Prev,[X|B2],B1).
-
-
-/* ----------------------------------------------------------------------------------
-   Question and Exclamation Mark
----------------------------------------------------------------------------------- */
-
-pattern([X|A]-[32|A], Prev, B1-B2, [X]):- mark(X), !, insertSpace(Prev,[X|B2],B1).
-
-
-/* ----------------------------------------------------------------------------------
-   Contractions: year/decade expressions
----------------------------------------------------------------------------------- */
-
-pattern([Q,N1,N2,115|A]-A, [], [Q,N1,N2,115|B]-B, [115,N2,N1,Q]):- rsq(Q), num(N1),num(N2), !.  %%% "'30s" -> "'30s"
-pattern([Q,N1,N2,N|A]-[N|A], [], [Q,N1,N2|B]-B, [N2,N1,Q]):- rsq(Q), num(N1),num(N2), \+ alphanum(N), !.  %%% "'30" -> "'30"
-
-
-/* ----------------------------------------------------------------------------------
-   Contractions (Italian)
----------------------------------------------------------------------------------- */
-
-pattern([108,Q,X|A]-[X|A],   Prev, B1-B2, []):- option('--language',it), alpha(X), rsq(Q), !, insertSpace(Prev,[108,Q,32|B2],B1).   %%% " l'X" -> " l' X"
-
-
-/* ----------------------------------------------------------------------------------
-   Contractions: Irish and foreign names
----------------------------------------------------------------------------------- */
-
-pattern([U1,Q,U2|A]-A, [], [U1,Q,U2|B]-B, [U2,Q,U1]):- rsq(Q), alpha(U1),alpha(U2).  %%% "O'R" -> "O'R"
-
-/* ----------------------------------------------------------------------------------
-   Double character quotes
----------------------------------------------------------------------------------- */
-
-pattern([32,Q,Q,32|A]-[32|A], X, B-B, X):- quotes(Q), option('--quotes',delete), !.
-pattern([Q,Q|A]-A, X, B-B, X):- quotes(Q), option('--quotes',delete), !.
-pattern([X,X|A]-[32|A], Prev, B1-B2, [X,X]):- quotes(X), !, insertSpace(Prev,[X,X|B2],B1).
-
-/* ----------------------------------------------------------------------------------
-   Single character quotes
----------------------------------------------------------------------------------- */
-
-pattern([32,Q,32|A]-[32|A], X, B-B, X):- quote(Q), option('--quotes',delete), !.
-pattern([Q|A]-A, X, B-B, X):- quote(Q), option('--quotes',delete), !.
-pattern([X|A]-[32|A], Prev, B1-B2, [X]):- quote(X), !, insertSpace(Prev,[X|B2],B1).   
-
-
-/* ----------------------------------------------------------------------------------
-   Insert space, but only if there is a token just before
-
-insertSpace([], L, L):- !.
-insertSpace( _, L, [32|L]).
----------------------------------------------------------------------------------- */
-
-
-/* ----------------------------------------------------------------------------------
-   Codes for Brackets
----------------------------------------------------------------------------------- */
-
-bracket(X):- opening_bracket(X).
-bracket(X):- closing_bracket(X).
-
-opening_bracket(40).  %%% (
-opening_bracket(91).  %%% [
-opening_bracket(123). %%% {
-
-closing_bracket(41).  %%% )
-closing_bracket(93).  %%% ]
-closing_bracket(125). %%% }
-
-
-/* ----------------------------------------------------------------------------------
    Codes for right single quotation marks (used in genitives)
 ---------------------------------------------------------------------------------- */
 
@@ -564,13 +500,6 @@ quotes(39).    %%% ''
 quotes(8216).
 quotes(8217).
 quotes(8218).
-
-/* ----------------------------------------------------------------------------------
-   Codes for punctuation marks
----------------------------------------------------------------------------------- */
-
-mark(63).    %%% ?
-mark(33).    %%% !
 
 
 

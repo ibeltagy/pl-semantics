@@ -77,7 +77,8 @@ aspect(pt,_,Index,Att-Att,Sem):-
                                                B2:[]:eq(T,N),
                                                B2:[]:rel(St,T,temp_includes,1),
                                                B2:[]:rel(E,St,temp_abut,1)]),
-                                       app(F,St)))))).
+%                                      app(F,St)))))).
+                                       app(F,E)))))).
 
 
 /* -------------------------------------------------------------------------
@@ -92,7 +93,8 @@ aspect(pt,_,Index,Att-Att,Sem):-
                                                B2:[]:rel(T,N,temp_before,1),
                                                B2:[]:rel(St,T,temp_includes,1),
                                                B2:[]:rel(E,St,temp_abut,1)]),
-                                       app(F,St)))))).
+%                                      app(F,St)))))).
+                                       app(F,E)))))).
 
 
 /* -------------------------------------------------------------------------
@@ -104,7 +106,9 @@ aspect(pss,pt,Index,Att-Att,Sem):-
    Sem = lam(S,lam(F,app(S,lam(E,merge(B2:drs([B2:Index:T,B2:[]:St],
                                               [B2:[]:rel(St,T,temp_includes,1),
                                                B2:[]:rel(E,St,temp_overlap,1)]),
-                                       app(F,St)))))).
+%                                      app(F,St)))))).
+                                       app(F,E)))))).
+
 
 /* -------------------------------------------------------------------------
    Perfect Progressive 
@@ -115,7 +119,8 @@ aspect(ng,pt,Index,Att-Att,Sem):-
    Sem = lam(S,lam(F,app(S,lam(E,merge(B2:drs([B2:Index:T,B2:[]:St],
                                               [B2:[]:rel(St,T,temp_includes,1),
                                                B2:[]:rel(E,St,temp_overlap,1)]),
-                                       app(F,St)))))).
+%                                      app(F,St)))))).
+                                       app(F,E)))))).
 
 
 /* -------------------------------------------------------------------------
@@ -131,7 +136,8 @@ aspect(ng,_,Index,Att-Att,Sem):-
                                                B2:[]:eq(T,N),
                                                B2:[]:rel(St,T,temp_includes,1),
                                                B2:[]:rel(E,St,temp_overlap,1)]),
-                                       app(F,St)))))).
+%                                      app(F,St)))))).
+                                       app(F,E)))))).
 
 
 /* -------------------------------------------------------------------------
@@ -146,7 +152,8 @@ aspect(ng,_,Index,Att-Att,Sem):-
                                                B2:[]:rel(T,N,temp_before,1),
                                                B2:[]:rel(St,T,temp_included,1),
                                                B2:[]:rel(E,St,temp_overlap,1)]),
-                                       app(F,St)))))).
+%                                      app(F,St)))))).
+                                       app(F,E)))))).
 
 
 /* -------------------------------------------------------------------------

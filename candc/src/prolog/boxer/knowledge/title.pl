@@ -71,7 +71,7 @@ title(marshal, marshal,      person).
 title(master,  master,       person).
 title(T,       madame,       female):- member(T,[mme,madame,'mme.',mmes,'mmes.']).
 title(T,       major,        person):- member(T,[maj,'maj.',major]).
-title(T,       miss,         female):- member(T,[miss,ms,'mss.']).
+title(T,       miss,         female):- member(T,[miss,ms,'ms.']).
 title(T,       mister,       male)  :- member(T,[mr,'mr.',mister,monsier,messrs,'messrs.']).
 title(T,       missis,       female):- member(T,[mrs,'mrs.',missis,missus]).
 title(T,       mademoiselle, female):- member(T,['mademoiselle',mlle,'mlle.']).

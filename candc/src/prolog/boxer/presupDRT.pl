@@ -167,26 +167,15 @@ findAlfaConds([imp(B1,B3)|C],Res,Alfa,Ac,Bi1-Bi2):-
       Ac = [a(A)|Ac0]
    ), !.
 
-findAlfaConds([whq(B1,B3)|C],Res,Alfa,Ac,Bi1-Bi2):-
+findAlfaConds([duplex(Type,B1,Var,B3)|C],Res,Alfa,Ac,Bi1-Bi2):- 
    (
       findAlfaDrs(B1,B2,Alfa,Ac,Bi1-Bi2), !,
-      Res = [whq(B2,B3)|C]
-   ;
-      mergeDrs(B1,M1),
-      findAlfaDrs(B3,R2,Alfa,Ac0,[r(M1,R1)|Bi1]-Bi2),
-      Res = [whq(merge(R1,A),R2)|C],
-      Ac = [a(A)|Ac0]
-   ), !.
-
-findAlfaConds([whq(Type,B1,Var,B3)|C],Res,Alfa,Ac,Bi1-Bi2):- 
-   (
-      findAlfaDrs(B1,B2,Alfa,Ac,Bi1-Bi2), !,
-      Res = [whq(Type,B2,Var,B3)|C]
+      Res = [duplex(Type,B2,Var,B3)|C]
    ;
       mergeDrs(B1,M1),
       findAlfaDrs(B3,R2,Alfa,Ac0,[r(M1,R1)|Bi1]-Bi2),
       Ac = [a(A)|Ac0],
-      Res = [whq(Type,merge(R1,A),Var,R2)|C]
+      Res = [duplex(Type,merge(R1,A),Var,R2)|C]
    ), !.      
 
 findAlfaConds([or(B1,B2)|C],Res,Alfa,Ac,Bi1-Bi2):-
@@ -341,11 +330,11 @@ match(pro,C1,C2,X0):-
    member(_:pred(X2,Sym,a,_),C2), X1==X2, !.
 
 match(pro,C1,C2,X0):-
-   member(_:pred(X1,male,a,_),C1), X0==X1, 
+   member(_:pred(X1,male,n,2),C1), X0==X1, 
    member(_:named(X2,_,per,_),C2), X1==X2, !.
 
 match(pro,C1,C2,X0):-
-   member(_:pred(X1,female,a,_),C1), X0==X1, 
+   member(_:pred(X1,female,n,2),C1), X0==X1, 
    member(_:named(X2,_,per,_),C2),   X1==X2, !.
 
 match(pro,C1,C2,X0):-

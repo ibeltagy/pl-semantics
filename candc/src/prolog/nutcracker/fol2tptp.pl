@@ -119,7 +119,7 @@ printTPTP(not(Phi),Stream):- !,
    printTPTP(Phi,Stream).
 
 printTPTP(eq(X,Y),Stream):- !,
-   write_term(Stream,equal(X,Y),[numbervars(true)]).
+   write_term(Stream,X=Y,[numbervars(true)]).
 
 printTPTP(Pred,Stream):-
    nonvar(Pred),

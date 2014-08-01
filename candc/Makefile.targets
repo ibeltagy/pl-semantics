@@ -68,8 +68,10 @@ CCG_OBJS = src/lib/parser/atom.o src/lib/parser/feature.o src/lib/parser/varid.o
   src/lib/parser/print_boxer.o src/lib/parser/print_ccgbank.o \
   src/lib/parser/print_grs.o src/lib/parser/print_xml.o \
   src/lib/parser/print_debug.o src/lib/parser/print_js.o \
-  src/lib/parser/print_bankdeps.o src/lib/parser/print_factory.o \
-  src/lib/parser/print_gold_deps.o src/lib/parser/decoder.o \
+  src/lib/parser/print_bankdeps.o \
+  src/lib/parser/print_gold_deps.o \
+  src/lib/parser/print_latex.o src/lib/parser/print_factory.o \
+  src/lib/parser/decoder.o \
   src/lib/parser/decoder_derivs.o src/lib/parser/decoder_derivs_random.o \
   src/lib/parser/decoder_deps_recall.o src/lib/parser/decoder_gold.o \
   src/lib/parser/decoder_derivs_unique.o src/lib/parser/decoder_factory.o \
@@ -168,11 +170,14 @@ BOXER = src/prolog/boxer/alphaConversionDRT.pl \
         src/prolog/boxer/input.pl \
         src/prolog/boxer/output.pl \
         src/prolog/boxer/evaluation.pl \
-        src/prolog/boxer/ppDrs.pl \
+        src/prolog/boxer/noncomp.pl \
+        src/prolog/boxer/resolveDRT.pl \
         src/prolog/boxer/presupDRT.pl \
         src/prolog/boxer/printDrs.pl \
+        src/prolog/boxer/printCCG.pl \
         src/prolog/boxer/sortalCheck.pl \
         src/prolog/boxer/string2digit.pl \
+        src/prolog/boxer/sdrt.pl \
         src/prolog/boxer/tuples.pl \
         src/prolog/boxer/closure.pl \
         src/prolog/boxer/transform.pl \
@@ -180,13 +185,17 @@ BOXER = src/prolog/boxer/alphaConversionDRT.pl \
         src/prolog/boxer/typechange.pl \
         src/prolog/boxer/vpe.pl \
         src/prolog/boxer/version.pl \
-#        src/prolog/boxer/robust.pl \
         src/prolog/lib/errors.pl \
         src/prolog/lib/drs2fol.pl \
+        src/prolog/lib/pdrs2drs.pl \
         src/prolog/lib/options.pl \
+        src/prolog/lib/drs2tacitus.pl \
         src/prolog/boxer/knowledge/ontology.pl \
-        src/prolog/boxer/knowledge/nationality.pl \
+        src/prolog/boxer/knowledge/relations.pl \
         src/prolog/boxer/knowledge/title.pl \
+        src/prolog/boxer/knowledge/ne.pl \
+        src/prolog/boxer/knowledge/dates.pl \
+        src/prolog/boxer/knowledge/punctuation.pl \
         src/prolog/boxer/lex/determiners.pl \
         src/prolog/boxer/lex/tense.pl \
         src/prolog/boxer/lex/verbs.pl
@@ -200,12 +209,12 @@ FETCH = wget
 # VerbNet
 
 KNOW_VERBNET = working/verbnet
-VERBNET_VER = 3.0
+VERBNET_VER = 3.2
 VERBNET_TAR = verbnet-$(VERBNET_VER).tar.gz
 VERBNET_URL = http://verbs.colorado.edu/verb-index/$(VERBNET_TAR)
 VERBNET_EXT = ext/VerbNet
-VERBNET_DEPS = src/prolog/lib/verbnet2prolog.pl \
-               src/prolog/lib/verbnet2patterns.pl
+VERBNET_DEPS = src/prolog/lib/verbnet2boxer.pl \
+               src/prolog/lib/verbnet2gmb.pl
 
 $(VERBNET_DEPS): ext/$(VERBNET_TAR)
 	@mkdir -p $(VERBNET_EXT)
@@ -214,16 +223,10 @@ $(VERBNET_DEPS): ext/$(VERBNET_TAR)
 	@rmdir ext/verbnet-$(VERBNET_VER)
 	@chmod 644 $(VERBNET_EXT)/*
 
-ext/$(VERBNET_TAR):
-	@mkdir -p ext
-	cd ext; $(FETCH) $(VERBNET_URL)
-
-$(KNOW_VERBNET)/verbnet.pl: $(VERBNET_DEPS)
-	@mkdir -p $(KNOW_VERBNET)
-	$(PROLOG) -c src/prolog/lib/verbnet2prolog.pl > $(KNOW_VERBNET)/temp.pl
-	$(PROLOG) -c src/prolog/lib/verbnet2patterns.pl > $(KNOW_VERBNET)/verbnet.pl
-	@cp $(KNOW_VERBNET)/verbnet.pl src/prolog/boxer/lex/verbnet.pl
-
+src/prolog/boxer/lex/verbnet.pl: $(VERBNET_DEPS) ext/$(VERBNET_TAR)
+	$(PROLOG) -c src/prolog/lib/verbnet2boxer.pl > src/prolog/boxer/lex/verbnet.pl
+	$(PROLOG) -c src/prolog/lib/verbnet2gmb.pl > $(KNOW_VERBNET)/roles.pl
+	@cp $(KNOW_VERBNET)/roles.pl src/data/boxer/verbnet
 
 # WordNet
 
@@ -373,6 +376,7 @@ bin/tokkie: $(TOKKIE)
 	$(PROLOG) -g "['src/prolog/nutcracker/tokkie'], qsave_program('bin/tokkie',[goal=start,stand_alone=true]), halt."
 
 NTOKKIE = src/prolog/nutcracker/ntokkie.pl \
+          src/prolog/lib/abbreviations.pl \
           src/prolog/lib/options.pl \
           src/prolog/lib/errors.pl
 
@@ -400,6 +404,9 @@ bin/count_rules: $(BASE_OBJS) $(IO_OBJS) $(CONFIG_OBJS) $(EXT_OBJS) $(TAG_OBJS) 
 src/main/mpi_train_super.o: src/main/mpi_train_super.cc
 	$(MPIXX) $(MPI_CXXFLAGS) -c -o $@ $<
 
+src/main/mpi_reestimate.o: src/main/mpi_reestimate.cc
+	$(MPIXX) $(MPI_CXXFLAGS) -c -o $@ $<
+
 src/main/tree_gis.o: src/main/tree_gis.cc
 	$(MPIXX) $(MPI_CXXFLAGS) -c -o $@ $<
 
@@ -416,7 +423,7 @@ bin/gendeps: $(CCG_OBJS) src/main/gendeps.o
 
 bin/parser: $(BASE_OBJS) $(IO_OBJS) $(CONFIG_OBJS) $(TAG_OBJS) \
   $(MODEL_OBJS) $(CCG_OBJS) src/lib/tagger/super.o src/lib/tagger/pos.o \
-  src/main/parser.o src/lib/cluster_no_mpi.o src/lib/relations/morpha.o
+  src/main/parser.o src/lib/cluster_no_mpi.o
 	$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 bin/candc: src/lib/candc.o src/main/candc.o $(TAGGER_OBJS) $(CCG_OBJS) \
@@ -549,6 +556,10 @@ bin/train_class: $(TRAIN_OBJS) src/lib/classifier.o src/lib/extract/classifier.o
 
 bin/reestimate: $(TRAIN_OBJS) src/main/reestimate.o
 	$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
+
+bin/mpi_reestimate: $(BASE_OBJS) $(TRAIN_OBJS) \
+  src/lib/cluster_mpi.o src/main/mpi_reestimate.o
+	$(MPIXX) $(LDFLAGS) -o $@ $^ $(MPI_LIBS)
 
 bin/distribute: $(BASE_OBJS) $(CONFIG_OBJS) src/main/distribute.o \
   src/lib/cluster_mpi.o

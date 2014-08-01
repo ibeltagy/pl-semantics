@@ -31,8 +31,6 @@ drsfol(sdrs([B],_),Form):- !, drsfol(B,Form).
 
 drsfol(sdrs([B|L],C),Form):- !, drsfol(merge(B,sdrs(L,C)),Form).
     
-drsfol(smerge(B1,B2),Form):- !, drsfol(merge(B1,B2),Form).
-
 drsfol(alfa(_,B1,B2),Form):- !, drsfol(merge(B1,B2),Form).
 
 drsfol(drs([],[Cond]),Formula):- !, cond2fol(Cond,Formula).
@@ -71,8 +69,6 @@ drsfol(sdrs([B],_),W,Form):- !, drsfol(B,W,Form).
 
 drsfol(sdrs([B|L],C),W,Form):- !, drsfol(merge(B,sdrs(L,C)),W,Form).
 
-drsfol(smerge(B1,B2),W,Form):- !, drsfol(merge(B1,B2),W,Form).
-
 drsfol(alfa(_,B1,B2),W,Form):- !, drsfol(merge(B1,B2),W,Form).
 
 drsfol(drs([],[Cond]),W,Formula):- !, cond2fol(Cond,W,Formula).
@@ -108,8 +104,6 @@ drsfolGap(sdrs([B|L],C),F):- !, drsfolGap(merge(B,sdrs(L,C)),F).
 drsfolGap(lab(_,B),F):- !, drsfolGap(B,F).
 
 drsfolGap(sub(B1,B2),F):- !, drsfolGap(merge(B1,B2),F).
-
-drsfolGap(smerge(B1,B2),Gap^F):- !, drsfolGap(merge(B1,B2),Gap^F).  
 
 drsfolGap(alfa(_,B1,B2),Gap^F):- !, drsfolGap(merge(B1,B2),Gap^F).  
 
@@ -156,8 +150,6 @@ drsfolGap(lab(_,B),W,F):- !, drsfolGap(B,W,F).
 
 drsfolGap(sub(B1,B2),W,F):- !, drsfolGap(merge(B1,B2),W,F).
 
-drsfolGap(smerge(B1,B2),W,Gap^F):- !, drsfolGap(merge(B1,B2),W,Gap^F).  
-
 drsfolGap(alfa(_,B1,B2),W,Gap^F):- !, drsfolGap(merge(B1,B2),W,Gap^F).  
 
 drsfolGap(merge(B1,B2),W,Gap2^F):- !, 
@@ -199,7 +191,25 @@ cond2fol(or(Drs1,Drs2),or(Formula1,Formula2)):- !,
 cond2fol(whq(Drs1,Drs2),F):- !, 
    cond2fol(imp(Drs1,Drs2),F).
 
-cond2fol(whq(_,Drs1,_,Drs2),F):- !, 
+cond2fol(duplex(most,Drs1,X,Drs2),and(F1,all(Z,imp(F3,F4)))):- !, 
+   drs2fol(merge(Drs1,merge(Drs2,drs([],[[]:not(drs([[]:Y],[[]:rel(Y,X,g,1)]))]))),F1),
+   % most(P(x),Q(x)) if Ex P(x) & Q(x) & -Ey g(y,x) [at least one more P&Q than P&-Q] 
+   drs2fol(merge(Drs1,drs([],[[]:eq(X,Z),[]:not(Drs2)])),F3),
+   % if Ez p(z)&-q(z) then Ex p(x)&q(x) & g(z,x)
+   drs2fol(merge(Drs1,merge(Drs2,drs([],[[]:rel(Z,X,g,1)]))),F4).
+
+cond2fol(duplex(two,Drs1,X,Drs2),some(A,some(B,and(not(eq(A,B)),and(all(Z,imp(F0,or(eq(Z,A),eq(Z,B)))),and(F1,F2)))))):- !, 
+   drs2fol(merge(Drs1,merge(Drs2,drs([],[[]:eq(X,A)]))),F1),
+   drs2fol(merge(Drs1,merge(Drs2,drs([],[[]:eq(X,B)]))),F2),
+   drs2fol(merge(Drs1,merge(Drs2,drs([],[[]:eq(X,Z)]))),F0).
+
+cond2fol(duplex(three,Drs1,X,Drs2),some(A,some(B,some(C,and(not(eq(A,B)),and(not(eq(A,C)),and(not(eq(B,C)),and(all(Z,imp(F0,or(eq(Z,A),or(eq(Z,B),eq(Z,C))))),and(F1,and(F2,F3)))))))))):- !, 
+   drs2fol(merge(Drs1,merge(Drs2,drs([],[[]:eq(X,A)]))),F1),
+   drs2fol(merge(Drs1,merge(Drs2,drs([],[[]:eq(X,B)]))),F2),
+   drs2fol(merge(Drs1,merge(Drs2,drs([],[[]:eq(X,C)]))),F3),
+   drs2fol(merge(Drs1,merge(Drs2,drs([],[[]:eq(X,Z)]))),F0).
+
+cond2fol(duplex(_,Drs1,_,Drs2),F):- !, 
    cond2fol(imp(Drs1,Drs2),F).
 
 cond2fol(imp(B1,B2),Formula):- !,
@@ -292,7 +302,7 @@ cond2fol(or(Drs1,Drs2),W,or(Formula1,Formula2)):- !,
 cond2fol(whq(Drs1,Drs2),W,F):- !, 
    cond2fol(imp(Drs1,Drs2),W,F).
 
-cond2fol(whq(_,Drs1,_,Drs2),W,F):- !, 
+cond2fol(duplex(_,Drs1,_,Drs2),W,F):- !, 
    cond2fol(imp(Drs1,Drs2),W,F).
 
 cond2fol(imp(B1,B2),W,Formula):- !,
@@ -351,7 +361,7 @@ symbol(Type,F1,0,F2):- !, symbol(Type,F1,1,F2).    % WSD (first sense)
 
 symbol(Type,F1,Sense,F2):-
    atom_codes(Type,A0), 
-   number_codes(Sense,A1),
+   ( number(Sense), !, number_codes(Sense,A1); atom_codes(Sense,A1) ),
    append(A0,A1,A2),
    ( atom(F1),  !, atom_codes(F1,A3)   
    ; number(F1), number_codes(F1,A3) ),
