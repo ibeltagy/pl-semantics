@@ -49,7 +49,6 @@ class BoxerDiscourseInterpreter[T](
     val boxerArgs = Map[String, String](
       "--box" -> "false",
       "--semantics" -> "drs",
-      "--flat" -> "false",
       "--resolve" -> "true",
       "--elimeq" -> "true",
       "--format" -> "prolog",

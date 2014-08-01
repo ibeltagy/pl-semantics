@@ -65,9 +65,10 @@ class BoxerExpressionParser(discourseId: String = "0") extends LogicParser[Boxer
             	this.parseOr()
             else if (pred == "timex")
             	this.parseTimex()
-
+            else if (pred == "duplex")
+              this.parseDuplex()
             else
-                throw new UnexpectedTokenException(predIdx, Some(pred), List("not", "imp", "eq", "pred", "rel", "named", "prop", "card", "whq", "or", "timex"))
+                throw new UnexpectedTokenException(predIdx, Some(pred), List("not", "imp", "eq", "pred", "rel", "named", "prop", "card", "whq", "or", "timex", "duplex"))
         } else
             throw new UnexpectedTokenException(this.getCurrentIndex, Some(tok0), List("prs", "drs", "alfa", "merge", "smerge", "date"))
     }
@@ -223,7 +224,14 @@ class BoxerExpressionParser(discourseId: String = "0") extends LogicParser[Boxer
         this.assertNextToken(",")
         val typ = this.nextToken()
         this.assertNextToken(",")
-        val sense = this.parseInt()
+        val sense_s: String = this.nextToken
+        val sense = {
+          try {
+            sense_s.toInt
+          } catch {
+            case nfex: java.lang.NumberFormatException => 0
+          }
+        }
         this.assertNextToken(")")
         return BoxerNamed(this.discourseId, indices, variable, name, typ, sense)
     }
@@ -314,6 +322,23 @@ class BoxerExpressionParser(discourseId: String = "0") extends LogicParser[Boxer
         this.assertNextToken(")")
         return BoxerCard(this.discourseId, indices, variable, num, typ)
     }
+
+    protected def parseDuplex(): BoxerExpression = {
+      val pred = this.parseIndexList()
+      this.assertNextToken(":")
+      this.assertNextToken("duplex")
+      this.assertNextToken("(")
+      val typ = this.nextToken()
+      this.assertNextToken(",")
+      val first = this.parseDrs()
+      this.assertNextToken(",")
+      val recipient = this.parseVariable()
+      this.assertNextToken(",")
+      val second = this.parseDrs()
+      this.assertNextToken(")")
+      return BoxerMerge("merge", first, second) //our system is not interested in questions now
+    }
+
     protected def parseWhq(): BoxerExpression = {
         //val pred = this.nextToken
         val pred = this.parseIndexList()
