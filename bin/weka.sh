@@ -110,7 +110,7 @@ esac
       classify)
 #        result=$(java -Xmx1024m -cp $wekaJarPath weka.classifiers.meta.AdaBoostM1 -i $testCV  )
          java -Xmx1024m -cp $wekaJarPath:$libsvmPath weka.Run -no-scan -no-load  weka.classifiers.functions.LibSVM -i $testCV 
-
+#  java -Xmx1024m -cp /u/beltagy/workspace/deft/weka/weka.jar:/u/beltagy/wekafiles/packages/LibSVM/lib/libsvm.jar:/u/beltagy/wekafiles/packages/LibSVM/LibSVM.jar weka.Run -no-scan -no-load  weka.classifiers.functions.LibSVM -i -t tmp-train.arff -p 0 -no-cv
          ;;
       regress)  
 			java -Xmx1024m -cp $wekaJarPath weka.classifiers.meta.AdditiveRegression -i $testCV  -S 0.95 -I 10 -W weka.classifiers.rules.M5Rules
