@@ -10,7 +10,7 @@ class CandcImplTests {
   @Test
   def test() {
 
-    val candc = CandcImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin/")))
+    val candc = new CandcImpl()
 
     println(candc.parseMultisentence(List("John is short .", "He is young .")))
     println(candc.batchParseMultisentence(List(List("John is short .", "He is young ."), List("Bill is tall .", "He is old ."))))

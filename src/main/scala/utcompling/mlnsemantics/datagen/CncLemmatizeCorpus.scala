@@ -51,7 +51,7 @@ object CncLemmatizeCorpus {
 }
 
 class CncLemmatizeCorpusMapper extends Mapper[Object, Text, IntWritable, Text] {
-  private[this] val candc = CandcImpl.findBinary(Some(pathjoin(System.getenv("HOME"), "bin/candc/bin")))
+  private[this] val candc = new CandcImpl()
 
   private[this] val returnKey = new IntWritable
   private[this] var returnVal = new Text

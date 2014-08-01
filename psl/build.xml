@@ -41,7 +41,7 @@
     <target name="init">
         <mkdir dir="target/classes"/>
         <copy includeemptydirs="false" todir="target/classes">
-            <fileset dir="src/main/resources">
+            <fileset dir="src/resources">
                 <exclude name="**/*.java"/>
                 <exclude name="**/*.java"/>
             </fileset>
@@ -56,7 +56,7 @@
     <target depends="init" name="build-project">
         <echo message="${ant.project.name}: ${ant.file}"/>
         <javac includeantruntime="false" debug="true" debuglevel="${debuglevel}" destdir="target/classes" source="${source}" target="${target}">
-            <src path="src/main/resources"/>
+            <src path="src/resources"/>
             <exclude name="**/*.java"/>
             <classpath refid="psl.classpath"/>
         </javac>
@@ -71,7 +71,7 @@
         </javac>
     	<groovyc destdir="target/classes" listfiles="true" verbose="true" fork="true">
     		<src path="src/groovy"/>
-    		<src path="src/main/java"/>
+    		<src path="src/core"/>
 			<classpath refid="psl.classpath"/>
     	</groovyc>
 
@@ -91,7 +91,7 @@
         <antcall target="build"/>
     </target>
     <target name="run">
-        <java classname="psl.TextInterface" failonerror="true" fork="yes">
+        <java classname="edu.umd.cs.psl.groovy.TextInterface" failonerror="true" fork="yes">
             <classpath refid="psl.classpath"/>
             <arg value="${arg0}"/>
             <arg value="${arg1}"/>

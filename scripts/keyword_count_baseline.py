@@ -33,7 +33,7 @@ def extract_features(left_sent, right_sent):
     fla = np.array(fl)
     fra = np.array(fl)
 
-    return fl + fr + list(fla + fra)
+    return fl + fr #+ list(np.abs(fla - fra))
 
 def main():
     parser = argparse.ArgumentParser("Creates a result file by counting occurrences of key phrases.")

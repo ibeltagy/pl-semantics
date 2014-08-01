@@ -21,8 +21,8 @@ class FracasReaderTests {
   def test() {
 
     val binDir = Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin"))
-    val candc = CandcImpl.findBinary(binDir)
-    val boxer = BoxerImpl.findBinary(binDir)
+    val candc = new CandcImpl()
+    val boxer = new BoxerImpl()
     val bei = new MergingBoxerExpressionInterpreterDecorator()
     val bdi = new BoxerDiscourseInterpreter(bei, candc, boxer)
     val cdp = new CandcDiscourseParser(candc)

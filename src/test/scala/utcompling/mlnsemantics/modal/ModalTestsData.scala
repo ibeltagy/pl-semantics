@@ -577,15 +577,15 @@ class ModalTestsData {
       if (true) { // Generate DRS
         val boxerDiscourseInterpreter = new BoxerDiscourseInterpreter[BoxerExpression](
           new PassthroughBoxerExpressionInterpreter(),
-          CandcImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin"))),
-          new BoxerImpl(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin/boxer")))
+          new CandcImpl(),
+          new BoxerImpl())
         val b = boxerDiscourseInterpreter.interpretMultisentence(List(s))
         println(b)
         println(new Boxer2DrtExpressionInterpreter().interpret(b).pretty)
       }
 
       if (true) { // Generate Parse
-        val candc = new CandcDiscourseParser(CandcImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin"))))
+        val candc = new CandcDiscourseParser(new CandcImpl())
         println(candc.parseMultisentence(List(s)).repr)
       }
     }

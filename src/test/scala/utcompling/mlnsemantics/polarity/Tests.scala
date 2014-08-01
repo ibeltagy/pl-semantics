@@ -24,8 +24,8 @@ class Tests {
     def f(s: String) = new FolLogicParser().parse(s)
 
     val discourseInterpreter = new BoxerDiscourseInterpreter[DrtExpression](
-      candc = CandcImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc"))),
-      boxer = BoxerImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin/boxer"))))
+      candc = new CandcImpl(),
+      boxer = new BoxerImpl())
 
     val prover = new Prover9TheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/LADR-2009-11A/bin/prover9"), 5, false)
     def tp(a: DrtExpression, g: DrtExpression, s: List[FolExpression] = List()) =

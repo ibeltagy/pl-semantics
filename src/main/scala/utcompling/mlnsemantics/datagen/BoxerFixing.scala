@@ -22,8 +22,8 @@ object BoxerFixing {
 
     val boxerInterpreter =
       new BoxerDiscourseInterpreter(
-        candc = CandcImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin"))),
-        boxer = BoxerImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin"))))
+        candc = new CandcImpl(),
+        boxer = new BoxerImpl())
    var i = 291
    for (sentence <- sts_long.drop(291)) {
       println(i)

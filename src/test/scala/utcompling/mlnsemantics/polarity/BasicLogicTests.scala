@@ -17,8 +17,8 @@ class BasicLogicTests {
 
     val cr = new CaseRunner(
       discourseInterpreter = new BoxerDiscourseInterpreter[DrtExpression](
-        candc = CandcImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin/"))),
-        boxer = BoxerImpl.findBinary(Some(FileUtils.pathjoin(System.getenv("HOME"), "bin/candc/bin/")))),
+        candc = new CandcImpl(),
+        boxer = new BoxerImpl()),
       prover = new Prover9TheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/LADR-2009-11A/bin/prover9"), 5, false))
 
     println("quantification")

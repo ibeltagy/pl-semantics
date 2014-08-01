@@ -14,8 +14,8 @@ def read_mln_output(directory):
         if line.startswith("Errors found: "):
             numErrors = int(line.split(" ")[-1])
             if numErrors > 0:
-                sys.stderr.write("Results from directory '%s' has %d errors. You must fix them first.\n" % numErrors)
-                sys.exit(1)
+                sys.stderr.write("Results from directory '%s' has %d errors. You must fix them first.\n" % (directory, numErrors))
+                #sys.exit(1)
         if line.startswith("[ "):
             results = line.strip()[2:-1]
             results = results.split(" ")
@@ -39,8 +39,19 @@ def output_train_arff(feats, golds, outf, mode="classify"):
     for x, y in zip(feats, golds):
         outf.write(",".join(map(str, x)) + "," + y + "\r\n")
 
-def output_test_arff(feats, outf):
-    pass
+def output_test_arff(feats, outf, mode="classify"):
+    outf.write("@relation rte\n")
+    for i, f in enumerate(feats[0], 1):
+        outf.write("@attribute act%d real\n" % i)
+    if mode == 'classify':
+        outf.write("@attribute gt {0,0.5,1}\n")
+    elif mode == 'regression':
+        outf.write("@attribute gt real\n")
+    else:
+        raise ValueError("I don't know what to do with mode '%s'" % mode)
+    outf.write("@data\n")
+    for x in feats:
+        outf.write(",".join(map(str, x)) + ",0.5\r\n")
 
 def main():
     parser = argparse.ArgumentParser("Takes in a bunch of system outputs and builds an ensemble arff file.")
@@ -48,6 +59,7 @@ def main():
     parser.add_argument('--gold', '-g', help="Gold labels file.")
     parser.add_argument('--out', '-o', type=argparse.FileType('w'), default=sys.stdout, help='Output file. Defaults to stdout.')
     parser.add_argument('--weka', '-w', action='store_true', help='Automatically launch WEKA after generating file.')
+    parser.add_argument('--test', '-t', action='store_true', help='Automatically apply to test set.')
     args = parser.parse_args()
 
     if args.gold:
@@ -74,6 +86,13 @@ def main():
             launcher = weka_prefix + "weka.Run -no-scan -no-load  weka.classifiers.functions.LibSVM -i -t %s" % train_file
         else:
             launcher = weka_prefix + "weka.classifiers.meta.AdditiveRegression -i -t %s -S 0.95 -I 10 -W weka.classifiers.rules.M5Rules" % train_file
+        if args.test:
+            test_file = args.out.name.replace("train", "test")
+            test_mln_feats = [read_mln_output(m.replace("train", "test")) for m in args.mln]
+            test_all_feats = [reduce(lambda x, y: x + y, x) for x in zip(*test_mln_feats)]
+            with open(test_file, 'w') as test_file_f:
+                output_test_arff(test_all_feats, test_file_f, mode)
+            launcher = launcher + " -T %s -p 0" % (test_file)
         os.execl(*launcher.split())
 
 
