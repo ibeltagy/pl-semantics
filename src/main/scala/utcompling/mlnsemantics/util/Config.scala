@@ -206,8 +206,8 @@ class Config(opts: Map[String, String] = Map()) {
   
   //Introduction for all UNVs, or for LHS only
   val lhsOnlyIntro = opts.get("-lhsOnlyIntro") match {
-    case Some("true") => true;
-    case _ => false;
+    case Some("false") => false;
+    case _ => true;
   }
   
   //What probabilistic logic tool to be used, PSL or MLN. NONE is a dummy inference that always returns 0. 

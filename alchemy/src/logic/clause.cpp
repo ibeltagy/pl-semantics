@@ -159,7 +159,7 @@ bool Clause::createAndAddUnknownClause(
     }
   }
   
-  if (clause) 
+  if (clause)  //if clause contains unknown predicates ?
   {
     if (numUnknownClauses) (*numUnknownClauses)++;
 
@@ -204,8 +204,27 @@ bool Clause::createAndAddUnknownClause(
   }
   else 
   {
+   //if all predicates in the clause are known
+	//MLN or Query
+	//True or False
+	//Hard or Soft
+	//8 possible cases, some of them can be ignore (it is ok to drop the clause)
+	//and some of them should generate an MLN inconsistensy error
+	//and some of them should end inference and return result directly
+	//1)MLN: (Checking for inconsistency between DB and MLN)
+	//True, Hard: drop
+ 	//True, Soft: drop
+	//False, Hard: Error, inconsistency between DB and MLN. Dropping is wrong, because inconsistency can go unnoticed
+ 	//False, Soft: drop
+	//2)Query: (Checking if the query is trivially answered by the DB)
+	//True, Hard: drop. (num). If all clauses of the query are true(which is difficult to check), Pr = 1
+ 	//True, Soft: drop. (denum). If all clauses of the query are true(which is difficult to check), Pr = 1
+	//False, Hard: (num)terminate inference with probability 0. If ignored, WRONG INFERENCE
+ 	//False, Soft: (denum)terminate inference with probability 0. If ignored, WRONG INFERENCE
+	//3)NO WAY TO CHECK FOR INCONSISTENCY WITHIN THE MLN ITSELF. IN THIS CASE, WE GET 0/0 PROBABILITY
+
 	  cerr << "Unsatisfiable clause found with weight: " << wt_ << endl;
-	  exit(7);
+	  //exit(7);
   }
 
   return false;

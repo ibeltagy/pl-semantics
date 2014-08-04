@@ -68,13 +68,13 @@ case $CMD in
 			 sick-rte-test) 
 				dsSize=4927
 				task=rte
-				gs="resources/sick/sick-test.gs"
+				gs="resources/sick/sick-test-rte.gs"
 				DS=sick-test
 				;;
 			 sick-sts-test) 
 				dsSize=4927
 				task=sts
-				gs="resources/sick/sick-test.gs"
+				gs="resources/sick/sick-test-sts.gs"
 				DS=sick-test
 				;;
 			 *)
