@@ -245,12 +245,14 @@ void VEC(GM& gm, vector<int>& order, vector<int>& sampling_order, clock_t& time_
 	f[n] = n;
 	bool has_timed_out = false;
 	long double num_explored = 0.0;
+	bool first_iteration_over = false;
 	while (1) {
 		bool has_sol = true;
-		if (timer.timeout(time_bound)) {
+		if (timer.timeout(time_bound) && first_iteration_over) {
 			has_timed_out = true;
 			break;
 		}
+		first_iteration_over = true;
 		num_explored += (1.0);
 		if (gm.mode == DET) {
 			vec<Lit> assumptions;

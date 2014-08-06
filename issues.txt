@@ -1,31 +1,41 @@
 New testing and development phase starts end of July 2014
+** Summery of the short TODO list:
+*)Implment AutoTyping with Skolem functions. Test it on prb 25, sick-rte 791
+*)Fix the handling of empty query in alchemy/src/infer/Clause.cpp
+*)None-0/1 probabilites because of empty domain. Test it on 1003	"A sea turtle is hunting for fish"	"The turtle isn't following the fish"
+
+*)Scope of negation: e.g
+*)A vs The: eg.
+*)Unknown: eg. 2049
+
+------
 -Suggestion: hard-coded rules. It would be great if I can get 100% accuracy with the hard-coded rules
 -Suggestion: MOST and FEW problem (what about NOT, EXACTLY, MANY): Check entailment as if it is EXIST, then apply modality rules in a separate step. 
 -Remember to test also on the test-set of SICK, not only the training set
 RUntime errors: 363,523,2432,2434,2561,3368,3374,3433,3590,3953,3954,3955,4340,4341,4342,4343,4344,4345,4570,4571
 SCRIPT: grep -E "actual:.*-|Pair" condor/afterconf-sick-test-rte-fixpermute-noir-lhsonlyintro/*.out  | grep actual -B 1 | grep '\-\-' -v | tr '\n' ' ' | tr ']' '\n' | awk '{print $3 "\t" $6}' | tr ',' ' ' | sort -n
-363	0.0:-3.0 
-523	-2.0:-2.0 
-2432	-2.0:-2.0 
-2434	-2.0:-2.0 
-2561	0.06102399999999997:-5.0 
-3368	0.0:-3.0 
-3374	0.0:-3.0 
-3433	0.0:-1.0 
-3590	0.0:-3.0 
-3953	0.0:-1.0 
-3954	0.0:-1.0 
-3955	0.0:-1.0 
-4340	-1.0:-1.0 
-4341	-1.0:-1.0 
-4342	-1.0:-1.0 
-4343	-1.0:-1.0 
-4344	0.0:-1.0 
-4345	0.0:-1.0 
-4570	0.0:-3.0 
-4571	-3.0:1.0
+363	0.0:-3.0 	Thing->BOX
+523	-2.0:-2.0	Parsing error
+2432	-2.0:-2.0 	Parsing error
+2434	-2.0:-2.0 	Parsing error
+2561	0.06:-5.0 	rerun solved it
+3368	0.0:-3.0 	Longer timeout
+3374	0.0:-3.0 	Longer timeout
+3433	0.0:-1.0 	Rerun solved it
+3590	0.0:-3.0 	Implication with large number of constants
+3953	0.0:-1.0 	Rerun from local machine solved it, but breaks on Condor
+3954	0.0:-1.0    Rerun from local machine solved it, but breaks on Condor
+3955	0.0:-1.0    Rerun from local machine solved it, but breaks on Condor
+4340	-1.0:-1.0 	Undetected parsing errors, empty boxes
+4341	-1.0:-1.0 	Undetected parsing errors, empty boxes
+4342	-1.0:-1.0 	Undetected parsing errors, empty boxes
+4343	-1.0:-1.0 	Undetected parsing errors, empty boxes
+4344	0.0:-1.0 	Undetected parsing errors, empty boxes
+4345	0.0:-1.0 	Undetected parsing errors, empty boxes
+4570	0.0:-3.0 	Longer timeout
+4571	-3.0:1.0		Thing->BOX
 
-Inference errors: 86,448,812,964,976,1186,1207,1212,1237,1303,1362,1465,1528,1575,1799,1815,2179,2277,2434,2521,3084,3209,3228,3635,3676,3693,3809,4408,4502,4602
+Inference errors: 86,448,812,964,976,1186,1207,1212,1237,1303,1362,1465,1528,1575,1799,1815,2179,2277,2434,2521,3084,3209,3228,3635,3676,3693,3809,4408,4502,4602   (same errors as in the Training set, like "A" vs "The", scope of negation, misparse, missing rules)
     86        1:0        3:1   +   1 
    448        1:0        3:1   +   1 
    812        1:0        3:1   +   1 
@@ -59,27 +69,28 @@ Inference errors: 86,448,812,964,976,1186,1207,1212,1237,1303,1362,1465,1528,157
 -Check the error code -7 in alchemy/src/logic/clause.cpp becuase it looks like it is not needed. For example, pair 9 in prb after disabling groundExist and negating hypothesis
 -Check the effect of combination-permutation vs combination only. combination only is wrong. It is applied in HardAssumptionAsEvidenceProbabilisticTheoremProver and NoExistProbabilisticTheoremProver. Disable it, run experiment, then enable it and test again. Done. Works better with same accuracy
 -run experiment with -lhsOnlyIntro true. Done. Works extreamly faster with the same accuracy.
+-run experiment with -lhsOnlyIntro true. Done. Works extreamly faster with the same accuracy.
 -Implement the AutoTyping on the HardAssumptionAsEvidenceProbabilisticTheoremProver then run pair 25 in prb. 
 -Cases of domain with no constants but the default need a second look because they give none 0/1 answers. For exmple, sick-rte 4,6 and prb 29,31. Also, add to these examples the non-0/1 results of the run afterconference-sick-rte-noIR-fixPermute-lhsOnlyIntro
 -examples with runtime errors: 167,288,366,412,788,790,791,792,949,2707,2709,2710,3618,3767,4476,4723,4725 (all of them are classified correctly)
 Some answered, remanining: 288,366,412,788,791,792,3618,4476,4723,4725
 167	0.0:-3.0		Need longer timeout
-288	-1.0:0.0 	
-366	-1.0:0.0 
-412	-3.0:0.0 
-788	0.0:-3.0 
+288	-1.0:0.0 	At least one VEC iteration
+366	-1.0:0.0 	At least one VEC iteration
+412	-3.0:0.0 	Need longer timeout
+788	0.0:-3.0 	Insain number of constants because of thing->BOX. Needs the auto-typing with the skolemization
 790	1.0:-1.0		Need longer timeout
-791	1.0:-3.0 
-792	0.0:-3.0 
+791	1.0:-3.0 	Insain number of constatns because of thing->BOX. Needs the auto-typing with skolemization 
+792	0.0:-3.0 	Insain number of constatns because of thing->BOX. Needs the auto-typing with skolemization
 949	-2.0:-2.0	Parsing error
 2707	-2.0:-2.0 	Parsing error
 2709	-2.0:-2.0 	Parsing error
 2710	-2.0:-2.0 	Parsing error
-3618	-1.0:0.0 
+3618	-1.0:0.0 	At least one VEC iteration
 3767	-1.0:0.0 	Need longer timeout 
-4476	-1.0:-1.0 
-4723	-1.0:-1.0 
-4725	-1.0:-1.0 
+4476	-1.0:-1.0 	Undetected Parsing error produces empty boxing
+4723	-1.0:-1.0 	Undetected Parsing error produces empty boxing
+4725	-1.0:-1.0   Undetected Parsing error produces empty boxing
 -examples that are predected to be Neutral but supposed to be otherwise are probably because lake of IR. Few examples are not in this class, and they should be carefully studied. They are: 458,642,974,1003,1145,1196,1227,1240,1371,1531,1653,1991,2049,2195,2521,3346,3738,3897,3899,4505
 Details:
    458      2:0.5        1:0   +   1  Unknown. "There is no cat eating corn on the cob		A cat is eating some corn. Inference makes sense", annotation makes sense, do not know where the problem is.
@@ -226,7 +237,6 @@ Tokenization details and different modes of tokenization are in utcompling/mlnse
 -Removing special characters: It is two steps, 
 (a) removing quotes if the text is quoted before generating inference rules.  
 (b) replace special characters with _ before convert to FOL in PredicateCleaningBoxerExpressionInterpreterDecorator
-Is this the right place ? Should not it be right before calling MLN/PSL ? would it be better NOT to remove special characters. Instead, replace them with some other characters ?  I will keep it like this for now until I find an example where this needs to be changed. 
 In all cases, candc gets somehow confused when parsing special characters. 
 //==========================================Future enhancements
 -When supporting embeded proposition, UnnecessarySubboxRemovingBoxerExpressionInterpreter has to change  (unremove theme and propositions)
