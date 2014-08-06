@@ -19,6 +19,24 @@ class FindEventsProbabilisticTheoremProver(
   extends ProbabilisticTheoremProver[BoxerExpression] {
 
   private val LOG = LogFactory.getLog(classOf[FindEventsProbabilisticTheoremProver])
+  
+  private def removeVarTypes(e: BoxerExpression): BoxerExpression = {
+      e match {
+        case BoxerVariable(name) => {
+          var add : Int = name.charAt(0) match 
+          {
+            case 'x' => 100;
+            case 'e' => 200;
+            case 'p' => 300;
+            case 's' => 400;
+            case _ => throw new RuntimeException("Unsupported variable type (" + name.charAt(0) + ")" );
+          }
+          BoxerVariable("x" + (add + name.substring(1).toInt))
+        }
+        case _ => e.visitConstruct(removeVarTypes)
+      }
+    }
+
 
   override def prove(
     constants: Map[String, Set[String]],
@@ -30,12 +48,17 @@ class FindEventsProbabilisticTheoremProver(
     var newAssumption = assumptions.head.expression;
     var newGoal = goal;
 
-    var newDeclarationsDetailed : Map[BoxerExpression/*representative exp*/, Seq[(String/*x,e,p,d*/, Set/*vars confirming this type*/[(String/*t,h*/, String/*varname*/)])]] = Map();
+    newAssumption = removeVarTypes(newAssumption);//remove types
+    newGoal = removeVarTypes(newGoal); //remove types
+
+
+    var newDeclarationsDetailed : Map[BoxerExpression/*representative exp*/, Seq[(String/*x,e,p,s,d*/, Set/*vars confirming this type*/[(String/*t,h*/, String/*varname*/)])]] = Map();
     
     var conflicts:Set[(String/*t,h*/, String/*varname*/)] = Set();
     
     var eventVars:Set[(String, String)] = Set();
     var propVars:Set[(String, String)] = Set();
+    var stateVars:Set[(String, String)] = Set();
     var TOrH = "t";
     if (Sts.opts.withEventProp){
 	    eventVars = findEventVar(newAssumption).toSet;
@@ -53,7 +76,7 @@ class FindEventsProbabilisticTheoremProver(
     TOrH = "h";
     newGoal = convertToEvntPropVar(newGoal); //use conflicts, eventVars and propVars to rename variables
     
-
+    
     object AllDone extends Exception { }
     def propagateConflicts() = 
     {
@@ -69,7 +92,7 @@ class FindEventsProbabilisticTheoremProver(
 	    	      for(i<-0 to types.length - 1)
 	    		  {
 	    			  	val conf = types.get(i)
-		    		    if (conf._1 == "e" || conf._1 == "p") 
+		    		    if (conf._1 == "e" || conf._1 == "p" || conf._1 == "s") 
 			    		{
 			    			  if (!(conflicts & conf._2).isEmpty)
 			    			  {
@@ -95,6 +118,7 @@ class FindEventsProbabilisticTheoremProver(
     		{
     		  var changedType =	if (eventVars.contains((discId, types.get(i).name))) "e"
     			  				else if (propVars.contains((discId, types.get(i).name))) "p"
+    			  				else if (stateVars.contains((discId, types.get(i).name))) "s"
     			  				else "x"
     		  
     		  val existingType = existingTypes.get(i)._1
@@ -117,6 +141,7 @@ class FindEventsProbabilisticTheoremProver(
     	    newDeclarationsDetailed += (exp -> (types.map(t=>{
       		  val changedType =	if (eventVars.contains((discId, t.name))) "e"
 	  				else if (propVars.contains((discId, t.name))) "p"
+	  				else if (stateVars.contains((discId, t.name))) "s"	  				  
 	  				else "x"    	      
     	      (changedType, Set((discId, t.name)))
     	    })))
@@ -164,6 +189,8 @@ class FindEventsProbabilisticTheoremProver(
             BoxerVariable("e" + name.substring(1))
           else if (propVars.contains((TOrH, name)))
             BoxerVariable("p" + name.substring(1))
+          else if (stateVars.contains((TOrH, name)))
+            BoxerVariable("s" + name.substring(1))            
           else
             e //also x
         }
@@ -176,13 +203,15 @@ class FindEventsProbabilisticTheoremProver(
       Map(
         "hx" -> Set[String](),
         "he" -> Set[String](),
-        "hp" -> Set[String]()) ;
+        "hp" -> Set[String](),
+        "hs" -> Set[String]());
     
     if (Sts.opts.task == "sts")
       newConstants = newConstants ++ Map(
         "tx" -> Set[String](),
         "te" -> Set[String](),
-        "tp" -> Set[String]()) ;
+        "tp" -> Set[String](),
+        "ts" -> Set[String]()) ;    
     
     val newDeclarations = newDeclarationsDetailed.flatMap(d => {
       List((d._1/*expression*/ match {
@@ -195,6 +224,7 @@ class FindEventsProbabilisticTheoremProver(
 			case "x"=>"hx";
 			case "e"=>"he";
 			case "p"=>"hp";
+			case "s"=>"hs";			
 			case "c"=>"hx";//conflict
 	      }))) ++
 	     (if (Sts.opts.task == "sts")
@@ -211,6 +241,7 @@ class FindEventsProbabilisticTheoremProver(
 				case "x"=>"tx";
 				case "e"=>"te";
 				case "p"=>"tp";
+				case "s"=>"ts";				
 				case "c"=>"tx";//conflict
 		      })))
 		  else
