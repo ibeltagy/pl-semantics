@@ -72,8 +72,8 @@ class TextualTheoremProver(
 	   else return Seq.fill(Sts.opts.kbest * Sts.opts.kbest)(-2);
 	 }
     
-    hypEx = BoxerPrs(hypEx.asInstanceOf[BoxerPrs].exps.map( e=> (removeTheres(e._1), e._2 )))
-    txtEx = BoxerPrs(txtEx.asInstanceOf[BoxerPrs].exps.map( e=> (removeTheres(e._1), e._2 )))
+    hypEx = BoxerPrs(hypEx.asInstanceOf[BoxerPrs].exps.map( e=> (removeDanglingEqualities(removeTheres(e._1)), e._2 )))
+    txtEx = BoxerPrs(txtEx.asInstanceOf[BoxerPrs].exps.map( e=> (removeDanglingEqualities(removeTheres(e._1)), e._2 )))
     
     //return Seq(0)
     
@@ -153,41 +153,86 @@ class TextualTheoremProver(
 		})
 	})
 	return exp;
-	/*
-    e match 
-	  {
-	    case BoxerDrs(ref, cond) if(cond.length == 2)=> {
-	      var thereVar:BoxerVariable = null;
-	      var negatedDrs:BoxerDrs = null;
-	      var eqIndex = -1;
-	      var notDiscId =  "";
-	      var notIndices: List[BoxerIndex] = null;
-	      (cond.head, cond.last) match 
-	      {
-	        case (BoxerPred(discId1, indices1, variable1, "there", pos, sense), 
-	              BoxerProp(discId2, indices2, variable2, BoxerDrs(ref, List(BoxerNot(discId3, indices3, drs)))))
-	              =>thereVar = variable1;  negatedDrs = drs.asInstanceOf[BoxerDrs];	notDiscId = discId3 ; notIndices = indices3
-	        case (BoxerProp(discId2, indices2, variable2, BoxerDrs(ref, List(BoxerNot(discId3, indices3, drs)))),
-	              BoxerPred(discId1, indices1, variable1, "there", pos, sense))
-	              =>thereVar = variable1;  negatedDrs = drs.asInstanceOf[BoxerDrs];	notDiscId = discId3 ; notIndices = indices3             
-	        case _ => return e;
-	      }
-	      negatedDrs.conds.indices.foreach(i=>
-	      {
-	          negatedDrs.conds(i) match 
-	          {
-	            case BoxerEq(discId, indices, first, second) => if(first == thereVar || second == thereVar) eqIndex = i;
-	            case _ => 
-	          }
-	      })
-	      if(eqIndex != -1)
-			{
-				println ("<<<<< THERE removed >>>>>")
-				return BoxerNot(notDiscId, notIndices, BoxerDrs(negatedDrs.refs, negatedDrs.conds.filterNot(_ == negatedDrs.conds(eqIndex))))
-			}
-	    }
-	    case _ => return e;
-	  }
-	  return e;*/
   }
+/////////////////////////////////////////
+  def countPredRef(e:BoxerExpression) : Int =
+  {
+    e match {
+		case BoxerAlfa(variable, first, second) =>  /*countPredRef(variable) +*/ countPredRef(first) + countPredRef(second)
+		case BoxerDrs(refs, conds) => 
+		  //val l1 = refs.map(r=>{countPredRef(r._2)})
+		  val l2 = conds.map(c=>{countPredRef(c)})
+		  (/*l1 ++ */ l2).foldLeft(0)( _ + _) 
+		case BoxerEq(discId, indices, first, second) => countPredRef(first) + countPredRef(second)
+		case BoxerNamed(discId, indices, variable, name, typ, sense) => countPredRef(variable);
+		case BoxerPred(discId, indices, variable, name, pos, sense) => countPredRef(variable);
+		case BoxerProp(discId, indices, variable, drs) => /*countPredRef(variable) +*/ countPredRef(drs);
+		case BoxerRel(discId, indices, event, variable, name, sense) =>  countPredRef(variable) + countPredRef(event);
+		case BoxerCard(discId, indices, variable, num, typ) => countPredRef(variable);
+		case BoxerVariable(v) => if(v == varToBeRemoved) 1 else 0;
+		case _ => e.visit(countPredRef, (parts: List[Int]) => parts.reduce(_ + _), 0)
+    }  
+  }
+  
+  def removeDanglingEquality(e:BoxerExpression) : BoxerExpression =
+  {
+    e match {
+      case BoxerDrs(ref, cond) => BoxerDrs(ref.filterNot(r=>{r._2.name == varToBeRemoved}), 
+          cond.filterNot(c=> { c == eqToBeRemoved}).map(removeDanglingEquality))
+      case _ => e.visitConstruct(removeDanglingEquality)
+    }
+  }
+  
+  def removeDanglingEqualities(e:BoxerExpression) : BoxerExpression = 
+  {
+    var exp = e;
+	val eqs = e.getEqualities.flatMap(eq =>{
+	    eq match
+	    {
+	      case BoxerEq(discId, indices, first, second) => Some((eq, first.name, second.name))
+	    }
+	})
+	eqs.foreach(eq=>
+	{
+		eqToBeRemoved = eq._1
+		varToBeRemoved = eq._2;  //first equality variable
+		val cntAllRef = countRef(exp);
+		val cntPredRef = countPredRef(exp);
+		if(cntPredRef == 1 && cntAllRef == 2 )
+		{
+		  exp = removeDanglingEquality(exp);
+		  println ("<<<<< EQ removed >>>>>")
+		}
+		else if(cntPredRef == 1 && cntAllRef != 2 )
+		{
+		  println("<<<<< EQ REMOVE ERROR on Variable " + varToBeRemoved + ", countAllRef = "+cntAllRef+" >>>>>")
+		}
+		else if(cntPredRef == 0 )
+		{
+		  throw new RuntimeException("not reachable");
+		}
+		else 
+		{
+			varToBeRemoved = eq._3; //second equality variable
+			val cntAllRef = countRef(exp);
+			val cntPredRef = countPredRef(exp);
+			if(cntPredRef == 1 && cntAllRef == 2 )
+			{
+			  exp = removeDanglingEquality(exp);
+			  println ("<<<<< EQ removed >>>>>")
+			}
+			else if(cntPredRef == 1 && cntAllRef != 2 )
+			{
+				println("<<<<< EQ REMOVE ERROR on Variable " + varToBeRemoved + ", countAllRef = "+cntAllRef+" >>>>>")
+			}
+			else if(cntPredRef == 0 )
+			{
+			  throw new RuntimeException("not reachable");
+			}
+				
+		}
+	})
+	return exp;
+  }
+  
 }

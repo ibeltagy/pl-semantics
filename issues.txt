@@ -8,6 +8,12 @@ New testing and development phase starts end of July 2014
 *)A vs The: eg.
 *)Unknown: eg. 2049
 
+---------
+Changes of the new Boxer:
+-Variables types: entity, event, prop, s
+-Hanlding of THERE is slightly different
+-Always use MERGE, and ALPHA was never used. 
+-A very frequent meta predicate called "topic" 
 ------
 -Suggestion: hard-coded rules. It would be great if I can get 100% accuracy with the hard-coded rules
 -Suggestion: MOST and FEW problem (what about NOT, EXACTLY, MANY): Check entailment as if it is EXIST, then apply modality rules in a separate step. 
@@ -91,6 +97,7 @@ Some answered, remanining: 288,366,412,788,791,792,3618,4476,4723,4725
 4476	-1.0:-1.0 	Undetected Parsing error produces empty boxing
 4723	-1.0:-1.0 	Undetected Parsing error produces empty boxing
 4725	-1.0:-1.0   Undetected Parsing error produces empty boxing
+
 -examples that are predected to be Neutral but supposed to be otherwise are probably because lake of IR. Few examples are not in this class, and they should be carefully studied. They are: 458,642,974,1003,1145,1196,1227,1240,1371,1531,1653,1991,2049,2195,2521,3346,3738,3897,3899,4505
 Details:
    458      2:0.5        1:0   +   1  Unknown. "There is no cat eating corn on the cob		A cat is eating some corn. Inference makes sense", annotation makes sense, do not know where the problem is.
