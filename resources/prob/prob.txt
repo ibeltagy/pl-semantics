@@ -1,5 +1,6 @@
+A motorbike rider is jumping over a person on a sandy track	A person is riding a motorbike in the event related to motocross
+A young girl in a blue leotard is jumping in the air	There is no girl in blue jumping in the air
 A person is not quickly chopping mushrooms with a knife	A person is quickly chopping mushrooms with a knife
-A man is climbing a rope	There is no man holding a mask in his raised hand
 A snake is being fed a mouse by a man	No snake is being fed a mouse by a man
 There is no woman using an eye pencil and applying eye liner to her eyelid	A woman is applying cosmetics to her eyelid
 a bird flies	a bird flies

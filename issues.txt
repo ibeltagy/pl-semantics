@@ -2,11 +2,14 @@ New testing and development phase starts end of July 2014
 ** Summery of the short TODO list:
 *)Implment AutoTyping with Skolem functions. Test it on prb 25, sick-rte 791
 *)Fix the handling of empty query in alchemy/src/infer/Clause.cpp
-*)None-0/1 probabilites because of empty domain. Test it on 1003	"A sea turtle is hunting for fish"	"The turtle isn't following the fish"
-
-*)Scope of negation: e.g
-*)A vs The: eg.
-*)Unknown: eg. 2049
+*)Use IJGP for ground networks with long formulas (more than 21 )
+*)Negation and alignment of negation scope and how to negate T. This should cover the subproblems below: (Examples below)
+  -)None-0/1 probabilites because of empty domain. Test it on 1003	"A sea turtle is hunting for fish"	"The turtle isn't following the fish"
+  -)Scope of negation: e.g
+  -)A vs The: eg.
+  +)Implemented by negating what is at the right of AGENT relation. This is wrong in cases like 307,3301,3436
+  +)Still many negation scope pairs fail. Some of them are listed below 
+*)Unknown: 458,2049,2195
 
 ---------
 Changes of the new Boxer:
@@ -97,6 +100,29 @@ Some answered, remanining: 288,366,412,788,791,792,3618,4476,4723,4725
 4476	-1.0:-1.0 	Undetected Parsing error produces empty boxing
 4723	-1.0:-1.0 	Undetected Parsing error produces empty boxing
 4725	-1.0:-1.0   Undetected Parsing error produces empty boxing
+-------
+Same as above with the new Boxer: 
+412 -3.0:0.0,		Very long query (27 predicates). SampleSearch needs to call IJGP instead of VEC
+667 0.0:-1.0,		Works locally
+703 -3.0:-3.0,		Disjunction gets insane
+754 0.0:-1.0,		Works locally
+756 0.0:-1.0,		Works locally
+757 0.0:-1.0,		Works locally
+788 0.0:-1.0,		THING->BOX. Needs Skolem functions with AutoType
+790 1.0:-1.0,		Works locally
+791 1.0:-3.0,		THING->BOX. Needs Skolem functions with AutoType
+792 0.0:-3.0,		THING->BOX. Needs Skolem functions with AutoType
+949 -2.0:-2.0,		Misparse
+2707 -2.0:-2.0,	Misparse
+2709 -2.0:-2.0,	Misparse
+2710 -2.0:-2.0,	Misparse
+3618 -3.0:0.0,		Use IJGP not VEC
+3624 0.0:-1.0,		Very weird boxing creats a very large ground network. Memory exhausted
+3626 0.0:-1.0,		Memory exhausted
+4111 0.0:-3.0,		THING->BOX. Needs Skolem functions with AutoType
+4135 0.0:-3.0,		Use IJGP not VEC
+4137 0.0:-1.0,		Works locally
+
 
 -examples that are predected to be Neutral but supposed to be otherwise are probably because lake of IR. Few examples are not in this class, and they should be carefully studied. They are: 458,642,974,1003,1145,1196,1227,1240,1371,1531,1653,1991,2049,2195,2521,3346,3738,3897,3899,4505
 Details:
@@ -120,8 +146,32 @@ Details:
   3897        1:0        3:1   +   1  Scope of negation
   3899        1:0        3:1   +   1  Scope of negation 
   4505      2:0.5        1:0   +   1  Wrong annotation, our system gets it right
-
-
+-----------------
+With new BOXER + introduction to LHS of Negated Text, problmes are: 
+*)Unknonw: 
+458
+2049
+2195
+3897
+3899
+Representative example:
+-A person is not writing with a pencil		A person is writing
+*)A vs The
+1003
+1145
+1227
+1240
+3738
+565
+1719
+2899
+Representative examples: 
+-A man is driving a car			A man is NOT driving THE car
+-A man is driving a new car	A man is driving a car that is NOT new
+*)Un-even Negation scope
+4325
+4610
+4326
 ---------------------------
 ===========================
 Things to try: fixed AutoType, repeat, noRelIntro, IR W * 3
