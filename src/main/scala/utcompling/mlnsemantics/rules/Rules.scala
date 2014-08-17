@@ -13,15 +13,26 @@ import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 class Rules {
 }
 
+class RuleType {
+}
+
+object RuleType extends Enumeration {
+	  type RuleType = Value
+	  val Implication = Value("Implication") 
+	  val DoubleImplication = Value("DoubleImplication")
+	  val BackwardImplication = Value("BackwardImplication")
+	  val Opposite = Value("Opposite")
+  }
+
 object Rules {
 
-  private val LOG = LogFactory.getLog(classOf[Rules])
+  private val LOG = LogFactory.getLog(classOf[Rules]) 
 
   /**
    * Convert paraphrase rules in text format to FOL.
    * Rules have the format: <id> TAB <text_phrase> TAB <hypo_phrase> TAB <sim_score>
    */
-  def convertRulesToFOL(rules: List[String], text: BoxerExpression, hypothesis: BoxerExpression): List[(BoxerDrs, BoxerDrs, Double)] =
+  def convertRulesToFOL(rules: List[String], text: BoxerExpression, hypothesis: BoxerExpression): List[(BoxerDrs, BoxerDrs, Double, RuleType.Value)] =
     {
       val assumePredsList = text.getPredicates
       val goalPredsList = hypothesis.getPredicates
@@ -149,7 +160,7 @@ object Rules {
           val lhsDrs = BoxerDrs((matchAssumePredVars ++ matchGoalPredVars).map(v => (List() -> BoxerVariable(v))).toList, leftFOL.toList);
           val rhsDrs = BoxerDrs((matchAssumePredVars ++ matchGoalPredVars).map(v => (List() -> BoxerVariable(v))).toList, rightFOL.toList);
           
-          List((lhsDrs, rhsDrs, score.toDouble))
+          List((lhsDrs, rhsDrs, score.toDouble, RuleType.Implication))
         }
       }
       return folRules;
@@ -164,19 +175,19 @@ object Rules {
       }
     }
 
-  def createWeightedExpression(leftFOL: BoxerDrs, rightFOL: BoxerDrs, score: Double): List[WeightedExpression[BoxerExpression]] =
+  def createWeightedExpression(leftFOL: BoxerDrs, rightFOL: BoxerDrs, score: Double, ruleType: RuleType.Value): List[WeightedExpression[BoxerExpression]] =
   {
     if(score < Sts.opts.weightThreshold )
       return List();
   
-    List(createWeightedExpression(leftFOL, rightFOL, "h", score)).flatten ++
+    List(createWeightedExpression(leftFOL, rightFOL, "h", score, ruleType)).flatten ++
     (
       if (Sts.opts.task == "sts")
-        List(createWeightedExpression(rightFOL, leftFOL, "t", score)).flatten
+        List(createWeightedExpression(rightFOL, leftFOL, "t", score, ruleType)).flatten
       else List())
   }
 
-  private def createWeightedExpression(leftFOL: BoxerDrs, rightFOL: BoxerDrs, discId: String, score: Double): Option[WeightedExpression[BoxerExpression]] =
+  private def createWeightedExpression(leftFOL: BoxerDrs, rightFOL: BoxerDrs, discId: String, score: Double, ruleType: RuleType.Value): Option[WeightedExpression[BoxerExpression]] =
     {
       val lhsSet = leftFOL.refs.map(_._2).toSet
       val rhsSet = rightFOL.refs.map(_._2).toSet
@@ -193,7 +204,12 @@ object Rules {
       val allRefs = (lhs.refs ++ rhs.refs).toSet.toList
       rhs = BoxerDrs(List(), rhs.conds);
       lhs = BoxerDrs(allRefs, lhs.conds);
-      val unweightedRule = BoxerImp(discId, List(), lhs, rhs)
+      val unweightedRule = ruleType match {
+        case RuleType.BackwardImplication => BoxerImp(discId, List(), rhs, lhs) 
+        case RuleType.Implication => BoxerImp(discId, List(), lhs, rhs)
+        case RuleType.DoubleImplication => BoxerEqv(discId, List(), lhs, rhs)
+        case RuleType.Opposite => BoxerEqv(discId, List(), lhs, BoxerNot(discId, List(), rhs))
+      }
       return Some(SoftWeightedExpression(unweightedRule, score))
     }
 }

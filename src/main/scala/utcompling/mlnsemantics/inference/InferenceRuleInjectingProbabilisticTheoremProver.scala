@@ -27,6 +27,7 @@ import utcompling.mlnsemantics.rules.DistributionalRules
 import utcompling.mlnsemantics.rules.ParaphraseRules
 import utcompling.mlnsemantics.rules.Rules
 import utcompling.mlnsemantics.rules.OnTheFlyRules
+import utcompling.mlnsemantics.rules.WordNetRules
 
 class InferenceRuleInjectingProbabilisticTheoremProver(
 
@@ -62,15 +63,18 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 	val paraphraseRules = new ParaphraseRules().getRules();
 		
 	val precompiledRules = Rules.convertRulesToFOL(distributionalRules ++  paraphraseRules, assumptions.head.expression, goal)
-								.map(r=> (r._1, r._2, r._3 * Sts.opts.rulesWeight)) //scale weights of all precompiles rules
+								.map(r=> (r._1, r._2, r._3 * Sts.opts.rulesWeight, r._4)) //scale weights of all precompiles rules
 	
 	    //generate distributional inference rules on the fly
 	val onthefulyRules = new OnTheFlyRules().getRules(assumptions.head.expression, goal, ruleWeighter, vecspaceFactory)
-										.map(r=> (r._1, r._2, r._3 * Sts.opts.distWeight)) //scale weights of all onthefly rules
+										.map(r=> (r._1, r._2, r._3 * Sts.opts.distWeight, r._4)) //scale weights of all onthefly rules
+										
+          //Hard rules from WordNet
+	val wordNetRules = new WordNetRules().getRules(assumptions.head.expression, goal);
     
     val rules:List[WeightedExpression[BoxerExpression]] = Sts.opts.inferenceRulesLevel match {
 		case -1 => List();
-		case _ => (precompiledRules ++  onthefulyRules).flatMap(r=>Rules.createWeightedExpression(r._1, r._2, r._3));
+		case _ => (precompiledRules ++  onthefulyRules ++ wordNetRules).flatMap(r=>Rules.createWeightedExpression(r._1, r._2, r._3, r._4));
 	 } 
   
     delegate.prove(constants, declarations, evidence, assumptions ++ (rules.toSet.toList), goal)

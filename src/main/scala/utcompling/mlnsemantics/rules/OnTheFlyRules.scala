@@ -23,7 +23,7 @@ class OnTheFlyRules extends Rules {
   private val LOG = LogFactory.getLog(classOf[OnTheFlyRules])
 
   def getRules(text: BoxerExpression, hypothesis: BoxerExpression, ruleWeighter: RuleWeighter,
-    vecspaceFactory: ((String => Boolean) => BowVectorSpace)): List[(BoxerDrs, BoxerDrs, Double)] =
+    vecspaceFactory: ((String => Boolean) => BowVectorSpace)): List[(BoxerDrs, BoxerDrs, Double, RuleType.Value)] =
     {
       val assumPredsAndContexts = getAllPredsAndContexts(text)
       val goalPredsAndContexts = getAllPredsAndContexts(hypothesis)
@@ -59,7 +59,7 @@ class OnTheFlyRules extends Rules {
         predTypeMap += ((goalPredsAndContext._1.name) -> variableType(goalPredsAndContext._1))
 
       //create rules
-      var rules = List[(BoxerDrs, BoxerDrs, Double)]() ;
+      var rules = List[(BoxerDrs, BoxerDrs, Double, RuleType.Value)]() ;
    if (Sts.opts.inferenceRulesLevel > 0){ //if > 0, add lexical and phrasal distrbutional rules
     
       //findRelPred handels if inferenceRulesLevel is 1 or 2
@@ -105,7 +105,7 @@ class OnTheFlyRules extends Rules {
             val goalVarTypeMap = goalEntryExp.getPredicates().map(pred => (pred.variable.name, predTypeMap(pred.name))).toMap
           
               if (rw.head._2.get > 0 && checkCompatibleType(assumeVarTypeMap, goalVarTypeMap))
-                rules = rules ++ List((assumEntryExp, goalEntryExp, rw.head._2.get))
+                rules = rules ++ List((assumEntryExp, goalEntryExp, rw.head._2.get, RuleType.Implication))
               
             }
           }

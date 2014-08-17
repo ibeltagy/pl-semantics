@@ -7,6 +7,8 @@ import edu.mit.jwi.Dictionary
 import edu.mit.jwi.IDictionary
 import java.net.URL
 import scala.collection.JavaConversions.asScalaBuffer
+import utcompling.Resources
+import edu.mit.jwi.item.IWord
 
 class WordnetImpl(dict: IDictionary) extends Wordnet {
 
@@ -14,7 +16,8 @@ class WordnetImpl(dict: IDictionary) extends Wordnet {
     this({ val d = new Dictionary(new URL("file", null, path)); d.open(); d })
 
   def this() =
-    this(System.getenv("WORDNETHOME"))
+    //this(System.getenv("WORDNETHOME"))
+    this(Resources.wordnet)
 
   def open(): IDictionary =
     if (dict.open())
@@ -60,12 +63,16 @@ class WordnetImpl(dict: IDictionary) extends Wordnet {
       })
   }
   
+  
+  def antonyms(synset: ISynset):Set[IWord] =
+		  synset.getWords().map(w=> w.getRelatedWords(Pointer.ANTONYM)).flatten.map(wIdx=>dict.getWord(wIdx)).toSet
+  
   def getSynonyms(name: String, pos: String): Set[String] =
     (for (
       p <- getPos(pos);
       s <- this.synsets(name, p);
       w <- s.getWords
-    ) yield w.getLemma).toSet + name -- Set("POS", "NEG") //TODO: REMOVE THE "+ name".  WE ONLY WANT NEED THIS FOR WHEN THE WORD ISN'T IN WORDNET.
+    ) yield w.getLemma).toSet
 
   def getHypernyms(name: String, pos: String): Set[String] =
     (for (
@@ -82,12 +89,19 @@ class WordnetImpl(dict: IDictionary) extends Wordnet {
       h <- this.allHyponyms(s, 20);
       w <- h.getWords
     ) yield w.getLemma).toSet
-
+    
+  def getAntonyms(name: String, pos: String): Set[String] =
+    (for (
+      p <- getPos(pos);
+      s <- this.synsets(name, p);
+      w <- this.antonyms(s)
+    ) yield w.getLemma()).toSet
+    
   def getPos(s: String): List[POS] =
     s match {
       case "n" => List(POS.NOUN)
       case "v" => List(POS.VERB)
-      case "a" => List(POS.ADJECTIVE)
+      case "a" => List(POS.ADJECTIVE, POS.ADVERB)
       case _ => Nil
     }
 

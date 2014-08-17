@@ -143,6 +143,11 @@ class Config(opts: Map[String, String] = Map()) {
     case _ => new utcompling.mlnsemantics.vecspace.CosineLexEntailmentModel
   }
 
+  //Enable or Disable WordNet rules
+  val wordnet = opts.get("-wordnet") match {
+    case Some("false") => false;
+    case _ => true;
+  }
   
   //-------------------------------------------task
     

@@ -1,3 +1,14 @@
+H|T, H|NotT, T|NotH 
+-It covers the A vs. THE problem, and the negation scope problem
+-Negating a formula that already has a negation is by removing that negation
+-Do I still need to detect the subject, or the presuposition ? Try it
+-Does it cover Contradition because of antonyms ? I hope so
+-Suggestion: if only T contains negations, use H|NotT, If only H does, use T|NotH, If both do, then use both T|NotH and H|NotT. If none of them does, ......???
+
+Antonyms rules problems: try pair 538
+1-how to negate T ? (same problem as the A and THE)
+2-AutoType forces everything to False. This should be taken into account.
+
 New testing and development phase starts end of July 2014
 ** Summery of the short TODO list:
 *)Implment AutoTyping with Skolem functions. Test it on prb 25, sick-rte 791

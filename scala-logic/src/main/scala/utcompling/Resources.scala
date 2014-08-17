@@ -11,6 +11,7 @@ object Resources {
   var candc = "candc/bin";
   var alchemy = "alchemy/bin";
   var polarityLexicon = "resources/polarity-lexicon/polarity_lexicon_expanded.txt";
+  var wordnet = "resources/wordnet";
   
   def setVar(varName: String, varValue: String) = 
   {
@@ -19,7 +20,8 @@ object Resources {
       case "candc" => candc = varValue;
       case "alchemy" => alchemy = varValue;
       case "polarityLexicon" => polarityLexicon = varValue;
-      case _ =>
+      case "wordnet" => wordnet = varValue;
+      case _ => throw new RuntimeException("unknown resource");
     }
   }
 
