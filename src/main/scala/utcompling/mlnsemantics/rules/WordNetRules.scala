@@ -47,11 +47,14 @@ class WordNetRules extends Rules {
         	 if (hypPred.pos == txtPred.pos && hypPred.name != txtPred.name)
         	 {
         		 if (synonyms.contains(hypPred.name))
-        			  rules = rules :+ createRule (txtPred, hypPred, RuleType.Implication); //supposed to be DoubleImplication
+        		 {								//DoubleImplication
+        		   rules = rules :+ createRule (txtPred, hypPred, RuleType.Implication); 
+        		   rules = rules :+ createRule (txtPred, hypPred, RuleType.BackwardImplication);
+        		 }
         		 if (hypernyms.contains(hypPred.name))
         			  rules = rules :+ createRule (txtPred, hypPred, RuleType.Implication);
-        		 //if (hyponyms.contains(hypPred.name))   //backward implication 
-        		 //	  rules = rules :+ createRule (hypPred, txtPred, RuleType.BackwardImplication); //backward implication 
+        		 if (hyponyms.contains(hypPred.name))   //backward implication 
+        		 	  rules = rules :+ createRule (txtPred, hypPred, RuleType.BackwardImplication); //backward implication 
         		 if (antonyms.contains(hypPred.name))   
         			  rules = rules :+ createRule (txtPred, hypPred, RuleType.Opposite);        		 
         	 }

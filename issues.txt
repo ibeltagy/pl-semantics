@@ -1,3 +1,6 @@
+Pair 85, yet another problem with detecting Contradiction. The idea of removing negation from the negated sentense it WRONG
+bug in AutoType. Check pair: 4599. Inference rule that does not propagate evidence 
+
 H|T, H|NotT, T|NotH 
 -It covers the A vs. THE problem, and the negation scope problem
 -Negating a formula that already has a negation is by removing that negation
@@ -8,6 +11,7 @@ H|T, H|NotT, T|NotH
 Antonyms rules problems: try pair 538
 1-how to negate T ? (same problem as the A and THE)
 2-AutoType forces everything to False. This should be taken into account.
+3-AutoType should be checked to support the new types of inference rules
 
 New testing and development phase starts end of July 2014
 ** Summery of the short TODO list:

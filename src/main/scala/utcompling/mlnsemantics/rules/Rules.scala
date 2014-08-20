@@ -202,8 +202,16 @@ object Rules {
       var lhs = changedLHS.asInstanceOf[BoxerDrs]();      
       var rhs = rightFOL
       val allRefs = (lhs.refs ++ rhs.refs).toSet.toList
-      rhs = BoxerDrs(List(), rhs.conds);
-      lhs = BoxerDrs(allRefs, lhs.conds);
+      if(ruleType  == RuleType.BackwardImplication )
+      {
+    	  rhs = BoxerDrs(allRefs, rhs.conds);
+    	  lhs = BoxerDrs(List(), lhs.conds);
+      }
+      else
+      {
+    	  rhs = BoxerDrs(List(), rhs.conds);
+    	  lhs = BoxerDrs(allRefs, lhs.conds);        
+      }
       val unweightedRule = ruleType match {
         case RuleType.BackwardImplication => BoxerImp(discId, List(), rhs, lhs) 
         case RuleType.Implication => BoxerImp(discId, List(), lhs, rhs)

@@ -68,7 +68,7 @@ class TextualTheoremProver(
 	   if(Sts.opts.task == "sts")
 			  return Seq.fill(Sts.opts.kbest * Sts.opts.kbest * 2)(-2);
 	   else  if (Sts.opts.task == "rte" && Sts.opts.withNegT && Sts.opts.softLogicTool != "psl")
-   		  return Seq.fill(Sts.opts.kbest * Sts.opts.kbest * 2)(-2); //check GivenNotTextProbabilisticTheoremProver for details
+   		  return Seq.fill(Sts.opts.kbest * Sts.opts.kbest * 3)(-2); //check GivenNotTextProbabilisticTheoremProver for details
 	   else return Seq.fill(Sts.opts.kbest * Sts.opts.kbest)(-2);
 	 }
     

@@ -141,3 +141,13 @@ class Lucene(rulesFileName: String) {
   }
 
 }
+object Lucene
+{
+	def main(args: Array[String])
+	{
+		val l = new Lucene ("resources/ppdb.small")
+		val res = l.query("Some adults are sitting in the chairs and are watching the ocean ______parse_failed______")
+		println(res)
+		
+	}
+}
