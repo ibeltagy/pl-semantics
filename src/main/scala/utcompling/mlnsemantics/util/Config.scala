@@ -27,6 +27,55 @@ import utcompling.Resources
 
 class Config(opts: Map[String, String] = Map()) {
 
+  val validArgs:List[String] = List(
+	    "-log",
+		"-timeout",
+		"-vectorSpace",
+		"-distWeight",
+		"-phrases",
+		"-phraseVecs",
+		"-rulesWeight",
+		"-rules",
+		"-vectorMaker",
+		"-vsWithPos",
+		"-alpha",
+		"-ngramN",
+		"-dupPhraseLexical",
+		"-irLvl",
+		"-wThr",
+		"-lexInferModelFile",
+		"-lexInferMethod",
+		"-wordnet",
+		"-task",
+		"-varBind",
+		"-chopLvl",
+		"-maxProb",
+		"-scaleW",
+		"-logic",
+		"-fixDCA",
+		"-noHMinus",
+		"-keepUniv",
+		"-lhsOnlyIntro",
+		"-softLogic",
+		"-withEventProp",
+		"-negativeEvd",
+		"-withNegT",
+		"-groundExist",
+		"-focusGround",
+		"-groundLimit",
+		"-funcConst",
+		"-metaW",
+		"-relW",
+		"-kbest",
+		"-multiOut"
+	);
+  
+  val diff = opts.keys.toSet.diff(validArgs.toSet)
+  if(!diff.isEmpty)
+  {
+    throw new RuntimeException("Invalid arguments " + diff.mkString(", "));
+  }
+  
   //log levels as defined by log4j
   val loglevel = opts.get("-log").map(Level.toLevel).getOrElse(Level.OFF);
   
@@ -82,7 +131,9 @@ class Config(opts: Map[String, String] = Map()) {
   val compositeVectorMaker = opts.get("-vectorMaker") match {
     case Some("ngram") => "ngram";
     case Some("mul") => "mul";
-    case _ => "add";
+    case Some("add") => "add";
+    case None => "add"; //default
+    case Some(x) => throw new RuntimeException("Invalid value " + x + " for argument -vectorMaker");
   }
   
   //vector space has POS or not. The one I am using now is without POS. Gemma has ones with POS
@@ -140,7 +191,8 @@ class Config(opts: Map[String, String] = Map()) {
   val lexicalInferenceMethod: utcompling.mlnsemantics.vecspace.LexEntailmentModel = opts.get("-lexInferMethod") match {
     case Some("cosine") => new utcompling.mlnsemantics.vecspace.CosineLexEntailmentModel
     case Some("asym") => new utcompling.mlnsemantics.vecspace.LogRegLexEntailmentModel(lexicalInferenceModelFile)
-    case _ => new utcompling.mlnsemantics.vecspace.CosineLexEntailmentModel
+    case None => new utcompling.mlnsemantics.vecspace.CosineLexEntailmentModel
+    case Some(x) => throw new RuntimeException("Invalid value " + x + " for argument -lexInferMethod");
   }
 
   //Enable or Disable WordNet rules
@@ -154,7 +206,9 @@ class Config(opts: Map[String, String] = Map()) {
   //task: rte, sts
   val task = opts.get("-task") match {
     case Some("sts") => "sts";
-    case _ => "rte";
+    case Some("rte") => "rte";
+    case None => "rte";
+    case Some(x) => throw new RuntimeException("Invalid value " + x + " for argument -task");
   }
 
   //variable binding (only on sts with mln)
@@ -167,7 +221,9 @@ class Config(opts: Map[String, String] = Map()) {
   //rp (relation ^ predicate), prp (predicate ^ relation ^ predicate)
   val chopLvl = opts.get("-chopLvl") match {
     case Some("prp") => "prp";
-    case _ => "rp";
+    case Some("rp") => "rp";
+    case None => "rp";
+    case Some(x) => throw new RuntimeException("Invalid value " + x + " for argument -chopLvl");
   }
 
   //maximum probability. It is part of the equation to calculate the average-combiners's weights (only on sts with mln) 
@@ -186,7 +242,9 @@ class Config(opts: Map[String, String] = Map()) {
 
   val logicFormSource = opts.get("-logic") match {
     case Some("dep") => "dep";
-    case _ => "box";
+    case Some("box") => "box";
+    case None => "box";
+    case Some(x) => throw new RuntimeException("Invalid value " + x + " for argument -logic");    
   }
 
   //do all the changes required to fix the problems resulting from the Domain Closure Assumption
@@ -221,13 +279,14 @@ class Config(opts: Map[String, String] = Map()) {
     case Some("none") => "none"
     case Some("ss") => "ss"
     case Some("mln") => "mln"
-    case _ => {
+    case None => {
       task match {
         case "rte" => "ss"
         case "sts" => "psl"
         case _ => "none"
       }
     }
+    case Some(x) => throw new RuntimeException("Invalid value " + x + " for argument -softLogic");    
   }
   
   //recover event variables and prop variables or not
