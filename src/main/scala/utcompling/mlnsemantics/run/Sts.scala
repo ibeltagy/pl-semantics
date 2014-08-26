@@ -197,7 +197,8 @@ object Sts {
           val ttp =
             new TextualTheoremProver( // 1<==
               logicFormSource,
-	     new DoMultipleParsesTheoremProver( // 1.5<==multiple parses
+           new	EditDRSTheoremProver(
+            new DoMultipleParsesTheoremProver( // 1.5<==multiple parses
 	         new HandleSpecialCharProbabilisticTheoremProver( // 2<== class name is misleading. Just remove the surrounding quotes if the predicate name is quoted. 
 	            		  											//This is necessary before generating inference rules, because generating inference rules searches vector space
             	new FindEventsProbabilisticTheoremProver(   //3,4<== Find event variables and prop variables. This is important to reduce domain size. 
@@ -227,7 +228,7 @@ object Sts {
 		                       new PositiveEqEliminatingProbabilisticTheoremProver( //Apply skolemized positive equalities and remove skolmeized negated equalities.		                          
 		                        new AutoTypingPTP( //generate negative evidence
 		                         new NoExistProbabilisticTheoremProver( //
-		                        softLogicTool)))))))))))))))) // 16<== run Alchemy or PSL
+		                        softLogicTool))))))))))))))))) // 16<== run Alchemy or PSL
 
           val p = ttp.prove(Tokenize(Sts.text).mkString(" "), Tokenize(Sts.hypothesis).mkString(" "))
           return p;
