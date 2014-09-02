@@ -1,3 +1,4 @@
+BUG: lemmatizing sentense does not work when called bin/mlnsem sen T H
 Pair 85, yet another problem with detecting Contradiction. The idea of removing negation from the negated sentense it WRONG
 bug in AutoType. Check pair: 4599. Inference rule that does not propagate evidence 
 

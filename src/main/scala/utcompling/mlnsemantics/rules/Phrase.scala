@@ -1,4 +1,4 @@
-package utcompling.mlnsemantics.inference.support
+package utcompling.mlnsemantics.rules
 
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerPred
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerRel
@@ -13,6 +13,14 @@ case class SimplePhrase(head:BoxerPred, tail: List[BoxerPred]) //All predicates 
 case class RelationalPhrase(head:BoxerRel, tail: SimplePhrase) //The SimplePhrase has the same variable name of head.variable.
 															//head.event could be anything
 {
+  def isPreposition = {
+    val relName = head.name
+    val nonPrep = List("agent", "patient", "topic", "role", "theme")
+    !(nonPrep.contains(relName))
+  }
+  def getHeadVariable = head.event
+  def getTailVariable = head.variable  
+  
 }
 
 

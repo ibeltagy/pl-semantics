@@ -28,6 +28,7 @@ import utcompling.mlnsemantics.rules.ParaphraseRules
 import utcompling.mlnsemantics.rules.Rules
 import utcompling.mlnsemantics.rules.OnTheFlyRules
 import utcompling.mlnsemantics.rules.WordNetRules
+import utcompling.mlnsemantics.rules.PhrasalRules
 
 class InferenceRuleInjectingProbabilisticTheoremProver(
 
@@ -55,6 +56,55 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     
     assumptions.foreach(x => LOG.info("\n" + d(x.expression).pretty))
     LOG.info("\n" + d(goal).pretty)
+    
+    var preds = assumptions.head.expression.getPredicates
+    var rels = assumptions.head.expression.getRelations
+    var simplePh = PhrasalRules.findSimplePhrases(preds);
+    var relationalPh = PhrasalRules.findRelationalPhrases(rels, simplePh);
+    var nounPh = PhrasalRules.findNounPhrases(simplePh);
+    var prepPh = PhrasalRules.findPrepPhrase(simplePh, relationalPh);
+    var verbPh = PhrasalRules.findVerbPhrase(simplePh, relationalPh);
+
+    LOG.trace("Assumption: ----------------")        
+    LOG.trace("Preds: ")
+    preds.sortBy(_.variable).foreach(LOG.trace(_))
+    LOG.trace("Rels: ")
+    rels.sortBy(_.variable).foreach(LOG.trace(_))
+    LOG.trace("SimplePhrase: ")
+    simplePh.foreach(LOG.trace(_))
+    LOG.trace("RelationalPhrase: ")
+    relationalPh.foreach(LOG.trace(_))
+    LOG.trace("NounPhrase: ")
+    nounPh.foreach(LOG.trace(_))
+    LOG.trace("PrepPhrase: ")
+    prepPh.foreach(LOG.trace(_))    
+    LOG.trace("VerbPhrase: ")
+    verbPh.foreach(LOG.trace(_))    
+
+    LOG.trace("Goal: ----------------")
+    preds = goal.getPredicates
+    rels = goal.getRelations
+    simplePh = PhrasalRules.findSimplePhrases(preds);
+    relationalPh = PhrasalRules.findRelationalPhrases(rels, simplePh);
+    nounPh = PhrasalRules.findNounPhrases(simplePh);
+    prepPh = PhrasalRules.findPrepPhrase(simplePh, relationalPh);
+    verbPh = PhrasalRules.findVerbPhrase(simplePh, relationalPh);
+    
+    LOG.trace("Preds: ")
+    preds.sortBy(_.variable).foreach(LOG.trace(_))
+    LOG.trace("Rels: ")
+    rels.sortBy(_.variable).foreach(LOG.trace(_))
+    LOG.trace("SimplePhrase: ")
+    simplePh.foreach(LOG.trace(_))
+    LOG.trace("RelationalPhrase: ")
+    relationalPh.foreach(LOG.trace(_))
+    LOG.trace("NounPhrase: ")
+    nounPh.foreach(LOG.trace(_))
+    LOG.trace("PrepPhrase: ")
+    prepPh.foreach(LOG.trace(_))    
+    LOG.trace("VerbPhrase: ")
+    verbPh.foreach(LOG.trace(_))    
+        
 
     //query lucene for pre-compiled distributional rules
 	val distributionalRules = new DistributionalRules().getRules();
