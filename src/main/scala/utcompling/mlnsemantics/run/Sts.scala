@@ -17,7 +17,6 @@ import utcompling.mlnsemantics.inference._
 import utcompling.scalalogic.discourse.impl.PreparsedBoxerDiscourseInterpreter
 import utcompling.scalalogic.discourse.DiscourseInterpreter
 import utcompling.mlnsemantics.inference.DependencyParsedBoxerDiscourseInterpreter
-import dhg.depparse._
 import org.apache.commons.logging.LogFactory
 import utcompling.mlnsemantics.util.Config
 import utcompling.mlnsemantics.util.Lucene
@@ -28,6 +27,8 @@ import utcompling.scalalogic.drt.expression.DrtApplicationExpression
 import scala.math.{sqrt, pow, min, ceil}
 import utcompling.mlnsemantics.inference.NoExistProbabilisticTheoremProver
 import utcompling.Resources
+import utcompling.mlnsemantics.datagen.Lemmatize
+import dhg.depparse.DepParser
 
 /**
  *
@@ -77,17 +78,19 @@ object Sts {
     newArgs.toSeq match {
       case Seq("sen", sen1, sen2) =>
       {
-    	  println(sen1);
-    	  println(sen2);
-    	  val lemmatized = new CncLemmatizeCorpusMapper().parseToLemmas(Array(sen1, sen2))
-    	  val lemmas = lemmatized.map(_.map(_.map(_._2).mkString(" ")).getOrElse("______parse_failed______"))
-    	  println(lemmas);
-	      val sentences = Array(sen1, sen2).map(Tokenize.separateTokens).toList
-	      val di = new ModalDiscourseInterpreter
-	      val boxes = di.batchInterpret(sentences);
-	      println(boxes);
-	      val allLemmas = lemmas.flatMap(_.split("\\s+")).toSet
-	      val fullVsFile = opts.vectorSpace
+//    	 println(sen1);
+//    	 println(sen2);
+	     val sentences = Array(sen1, sen2).map(Tokenize.separateTokens).toList
+    	 println(sentences);	     
+    	 //val lemmatized = new CncLemmatizeCorpusMapper().parseToLemmas(Array(sen1, sen2))
+    	 //val lemmas = lemmatized.map(_.map(_.map(_._2).mkString(" ")).getOrElse("______parse_failed______"))
+	     val lemmas = sentences.map(Lemmatize.lemmatizeWords)
+    	 println(lemmas);
+	     val di = new ModalDiscourseInterpreter
+	     val boxes = di.batchInterpret(sentences);
+	     println(boxes);
+	     val allLemmas = lemmas.flatMap(_.split("\\s+")).toSet
+	     val fullVsFile = opts.vectorSpace
          val tempVSFile = FileUtils.mktemp();
 	      FileUtils.writeUsing(tempVSFile) { f =>
           	for (line <- readLines(fullVsFile)) {
@@ -116,6 +119,8 @@ object Sts {
       }
       
       case Seq("lem", stsFile, lemFile) =>
+      	println ("No need to generate LEM file anymore");
+        /*  
         val sentences = readLines(stsFile).flatMap(_.split("\t")).toVector
         val step = 500;  //file is large. It should be partitioned before passed to the parser
         val totalSen = sentences.length;
@@ -135,10 +140,12 @@ object Sts {
 		            .grouped(2).foreach { case Seq(a, b) => f.write("%s\t%s\n".format(a, b)) }
 	          }
 	        }
+	    * 
+	    */
         
 
-      case Seq("vs", lemFile, stsVsFile) =>
-        val allLemmas = readLines(lemFile).flatMap(_.split("\\s+")).toSet
+      case Seq("vs", stsFile, stsVsFile) =>
+        val allLemmas = readLines(stsFile).flatMap(_.split("\\s+").map(Lemmatize.lemmatizeWord)).toSet
         val fullVsFile = opts.vectorSpace
         FileUtils.writeUsing(stsVsFile) { f =>
           for (line <- readLines(fullVsFile)) {
@@ -236,7 +243,7 @@ object Sts {
     
     def run(stsFile: String, boxFile: String, lemFile: String, vsFile: String, goldSimFile: String, outputSimFile: String, allLemmas: String => Boolean, includedPairs: Int => Boolean) {
     	val pairs = readLines(stsFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
-		val lemPairs = readLines(lemFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
+		//val lemPairs = readLines(lemFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
         val vectorSpace = BowVectorSpace(vsFile)
 
 
@@ -264,13 +271,14 @@ object Sts {
 		}	 
 		
 		val results =
-	    for ((((((txt, hyp), boxPair), goldSim), (lemTxt, lemHyp)), i) <- (pairs zipSafe boxPairs zipSafe goldSims zipSafe lemPairs).zipWithIndex if includedPairs(i + 1)) yield {
+	    //for ((((((txt, hyp), boxPair), goldSim), (lemTxt, lemHyp)), i) <- (pairs zipSafe boxPairs zipSafe goldSims zipSafe lemPairs).zipWithIndex if includedPairs(i + 1)) yield {
+		  for ((((((txt, hyp), boxPair), goldSim)), i) <- (pairs zipSafe boxPairs zipSafe goldSims ).zipWithIndex if includedPairs(i + 1)) yield {
 	
 			Sts.pairIndex = i+1;
 			Sts.text = txt;
 			Sts.hypothesis = hyp;
-			Sts.textLemma = lemTxt;
-			Sts.hypothesisLemma = lemHyp;
+			Sts.textLemma = Lemmatize.lemmatizeWords(txt);
+			Sts.hypothesisLemma = Lemmatize.lemmatizeWords(hyp);
 			println("=============\n  Pair %s\n=============".format(i + 1))
 			println(Sts.text)
 			println(Sts.hypothesis)

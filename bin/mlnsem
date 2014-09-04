@@ -105,7 +105,7 @@ fi
 
 if [ "$CMD" == "all" ] || [ "$CMD" == "gen" ] || [ "$CMD" == "vs" ]; then
 	echo "Start extracting vector space"
-	$START utcompling.mlnsemantics.run.Sts vs $lem $vs "$@"
+	$START utcompling.mlnsemantics.run.Sts vs  $txt $vs "$@"   #Use the txt file to extract lemmas. no Separate lem file
 	echo "Done extracting vector space"
 fi
 
