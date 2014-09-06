@@ -55,7 +55,7 @@ case class NgramCompositeVectorMaker(n: Int, alpha: Double) extends CompositeVec
   override def make(preds: Iterable[String], vectorspace: BowVectorSpace, sentence: String, lemmatizedSent: String): BowVector = {
     assert(!utcompling.mlnsemantics.run.Sts.opts.vectorspaceFormatWithPOS, "NgramCompositeVectorMaker doesn't work with a pos-tagged space.")
 
-    val sent_a = tokenize(sentence)
+    val sent_a = sentence.split(" ")
     val wordPosInds = preds.map(extractWordPosInd _).filter(_._3 > 0)
     val pred_words = wordPosInds.map(_._1)
     val positions = wordPosInds.map(_._3).toArray

@@ -11,8 +11,8 @@ import org.apache.lucene.analysis.core.SimpleAnalyzer
 import java.io.File
 import org.apache.commons.logging.LogFactory
 import scala.io.Source
-import utcompling.mlnsemantics.datagen.SimpleTokenizer
 import math.{ceil, min}
+import utcompling.mlnsemantics.datagen.Tokenize
 
 /**
  * A companion object handles reading and writing to Lucene.
@@ -25,8 +25,12 @@ class Lucene(rulesFileName: String) {
   private val LOG = LogFactory.getLog(classOf[Lucene])
 
   var createIndex = false;
+  var initIndex = false;
   val index = rulesFileName match {
-    case "" => new RAMDirectory();  //dummy index
+    case "" => {
+      initIndex = true; //In RAMDirectory need to be initialized even with an empty entry to be able to read
+      new RAMDirectory();  //dummy index
+    }
     case _ => {
       val file = new File(rulesFileName+".idx");
       file.exists() match {
@@ -44,13 +48,18 @@ class Lucene(rulesFileName: String) {
   val maxNumReturns = 1000000
   val analyzer = new SimpleAnalyzer(Version.LUCENE_41)
   val config = new IndexWriterConfig(Version.LUCENE_41, analyzer)
-  val writer = new IndexWriter(index, config)
+  var writer:IndexWriter = null; 
   val parser = new QueryParser(Version.LUCENE_41, fieldName, analyzer)
-  
-  this.write(Iterable[String]()); //initialize the writer.
-  
-  if (createIndex)
-	  writeRulesFile(rulesFileName);
+        
+  if (initIndex || createIndex)
+  {
+      writer = new IndexWriter(index, config)	//<------------------------
+      if (initIndex)
+    	  this.write(Iterable[String]()); //initialize the writer.
+      if (createIndex)
+    	  writeRulesFile(rulesFileName);      
+      writer.close;    	//<------------------------
+  }
     
   /**
    * Write a rules file to Lucene database. (with progress bar)
@@ -104,15 +113,15 @@ class Lucene(rulesFileName: String) {
     searcher.search(parser.parse(query), collector)
     collector.topDocs().scoreDocs.toSeq.map(_.doc).map(searcher.doc(_).get(fieldName))
   }
-  
-  
+   
   val ignoredTokens = List("a", "an", "the", "be", "is", "are", "to", "in", "on", "at", "of", "for")
-  //This function is like "read(query)" but it cleanups the query string before querying Lucene 
+  //This function is like "read(query)" but it cleanups the query string before querying Lucene  
   def query(q: String): Seq[String] = 
   {
 	val start = System.nanoTime    
-	val query = SimpleTokenizer(q)
+	val query = q.split(" ")
 	.filter(token => token.length > 1 && !ignoredTokens.contains(token))
+	.toSeq
 	.distinct
 	.mkString(" ")
 	val r = this.read(query);
@@ -120,7 +129,27 @@ class Lucene(rulesFileName: String) {
 	LOG.debug("Searching time: " + (end - start) / 1e9 + " s")       
 	LOG.debug("# returned rules: " + r.size)
 	r;
+  }
+  def query(sen1: String, sen2: String): Seq[String] = 
+  {
+	val start = System.nanoTime    
+	val query1 = sen1.split(" ")
+	.filter(token => token.length > 1 && !ignoredTokens.contains(token))
+	.toSeq
+	.distinct
+	.mkString(" ")
+	val query2 = sen2.split(" ")
+	.filter(token => token.length > 1 && !ignoredTokens.contains(token))
+	.toSeq
+	.distinct
+	.mkString(" ")
+	val r = this.read("( " + query1 + " ) AND (" + query2 +" )");
+	val end = System.nanoTime
+	LOG.debug("Searching time: " + (end - start) / 1e9 + " s")       
+	LOG.debug("# returned rules: " + r.size)
+	r;
   }  
+
 
   /**
    * Read paraphrase rules satisfying the phrase query from Lucene database

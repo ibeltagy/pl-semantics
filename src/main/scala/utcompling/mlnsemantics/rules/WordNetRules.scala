@@ -4,7 +4,6 @@ import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.CollectionUtil._
 import opennlp.scalabha.util.FileUtils._
 import org.apache.commons.logging.LogFactory
-import utcompling.mlnsemantics.datagen.SimpleTokenizer
 import utcompling.mlnsemantics.run.Sts
 import scala.Array.canBuildFrom
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
@@ -40,7 +39,7 @@ class WordNetRules extends Rules {
 		  val hypernyms = WordNetRules.wordnet.getHypernyms(txtPred.name, txtPred.pos);
 		  val hyponyms = WordNetRules.wordnet.getHyponyms(txtPred.name, txtPred.pos);
 		  val antonyms = WordNetRules.wordnet.getAntonyms(txtPred.name, txtPred.pos);
-		  println (txtPred.name + " -->" + antonyms )
+		  //println (txtPred.name + " -->" + antonyms )
 
           for (hypPred <- hypPreds )
           {

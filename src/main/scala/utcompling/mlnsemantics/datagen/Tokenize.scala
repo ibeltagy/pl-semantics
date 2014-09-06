@@ -39,6 +39,7 @@ object Tokenize {
 } */
 
 
+/* This a terribly bad tokenizer. DO NOT USE IT 
 /**
  * A very simple tokenizer that pulls most puncuation off the characters.
  * Given a raw string, tokenize it with a simple regular expression, returning
@@ -53,4 +54,4 @@ object SimpleTokenizer {
     .split("\\s+")
     .toIndexedSeq
 }
-
+*/

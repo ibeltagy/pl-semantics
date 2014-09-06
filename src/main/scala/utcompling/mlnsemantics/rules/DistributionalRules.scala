@@ -3,9 +3,9 @@ package utcompling.mlnsemantics.rules
 import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.FileUtils._
 import org.apache.commons.logging.LogFactory
-import utcompling.mlnsemantics.datagen.SimpleTokenizer
 import utcompling.mlnsemantics.run.Sts
 import scala.Array.canBuildFrom
+import utcompling.mlnsemantics.datagen.Tokenize
 
 class DistributionalRules extends Rules{
   
@@ -19,8 +19,8 @@ class DistributionalRules extends Rules{
         val Array(id, content) = phrase.split("\t")
         val str = " " + content + " "
 
-        val simpleTxt = (" " + SimpleTokenizer(Sts.text).mkString(" ") + " ")
-        val simpleLemTxt = (" " + SimpleTokenizer(Sts.textLemma).mkString(" ") + " ")
+        val simpleTxt = (" " + Sts.text.split(" ") + " ")
+        val simpleLemTxt = (" " + Sts.textLemma.split(" ") + " ")
 
         val cond = simpleTxt.contains(str) || simpleLemTxt.contains(str)
 
@@ -37,8 +37,8 @@ class DistributionalRules extends Rules{
         val Array(id, content) = phrase.split("\t")
         val str = " " + content + " "
 
-        val simpleHyp = (" " + SimpleTokenizer(Sts.hypothesis).mkString(" ") + " ")
-        val simpleLemHyp = (" " + SimpleTokenizer(Sts.hypothesisLemma).mkString(" ") + " ")
+        val simpleHyp = (" " + Sts.hypothesis.split(" ") + " ")
+        val simpleLemHyp = (" " + Sts.hypothesisLemma.split(" ") + " ")
 
         val cond = simpleHyp.contains(str) || simpleLemHyp.contains(str)
 

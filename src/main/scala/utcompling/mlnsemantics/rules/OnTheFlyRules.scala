@@ -4,7 +4,6 @@ import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.CollectionUtil._
 import opennlp.scalabha.util.FileUtils._
 import org.apache.commons.logging.LogFactory
-import utcompling.mlnsemantics.datagen.SimpleTokenizer
 import utcompling.mlnsemantics.run.Sts
 import scala.Array.canBuildFrom
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
@@ -119,7 +118,7 @@ class OnTheFlyRules extends Rules {
     if( l.length != 1)
       0 // index is not unique or does not exist 
     else
-      l.head.wordIndex+1 //index starts from 1 
+      l.head.wordIndex + 1//1 based indexing 
   }
   
   private def getAllPredsAndContexts(e: BoxerExpression): Seq[(BoxerPred, Seq[String])] =

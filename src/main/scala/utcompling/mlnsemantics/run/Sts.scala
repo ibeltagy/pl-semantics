@@ -80,7 +80,7 @@ object Sts {
       {
 //    	 println(sen1);
 //    	 println(sen2);
-	     val sentences = Array(sen1, sen2).map(Tokenize.separateTokens).toList
+	     val sentences = Array(sen1.toLowerCase(), sen2.toLowerCase()).map(Tokenize.separateTokens).toList
     	 println(sentences);	     
     	 //val lemmatized = new CncLemmatizeCorpusMapper().parseToLemmas(Array(sen1, sen2))
     	 //val lemmas = lemmatized.map(_.map(_.map(_._2).mkString(" ")).getOrElse("______parse_failed______"))
@@ -237,7 +237,7 @@ object Sts {
 		                         new NoExistProbabilisticTheoremProver( //
 		                        softLogicTool))))))))))))))))) // 16<== run Alchemy or PSL
 
-          val p = ttp.prove(Tokenize(Sts.text).mkString(" "), Tokenize(Sts.hypothesis).mkString(" "))
+          val p = ttp.prove(Sts.text, Sts.hypothesis) //Sts.text and Sts.hypothesis are already tokenized 
           return p;
     }
     
@@ -275,10 +275,10 @@ object Sts {
 		  for ((((((txt, hyp), boxPair), goldSim)), i) <- (pairs zipSafe boxPairs zipSafe goldSims ).zipWithIndex if includedPairs(i + 1)) yield {
 	
 			Sts.pairIndex = i+1;
-			Sts.text = txt;
-			Sts.hypothesis = hyp;
-			Sts.textLemma = Lemmatize.lemmatizeWords(txt);
-			Sts.hypothesisLemma = Lemmatize.lemmatizeWords(hyp);
+			Sts.text = Tokenize.separateTokens(txt.toLowerCase());
+			Sts.hypothesis = Tokenize.separateTokens(hyp.toLowerCase());
+			Sts.textLemma = Lemmatize.lemmatizeWords(Sts.text);
+			Sts.hypothesisLemma = Lemmatize.lemmatizeWords(Sts.hypothesis);
 			println("=============\n  Pair %s\n=============".format(i + 1))
 			println(Sts.text)
 			println(Sts.hypothesis)

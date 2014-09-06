@@ -1,4 +1,7 @@
-BUG: lemmatizing sentense does not work when called bin/mlnsem sen T H
+Use the index of predicates to correctly pick the subject and solve the bug I have now.
+Enhancement (fast system without the GEN phase): Use Lucene to search the vector space for the vectors, instead of linear search
+Enhancement (fast system without the GEN phase): User EasyCCG instead of C&C
+SOLVED: lemmatizing sentense does not work when called bin/mlnsem sen T H
 Pair 85, yet another problem with detecting Contradiction. The idea of removing negation from the negated sentense it WRONG
 bug in AutoType. Check pair: 4599. Inference rule that does not propagate evidence 
 

@@ -20,7 +20,6 @@ import org.apache.commons.logging.LogFactory
 import support.HardWeightedExpression
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerNamed
 import utcompling.mlnsemantics.run.Sts
-import dhg.depparse.Lemmatize
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.MultiMap
 import utcompling.mlnsemantics.rules.DistributionalRules

@@ -3,12 +3,18 @@ package utcompling.mlnsemantics.rules
 import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.FileUtils._
 import org.apache.commons.logging.LogFactory
-import utcompling.mlnsemantics.datagen.SimpleTokenizer
 import utcompling.mlnsemantics.run.Sts
 import utcompling.scalalogic.discourse.candc.boxer.expression._
-import dhg.depparse.Lemmatize
 import utcompling.mlnsemantics.inference.support.WeightedExpression
 import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
+import utcompling.mlnsemantics.datagen.Lemmatize
+import utcompling.mlnsemantics.datagen.Tokenize
+import utcompling.mlnsemantics.datagen.Lemmatize
+import scala.util.control.Breaks._
+import scala.collection.mutable.MultiMap
+import scala.collection.mutable.HashMap
+import scala.collection.mutable.Set
+
 
 class Rules {
 }
@@ -26,7 +32,9 @@ object RuleType extends Enumeration {
 
 object Rules {
 
-  private val LOG = LogFactory.getLog(classOf[Rules]) 
+  private val LOG = LogFactory.getLog(classOf[Rules])
+  
+  val tokensToRemoveFromRules = List("a", "an", "the")
 
   /**
    * Convert paraphrase rules in text format to FOL.
@@ -39,21 +47,19 @@ object Rules {
       val assumeRelsList = text.getRelations
       val goalRelsList = hypothesis.getRelations
 
+      val assumIndexMap = buildIndexMap(assumePredsList, assumeRelsList, Sts.textLemma);
+      val goalIndexMap = buildIndexMap(goalPredsList, goalRelsList, Sts.hypothesisLemma);
+
       val folRules = rules.flatMap { rule =>
         val Array(id, left, right, score) = rule.split("\t")
 
-        val leftTokens = left.split(" ").flatMap(token => Array(token, Lemmatize(token, "")))
+        val p1 = findPreds(left, assumePredsList, assumeRelsList, assumIndexMap, Sts.text, Sts.textLemma);
+        val p2 = findPreds(right, goalPredsList, goalRelsList, goalIndexMap, Sts.hypothesis, Sts.hypothesisLemma);
+        val leftTokens = left.split(" ").flatMap(token => Array(token, Lemmatize.lemmatizeWord(token)))
           .distinct
 
         // Find relating predicates for the lhs
         val matchAssumePreds = assumePredsList.filter { pred =>
-
-          /*var isContained = true
-				pred.name.split("_").foreach { token =>    //again, split is wrong
-					if(token != "topic" && !leftTokens.contains(token) && !leftTokens.contains(token + "s")) 
-						isContained = false
-				}
-				isContained*/
           (pred.name == "topic" || leftTokens.contains(pred.name) || leftTokens.contains(pred.name + "s"))
         }
         val matchAssumePredVars = matchAssumePreds.map(pred => pred.variable.name)
@@ -63,17 +69,11 @@ object Rules {
               || matchAssumePredVars.isEmpty)
               && leftTokens.contains(rel.name)))
 
-        val rightTokens = right.split(" ").flatMap(token => Array(token, Lemmatize(token, "")))
+        val rightTokens = right.split(" ").flatMap(token => Array(token, Lemmatize.lemmatizeWord(token)))
           .distinct
 
         // Find relating predicates for the rhs
         val matchGoalPreds = goalPredsList.filter { pred =>
-          /*var isContained = true
-				pred.name.split("_").foreach { token =>   //again, split here is wrong
-					if(token != "topic" && !rightTokens.contains(token) && !rightTokens.contains(token + "s")) 
-						isContained = false
-				}
-				isContained*/
           (pred.name == "topic" || rightTokens.contains(pred.name) || rightTokens.contains(pred.name + "s"))
         }
         val matchGoalPredVars = matchGoalPreds.map(pred => pred.variable.name)
@@ -165,7 +165,178 @@ object Rules {
       }
       return folRules;
     }
+  
+  private def buildIndexMap (preds: Seq[BoxerPred], rels: Seq[BoxerRel], lemma:String): MultiMap[Int, BoxerExpression] = 
+  {
+	  val indexMap = new HashMap[Int, Set[BoxerExpression]] with MultiMap[Int, BoxerExpression]
+	  preds.foreach(pred=>{
+	    pred.indices.foreach(idx => {
+	      indexMap.addBinding(idx.wordIndex, pred)
+	    })
+	  })
+	  rels.foreach(rel=>{
+	    rel.indices.foreach(idx => {
+	      indexMap.addBinding(idx.wordIndex, rel)
+	    })
+	  })
 
+	  val lemmaTokens = lemma.split(" ");
+	  if (indexMap.keys.max >= lemmaTokens.length)
+	    throw new RuntimeException("BoxerIndex larger than number of tokens in the sentence")
+	  indexMap.values.foreach(m=>{
+	    if(m.size > 1)
+	      println ("Map of size > 1: " + m);
+	  })
+
+	  for(i <-0 until lemmaTokens.size)
+	  {
+	    val token = lemmaTokens(i);
+	    val boxerExprSet = indexMap.getOrElse(i, Set())
+	    if(boxerExprSet.size == 0 )
+	    {
+	      println("Token: (" + token + ") has no logical match")
+	      /* List of tokens with no logical match 
+			1 all 
+			2 do 
+			2 this 
+			3 or 
+			5 in 
+			6 have 
+			7 of 
+			12 each 
+			14 both 
+			18 different 
+			31 . 
+			35 five 
+			42 to 
+			44 other 
+			73 n't 
+			75 four 
+			86 another 
+			131 who 
+			137 that 
+			144 three 
+			183 which 
+			216 one 
+			380 not 
+			387 some 
+			399 , 
+			590 an 
+			621 there 
+			658 no 
+			740 two 
+			2300 and 
+			5216 the 
+			11650 be 
+			13875 a
+			* 
+			*/ 
+	    }
+	    else
+	    {
+	      var isPred = false;
+	      var isRel = false;
+	      boxerExprSet.foreach{
+	        case BoxerPred(discId, indices, variable, name, pos, sense) =>
+	          isPred = true;
+	          if(isRel)
+	            throw new RuntimeException("Pred and Rel at the same time");
+	          if(!isLemmaExpnameMatch(token, name)) println ("Expecting token: (" + token+ ") but found pred named: (" + name + ")");
+
+	        case BoxerRel(discId, indices, event, variable, name, sense) =>
+	          isRel = true;
+	          if(isPred)
+	            throw new RuntimeException("Pred and Rel at the same time");
+	          if(!isLemmaExpnameMatch(token, name)) println ("Expecting token: (" + token+ ") but found rel named: (" + name + ")");
+	      }
+	    }
+	  }
+
+	  return indexMap; 
+  }
+  private def isLemmaExpnameMatch (lemma: String, exp: String) : Boolean = 
+  {
+	  if (lemma == exp)
+	    return true;
+	  if (lemma == Lemmatize.lemmatizeWord(exp))
+	    return true;
+	  val ignoredPairs = List(
+		("likes","like"),
+		("nothing","thing"),
+		("where","location"),
+		("you","person"),
+		("her","she"),
+		("themselve","group"),
+		("the","in"),
+		("nobody","person"),
+		("tortilla","tortillum"),  //<<
+		("himself","male"),
+		("other","person"),
+		("she","female"),
+		("somebody","person"),
+		("something","thing"),
+		("without","with"),
+		("a","for"),  //<<
+		("many","quantity"),
+		("another","thing"),
+		("him","male"),
+		("someone","person"),
+		(",","rel"),
+		("them","thing"),
+		("their","thing"),
+		("each","thing"),
+		("'","of"),
+		("her","female"),
+		("its","thing"),
+		("his","male"),
+		("by","agent"),
+		("it","thing"),
+		("they","thing"));
+	  if (ignoredPairs.contains((lemma, exp)))
+	    return true;
+	  
+	  return false;
+  }
+  private def findPreds(phrase: String, preds: Seq[BoxerPred], rels: Seq[BoxerRel], indexMap: MultiMap[Int, BoxerExpression], sentence: String , lemma: String): List[BoxerPred] = 
+  {
+	val sentenceTokens = sentence.split(" ").filterNot(Rules.tokensToRemoveFromRules.contains(_));
+	val lemmaTokens = lemma.split(" ").filterNot(Rules.tokensToRemoveFromRules.contains(_));
+	//println(sentenceTokens.mkString(" "))
+	//println(lemmaTokens.mkString(" "))
+	require(sentenceTokens.length == lemmaTokens.length)
+	val phraseTokens = Tokenize(phrase.toLowerCase()).map(Lemmatize.lemmatizeWord).filterNot(Rules.tokensToRemoveFromRules.contains(_)).toArray
+
+	if(!lemmaTokens.containsSlice(phraseTokens))
+	  throw new RuntimeException("A matched rule could not be found in the sentnece");
+	
+	var sliceIndex:Int = lemmaTokens.indexOfSlice(phraseTokens)
+	//println(lemmaTokens.slice(sliceIndex, sliceIndex + phraseTokens.length).mkString(" # "));
+//	val firstBoxerIndex = sliceIndex; //zero based indexing
+//	val LastBoxerIndex = sliceIndex + phraseTokens.length - 1;
+
+	//TODO: collect preds and rels from indexMap on indices on the range (firstBoxerIndex, LastBoxerIndex)
+	println("Rule part (" + phrase + ") is mapped to the sets: ")
+	indexMap.slice(sliceIndex, sliceIndex + phraseTokens.length).foreach(s=> {
+		println (s);
+	})
+/*    
+    val leftTokens = left.split(" ").flatMap(token => Array(token, Lemmatize.lemmatizeWord(token)))
+          .distinct
+
+        // Find relating predicates for the lhs
+        val matchAssumePreds = assumePredsList.filter { pred =>
+          (pred.name == "topic" || leftTokens.contains(pred.name) || leftTokens.contains(pred.name + "s"))
+        }
+        val matchAssumePredVars = matchAssumePreds.map(pred => pred.variable.name)
+        val matchAssumeRels = assumeRelsList.filter(rel =>
+          (matchAssumePredVars.contains(rel.event.name) && matchAssumePredVars.contains(rel.variable.name))
+            || ((matchAssumePredVars.contains(rel.event.name) || matchAssumePredVars.contains(rel.variable.name)
+              || matchAssumePredVars.isEmpty)
+              && leftTokens.contains(rel.name)))
+              * 
+              */
+    List();
+  }        
   private def changeExpDirection(e: BoxerExpression): BoxerExpression =
     {
       e match {
