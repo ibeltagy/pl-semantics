@@ -1,7 +1,7 @@
 #!/bin/bash
 read line
-wekaJarPath="/u/beltagy/workspace/deft/weka/weka.jar"
-libsvmPath="/u/beltagy/wekafiles/packages/LibSVM/lib/libsvm.jar:/u/beltagy/wekafiles/packages/LibSVM/LibSVM.jar"
+wekaJarPath="lib/weka.jar"
+libsvmPath="lib/libsvm/libsvm.jar:lib/LibSVM.jar"
 act=$line
 CMD=$1
 gs=$2

@@ -1,0 +1,601 @@
+(I)
+
+1
+P 5 20 A man plays a guitar
+P 5 20 A man plays a acoustic guitar
+P 5 20 A man plays a electric guitar
+P 5 20 A old man plays guitar
+P 5 20 The man plays the guitar
+P 5 20 The man plays music
+P 5 20 A man plays a instrument
+
+S 5 20 A guitar plays a man
+S 5 20 A guitar plays no man
+S 5 20 A acoustic guitar plays a man
+S 5 20 A instrument plays a man
+
+D 5 20 No man plays no guitar
+SD 5 20 No guitar plays no man
+SD 5 20 No guitar plays a man
+D 5 20 Some man plays no guitar
+SD 5 20 Some guitar plays no man
+SD 20 No guitar plays some man
+D 5 20 The man plays no guitar
+SD 5 20 The guitar plays no man
+SD 5 20 No guitar plays the man
+
+D 5 20 No man plays a acoustic guitar
+D 5 20 A man plays no acoustic guitar
+SD 5 20 A guitar plays no acoustic man
+SD 5 20 A acoustic guitar plays no man
+SD 5 20 No acoustic guitar plays a man
+D 5 20 No man plays a old guitar
+SD 5 20 No guitar plays a old man
+
+
+2 
+P 168 178 A girl plays violin
+P 168 178 A lady plays violin
+P 168 178 A woman plays violin
+P 168 178 A woman plays the violin
+
+S 168 178 A violin plays a girl
+S 168 178 A violin plays a lady
+S 168 178 A violin plays the woman
+S 168 178 The violin plays a woman
+S 168 178 A violin plays a woman
+
+D 168 178 No girl plays violin
+D 168 178 No lady plays violin
+
+
+3
+P 343 358 A band performs
+P 343 358 A musical band performs
+P 343 358 A band plays
+P 343 358 The band plays
+P 343 358 Men play music
+P 343 358 A musical group performs
+P 343 358 People sing songs
+P 343 358 A musical band plays music
+P 343 358 A band plays music
+
+S 343 358 Songs sing people
+S 343 358 Music plays men
+S 343 358 Music plays a band
+
+D 343 358 No people sings songs
+SD 343 358 Songs sing no people
+SD 343 358 No people sings no songs
+SD 343 358 No songs sing no people
+D 343 358 No musical band plays music
+SD 343 358 No musical music plays a band
+
+
+(II)
+
+4
+P 248 265 A woman cuts a onion
+P 248 265 A girl cuts a onion
+P 248 265 The lady slices onions
+P 248 265 A girl slices a onion
+P 248 265 A woman slices some vegetable
+P 248 265 A girl cuts the onion
+P 248 265 A woman slices a onion
+P 248 265 A woman slices vegetables
+P 248 265 A girl chops onion
+P 248 265 A woman chops a white onion
+P 248 265 A woman cuts a onion
+P 248 265 The cook cuts onions
+
+S 248 265 A onion cuts a woman
+S 248 265 A onion cuts a girl
+S 248 265 The onion cuts a girl
+S 248 265 A onion slices a woman
+S 248 265 Onions chop a girl
+S 248 265 A white onion chops a woman
+
+D 248 265 No woman cuts a onion
+SD 248 265 A onion cuts no woman
+D 248 265 No woman cuts no onion
+SD 248 265 No onion cuts no woman
+D 248 265 No girl cuts a onion
+SD 248 265 No onion cuts a girl
+D 248 265 No girl cuts no onion
+SD 248 265 No onion cuts no girl
+D 248 265 No woman slices a onion
+SD 248 265 No onion slices a woman
+D 248 265 No onion slices no woman
+D 248 265 No girl chops onion
+SD 248 265 No onion chops a girl
+D 248 265 No woman slices some vegetable
+D 248 265 A woman slices no vegetable
+D 248 265 No white woman chops a onion
+
+
+5
+P 103 110 A woman cooks a egg
+P 103 110 A person cooks a egg
+P 103 110 A person cooks eggs
+P 103 110 A woman cooks eggs
+P 103 110 A woman cooks big eggs
+
+S 103 110 A egg cooks a woman
+S 103 110 A egg cooks a person
+
+D 103 110 No woman cooks a egg
+SD 103 110 No egg cooks a woman
+D 103 110 No woman cooks no egg
+SD 103 110 No egg cooks no woman
+D 103 110 No person cooks a egg
+SD 103 110 No egg cooks a person
+D 103 110 No person cooks no egg
+SD 103 110 No egg cooks no person
+
+
+6
+P 76 80 A woman works dough
+P 76 80 The baker works dough
+P 76 80 A person works dough
+P 76 80 A chef works dough
+P 76 80 A woman works some dough
+P 76 80 Some woman works a dough
+P 76 80 A person makes cake
+P 76 80 A person makes a big cake
+P 76 80 A tall person makes a big cake
+
+S 76 80 A dough works a woman
+S 76 80 The dough works a baker
+S 76 80 Some dough works a woman
+S 76 80 A cake makes a person
+S 76 80 A cake makes a big person
+S 76 80 A cake cooks a woman
+
+D 76 80 No woman works dough
+SD 76 80 No dough works a woman
+D 76 80 A woman works no dough
+SD 76 80 A dough works no woman
+D 76 80 No baker works dough
+SD 76 80 No dough works a baker
+D 76 80 No person works dough
+SD 76 80 No dough works a person
+D 76 80 No person makes cake
+SD 76 80 No cake makes a person
+D 76 80 No woman cooks cake
+SD 76 80 No cake cooks a woman
+
+
+7
+P 25 35 A woman peels a fruit
+P 25 35 A woman peels a mango
+P 25 35 A chef peels a mango
+P 25 35 The cook peels a mango
+P 25 35 A person peels a mango
+P 25 35 The person peels a mango
+P 25 35 A person peels a big fruit
+P 25 35 A woman peels a green fruit
+P 25 35 A big person peels a fruit
+
+S 25 35 A fruit peels a woman
+S 25 35 A mango peels a woman
+S 25 35 The mango peels a cook
+S 25 35 A big fruit peels a woman
+S 25 35 A green fruit peels a woman
+
+D 25 35 No woman peels a fruit
+SD 25 35 No fruit peels a woman
+D 25 35 No woman peels a mango
+D 25 35 No woman peels no mango
+SD 25 35 No mango peels no woman
+D 25 35 No woman peels a big fruit
+SD 25 35 No big fruit peels a woman
+SD 25 35 A big avocado peels no man
+D 25 35 No woman peels a green fruit
+SD 25 35 No green fruit peels a woman
+SD 25 35 A green fruit peels no woman
+
+
+8
+P 0 7 A woman feeds a baby
+P 0 7 A woman feeds a small baby
+P 0 7 A small woman feeds a baby
+P 0 7 A woman holds a small baby
+P 0 7 The baby drinks milk
+P 0 7 The baby drinks white milk
+P 0 7 A child drinks milk
+P 0 7 A baby drinks milk
+
+S 0 7 A baby feeds a woman
+S 0 7 A baby holds a small woman
+S 0 7 A small baby holds a woman
+S 0 7 The milk drinks a baby
+S 0 7 A milk drinks the baby
+S 0 7 The white milk drinks a baby
+S 0 7 A milk drinks a child
+S 0 7 A milk drinks a baby
+S 0 7 A small baby feeds a woman
+
+D 0 7 No woman feeds a baby
+SD 0 7 No baby feeds a woman
+SD 0 7 A baby feeds no woman
+D 0 7 No woman feeds a small baby
+SD 0 7 No small baby feeds a woman
+SD 0 7 A small baby feeds no woman
+SD 0 7 No small baby feeds no woman
+D 0 7 No woman holds a small baby
+SD 0 7 No baby holds a small woman
+SD 0 7 No small baby holds a woman
+D 0 7 No baby drinks white milk
+SD 0 7 No milk drinks a white baby
+SD 0 7 No white milk drinks a baby
+D 0 7 No baby drinks milk
+SD 0 7 No milk drinks a baby
+
+
+(III) 
+
+9
+P 33 46 A bird baths
+P 33 46 The bird baths
+P 33 46 Some bird baths
+P 33 46 The white bird baths
+P 33 46 A white bird baths
+P 33 46 Some white bird baths
+P 33 46 A bird plays
+P 33 46 A gull plays
+P 33 46 A gull splashes
+P 33 46 A bird drinks some water
+P 33 46 The bird drinks water
+P 33 46 Some bird drinks water
+P 33 46 A bird drinks some water
+
+S 33 46 Some water drinks a bird
+S 33 46 The water drinks some bird
+
+D 33 46 No bird drinks water
+SD 33 46 No water drinks a bird
+
+
+10
+P 1 16 A hamster eats seeds
+P 1 16 A hamster eats several seeds
+P 1 16 A hamster eats some seeds
+P 1 16 A hamster eats nuts
+P 1 16 A hamster eats food
+
+S 1 16 Some seed eats a hamster
+S 1 16 Several seeds eat a hamster
+S 1 16 Nuts eat a hamster
+S 1 16 Food eats a hamster
+
+D 1 16 No hamster eats seeds
+SD 1 16 No seeds eat a hamster
+D 1 16 Several hamsters eat seeds
+SD 1 16 A seed eats several hamsters
+D 1 16 No hamster eats several seeds
+SD 1 16 No seed eats several hamsters
+SD 1 16 Several seeds eat no hamster
+D 1 16 No hamster eats nuts
+SD 1 16 No nuts eat a hamster
+D 1 16 No hamster eats food
+SD 1 16 No food eats a hamster
+
+11
+P 640 645 A man drinks a glass
+P 640 645 A man drinks a drink
+P 640 645 A man drinks water
+P 640 645 A fat man drinks water
+P 640 645 A man drinks a clear liquid
+P 640 645 A person drinks
+
+S 640 645 A glass drinks a man
+D 640 645 No man drinks a glass
+SD 640 645 No glass drinks a man
+SD 640 645 A glass drinks no man
+S 640 645 A drink drinks a man
+D 640 645 No man drinks a drink
+SD 640 645 No drink drinks a man
+SD 640 645 A drink drinks no man
+D 640 645 A man drinks no drink
+S 640 645 Water drinks a man
+S 640 645 Some water drinks a man 
+D 640 645 No man drinks water
+SD 640 645 No water drinks a man
+S 640 645 Water drinks a fat man
+D 640 645 No fat man drinks water
+D 640 645 No water drinks a fat man
+S 640 645 A clear liquid drinks a man
+D 640 645 No man drinks a clear liquid
+SD 640 645 No clear liquid drinks a man
+
+
+(IV)
+
+12
+P 6 15 A plane flies 
+P 6 15 The plane flies 
+P 6 15 Some plane flies 
+P 6 15 A jet flies
+P 6 15 The jet flies
+P 6 15 Some jet flies
+P 6 15 A airplane flies
+P 6 15 The airplane flies
+P 6 15 Some airplane flies
+
+
+(V)
+
+13
+P 48 58 Men roll tires 
+P 48 58 Men roll huge tires
+P 48 58 Huge men roll small tires
+P 48 58 Two men roll huge tires
+P 48 58 Two men roll big tires
+P 48 58 Two men push tires
+P 48 58 Two men push large tires
+P 48 58 Men flip tires
+P 48 58 Men flip large tires
+P 48 58 Two men flip tires
+P 48 58 Some men flip tires
+P 48 58 Men flip the tires
+P 48 58 Two men flip heavy tires
+P 48 58 Two men move tires
+P 48 58 The men lift the weight
+P 48 58 Some people lift the heavy tires
+P 48 58 Some heavy people lift the tires
+
+S 48 58 Tires roll men 
+S 48 58 Huge tires roll little men
+S 48 58 Tires push two men
+S 48 58 Tires flip men
+S 48 58 Two tires move men 
+S 48 58 The weight lifts the men
+S 48 58 Strong tires pull two big persons
+S 48 58 Some tires lift the heavy persons
+S 48 58 The heavy tires lift some people
+
+D 48 58 Huge men roll no tires
+D 48 58 No men flip tires
+D 48 58 No tires flip no men 
+D 48 58 The heavy tires lift no person
+
+
+(VI)
+
+14
+P 174 181 A woman rides a horse
+P 174 181 A lady rides a horse
+P 174 181 A girl rides a horse
+P 174 181 The girl rides a horse
+P 174 181 A young girl rides a horse
+P 174 181 One lady rides a horse
+P 174 181 A person rides a horse
+P 174 181 A lady rides one horse
+
+S 174 181 A horse rides a woman
+S 174 181 A horse rides a lady
+S 174 181 A horse rides a girl
+S 174 181 The horse rides a girl
+S 174 181 A horse rides the girl
+S 174 181 A young horse rides a girl
+S 174 181 A horse rides a young girl
+
+D 174 181 No woman rides a horse
+SD 174 181 No horse rides a woman
+SD 174 181 A horse rides no woman
+SD 174 181 No horse rides no woman
+D 174 181 No woman rides a horse
+SD 174 181 No horse rides a lady
+SD 174 181 A horse rides no lady
+SD 174 181 No horse rides no lady
+D 174 181 No girl rides a horse
+SD 174 181 No horse rides a girl
+SD 174 181 A horse rides no girl
+SD 174 181 No horse rides no girl
+D 174 181 No young girl rides a horse
+D 174 181 No girl rides a young horse
+SD 174 181 No horse rides a young girl
+SD 174 181 No young horse rides a girl
+SD 174 181 No young horse rides no girl
+D 174 181 No lady rides one horse
+SD 174 181 No horse rides one lady
+SD 174 181 One horse rides no lady
+
+
+(VII)
+
+15
+P 38 60 A guy shoots a gun
+P 38 60 A man shoots a pistol
+P 38 60 A man shoots a revolver
+P 38 60 The man shoots a gun
+P 38 60 A man shoots the gun
+P 38 60 A man fires a gun
+
+S 38 60 A gun shoots a guy
+S 38 60 A pistol shoots a man
+S 38 60 A revolver shoots a man
+S 38 60 The gun shoots a man
+S 38 60 A gun shoots the man
+S 38 60 A gun fires a man
+
+D 38 60 No guy shoots a gun
+SD 38 60 No gun shoots a guy
+SD 38 60 No gun shoots no guy
+D 38 60 No man shoots a pistol
+SD 38 60 No pistol shoots a man
+SD 38 60 No man shoots a revolver
+SD 38 60 No revolver shoots a man
+SD 38 60 No revolver shoots no man
+D 38 60 No man shoots a gun
+SD 38 60 No gun shoots a man
+D 38 60 No man fires a gun
+SD 38 60 No gun fires a man
+SD 38 60 No gun fires no man
+
+
+(VIII)
+
+16
+P 0 4 A team practices
+P 0 4 A team plays baseball
+P 0 4 A amateur team plays
+P 0 4 Three men play baseball
+P 0 4 Two white males throw a baseball
+P 0 4 Some people throw a baseball
+P 0 4 Guys practice baseball
+P 0 4 Some white men practice baseball
+P 0 4 The players practice baseball
+P 0 4 The boys practice baseball
+
+S 0 4 Baseball plays a team
+S 0 4 Baseball plays two men
+S 0 4 A baseball throws men
+S 0 4 Some baseball throws people
+S 0 4 A baseball throws some people
+S 0 4 Baseball practices guys
+S 0 4 Some white baseball practices men
+S 0 4 The baseball practices players
+S 0 4 Baseball practices the players
+S 0 4 The baseball practices boys
+S 0 4 Baseball practices the boys
+
+D 0 4 No boy plays baseball
+SD 0 4 No baseball plays a boy
+D 0 4 No team plays baseball
+SD 0 4 Baseball plays no team
+D 0 4 No men play baseball
+SD 0 4 Baseball plays no men
+D 0 4 No man throws a baseball
+SD 0 4 No baseball throws a man
+D 0 4 No men throw a baseball
+SD 0 4 No baseball throw men
+D 0 4 No white males throw a baseball
+SD 0 4 No white baseball throws men
+SD 0 4 No baseball throws white men
+D 0 4 No people throw a baseball 
+SD 0 4 No baseball throws people
+D 0 4 No guys practice baseball
+SD 0 4 No baseball practices guys
+D 0 4 No white men practice baseball
+SD 0 4 No white baseball practices men
+SD 0 4 No baseball practices white men
+D 0 4 No players practice baseball
+SD 0 4 No baseball practices players
+D 0 4 No boys practice baseball
+SD 0 4 No baseball practices boys
+SD 0 4 Baseball practices no boys
+
+
+(IX) 
+
+17
+P 5 15 A dog chases a ball
+P 5 15 A dog chases a big ball
+P 5 15 A little dog chases a huge ball
+P 5 15 A little dog chases a large ball
+P 5 15 The little dog chases the big blue ball
+P 5 15 A bulldog chases a large blue ball
+P 5 15 A dog plays 
+P 5 15 A small dog runs
+
+S 5 15 A ball chases a dog
+S 5 15 A big ball chases a dog
+S 5 15 A huge ball chases a little dog
+S 5 15 A large ball chases a little dog
+S 5 15 The big blue ball chases the little dog
+S 5 15 The little blue ball chases the big dog
+S 5 15 The little big ball chases the blue dog
+S 5 15 A large blue ball chases a bulldog
+
+D 5 15 No dog chases a ball
+SD 5 15 No ball chases a dog
+D 5 15 No dog chases no ball
+SD 5 15 No ball chases no dog
+D 5 15 No dog chases a big ball
+D 5 15 No dog chases no big ball
+D 5 15 No little dog chases a huge ball
+D 5 15 No little dog chases no huge ball
+SD 5 15 No little ball chases no huge dog
+D 5 15 No little dog chases a large ball
+SD 5 15 No large ball chases a little dog
+D 5 15 A little dog chases no large ball
+SD 5 15 A large dog chases no little ball
+SD 5 15 A large ball chases no little dog
+D 5 15 No little dog chases no large ball
+SD 5 15 No large dog chases no little ball
+SD 5 15 No large ball chases no little dog
+D 5 15 No little dog chases the big blue ball
+SD 5 15 No little ball chases the big blue dog
+D 5 15 No bulldog chases a large blue ball
+D 5 15 No large blue ball chases a bulldog
+
+
+(XI)
+
+18
+P 126 130 A man rides a bicycle 
+P 126 130 A man rides a bike
+P 126 130 A man rides a big bike
+P 126 130 A man rides a green bike
+
+S 126 130 A bicycle rides a man
+S 126 130 A bike rides a man
+S 126 130 A green bike rides a man
+
+D 126 130 No man rides a bicycle 
+SD 126 130 No green bike rides a man
+SD 126 130 No bicycle rides a man
+SD 126 130 No bicycle rides no man
+D 126 130 No man rides a bike
+SD 126 130 No bike rides a man
+SD 126 130 No bike rides no man
+D 126 130 No man rides a big bike
+D 126 130 No man rides a green bike
+
+
+(XII)
+
+19
+P 166 170 A man climbs a rope
+P 166 170 A man climbs a big rope
+P 166 170 The man climbs a rope
+P 166 170 The soldier climbs a rope
+
+S 166 170 A rope climbs a man
+S 166 170 A big rope climbs a man
+S 166 170 The rope climbs a man
+S 166 170 The rope climbs a soldier
+
+D 166 170 No man climbs a rope
+SD 166 170 No rope climbs a man
+SD 166 170 No rope climbs no man
+D 166 170 No man climbs a big rope
+SD 166 170 No big rope climbs a man
+SD 166 170 No big rope climbs no man
+
+
+(XIII)
+
+20
+P 0 5 A man enters a room
+P 0 5 A man enters a big room
+P 0 5 A man enters a tall room
+P 0 5 A man opens a door
+
+S 0 5 A room enters a man
+S 0 5 A big room enters a man
+S 0 5 A tall room enters a man
+S 0 5 A door opens a man
+
+D 0 5 No man enters a room
+SD 0 5 No room enters a man
+SD 0 5 No room enters no man
+D 0 5 No man enters a big room
+SD 0 5 No big room enters a man
+SD 0 5 No big room enters no man
+D 0 5 No man enters a tall room
+SD 0 5 No tall room enters a man
+SD 0 5 No tall room enters no man
+D 0 5 No man opens a door
+SD 0 5 No door opens a man

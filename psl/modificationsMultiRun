@@ -1,0 +1,34 @@
+Do not know
+src/main/java/edu/umd/cs/psl/model/atom/memory/MemoryAtom.java: private static final Set<GroundKernel> emptyGroundKernels = ImmutableSet.of();
+
+DONE
+src/main/java/edu/umd/cs/psl/database/RDBMS/Formula2SQL.java:   private static final Set<String> varsTables = new HashSet<String>();
+src/main/java/edu/umd/cs/psl/database/RDBMS/RDBMSDatabase.java: private static final BiMap<ExternalFunction, String> externalFunctions = HashBiMap.cre
+src/main/java/edu/umd/cs/psl/database/RDBMS/RDBMSDatabase.java: private static int externalFunctionCounter=0;
+src/main/java/edu/umd/cs/psl/groovy/RelationalDataStore.java:   private static int writeIDCounter = foldIDUpperBound;
+src/main/java/edu/umd/cs/psl/evaluation/resultui/printer/ListAtomPrintStream.java:      static private HashMap<String, Double> values;
+src/main/java/edu/umd/cs/psl/util/config/PSLConfiguration.java: public static final long startTime = System.currentTimeMillis();
+
+NO Need
+src/main/java/edu/umd/cs/psl/database/loading/Inserter.java:    public static final Inserter nullInserter = new Inserter() {
+src/main/java/edu/umd/cs/psl/evaluation/statistics/filter/AtomFilter.java:      public static final AtomFilter NoFilter = new AtomFilter() {
+src/main/java/edu/umd/cs/psl/model/formula/traversal/FormulaEvaluator.java:     public final static FormulaEvaluator LUKASIEWICZ = new FormulaEvaluator(Tnorm.LUKASIEWICZ);
+src/main/java/edu/umd/cs/psl/model/formula/traversal/FormulaEvaluator.java:     public final static FormulaEvaluator GOEDEL = new FormulaEvaluator(Tnorm.GOEDEL);
+src/main/java/edu/umd/cs/psl/model/formula/traversal/FormulaEvaluator.java:     public final static FormulaEvaluator PRODUCT = new FormulaEvaluator(Tnorm.PRODUCT);
+src/main/java/edu/umd/cs/psl/model/function/AttributeSimFunAdapter.java:        private static final ArgumentType[] argumenttypes = new ArgumentType[]
+src/main/java/edu/umd/cs/psl/model/kernel/datacertainty/DataCertaintyKernel.java:       private static final DataCertaintyKernel certaintyKernel = new
+src/main/java/edu/umd/cs/psl/model/parameters/Parameters.java:  public final static Parameters NoParameters = new Parameters() {
+src/main/java/edu/umd/cs/psl/optimizer/conic/ipm/IPM.java:      private static final ArrayList<ConeType> supportedCones = new ArrayList<ConeType>(2);
+src/main/java/edu/umd/cs/psl/optimizer/conic/util/Dualizer.java:        private static final ArrayList<ConeType> supportedCones = new ArrayList<ConeTy
+src/main/java/edu/umd/cs/psl/reasoner/ConicReasoner.java:       public static final ConicProgramSolverFactory CPS_DEFAULT = new HomogeneousIPMFactory(
+src/main/java/edu/umd/cs/psl/ui/data/file/util/DelimitedObjectConstructor.java: public static Filter NoFilter = new Filter() {
+src/main/java/edu/umd/cs/psl/util/collection/Filters.java:      public static final com.google.common.base.Predicate<Kernel> ProbabilisticEvidence = n
+
+
+Wierd
+src/main/java/edu/umd/cs/psl/evaluation/process/local/LocalProcessMonitor.java: private static final LocalProcessMonitor singleton = new LocalProcessM
+src/main/java/edu/umd/cs/psl/model/predicate/PredicateFactory.java:     public static final Map<String,Class<? extends AttributeSimilarityFunction>> d
+
+
+
+
