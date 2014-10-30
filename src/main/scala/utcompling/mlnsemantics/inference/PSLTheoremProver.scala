@@ -120,7 +120,7 @@ class PSLTheoremProver(
     {
     	case e: Exception =>{
     	  System.err.println (e);
-    	  return Seq(-2.0);
+    	  return Seq(-2.0, -2.0);
     	}   				 
     }
     
@@ -326,7 +326,7 @@ class PSLTheoremProver(
         .flatMap {
           case e @ SoftWeightedExpression(folEx, weight) =>
             weight match {
-              case Double.PositiveInfinity => Some(HardWeightedExpression(folEx))
+              //case Double.PositiveInfinity => Some(HardWeightedExpression(folEx))
               case Double.NegativeInfinity => None ;//Some(HardWeightedExpression(-folEx))
               case _ => Some(e)
             }

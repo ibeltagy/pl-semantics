@@ -230,6 +230,8 @@ public class TextInterface {
 					ConfigManager cm = ConfigManager.getManager();
 					ConfigBundle exampleBundle = cm.getBundle("example");
 					Database db = data.getDatabase();
+					try
+					{
 					UIFullInferenceResult result = m.mapInference(
 							db, exampleBundle);
 
@@ -241,8 +243,15 @@ public class TextInterface {
 							queryAtomsList, false);
 					result.printAtoms(m.getPredicate("entailment"),
 							queryAtomsList, false);
-					db.close();			
+					db.close();
 					data.close();
+					}
+					catch (Exception e)
+					{
+						db.close();
+						data.close();
+						throw e;
+					}
 
 					/*
 					 * result.printAtoms(r_agent_dt, false);

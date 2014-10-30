@@ -54,8 +54,8 @@ class WordNetRules extends Rules {
         			  rules = rules :+ createRule (txtPred, hypPred, RuleType.Implication);
         		 if (hyponyms.contains(hypPred.name))   //backward implication 
         		 	  rules = rules :+ createRule (txtPred, hypPred, RuleType.BackwardImplication); //backward implication 
-        		 if (antonyms.contains(hypPred.name))   
-        			  rules = rules :+ createRule (txtPred, hypPred, RuleType.Opposite);        		 
+        		 if (antonyms.contains(hypPred.name) && Sts.opts.softLogicTool != "psl" /*PSL does not like this rule*/)
+        			  rules = rules :+ createRule (txtPred, hypPred, RuleType.Opposite);
         	 }
           }
        } 
