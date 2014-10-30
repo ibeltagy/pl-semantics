@@ -37,16 +37,25 @@ class GivenNotTextProbabilisticTheoremProver(
     	var newGoal:BoxerExpression = null;
     	val newAssumptions2 = assumptions.map{
     	    case HardWeightedExpression(exp) => {
+    	    	//newGoal = exp;
+    	    	//HardWeightedExpression (negateText(goal)) 
+    	    	//newGoal = negateText(exp);
     	    	newGoal = exp;
-    	    	HardWeightedExpression (negateText(goal)) 
+    	    	HardWeightedExpression (goal)
     	    }
           case a @ _ => a
         }
     	
-    	val tGivenNotH = delegate.prove(constants, declarations, evidence, newAssumptions2, newGoal);
-    	assert(tGivenNotH.length == 1)
+    	//Wrong
+    	//val tGivenNotH = delegate.prove(constants, declarations, evidence, newAssumptions2, newGoal);
+    	//assert(tGivenNotH.length == 1)
     	
-    	hGivenT ++ hGivenNotT ++ tGivenNotH
+    	//Hoefully correct
+    	//val notTGivenH = delegate.prove(constants, declarations, evidence, newAssumptions2, newGoal);
+    	val notTGivenH:Seq[Double] = Seq(0.0)
+    	assert(notTGivenH.length == 1)
+    	
+    	hGivenT ++ hGivenNotT ++ notTGivenH
     }
     else
       delegate.prove(constants, declarations, evidence, assumptions, goal)   
