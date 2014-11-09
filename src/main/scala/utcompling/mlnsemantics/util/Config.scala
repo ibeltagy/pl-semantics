@@ -36,6 +36,7 @@ class Config(opts: Map[String, String] = Map()) {
 		"-phraseVecs",
 		"-rulesWeight",
 		"-rules",
+		"-rulesMatchLemma",		
 		"-vectorMaker",
 		"-vsWithPos",
 		"-alpha",
@@ -124,6 +125,12 @@ class Config(opts: Map[String, String] = Map()) {
     case Some(rulesFile) => rulesFile;
     case _ => "";
   }
+  
+  //Match paraphrases with the sentence or with the lemmatized sentnece ?
+  val rulesMatchLemma = opts.get("-rulesMatchLemma") match {
+    case Some(matchLemma) => matchLemma.toBoolean
+    case _ => false;
+  }
 
   //-------------------------------------------On-the-fly inference rules generation 
   
@@ -138,6 +145,7 @@ class Config(opts: Map[String, String] = Map()) {
   
   //vector space has POS or not. The one I am using now is without POS. Gemma has ones with POS
   //The case of "with POS", is not well tested. Expect it to break 
+  //Now the default is one with POS that Stephen built
   val vectorspaceFormatWithPOS = opts.get("-vsWithPos") match {
     case Some(vst) => vst.toBoolean
     case _ => true;
@@ -172,7 +180,7 @@ class Config(opts: Map[String, String] = Map()) {
   //-1)no rules at all  0)pre-compiled rules. No on-the-fly rules 1)pre-compiled rules + lexical rules, 2)all rules(precompiled, lexical, phrasal)
   val inferenceRulesLevel = opts.get("-irLvl") match {
     case Some(vst) => vst.toInt;
-    case _ => 2;
+    case _ => 1;
   }
   
   //weight threshold

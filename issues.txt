@@ -1,3 +1,7 @@
+-Think how "subset" predicate affect the infernece and see if we can have hard coded rules to fix this issue.
+-Better handling of multi=word expressions like: clean up, in front of, ... 
+
+
 Use the index of predicates to correctly pick the subject and solve the bug I have now.
 Enhancement (fast system without the GEN phase): Use Lucene to search the vector space for the vectors, instead of linear search
 Enhancement (fast system without the GEN phase): User EasyCCG instead of C&C

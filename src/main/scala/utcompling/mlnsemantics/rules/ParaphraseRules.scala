@@ -6,6 +6,7 @@ import org.apache.commons.logging.LogFactory
 import utcompling.mlnsemantics.run.Sts
 import scala.Array.canBuildFrom
 import utcompling.mlnsemantics.datagen.Tokenize
+import utcompling.mlnsemantics.datagen.Lemmatize
 
 class ParaphraseRules extends Rules{
   private val LOG = LogFactory.getLog(classOf[ParaphraseRules])
@@ -14,16 +15,23 @@ class ParaphraseRules extends Rules{
 
   def getRules(): List[String] = {
 
-    val returnedRules = Sts.luceneParaphrases.query(Sts.text + " " + Sts.textLemma, Sts.hypothesis + " " + Sts.hypothesisLemma)
+  	val returnedRules = if (Sts.opts.rulesMatchLemma)
+  			Sts.luceneParaphrases.query(Sts.text + " " + Sts.textLemma, Sts.hypothesis + " " + Sts.hypothesisLemma)
+  		else
+  			Sts.luceneParaphrases.query(Sts.text  , Sts.hypothesis )
 
     val filterStart = System.nanoTime
     val paraphraseRules = returnedRules
       .filter { rule =>
         val Array(id, ruleLhs, ruleRhs, score) = rule.split("\t")
-        //Some datasets use lemmas, other use non-lemmas, so, search in the sentence and the lemmatized sentence
-        (process(Sts.text) +  process(Sts.textLemma)).contains(process(Tokenize.separateTokens(ruleLhs))) &&
-        (process(Sts.hypothesis) +  process(Sts.hypothesisLemma)).contains(process(Tokenize.separateTokens(ruleRhs)))
-        
+
+        if (Sts.opts.rulesMatchLemma)//Some datasets use lemmas, other use non-lemmas, so, search in the sentence and the lemmatized sentence
+        	process(Sts.textLemma).contains(process(Tokenize.separateTokens(Lemmatize.lemmatizeWords(ruleLhs)))) &&
+        	process(Sts.hypothesisLemma).contains(process(Tokenize.separateTokens(Lemmatize.lemmatizeWords(ruleRhs))))
+        else
+        	process(Sts.text).contains(process(Tokenize.separateTokens(ruleLhs))) &&
+        	process(Sts.hypothesis).contains(process(Tokenize.separateTokens(ruleRhs)))
+        	
       }.toList
 
     val filterEnd = System.nanoTime
