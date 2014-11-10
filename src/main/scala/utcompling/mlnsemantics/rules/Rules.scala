@@ -139,6 +139,10 @@ object Rules {
 		{
 			visitedSorted += head;
 			val matchedRelations = fromTo.filter(_._1 == head).toList;
+			if(matchedRelations.size > 1)
+			{
+				LOG.debug("FanOut > 1: " + exps);
+			}
 			matchedRelations.sortBy(x=>x._2).foreach(x=>queue.enqueue(x._2));
 		}
 	}
@@ -157,52 +161,64 @@ object Rules {
 			resPos;
 		else
 			posRenamed);
-		(varname ->newPos)
+		varsPOS = varsPOS + (varname ->newPos);
   	}
-    //rename vars in the predicates and relations
   	//Collect POS
-	val lastVIndex = 0;
-	val lastNIndex = 0;
-	val lastAIndex = 0;
-  	val expsNamesChanged: Set[BoxerExpression] = exps.map
+  	exps.map
   	{
 		case BoxerPred(discId, indices, variable, name, pos, sense) => {
-			val newVariableName = "x" + visitedSorted.indexOf(variable.name);
-			varsPOS = varsPOS + addVarPos(newVariableName, pos);
-			BoxerPred(discId, indices, BoxerVariable(newVariableName), name, pos, sense)
+			addVarPos(variable.name, pos); 
 		}
 		case BoxerRel(discId, indices, event, variable, name, sense) =>{
-			val newEventName = "x"+visitedSorted.indexOf(event.name);			
-			val newVariableName = "x"+visitedSorted.indexOf(variable.name);
-			varsPOS = varsPOS + addVarPos(newEventName, "r");
-			varsPOS = varsPOS + addVarPos(newVariableName, "r");
-			BoxerRel(discId, indices, BoxerVariable(newEventName), BoxerVariable(newVariableName), name, sense)
+			addVarPos(event.name, "r");
+			addVarPos(variable.name, "r");
 		}
   	}
   	if(varsPOS.size != visitedSorted.size)
   		LOG.error ("size mismatch")
   	assert(varsPOS.size == visitedSorted.size)
-	val sortedVarsPOS = varsPOS.toList.sortBy(_._1); //sort on the name. Names now are x1, x2, ... 
-	val pattern = sortedVarsPOS.map(_._2).mkString("");
+
+  	val pattern = visitedSorted.map(varsPOS.get(_).get)
+	//val sortedVarsPOS = varsPOS.toList.sortBy(_._1); //sort on the name. Names now are x1, x2, ... 
+	//val pattern = sortedVarsPOS.map(_._2).mkString("");
 	//rename variables again to PosFirst, PosIndex, PosLast 
-/* 	
-	expsNamesChanged: Set[BoxerExpression] = exps.map
+
+	//rename vars in the predicates and relations
+  	def getNewVariableName (oldName: BoxerVariable):BoxerVariable = 
+  	{
+		val varIndex = visitedSorted.indexOf(oldName.name);
+		val varPos = pattern(varIndex);
+		val firstSimilarPosIndex = pattern.indexOf(varPos);
+		val lastSimilarPosIndex = pattern.lastIndexOf(varPos);
+		val newVarSuffix = (
+			if(firstSimilarPosIndex == varIndex)
+			{
+				"f"
+			}
+			else if(lastSimilarPosIndex == varIndex)
+			{
+				assert(firstSimilarPosIndex != lastSimilarPosIndex);
+				"l"
+			}
+			else 
+			{
+				assert(firstSimilarPosIndex < varIndex);
+				assert(lastSimilarPosIndex > varIndex);
+				"m" + varIndex;
+			}
+		)
+		return BoxerVariable(varPos + newVarSuffix);
+  	}
+	val expsNamesChanged: Set[BoxerExpression] = exps.map
   	{
 		case BoxerPred(discId, indices, variable, name, pos, sense) => {
-			val newVariableName = "x" + visitedSorted.indexOf(variable.name);
-			varsPOS = varsPOS + addVarPos(newVariableName, pos);
-			BoxerPred(discId, indices, BoxerVariable(newVariableName), name, pos, sense)
+			BoxerPred(discId, indices, getNewVariableName(variable), name, pos, sense)
 		}
 		case BoxerRel(discId, indices, event, variable, name, sense) =>{
-			val newEventName = "x"+visitedSorted.indexOf(event.name);			
-			val newVariableName = "x"+visitedSorted.indexOf(variable.name);
-			varsPOS = varsPOS + addVarPos(newEventName, "r");
-			varsPOS = varsPOS + addVarPos(newVariableName, "r");
-			BoxerRel(discId, indices, BoxerVariable(newEventName), BoxerVariable(newVariableName), name, sense)
+			BoxerRel(discId, indices, getNewVariableName(event), getNewVariableName(variable), name, sense)
 		}
   	}
-*/
-  	return (expsNamesChanged, pattern) //retrurn renamed expressions and pattern
+  	return (expsNamesChanged, pattern.mkString("")) //retrurn renamed expressions and pattern
   }
   
   def convertRulesToFOL(rules: List[String], text: BoxerExpression, hypothesis: BoxerExpression): List[(BoxerDrs, BoxerDrs, Double, RuleType.Value)] =
