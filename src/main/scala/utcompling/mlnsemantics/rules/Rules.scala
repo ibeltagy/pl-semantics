@@ -237,136 +237,163 @@ object Rules {
 
 	val folRules = rules.flatMap { rule =>
 		val Array(id, left, right, score) = rule.split("\t")
-		val p1 = findPreds(left, assumePredsList, assumeRelsList, assumIndexMap, assumSentence);
-        val exp1 = addMetaRels(p1, assumMetaRel);
-        val p2 = findPreds(right, goalPredsList, goalRelsList, goalIndexMap, goalSentence);
-        val exp2 = addMetaRels(p2, goalMetaRel)
-        LOG.trace ("Paraphrase rule: (" + left + ") => " + exp1.map(simplePrintPred).mkString(", "));
-        LOG.trace ("Paraphrase rule: (" + right+ ") => " + exp2.map(simplePrintPred).mkString(", "));
-        LOG.trace ("DBG: ("+id+")(" + left + ", "+ right +") (" + exp1.map(simplePrintPred).mkString(", ") +") => ("+ exp2.map(simplePrintPred).mkString(", ") + ")");
-        LOG.trace ("PTRN: ("+id+")(" + left + ", "+ right +") (" + exp1.map(simplerPrintPred).mkString(", ") +") => ("+ exp2.map(simplerPrintPred).mkString(", ") + ")");
-        LOG.trace ("POS: ("+id+")(" + left + ", "+ right +") (" + printExpPattern(exp1) +") => ("+ printExpPattern(exp2) + ")");
-        val pattern1 = sortVarsRenameVarsGetPattern(exp1);
-        val pattern2 = sortVarsRenameVarsGetPattern(exp2);
-        LOG.trace ("SrtRnm: " + pattern1._2 +"--" +  pattern1._1 + "-------" + exp1);
-        LOG.trace ("SrtRnm: " + pattern2._2 +"--" + pattern2._1 + "-------" + exp2);
-        val ruleTemplate = (
-        		if (pattern2._2 > pattern1._2)
-        			pattern2._2 +"--"+ pattern1._2
-        		else
-        			pattern1._2 +"--"+ pattern2._2
-        )
-        LOG.trace ("Template: " + ruleTemplate);
-        
-        var x=1;
-        
-        val leftTokens = left.split(" ").flatMap(token => Array(token, Lemmatize.lemmatizeWord(token)))
-          .distinct
-
-        // Find relating predicates for the lhs
-        val matchAssumePreds = assumePredsList.filter { pred =>
-          (pred.name == "topic" || leftTokens.contains(pred.name) || leftTokens.contains(pred.name + "s"))
-        }
-        val matchAssumePredVars = matchAssumePreds.map(pred => pred.variable.name)
-        val matchAssumeRels = assumeRelsList.filter(rel =>
-          (matchAssumePredVars.contains(rel.event.name) && matchAssumePredVars.contains(rel.variable.name))
-            || ((matchAssumePredVars.contains(rel.event.name) || matchAssumePredVars.contains(rel.variable.name)
-              || matchAssumePredVars.isEmpty)
-              && leftTokens.contains(rel.name)))
-
-        val rightTokens = right.split(" ").flatMap(token => Array(token, Lemmatize.lemmatizeWord(token)))
-          .distinct
-
-        // Find relating predicates for the rhs
-        val matchGoalPreds = goalPredsList.filter { pred =>
-          (pred.name == "topic" || rightTokens.contains(pred.name) || rightTokens.contains(pred.name + "s"))
-        }
-        val matchGoalPredVars = matchGoalPreds.map(pred => pred.variable.name)
-        val matchGoalRels = goalRelsList.filter(rel =>
-          (matchGoalPredVars.contains(rel.event.name) && matchGoalPredVars.contains(rel.variable.name))
-            || ((matchGoalPredVars.contains(rel.event.name) || matchGoalPredVars.contains(rel.variable.name)
-              || matchGoalPredVars.isEmpty)
-              && rightTokens.contains(rel.name)))
-
-        // Use this map to rename variables in the rhs
-        var assumVarNameMap = Map[String, String]()
-        var goalVarNameMap = Map[String, String]()
-
-        var counter = 0;
-        matchAssumePredVars.sortWith(_.compareTo(_) < 0).map(v => {
-          assumVarNameMap += (v -> ("x" + counter.toString()));
-          counter = counter + 1;
-        })
-
-        counter = 0;
-        matchGoalPredVars.sortWith(_.compareTo(_) < 0).map(v => {
-          goalVarNameMap += (v -> ("x" + counter.toString()));
-          counter = counter + 1;
-        })
-
-        /*matchGoalPreds.map { pred =>()
-				if(matchAssumePreds.size == 1 && matchGoalPreds.size == 1) 
-					varNameMap += (pred.variable.name -> matchAssumePreds(0).variable.name) 
-				else matchAssumePreds.foreach { assumePred =>
-					val assumePredName = ("_" + assumePred.name + "_").replaceAll("_topic_", "_")
-					val goalPredName = ("_" + pred.name + "_").replaceAll("_topic_", "_")
-					if( (assumePred.toString.contains(",v,") && pred.toString.contains(",v,")) ||
-						assumePredName.contains(goalPredName) || 
-						goalPredName.contains(assumePredName)
-					)
-						varNameMap += (pred.variable.name -> assumePred.variable.name) 
-				}
-			}*/
-
-        val changedMatchAssumPreds = matchAssumePreds.map { pred =>
-          BoxerPred(pred.discId,
-            pred.indices,
-            BoxerVariable(assumVarNameMap.getOrElse(pred.variable.name, pred.variable.name)),
-            pred.name,
-            pred.pos,
-            pred.sense)
-        }
-        val changedMatchAssumRels = matchAssumeRels.map { rel =>
-          BoxerRel(rel.discId,
-            rel.indices,
-            BoxerVariable(assumVarNameMap.getOrElse(rel.event.name, rel.event.name)),
-            BoxerVariable(assumVarNameMap.getOrElse(rel.variable.name, rel.variable.name)),
-            rel.name,
-            rel.sense)
-        }
-        ////////////////////////			
-
-        val changedMatchGoalPreds = matchGoalPreds.map { pred =>
-          BoxerPred(pred.discId,
-            pred.indices,
-            BoxerVariable(goalVarNameMap.getOrElse(pred.variable.name, pred.variable.name)),
-            pred.name,
-            pred.pos,
-            pred.sense)
-        }
-        val changedMatchGoalRels = matchGoalRels.map { rel =>
-          BoxerRel(rel.discId,
-            rel.indices,
-            BoxerVariable(goalVarNameMap.getOrElse(rel.event.name, rel.event.name)),
-            BoxerVariable(goalVarNameMap.getOrElse(rel.variable.name, rel.variable.name)),
-            rel.name,
-            rel.sense)
-        }
-
-        val leftFOL = matchAssumePreds ++ matchAssumeRels
-        val rightFOL = matchGoalPreds ++ matchGoalRels
-        //val leftFOL = changedMatchAssumPreds ++ changedMatchAssumRels
-        //val rightFOL = changedMatchGoalPreds ++ changedMatchGoalRels
-
-        if (leftFOL.isEmpty || rightFOL.isEmpty)
-          None
-        else {
-
-          val lhsDrs = BoxerDrs((matchAssumePredVars ++ matchGoalPredVars).map(v => (List() -> BoxerVariable(v))).toList, leftFOL.toList);
-          val rhsDrs = BoxerDrs((matchAssumePredVars ++ matchGoalPredVars).map(v => (List() -> BoxerVariable(v))).toList, rightFOL.toList);
-          
-          List((lhsDrs, rhsDrs, score.toDouble, RuleType.Implication))
-        }
+		var inclusion : Boolean = false; // the "parking lot -> parking" case 
+		if(left.contains(right) && Sts.hypothesis.contains(left) || right.contains(left) && Sts.text.contains(right))
+		{
+			LOG.trace("Rule inclusion: " + left + "->" +right);
+			None
+		}
+		else
+		{
+			val p1 = findPreds(left, assumePredsList, assumeRelsList, assumIndexMap, assumSentence);
+	        val exp1 = addMetaRels(p1, assumMetaRel);
+	        val p2 = findPreds(right, goalPredsList, goalRelsList, goalIndexMap, goalSentence);
+	        val exp2 = addMetaRels(p2, goalMetaRel)
+	        LOG.trace ("Paraphrase rule: (" + left + ") => " + exp1.map(simplePrintPred).mkString(", "));
+	        LOG.trace ("Paraphrase rule: (" + right+ ") => " + exp2.map(simplePrintPred).mkString(", "));
+	        LOG.trace ("DBG: ("+id+")(" + left + ", "+ right +") (" + exp1.map(simplePrintPred).mkString(", ") +") => ("+ exp2.map(simplePrintPred).mkString(", ") + ")");
+	        LOG.trace ("PTRN: ("+id+")(" + left + ", "+ right +") (" + exp1.map(simplerPrintPred).mkString(", ") +") => ("+ exp2.map(simplerPrintPred).mkString(", ") + ")");
+	        LOG.trace ("POS: ("+id+")(" + left + ", "+ right +") (" + printExpPattern(exp1) +") => ("+ printExpPattern(exp2) + ")");
+	        var pattern1 = sortVarsRenameVarsGetPattern(exp1);
+	        var pattern2 = sortVarsRenameVarsGetPattern(exp2);
+	        LOG.trace ("SrtRnm: " + pattern1._2 +"--" +  pattern1._1 + "-------" + exp1);
+	        LOG.trace ("SrtRnm: " + pattern2._2 +"--" + pattern2._1 + "-------" + exp2);
+	        val ruleTemplate = (
+	        		if (pattern2._2 > pattern1._2)
+	        			pattern2._2 +"--"+ pattern1._2
+	        		else
+	        			pattern1._2 +"--"+ pattern2._2
+	        )
+	        LOG.trace ("Template: " + ruleTemplate);
+			  if (pattern1._2 == "" || pattern2._2 == "")
+					None
+			  else  //both patterns are not empty
+			  {
+	        		val knownPatterns = List(
+	("n--n" /*15496*/, "M"),
+	("nn--n" /*786*/, "M"),
+	("nn--nn" /*27*/, "M"),
+	("nr--nr" /*258*/, "M"), ("rn--nr" /*47*/, "I"), ("rn--rn" /*110*/, "M"),
+	("rnr--rnr" /*8*/, "M"), ("rrn--rrn" /*2*/, "M"),
+	("vn--vn" /*3*/, "M"),
+	("r--nr" /*18*/, "M"), ("rn--r" /*34*/, "M"),
+	("r--r" /*32*/, "M"),
+	("rr--rnr" /*804*/, "M"), ("rrn--rr" /*34*/, "I"),
+	("rr--rr" /*885*/, "M"),
+	("rrr--rr" /*12*/, "M"),
+	("vr--vnr" /*10*/, "M"),
+	("vr--vr" /*147*/, "M"),
+	("vn--v" /*75*/, "M"),
+	("vr--v" /*934*/, "P"),
+	("v--v" /*1684*/, "M"),
+	("rnn--n" /*15*/, "I"),
+	("nr--n" /*344*/, "I"), ("rn--n" /*378*/, "I"),
+	("nr--nn" /*152*/, "I"), ("rn--nn" /*147*/, "I"),
+	("rnr--n" /*8*/, "I"), ("rrn--n" /*1*/, "I"),
+	("rnr--nn" /*1*/, "I"),
+	("vnr--nr" /*1*/, "I"),
+	("vn--n" /*73*/, "I"),
+	("vn--rn" /*3*/, "I"),
+	("r--n" /*73*/, "I"),
+	("rnr--r" /*9*/, "I"),
+	("rr--n" /*417*/, "I"),
+	("rr--nr" /*325*/, "I"), ("rr--rn" /*1281*/, "I"),
+	("rr--r" /*230*/, "I"),
+	("rrr--nr" /*5*/, "I"),
+	("vr--n" /*22*/, "I"),
+	("vr--nr" /*48*/, "I"), ("vr--rn" /*19*/, "I"),
+	("vr--rnr" /*23*/, "I"),
+	("vr--rr" /*106*/, "I"),
+	("v--n" /*710*/, "I"),
+	("v--nn" /*5*/, "I"),
+	("v--nr" /*29*/, "I"), ("v--rn" /*22*/, "I"),
+	("v--rnr" /*11*/, "I"),
+	("v--r" /*57*/, "I"),
+	("v--rr" /*769*/, "I"),
+	("rn--nrr" /*2*/, "I"), ("rnr--nr" /*13*/, "I"), ("rrn--rn" /*3*/, "I"),
+	("rnn--nn" /*4*/, "I"),
+	("rrrn--n" /*4*/, "I")
+					).toMap;
+	
+					assert(knownPatterns.contains(ruleTemplate));
+					val matchOrIgnore = knownPatterns.get(ruleTemplate).get;
+					if(matchOrIgnore == "P") // add patient or remove agent 
+					{
+						assert(pattern2._2 == "v" && pattern1._2 == "vr" || pattern2._2 == "vr" && pattern1._2 == "v")
+						def removeAgentAddPatient (arg1:(Set[BoxerExpression], String), arg2:(Set[BoxerExpression], String)): 
+						((Set[BoxerExpression], String), (Set[BoxerExpression], String)) =
+						{
+							var newArg1 = arg1;
+							var newArg2 = arg2;
+							val filteredExps = arg1._1.filter(
+							{
+								case BoxerRel(discId, indices, event, variable, "agent", sense) => false 
+								case _  => true
+							})
+							if (filteredExps.size < arg1._1.size)
+							{
+								assert(filteredExps.size + 1 ==  arg1._1.size);
+								newArg1 = (filteredExps, "v");
+							}
+							else
+							{
+								val patient = BoxerRel(arg2._1.head.getPredicates.head.discId, List(), BoxerVariable("vf"), BoxerVariable("rf"), "patient", 0);
+								newArg2 = (arg2._1 + patient, "vr");
+							}
+							(newArg1, newArg2)
+						}
+						if (pattern1._2 == "vr")
+						{
+							val res = removeAgentAddPatient(pattern1, pattern2);
+							val existingPatients = hypothesis.getRelations.filter(rel => rel.name == "patient");
+							if (res._2._2 == "vr" /* a patient was added */ && existingPatients.size != 0 /*there are patients*/ 
+								|| res._2._2 == "v" /* no patient added */)
+							{
+								//apply changes
+								pattern1 = res._1  
+								pattern2 = res._2
+							}
+							//else keep it vr-v
+						}
+						else if (pattern2._2 == "vr")
+						{
+							val res = removeAgentAddPatient(pattern2, pattern1);
+							val existingPatients = text.getRelations.filter(rel => rel.name == "patient");
+							if (res._1._2 == "vr" /* a patient was added */ && existingPatients.size != 0 /*there are patients*/ 
+								|| res._1._2 == "v" /* no patient added */)
+							{
+								//apply changes
+								pattern2 = res._1
+								pattern1 = res._2
+							}
+							//else keep it vr-v
+						}
+						else
+							throw new RuntimeException("Not Reachable");
+					}
+					if (matchOrIgnore == "P" || matchOrIgnore == "M")
+					{
+						def getVariables(exp:BoxerExpression):List[BoxerVariable] = 
+						{
+							return exp match 
+							{
+								 case BoxerPred(discId, indices, variable, name, pos, sense) => List(variable);
+								 case BoxerRel(discId, indices, event, variable, name, sense) => List(event, variable)
+							}
+						}
+						val lhsVars:List[String] = pattern1._1.toList.flatMap(exp => getVariables(exp).map(v=>v.name));
+						val rhsVars:List[String] = pattern2._1.toList.flatMap (exp => getVariables(exp).map(v=>v.name));
+						val lhsDrs = BoxerDrs(lhsVars.map(v => (List[BoxerIndex]() -> BoxerVariable(v))),
+									pattern1._1.toList);
+						val rhsDrs = BoxerDrs(rhsVars.map(v => (List[BoxerIndex]() -> BoxerVariable(v))),
+									pattern2._1.toList);
+						LOG.trace ("ParaphraseRule added: " + lhsDrs + " => " + rhsDrs);
+						List((lhsDrs, rhsDrs, score.toDouble, RuleType.Implication))
+					}
+					else
+						None
+			}
+		}
       }
       return folRules;
     }
@@ -717,7 +744,7 @@ val matchAssumeRels = assumeRelsList.filter(rel =>
       val diff = rhsSet -- lhsSet; 
       if( ! diff.isEmpty )
       {
-        //println ("Rule ignored: " + leftFOL + " => " + rightFOL )
+        LOG.trace("Rule ignored: " + leftFOL + " => " + rightFOL )
         return None //RHS has variables that are not in the LHS
       }
 
