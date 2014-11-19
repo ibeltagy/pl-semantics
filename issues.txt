@@ -1,3 +1,6 @@
+-When generating R, how to deal with pred(Univ, Exist) ??
+-When generating R, do we need to check if negated or not negated predicates  ? e.g. pair 13
+
 -Think how "subset" predicate affect the infernece and see if we can have hard coded rules to fix this issue.
 -Better handling of multi=word expressions like: clean up, in front of, ... 
 

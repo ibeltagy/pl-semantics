@@ -104,8 +104,8 @@ class SetGoalPTP(
     else if (Sts.opts.task == "rte" && (Sts.opts.softLogicTool == "ss" || Sts.opts.softLogicTool == "mln") )
     {
       //simple conjunction, one goal, no entailment predicate
-      quantifiers = Map();
-      constantsCounter = 0;
+      //quantifiers = Map();  //moved to introductionEntry
+      //constantsCounter = 0;	//moved to introductionEntry
       isQuery = true;
       val goalExist = if(goal.isInstanceOf[FolVariableExpression])
     	  				None  //handling a very special case of parsing error
@@ -136,28 +136,40 @@ class SetGoalPTP(
       extraExpressions = List(GoalExpression(expr.asInstanceOf[FolExpression], Double.PositiveInfinity));
       
       goalExist match {
-//TODO
         case Some(g) => extraExpressions = HardWeightedExpression(g) :: extraExpressions;   //<<--- this is correct 
-//        case Some(g) => extraExpressions = extraExpressions :+  HardWeightedExpression(g);
         case _ =>
+      }
+      var extraSoftEvidenceRule:FolExpression  = null
+      extraSoftEvidence.foreach (x=> {
+		if (extraSoftEvidenceRule == null)
+			extraSoftEvidenceRule = x
+		else
+			extraSoftEvidenceRule = FolAndExpression(extraSoftEvidenceRule, x);
+      })
+      if (extraSoftEvidence.size > 0 || (extraSoftEvidence == 1 && !extraSoftEvidence.head.isInstanceOf[FolEqualityExpression]))
+      {
+		var extraSoftEvidenceVariables = extraSoftEvidenceRule.getVariables;
+		extraSoftEvidenceVariables.foreach (v => {
+			extraSoftEvidenceRule = FolExistsExpression(v, extraSoftEvidenceRule)
+		})
+		extraExpressions = SoftWeightedExpression(extraSoftEvidenceRule, 0.999) :: extraExpressions;
       }
       //----------------------
       assumptions //apply the same introduction procedure to the Text. 
         .foreach
         {
           case HardWeightedExpression(e) => {
-		      quantifiers = Map();
-		      constantsCounter = 0;
+		      //quantifiers = Map();	//moved to introductionEntry
+		      //constantsCounter = 0;	//moved to introductionEntry
 		      isQuery = false;
 		      val textExit = if(e.isInstanceOf[FolVariableExpression])
 	    	  					None  //handling a very special case of parsing error
 	    	  						//where the expression is just an empty box
 	    	  				else 
 	    	  					introductionEntry(e);
+		      assert(extraSoftEvidence.size == 0);
 		      textExit match {
-//TODO
- 	          case Some(t) => extraExpressions = HardWeightedExpression(t) :: extraExpressions; true;	//<<--- this is correct 
-//              case Some(t) => extraExpressions = extraExpressions :+ HardWeightedExpression(t); true;
+ 	          	case Some(t) => extraExpressions = HardWeightedExpression(t) :: extraExpressions; true;	//<<--- this is correct 
 		        case _ => false;
 		      }
           }
@@ -194,11 +206,16 @@ class SetGoalPTP(
   //****************************** SampleSearch functions *************************
   private var quantifiers: Map[String, (String, Boolean)] = null;
   private var constantsCounter = 0;
-  private var isQuery = true; 
+  private var isQuery = true;
+  private var extraSoftEvidence:Set[FolExpression] = Set(); 
   //private var parent: FolExpression = null;
   
   private def introductionEntry(expr: FolExpression): Option[FolExpression] =
   {
+    extraSoftEvidence = Set();
+    quantifiers = Map();
+    constantsCounter = 0;
+
     if (Sts.opts.lhsOnlyIntro )
     	lhsOnlyIntroduction(expr, false, false, List());
     else
@@ -207,18 +224,19 @@ class SetGoalPTP(
   
   private def lhsOnlyIntroduction(expr: FolExpression, inLhs:Boolean, isNegated:Boolean, univs:List[String]): Option[FolExpression] =
   {
-	expr match {
+    expr match {
       case FolExistsExpression(variable, term) => {
         quantifiers = quantifiers 	++  Map( variable.name  ->  ("E", isNegated) );
         lhsOnlyIntroduction(term, inLhs, isNegated, univs)
       }
       case FolAllExpression(variable, term) => {
         quantifiers = quantifiers 	++  Map( variable.name  ->  ("A", isNegated) );
-        lhsOnlyIntroduction(term, inLhs, isNegated, univs :+ (variable.name))
+        lhsOnlyIntroduction(term, inLhs, isNegated, univs)
       }
-	  case FolNegatedExpression(term) => lhsOnlyIntroduction(term, false, !isNegated, univs);      
+      case FolNegatedExpression(term) => lhsOnlyIntroduction(term, false, !isNegated, univs);      
       case FolOrExpression(first, second) => lhsOnlyIntroduction(FolAndExpression(first, second), inLhs, isNegated, univs);
-      case FolIfExpression(first, second) => {
+      case FolIfExpression(first, second) => 
+      {
           val f = lhsOnlyIntroduction(first, true, !isNegated, univs);
  		  val s = lhsOnlyIntroduction(second, false, isNegated, univs);
  		  if (f.isEmpty && s.isEmpty)
@@ -229,7 +247,8 @@ class SetGoalPTP(
  			  return f;
  		  else return  Some(FolAndExpression(f.get, s.get));
       }
-      case FolAndExpression(first, second) =>  {
+      case FolAndExpression(first, second) =>
+      {
          val f = lhsOnlyIntroduction(first, inLhs, isNegated, univs);
 		  val s = lhsOnlyIntroduction(second, inLhs, isNegated, univs);
 		  if (f.isEmpty && s.isEmpty)
@@ -240,35 +259,50 @@ class SetGoalPTP(
 			  return f;
 		  else return  Some(FolAndExpression(f.get, s.get));
       }
-      case FolAtom(pred, args @ _*) =>{
-    	  
-    	if(inLhs && isLhsOnlyIntroduction(args, inLhs, univs) )
+      case FolAtom(pred, args @ _*) =>
+      {  
+    	if(isLhsOnlyIntroduction(args, inLhs, univs) )
     	{
-			System.out.println(">>>>>>LHS Intro<<<<<<");
-    		Some(FolAtom.apply(pred, args.map(arg => lhsOnlyIntroduction(arg, univs) ) :_ *));
+		val extraEvid = FolAtom.apply(pred, args.map(arg => lhsOnlyIntroduction(arg, univs) ) :_ *)
+		if (inLhs) //hard evidence
+	    		Some(extraEvid);
+		else
+		{
+			assert(isQuery);
+			extraSoftEvidence = extraSoftEvidence + extraEvid;
+			None
+		}
     	}
     	else 
     	  None
       }
-	  case FolVariableExpression(v) => Some(FolVariableExpression(lhsOnlyIntroduction(v, univs)));
-
-      case FolEqualityExpression(first, second) => {
-    	       	if(inLhs && isLhsOnlyIntroduction(Seq(first.asInstanceOf[FolVariableExpression].variable, 
-        						   second.asInstanceOf[FolVariableExpression].variable), inLhs, univs))
-        		{
-    				System.out.println(">>>>>>LHS Intro<<<<<<");
-    	       		Some(FolEqualityExpression(lhsOnlyIntroduction(first, inLhs, isNegated, univs).get, lhsOnlyIntroduction(second, inLhs, isNegated, univs).get));
-        		}
+      case FolVariableExpression(v) => Some(FolVariableExpression(lhsOnlyIntroduction(v, univs)));
+      case FolEqualityExpression(first, second) => 
+      {
+    	       	if(isLhsOnlyIntroduction(Seq(first.asInstanceOf[FolVariableExpression].variable, 
+					     second.asInstanceOf[FolVariableExpression].variable),
+					 inLhs, univs))
+        	{
+			val extraEvid = FolEqualityExpression(lhsOnlyIntroduction(first, inLhs, isNegated, univs).get, 
+						   lhsOnlyIntroduction(second, inLhs, isNegated, univs).get);
+			if (inLhs) //hard evidence
+		    		Some(extraEvid);
+			else
+			{
+				assert(isQuery);
+				extraSoftEvidence = extraSoftEvidence + extraEvid;
+				None
+			}
+        	}
         	else 
         	  None
       }
       case FolIffExpression(first, second) => throw new RuntimeException(expr + " is not a valid expression")      
-	  case _ => throw new RuntimeException(expr + " is not a valid expression")
-	}
+      case _ => throw new RuntimeException(expr + " is not a valid expression")
+      }
   }
   private def lhsOnlyIntroduction(v: Variable, univs:List[String]): Variable =
   {
-		  require(univs.contains(v.name));
           var newVarName = v.name;  
           if(isQuery)
             newVarName = newVarName + "_hPlus";
@@ -277,14 +311,59 @@ class SetGoalPTP(
   }
   private def isLhsOnlyIntroduction (args: Seq[Variable], inLhs:Boolean, univs:List[String]): Boolean = 
   {
-        require(inLhs);
-        
+        var univCount = 0;
+        var notExistCount = 0;
         args.forall(arg=>{
-          if (!univs.contains(arg.name))
-        	  return false;
-          true;
+          require(quantifiers.contains(arg.name));
+          val q = quantifiers(arg.name);
+          if (q._1 == "A" && q._2 == false || q._1 == "E" && q._2 == true)
+            univCount = univCount + 1;
+          if (q._1 == "E" && q._2 == true)
+        	  notExistCount = notExistCount + 1;          
+          true
         })
-        return true;
+	var allUniv:Boolean = false;
+	if(univCount == 0)
+		return false; //Nothing need to be done in case no Univ quantifiers
+	else if (univCount == args.length)
+		allUniv = true;
+
+	if(!isQuery /*the existance pragmatic*/ && inLhs && notExistCount == 0 && allUniv)  /*Introduction for the exsitance case in Text*/
+		return true;  //hard evidence
+	else if(!isQuery)
+		return false; //all other cases of Univ in Text should be ignored
+	else if (allUniv)
+	{
+		if (isQuery && inLhs && notExistCount == 0)  /*LHS introduction in Q*/
+			return true;  //hard evidence
+		else if (isQuery && inLhs && notExistCount != 0)  /*Impossible case*/
+			throw new RuntimeException ("Unsupported case: in LHS, and some univ are notExist");
+		else if (isQuery && !inLhs && notExistCount == 0)  /*All birds are blue*/
+		{
+			System.out.println ("All univ are univ, but in RHS")
+			return false;  //all birds are blue. Generate a bird, but do not generate a blue
+		}
+		else if (isQuery && !inLhs && notExistCount != 0 && notExistCount < univCount)  /*Not sure, probably do as notExistCount == univCount*/
+		{
+			System.out.println ("All univ, some Univ, some notExist")
+			//e.g: "all birds do not eat all food"
+			return true;  //soft evidence
+		}
+		else if (isQuery && !inLhs && notExistCount == univCount)
+		{
+			System.out.println ("All univ, all notExist")
+			return true;  //soft evidence
+		}
+		else
+			throw new RuntimeException ("Unreachable point");
+	}
+	else
+	{
+		//TODO
+		System.out.println ("Not all univ, some Univ, some Exist")
+       		LOG.trace("found %s variables, only %s of them is/are universlly quantified".format(args.length, univCount)) 
+         	return false
+	}
   }
   //---------------------------
   private def introduction(expr: FolExpression, isNegated:Boolean, parent:FolExpression): Option[FolExpression] =

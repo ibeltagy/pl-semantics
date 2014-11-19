@@ -62,7 +62,18 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 	        	    List()
 	        	  }
 	        	  else
-	        		  List(HardWeightedExpression(exp))
+	        	    List(HardWeightedExpression(exp))
+	          }
+	          case SoftWeightedExpression(e, w)  if (e.isInstanceOf[FolExistsExpression])=> {
+	        	  extraUnivVars = Set();
+	        	  var exp = goUniv(e, List(), List(), false);
+	        	  if(Sts.opts.softLogicTool == "psl")
+	        	  {
+	        	    conjToEvd(exp);
+	        	    List()
+	        	  }
+	        	  else
+	        	    List(SoftWeightedExpression(exp, w))
 	          }
 	          case a @ _ => List(a)
 	        }

@@ -114,7 +114,7 @@ class AlchemyTheoremProver{
 	            //            val usedWeight = log(weight / (1 - weight)) / log(logBase) // treat 'weight' as a prob and find the log-odds
 	            //            f.write(usedWeight + " " + convert(folEx) + "\n")
 	            val folExpString = convert(folExp);
-            	var usedWeight = min(weight, 0.999);
+	            var usedWeight = min(weight, 0.999);
 	            usedWeight = max(usedWeight, 0.001);
 	            usedWeight = SetPriorPTP.predPrior + log(usedWeight) - log(1-usedWeight);
 
@@ -122,9 +122,11 @@ class AlchemyTheoremProver{
 	            //if (usedWeight  > 0)
 	            //{
 	              //This is a nasty hack to inverse what alchamy does when it splits a formula into smaller formulas
-	              var count = folExpString.split("=>").apply(1).count(_ == '^') + 1;
+	              var count = 0;
+	              count = folExpString.split("=>").last.count(_ == '^') + 1;
+	              //println(folExpString.split("=>") +  " -----" + folExpString.split("=>").last + "----" + count)
 	              if (!Sts.opts.scaleW) 
-				    count = 1;
+				count = 1;
 	              usedWeight = usedWeight * count;
 	              f.write("%.5f %s\n".format(usedWeight, folExpString))
 	            //}

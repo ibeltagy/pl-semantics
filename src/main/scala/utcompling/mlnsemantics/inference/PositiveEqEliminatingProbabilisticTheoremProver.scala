@@ -32,18 +32,29 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
     //No need to do it for the hypothesis 
     val newAssumptions:List[WeightedExpression[FolExpression]] = assumptions.map
     {
-          case HardWeightedExpression(e) => {
-	        	equalities = List();
-	        	var newExpr = findRemoveEq(e, Set(), false);
-				equalities = groupEqvClasses(equalities);
-				LOG.trace(equalities)
-				newExpr = applyEq(newExpr);
-				newConstants = newConstants.map(constant=>{
-				  (constant._1, constant._2.map(applyEq(_)).toSet )
-				}).toMap
-	        	HardWeightedExpression(newExpr)
-	        }          
-	        case a @ _ => a
+	case HardWeightedExpression(e) => {
+			equalities = List();
+			var newExpr = findRemoveEq(e, Set(), false);
+			equalities = groupEqvClasses(equalities);
+			LOG.trace(equalities)
+			newExpr = applyEq(newExpr);
+			newConstants = newConstants.map(constant=>{
+				(constant._1, constant._2.map(applyEq(_)).toSet )
+			}).toMap
+			HardWeightedExpression(newExpr)
+	}
+	case SoftWeightedExpression(e, w)  if (e.isInstanceOf[FolExistsExpression]) => {
+			equalities = List();
+			var newExpr = findRemoveEq(e, Set(), false);
+			equalities = groupEqvClasses(equalities);
+			LOG.trace(equalities)
+			newExpr = applyEq(newExpr);
+			newConstants = newConstants.map(constant=>{
+				(constant._1, constant._2.map(applyEq(_)).toSet )
+			}).toMap
+			SoftWeightedExpression(newExpr, w)
+	}	
+	case a @ _ => a
     }
     
     delegate.prove(

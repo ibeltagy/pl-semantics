@@ -73,34 +73,58 @@ class AutoTypingPTP(
 
 		def findApply = 
 		{
-		   //while (repeat)
-		   //{
+			//while (repeat)
+			//{
 				//repeat = false;
-		  
-		   //1)collect constants, and propagate them according to the Text
-		   first = true;
+			//1)collect constants, and propagate them according to the Text
+			first = true;
 			assumptions.foreach 
 			{
-	          case HardWeightedExpression(e) => 
-	          {
-	            quantifiedVars.clear();
-	            isHardRule = true;
-	            val vars = findConstVarsQuantif(e);
-	            //generate arrows from vars
-	   			vars.foreach(rhsVar => 
-	   			{
-	   				vars.foreach(lhsVar =>
-	   					propagate(Set(lhsVar), rhsVar)
-	      			)
-	      		})	            
-	          }
-             case SoftWeightedExpression(e, w) =>
-             {
-               quantifiedVars.clear();
-               isHardRule = false;
-               findArrowsIR (e)
-             }
-	          case _ => ;
+				case HardWeightedExpression(e) => 
+				{
+					quantifiedVars.clear();
+					isHardRule = true;
+					val vars = findConstVarsQuantif(e);
+					//generate arrows from vars
+					vars.foreach(rhsVar => 
+					{
+						vars.foreach(lhsVar => propagate(Set(lhsVar), rhsVar))
+					})
+				}
+				case SoftWeightedExpression(e, w) =>
+				{
+					quantifiedVars.clear();
+					e match
+					{
+						case FolAndExpression(first, second) =>  //The rule R
+						{
+							isHardRule = true;
+							val vars = findConstVarsQuantif(e);
+							//generate arrows from vars
+							vars.foreach(rhsVar => 
+							{
+								vars.foreach(lhsVar => propagate(Set(lhsVar), rhsVar))
+							})
+						}
+						case FolAtom(pred, args @ _*) =>  //The rule R
+						{
+							isHardRule = true;
+							val vars = findConstVarsQuantif(e);
+							//generate arrows from vars
+							vars.foreach(rhsVar => 
+							{
+								vars.foreach(lhsVar => propagate(Set(lhsVar), rhsVar))
+							})
+						}						
+						case FolAllExpression(v, term)  => //Inference rule
+						{
+							isHardRule = false;
+							findArrowsIR (e)
+						}
+						case _ => throw new RuntimeException("unsupported case:" + e)
+					}
+				}
+				case _ => ;
 			}
 /*
 			//2)apply infernece rules 
@@ -136,7 +160,7 @@ class AutoTypingPTP(
 			}
 */	    	 
 			//}//Repeat
-            genNegativeEvd(declarations);
+			genNegativeEvd(declarations);
 		}
 	
       val finish = runWithTimeout(3000, false) { findApply ;  true }
@@ -368,19 +392,19 @@ class AutoTypingPTP(
   //assume all inference rules are of the form  Univ LHS conjunctions => RHS conjunctions
   private def findArrowsIR(e: FolExpression) : Set[(String, Seq[String])] =
   {
-	  e match 
-      {
-      	case FolAllExpression(v, term) => quantifiedVars += v.name; findArrowsIR(term);
-      	case FolExistsExpression(v, term) => quantifiedVars += v.name; findArrowsIR(term);      	
-      	case FolIfExpression(lhs, rhs) =>  {
-      		val lhsVars = findArrowsIR(lhs);
-      		val rhsVars = findArrowsIR(rhs)
-   			rhsVars.foreach(rhsVar => propagate(lhsVars, rhsVar));
-      		Set();
-      	}
-      	case FolAtom(pred, args @ _*) => 
-      	  Set((pred.name, args.map(_.name)));
-      	case _ => e.visit(findArrowsIR, (x:List[Set[(String, Seq[String])]])=> x.reduce( _ ++ _))
-      }
+	e match
+	{
+		case FolAllExpression(v, term) => quantifiedVars += v.name; findArrowsIR(term);
+		case FolExistsExpression(v, term) => quantifiedVars += v.name; findArrowsIR(term);
+		case FolIfExpression(lhs, rhs) => {
+			val lhsVars = findArrowsIR(lhs);
+			val rhsVars = findArrowsIR(rhs)
+			rhsVars.foreach(rhsVar => propagate(lhsVars, rhsVar));
+			Set();
+		}
+		case FolAtom(pred, args @ _*) => 
+		  Set((pred.name, args.map(_.name)));
+		case _ => e.visit(findArrowsIR, (x:List[Set[(String, Seq[String])]])=> x.reduce( _ ++ _))
+	}
   }
 }
