@@ -17,6 +17,7 @@ class SetGoalPTP(
   extends ProbabilisticTheoremProver[FolExpression] {
 
   private val LOG = LogFactory.getLog(classOf[SetGoalPTP])
+  private val newVarNameSuffix = "_hPlus";
   
   /**
    * Return the proof, or None if the proof failed
@@ -108,7 +109,7 @@ class SetGoalPTP(
       //constantsCounter = 0;	//moved to introductionEntry
       isQuery = true;
       val goalExist = if(goal.isInstanceOf[FolVariableExpression])
-    	  				None  //handling a very special case of parsing error
+    	  				(None, None)  //handling a very special case of parsing error
     	  						//where the expression is just an empty box
 				      else 
 				        introductionEntry(goal);
@@ -135,41 +136,32 @@ class SetGoalPTP(
       }      
       extraExpressions = List(GoalExpression(expr.asInstanceOf[FolExpression], Double.PositiveInfinity));
       
-      goalExist match {
-        case Some(g) => extraExpressions = HardWeightedExpression(g) :: extraExpressions;   //<<--- this is correct 
+      goalExist._1 match {
+        case Some(g) => extraExpressions = HardWeightedExpression(g, Double.PositiveInfinity) :: extraExpressions;   //<<--- this is correct 
         case _ =>
       }
-      var extraSoftEvidenceRule:FolExpression  = null
-      extraSoftEvidence.foreach (x=> {
-		if (extraSoftEvidenceRule == null)
-			extraSoftEvidenceRule = x
-		else
-			extraSoftEvidenceRule = FolAndExpression(extraSoftEvidenceRule, x);
-      })
-      if (extraSoftEvidence.size > 0 || (extraSoftEvidence == 1 && !extraSoftEvidence.head.isInstanceOf[FolEqualityExpression]))
-      {
-		var extraSoftEvidenceVariables = extraSoftEvidenceRule.getVariables;
-		extraSoftEvidenceVariables.foreach (v => {
-			extraSoftEvidenceRule = FolExistsExpression(v, extraSoftEvidenceRule)
-		})
-		extraExpressions = SoftWeightedExpression(extraSoftEvidenceRule, 0.999) :: extraExpressions;
+      
+      goalExist._2 match {
+        case Some(g) => extraExpressions = HardWeightedExpression(g, 0.99999) :: extraExpressions;   //<<--- this is correct 
+        case _ =>
       }
+
       //----------------------
       assumptions //apply the same introduction procedure to the Text. 
         .foreach
         {
-          case HardWeightedExpression(e) => {
+          case HardWeightedExpression(e, w) => {
 		      //quantifiers = Map();	//moved to introductionEntry
 		      //constantsCounter = 0;	//moved to introductionEntry
 		      isQuery = false;
 		      val textExit = if(e.isInstanceOf[FolVariableExpression])
-	    	  					None  //handling a very special case of parsing error
+	    	  					(None, None)  //handling a very special case of parsing error
 	    	  						//where the expression is just an empty box
 	    	  				else 
 	    	  					introductionEntry(e);
-		      assert(extraSoftEvidence.size == 0);
-		      textExit match {
- 	          	case Some(t) => extraExpressions = HardWeightedExpression(t) :: extraExpressions; true;	//<<--- this is correct 
+		      assert(textExit._2.isEmpty);
+		      textExit._1 match {
+ 	          	case Some(t) => extraExpressions = HardWeightedExpression(t, Double.PositiveInfinity) :: extraExpressions; true;	//<<--- this is correct 
 		        case _ => false;
 		      }
           }
@@ -207,19 +199,52 @@ class SetGoalPTP(
   private var quantifiers: Map[String, (String, Boolean)] = null;
   private var constantsCounter = 0;
   private var isQuery = true;
-  private var extraSoftEvidence:Set[FolExpression] = Set(); 
+  private var extraSoftEvidence:Set[FolExpression] = Set();
+
   //private var parent: FolExpression = null;
   
-  private def introductionEntry(expr: FolExpression): Option[FolExpression] =
+  //first expression is for universal quantifiers, second is for negated existentials
+  private def introductionEntry(expr: FolExpression): (Option[FolExpression], Option[FolExpression]) =
   {
     extraSoftEvidence = Set();
     quantifiers = Map();
     constantsCounter = 0;
-
-    if (Sts.opts.lhsOnlyIntro )
+    val first = (if (Sts.opts.lhsOnlyIntro )
     	lhsOnlyIntroduction(expr, false, false, List());
     else
-    	introduction(expr, false, null);
+    	introduction(expr, false, null)
+    )
+    
+    var extraSoftEvidenceRule:Option[FolExpression]  = None
+    extraSoftEvidence.foreach (x=> {
+		if (extraSoftEvidenceRule == None)
+			extraSoftEvidenceRule = Some(x)
+		else
+			extraSoftEvidenceRule = Some(FolAndExpression(extraSoftEvidenceRule.get, x));
+    })
+    if (extraSoftEvidence.size > 0 || (extraSoftEvidence == 1 && !extraSoftEvidence.head.isInstanceOf[FolEqualityExpression]))
+    {
+		var extraSoftEvidenceVariables = extraSoftEvidenceRule.get.getVariables;
+		var univVars:Set[Variable]  = Set();
+		extraSoftEvidenceVariables.foreach (v => 
+		{
+		  val vname = v.name.replace(newVarNameSuffix, "");
+		  require(quantifiers.contains(vname), vname + " not found in  " + quantifiers);
+          val q = quantifiers(vname);
+          if (q._1 == "A" && q._2 == false || q._1 == "E" && q._2 == true)
+        	  univVars = univVars + v
+          else
+        	  extraSoftEvidenceRule = Some(FolAllExpression(v, extraSoftEvidenceRule.get))
+        })
+		univVars.foreach (v => 
+		{
+        	  extraSoftEvidenceRule = Some(FolExistsExpression(v, extraSoftEvidenceRule.get))
+        })
+    }
+    else
+    	extraSoftEvidenceRule = None
+    
+    return (first, extraSoftEvidenceRule)
   }
   
   private def lhsOnlyIntroduction(expr: FolExpression, inLhs:Boolean, isNegated:Boolean, univs:List[String]): Option[FolExpression] =
@@ -305,7 +330,7 @@ class SetGoalPTP(
   {
           var newVarName = v.name;  
           if(isQuery)
-            newVarName = newVarName + "_hPlus";
+            newVarName = newVarName + newVarNameSuffix;
           addConst(newVarName);
           return Variable(newVarName);
   }
@@ -348,7 +373,7 @@ class SetGoalPTP(
 			System.out.println ("All univ, some Univ, some notExist")
 			//e.g: "all birds do not eat all food"
 			return true;  //soft evidence
-		}
+		} 
 		else if (isQuery && !inLhs && notExistCount == univCount)
 		{
 			System.out.println ("All univ, all notExist")
@@ -359,10 +384,24 @@ class SetGoalPTP(
 	}
 	else
 	{
-		//TODO
 		System.out.println ("Not all univ, some Univ, some Exist")
-       		LOG.trace("found %s variables, only %s of them is/are universlly quantified".format(args.length, univCount)) 
-         	return false
+	    assert(args.length == 2);
+	    assert(univCount == 1);
+	    assert(notExistCount == 1 || notExistCount == 0);
+	    if (notExistCount == 1) //one exist and one negated exist
+	    {
+	        assert (!inLhs) // can not reach here and be inLhs
+       		System.out.println ("Not all univ, one exist, one notExist")
+	        return true;
+	    }
+	    else if (notExistCount == 0) //one exist and one univ
+	    {
+	        assert (!inLhs) //can not reach here and be inLhs
+       		System.out.println ("Not all univ, one exist, one univ")	        
+	        return false; //nothing need to be done
+	    }
+	    else 
+   			throw new RuntimeException ("Unreachable point");
 	}
   }
   //---------------------------

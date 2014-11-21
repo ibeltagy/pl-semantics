@@ -59,7 +59,7 @@ class ExistentialEliminatingProbabilisticTheoremProver(
     
     val newAssumptions: List[WeightedExpression[FolExpression]] =
       assumptions.map {
-        case HardWeightedExpression(e) => HardWeightedExpression(go(e))
+        case HardWeightedExpression(e, w) => HardWeightedExpression(go(e), w)
         case SoftWeightedExpression(e, w) => SoftWeightedExpression(go(e), w)
       }
 

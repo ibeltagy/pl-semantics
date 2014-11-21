@@ -14,6 +14,7 @@ Set up workspace (without PSL)
     ~/mln-semantics$ bin/mlnsem gen prb		#Generate helping files for a toy dataset I call it prb
     ~/mln-semantics$ bin/mlnsem run prb		#Run the toy examples of prb
 
+NOTE: You will need to downgrade "bison" to version 2.7 for Alchmey to compile
 
 Running our system on different datasets
 ----------------------

@@ -32,8 +32,8 @@ class EditDRSTheoremProver(
 	  
     val newGoal = BoxerPrs(goal.asInstanceOf[BoxerPrs].exps.map( e=> (process(e._1), e._2 )))
     val newAssumptions:List[WeightedExpression[BoxerExpression]] = assumptions.map({
-      case HardWeightedExpression(BoxerPrs(exps)) => HardWeightedExpression(BoxerPrs(exps.map( e=> 
-        												(process(e._1), e._2 ))))
+      case HardWeightedExpression(BoxerPrs(exps), w) => HardWeightedExpression(BoxerPrs(exps.map( e=> 
+        												(process(e._1), e._2 ))), w)
         												.asInstanceOf[WeightedExpression[BoxerExpression]];
       case _ => throw new RuntimeException("not reachable");
     })

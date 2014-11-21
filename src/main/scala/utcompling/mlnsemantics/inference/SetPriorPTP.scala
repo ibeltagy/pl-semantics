@@ -40,7 +40,7 @@ class SetPriorPTP(
     SetPriorPTP.predPrior = Sts.opts.task match //prior of the negated predicate 
     {
         case "sts" => 3; //prior in case of STS
-        case "rte" => 1; //prior in case of RTE
+        case "rte" => 2; //prior in case of RTE
     }
     SetPriorPTP.entPrior = SetPriorPTP.predPrior //entailment prior equals the other predicates priors
 
@@ -69,6 +69,7 @@ class SetPriorPTP(
       else return result;//if it does not work, return the result as it is. 
       
     }
+/*   //we still need negative prior on all predicates for things to work right even with the MCW 
     else  if(Sts.opts.negativeEvd == true) //if modified close-world assumption
     {
     	//No need for priors
@@ -76,7 +77,8 @@ class SetPriorPTP(
         SetPriorPTP.entPrior = 0;
 
     }
-    else  //Prior on all predicates
+*/
+     else  //Prior on all predicates
     {
       //for all declarations, generate prior expressions
       priorExpressions = declarations.flatMap {

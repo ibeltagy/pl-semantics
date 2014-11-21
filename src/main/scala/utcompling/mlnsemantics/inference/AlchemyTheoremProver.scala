@@ -97,6 +97,11 @@ class AlchemyTheoremProver{
               case Double.NegativeInfinity => None ;//Some(HardWeightedExpression(-folEx))
               case _ => Some(e)
             }
+          case e @ HardWeightedExpression(folEx, weight) =>
+            weight match {
+              case Double.PositiveInfinity => Some(HardWeightedExpression(folEx))
+              case _ => Some(SoftWeightedExpression(folEx, weight))
+            }            
           case e @ _ => Some(e)
         }.foreach { e => 
           e match {
@@ -114,8 +119,8 @@ class AlchemyTheoremProver{
 	            //            val usedWeight = log(weight / (1 - weight)) / log(logBase) // treat 'weight' as a prob and find the log-odds
 	            //            f.write(usedWeight + " " + convert(folEx) + "\n")
 	            val folExpString = convert(folExp);
-	            var usedWeight = min(weight, 0.999);
-	            usedWeight = max(usedWeight, 0.001);
+	            var usedWeight = min(weight, 0.999999);
+	            usedWeight = max(usedWeight, 0.000001);
 	            usedWeight = SetPriorPTP.predPrior + log(usedWeight) - log(1-usedWeight);
 
 	            //include all rules even the ones with negative weights 
@@ -136,9 +141,11 @@ class AlchemyTheoremProver{
 	            //   meaning that the probability of entailment (`mln`) using a weight `f(s)` based on similarity score `s <- [0,1]` will be
 	            //   roughly equal to the similarity score itself.
 	            
-          case HardWeightedExpression(folEx) => f.write(convert(folEx)+ ".\n")
+          case HardWeightedExpression(folEx, w) => {
+	            assert (w == Double.PositiveInfinity);
+	            f.write(convert(folEx)+ ".\n")
+          }
         }
-          
        }
     }
     tempFile

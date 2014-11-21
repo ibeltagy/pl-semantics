@@ -51,11 +51,11 @@ class TypeConvertingPTP(
       case _ => converter.interpret(goal)
     } 
     val newAssumptions = assumptions.map ({
-      case HardWeightedExpression(e) => HardWeightedExpression(converter.interpret(e))
+      case HardWeightedExpression(e, w) => HardWeightedExpression(converter.interpret(e), w)
       case SoftWeightedExpression(e, w) => SoftWeightedExpression(converter.interpret(e), w)
     }).flatMap{
     	//Empty expressions become the single variable "true"  
-    	case HardWeightedExpression(FolVariableExpression(Variable("true"))) => None 
+    	case HardWeightedExpression(FolVariableExpression(Variable("true")), w) => None 
     	case e @ _ => List(e)
     }
 

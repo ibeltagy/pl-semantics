@@ -38,7 +38,7 @@ class ModalDiscourseInterpreter(
     new PassthroughBoxerExpressionInterpreter(),
     new CandcImpl (),
     new BoxerImpl (),
-    Sts.opts.kbest),
+    (if(Sts.opts==null) 1 ; else Sts.opts.kbest) ),
   candcDiscourseParser: DiscourseParser[Discourse] = new CandcDiscourseParser(new CandcImpl()),
   polarityLexicon: PolarityLexicon = PolarityLexicon.fromFile(Resources.polarityLexicon))
   extends DiscourseInterpreter[BoxerExpression] {

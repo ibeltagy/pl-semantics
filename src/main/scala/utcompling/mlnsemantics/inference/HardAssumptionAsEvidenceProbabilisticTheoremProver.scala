@@ -53,7 +53,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 //	    else //fixDCA: handle skolem functions 
 	      assumptions
 	        .flatMap {
-	          case HardWeightedExpression(e) => {
+	          case HardWeightedExpression(e, w) => {
 	        	  extraUnivVars = Set();
 	        	  var exp = goUniv(e, List(), List(), false);
 	        	  if(Sts.opts.softLogicTool == "psl")
@@ -62,18 +62,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 	        	    List()
 	        	  }
 	        	  else
-	        	    List(HardWeightedExpression(exp))
-	          }
-	          case SoftWeightedExpression(e, w)  if (e.isInstanceOf[FolExistsExpression])=> {
-	        	  extraUnivVars = Set();
-	        	  var exp = goUniv(e, List(), List(), false);
-	        	  if(Sts.opts.softLogicTool == "psl")
-	        	  {
-	        	    conjToEvd(exp);
-	        	    List()
-	        	  }
-	        	  else
-	        	    List(SoftWeightedExpression(exp, w))
+	        	    List(HardWeightedExpression(exp, w))
 	          }
 	          case a @ _ => List(a)
 	        }

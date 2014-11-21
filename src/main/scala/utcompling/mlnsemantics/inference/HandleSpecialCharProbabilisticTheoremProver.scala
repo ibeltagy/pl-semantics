@@ -47,7 +47,7 @@ class HandleSpecialCharProbabilisticTheoremProver(
 
     delegate.prove(constants, declarations, evidence, 
       assumptions.map {
-        case HardWeightedExpression(e) => HardWeightedExpression(go(e))
+        case HardWeightedExpression(e, w) => HardWeightedExpression(go(e), w)
         case SoftWeightedExpression(e, w) => SoftWeightedExpression(go(e), w)
       }, go(goal))
   }

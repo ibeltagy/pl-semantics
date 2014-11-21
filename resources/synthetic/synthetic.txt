@@ -1,0 +1,1024 @@
+some man eat some food	some hungry man eat some delicious food
+some man eat some delicious food	some hungry man eat some food
+some hungry man eat some food	some man eat some delicious food
+some hungry man eat some delicious food	some man eat some food
+some man eat some food	some hungry man eat all delicious food
+some man eat some delicious food	some hungry man eat all food
+some hungry man eat some food	some man eat all delicious food
+some hungry man eat some delicious food	some man eat all food
+some man eat some food	some hungry man eat no delicious food
+some man eat some delicious food	some hungry man eat no food
+some hungry man eat some food	some man eat no delicious food
+some hungry man eat some delicious food	some man eat no food
+some man eat some food	some hungry man eat not all delicious food
+some man eat some delicious food	some hungry man eat not all food
+some hungry man eat some food	some man eat not all delicious food
+some hungry man eat some delicious food	some man eat not all food
+some man eat some food	all hungry man eat some delicious food
+some man eat some delicious food	all hungry man eat some food
+some hungry man eat some food	all man eat some delicious food
+some hungry man eat some delicious food	all man eat some food
+some man eat some food	all hungry man eat all delicious food
+some man eat some delicious food	all hungry man eat all food
+some hungry man eat some food	all man eat all delicious food
+some hungry man eat some delicious food	all man eat all food
+some man eat some food	all hungry man eat no delicious food
+some man eat some delicious food	all hungry man eat no food
+some hungry man eat some food	all man eat no delicious food
+some hungry man eat some delicious food	all man eat no food
+some man eat some food	all hungry man eat not all delicious food
+some man eat some delicious food	all hungry man eat not all food
+some hungry man eat some food	all man eat not all delicious food
+some hungry man eat some delicious food	all man eat not all food
+some man eat some food	no hungry man eat some delicious food
+some man eat some delicious food	no hungry man eat some food
+some hungry man eat some food	no man eat some delicious food
+some hungry man eat some delicious food	no man eat some food
+some man eat some food	no hungry man eat all delicious food
+some man eat some delicious food	no hungry man eat all food
+some hungry man eat some food	no man eat all delicious food
+some hungry man eat some delicious food	no man eat all food
+some man eat some food	no hungry man eat no delicious food
+some man eat some delicious food	no hungry man eat no food
+some hungry man eat some food	no man eat no delicious food
+some hungry man eat some delicious food	no man eat no food
+some man eat some food	no hungry man eat not all delicious food
+some man eat some delicious food	no hungry man eat not all food
+some hungry man eat some food	no man eat not all delicious food
+some hungry man eat some delicious food	no man eat not all food
+some man eat some food	not all hungry man eat some delicious food
+some man eat some delicious food	not all hungry man eat some food
+some hungry man eat some food	not all man eat some delicious food
+some hungry man eat some delicious food	not all man eat some food
+some man eat some food	not all hungry man eat all delicious food
+some man eat some delicious food	not all hungry man eat all food
+some hungry man eat some food	not all man eat all delicious food
+some hungry man eat some delicious food	not all man eat all food
+some man eat some food	not all hungry man eat no delicious food
+some man eat some delicious food	not all hungry man eat no food
+some hungry man eat some food	not all man eat no delicious food
+some hungry man eat some delicious food	not all man eat no food
+some man eat some food	not all hungry man eat not all delicious food
+some man eat some delicious food	not all hungry man eat not all food
+some hungry man eat some food	not all man eat not all delicious food
+some hungry man eat some delicious food	not all man eat not all food
+some man eat all food	some hungry man eat some delicious food
+some man eat all delicious food	some hungry man eat some food
+some hungry man eat all food	some man eat some delicious food
+some hungry man eat all delicious food	some man eat some food
+some man eat all food	some hungry man eat all delicious food
+some man eat all delicious food	some hungry man eat all food
+some hungry man eat all food	some man eat all delicious food
+some hungry man eat all delicious food	some man eat all food
+some man eat all food	some hungry man eat no delicious food
+some man eat all delicious food	some hungry man eat no food
+some hungry man eat all food	some man eat no delicious food
+some hungry man eat all delicious food	some man eat no food
+some man eat all food	some hungry man eat not all delicious food
+some man eat all delicious food	some hungry man eat not all food
+some hungry man eat all food	some man eat not all delicious food
+some hungry man eat all delicious food	some man eat not all food
+some man eat all food	all hungry man eat some delicious food
+some man eat all delicious food	all hungry man eat some food
+some hungry man eat all food	all man eat some delicious food
+some hungry man eat all delicious food	all man eat some food
+some man eat all food	all hungry man eat all delicious food
+some man eat all delicious food	all hungry man eat all food
+some hungry man eat all food	all man eat all delicious food
+some hungry man eat all delicious food	all man eat all food
+some man eat all food	all hungry man eat no delicious food
+some man eat all delicious food	all hungry man eat no food
+some hungry man eat all food	all man eat no delicious food
+some hungry man eat all delicious food	all man eat no food
+some man eat all food	all hungry man eat not all delicious food
+some man eat all delicious food	all hungry man eat not all food
+some hungry man eat all food	all man eat not all delicious food
+some hungry man eat all delicious food	all man eat not all food
+some man eat all food	no hungry man eat some delicious food
+some man eat all delicious food	no hungry man eat some food
+some hungry man eat all food	no man eat some delicious food
+some hungry man eat all delicious food	no man eat some food
+some man eat all food	no hungry man eat all delicious food
+some man eat all delicious food	no hungry man eat all food
+some hungry man eat all food	no man eat all delicious food
+some hungry man eat all delicious food	no man eat all food
+some man eat all food	no hungry man eat no delicious food
+some man eat all delicious food	no hungry man eat no food
+some hungry man eat all food	no man eat no delicious food
+some hungry man eat all delicious food	no man eat no food
+some man eat all food	no hungry man eat not all delicious food
+some man eat all delicious food	no hungry man eat not all food
+some hungry man eat all food	no man eat not all delicious food
+some hungry man eat all delicious food	no man eat not all food
+some man eat all food	not all hungry man eat some delicious food
+some man eat all delicious food	not all hungry man eat some food
+some hungry man eat all food	not all man eat some delicious food
+some hungry man eat all delicious food	not all man eat some food
+some man eat all food	not all hungry man eat all delicious food
+some man eat all delicious food	not all hungry man eat all food
+some hungry man eat all food	not all man eat all delicious food
+some hungry man eat all delicious food	not all man eat all food
+some man eat all food	not all hungry man eat no delicious food
+some man eat all delicious food	not all hungry man eat no food
+some hungry man eat all food	not all man eat no delicious food
+some hungry man eat all delicious food	not all man eat no food
+some man eat all food	not all hungry man eat not all delicious food
+some man eat all delicious food	not all hungry man eat not all food
+some hungry man eat all food	not all man eat not all delicious food
+some hungry man eat all delicious food	not all man eat not all food
+some man eat no food	some hungry man eat some delicious food
+some man eat no delicious food	some hungry man eat some food
+some hungry man eat no food	some man eat some delicious food
+some hungry man eat no delicious food	some man eat some food
+some man eat no food	some hungry man eat all delicious food
+some man eat no delicious food	some hungry man eat all food
+some hungry man eat no food	some man eat all delicious food
+some hungry man eat no delicious food	some man eat all food
+some man eat no food	some hungry man eat no delicious food
+some man eat no delicious food	some hungry man eat no food
+some hungry man eat no food	some man eat no delicious food
+some hungry man eat no delicious food	some man eat no food
+some man eat no food	some hungry man eat not all delicious food
+some man eat no delicious food	some hungry man eat not all food
+some hungry man eat no food	some man eat not all delicious food
+some hungry man eat no delicious food	some man eat not all food
+some man eat no food	all hungry man eat some delicious food
+some man eat no delicious food	all hungry man eat some food
+some hungry man eat no food	all man eat some delicious food
+some hungry man eat no delicious food	all man eat some food
+some man eat no food	all hungry man eat all delicious food
+some man eat no delicious food	all hungry man eat all food
+some hungry man eat no food	all man eat all delicious food
+some hungry man eat no delicious food	all man eat all food
+some man eat no food	all hungry man eat no delicious food
+some man eat no delicious food	all hungry man eat no food
+some hungry man eat no food	all man eat no delicious food
+some hungry man eat no delicious food	all man eat no food
+some man eat no food	all hungry man eat not all delicious food
+some man eat no delicious food	all hungry man eat not all food
+some hungry man eat no food	all man eat not all delicious food
+some hungry man eat no delicious food	all man eat not all food
+some man eat no food	no hungry man eat some delicious food
+some man eat no delicious food	no hungry man eat some food
+some hungry man eat no food	no man eat some delicious food
+some hungry man eat no delicious food	no man eat some food
+some man eat no food	no hungry man eat all delicious food
+some man eat no delicious food	no hungry man eat all food
+some hungry man eat no food	no man eat all delicious food
+some hungry man eat no delicious food	no man eat all food
+some man eat no food	no hungry man eat no delicious food
+some man eat no delicious food	no hungry man eat no food
+some hungry man eat no food	no man eat no delicious food
+some hungry man eat no delicious food	no man eat no food
+some man eat no food	no hungry man eat not all delicious food
+some man eat no delicious food	no hungry man eat not all food
+some hungry man eat no food	no man eat not all delicious food
+some hungry man eat no delicious food	no man eat not all food
+some man eat no food	not all hungry man eat some delicious food
+some man eat no delicious food	not all hungry man eat some food
+some hungry man eat no food	not all man eat some delicious food
+some hungry man eat no delicious food	not all man eat some food
+some man eat no food	not all hungry man eat all delicious food
+some man eat no delicious food	not all hungry man eat all food
+some hungry man eat no food	not all man eat all delicious food
+some hungry man eat no delicious food	not all man eat all food
+some man eat no food	not all hungry man eat no delicious food
+some man eat no delicious food	not all hungry man eat no food
+some hungry man eat no food	not all man eat no delicious food
+some hungry man eat no delicious food	not all man eat no food
+some man eat no food	not all hungry man eat not all delicious food
+some man eat no delicious food	not all hungry man eat not all food
+some hungry man eat no food	not all man eat not all delicious food
+some hungry man eat no delicious food	not all man eat not all food
+some man eat not all food	some hungry man eat some delicious food
+some man eat not all delicious food	some hungry man eat some food
+some hungry man eat not all food	some man eat some delicious food
+some hungry man eat not all delicious food	some man eat some food
+some man eat not all food	some hungry man eat all delicious food
+some man eat not all delicious food	some hungry man eat all food
+some hungry man eat not all food	some man eat all delicious food
+some hungry man eat not all delicious food	some man eat all food
+some man eat not all food	some hungry man eat no delicious food
+some man eat not all delicious food	some hungry man eat no food
+some hungry man eat not all food	some man eat no delicious food
+some hungry man eat not all delicious food	some man eat no food
+some man eat not all food	some hungry man eat not all delicious food
+some man eat not all delicious food	some hungry man eat not all food
+some hungry man eat not all food	some man eat not all delicious food
+some hungry man eat not all delicious food	some man eat not all food
+some man eat not all food	all hungry man eat some delicious food
+some man eat not all delicious food	all hungry man eat some food
+some hungry man eat not all food	all man eat some delicious food
+some hungry man eat not all delicious food	all man eat some food
+some man eat not all food	all hungry man eat all delicious food
+some man eat not all delicious food	all hungry man eat all food
+some hungry man eat not all food	all man eat all delicious food
+some hungry man eat not all delicious food	all man eat all food
+some man eat not all food	all hungry man eat no delicious food
+some man eat not all delicious food	all hungry man eat no food
+some hungry man eat not all food	all man eat no delicious food
+some hungry man eat not all delicious food	all man eat no food
+some man eat not all food	all hungry man eat not all delicious food
+some man eat not all delicious food	all hungry man eat not all food
+some hungry man eat not all food	all man eat not all delicious food
+some hungry man eat not all delicious food	all man eat not all food
+some man eat not all food	no hungry man eat some delicious food
+some man eat not all delicious food	no hungry man eat some food
+some hungry man eat not all food	no man eat some delicious food
+some hungry man eat not all delicious food	no man eat some food
+some man eat not all food	no hungry man eat all delicious food
+some man eat not all delicious food	no hungry man eat all food
+some hungry man eat not all food	no man eat all delicious food
+some hungry man eat not all delicious food	no man eat all food
+some man eat not all food	no hungry man eat no delicious food
+some man eat not all delicious food	no hungry man eat no food
+some hungry man eat not all food	no man eat no delicious food
+some hungry man eat not all delicious food	no man eat no food
+some man eat not all food	no hungry man eat not all delicious food
+some man eat not all delicious food	no hungry man eat not all food
+some hungry man eat not all food	no man eat not all delicious food
+some hungry man eat not all delicious food	no man eat not all food
+some man eat not all food	not all hungry man eat some delicious food
+some man eat not all delicious food	not all hungry man eat some food
+some hungry man eat not all food	not all man eat some delicious food
+some hungry man eat not all delicious food	not all man eat some food
+some man eat not all food	not all hungry man eat all delicious food
+some man eat not all delicious food	not all hungry man eat all food
+some hungry man eat not all food	not all man eat all delicious food
+some hungry man eat not all delicious food	not all man eat all food
+some man eat not all food	not all hungry man eat no delicious food
+some man eat not all delicious food	not all hungry man eat no food
+some hungry man eat not all food	not all man eat no delicious food
+some hungry man eat not all delicious food	not all man eat no food
+some man eat not all food	not all hungry man eat not all delicious food
+some man eat not all delicious food	not all hungry man eat not all food
+some hungry man eat not all food	not all man eat not all delicious food
+some hungry man eat not all delicious food	not all man eat not all food
+all man eat some food	some hungry man eat some delicious food
+all man eat some delicious food	some hungry man eat some food
+all hungry man eat some food	some man eat some delicious food
+all hungry man eat some delicious food	some man eat some food
+all man eat some food	some hungry man eat all delicious food
+all man eat some delicious food	some hungry man eat all food
+all hungry man eat some food	some man eat all delicious food
+all hungry man eat some delicious food	some man eat all food
+all man eat some food	some hungry man eat no delicious food
+all man eat some delicious food	some hungry man eat no food
+all hungry man eat some food	some man eat no delicious food
+all hungry man eat some delicious food	some man eat no food
+all man eat some food	some hungry man eat not all delicious food
+all man eat some delicious food	some hungry man eat not all food
+all hungry man eat some food	some man eat not all delicious food
+all hungry man eat some delicious food	some man eat not all food
+all man eat some food	all hungry man eat some delicious food
+all man eat some delicious food	all hungry man eat some food
+all hungry man eat some food	all man eat some delicious food
+all hungry man eat some delicious food	all man eat some food
+all man eat some food	all hungry man eat all delicious food
+all man eat some delicious food	all hungry man eat all food
+all hungry man eat some food	all man eat all delicious food
+all hungry man eat some delicious food	all man eat all food
+all man eat some food	all hungry man eat no delicious food
+all man eat some delicious food	all hungry man eat no food
+all hungry man eat some food	all man eat no delicious food
+all hungry man eat some delicious food	all man eat no food
+all man eat some food	all hungry man eat not all delicious food
+all man eat some delicious food	all hungry man eat not all food
+all hungry man eat some food	all man eat not all delicious food
+all hungry man eat some delicious food	all man eat not all food
+all man eat some food	no hungry man eat some delicious food
+all man eat some delicious food	no hungry man eat some food
+all hungry man eat some food	no man eat some delicious food
+all hungry man eat some delicious food	no man eat some food
+all man eat some food	no hungry man eat all delicious food
+all man eat some delicious food	no hungry man eat all food
+all hungry man eat some food	no man eat all delicious food
+all hungry man eat some delicious food	no man eat all food
+all man eat some food	no hungry man eat no delicious food
+all man eat some delicious food	no hungry man eat no food
+all hungry man eat some food	no man eat no delicious food
+all hungry man eat some delicious food	no man eat no food
+all man eat some food	no hungry man eat not all delicious food
+all man eat some delicious food	no hungry man eat not all food
+all hungry man eat some food	no man eat not all delicious food
+all hungry man eat some delicious food	no man eat not all food
+all man eat some food	not all hungry man eat some delicious food
+all man eat some delicious food	not all hungry man eat some food
+all hungry man eat some food	not all man eat some delicious food
+all hungry man eat some delicious food	not all man eat some food
+all man eat some food	not all hungry man eat all delicious food
+all man eat some delicious food	not all hungry man eat all food
+all hungry man eat some food	not all man eat all delicious food
+all hungry man eat some delicious food	not all man eat all food
+all man eat some food	not all hungry man eat no delicious food
+all man eat some delicious food	not all hungry man eat no food
+all hungry man eat some food	not all man eat no delicious food
+all hungry man eat some delicious food	not all man eat no food
+all man eat some food	not all hungry man eat not all delicious food
+all man eat some delicious food	not all hungry man eat not all food
+all hungry man eat some food	not all man eat not all delicious food
+all hungry man eat some delicious food	not all man eat not all food
+all man eat all food	some hungry man eat some delicious food
+all man eat all delicious food	some hungry man eat some food
+all hungry man eat all food	some man eat some delicious food
+all hungry man eat all delicious food	some man eat some food
+all man eat all food	some hungry man eat all delicious food
+all man eat all delicious food	some hungry man eat all food
+all hungry man eat all food	some man eat all delicious food
+all hungry man eat all delicious food	some man eat all food
+all man eat all food	some hungry man eat no delicious food
+all man eat all delicious food	some hungry man eat no food
+all hungry man eat all food	some man eat no delicious food
+all hungry man eat all delicious food	some man eat no food
+all man eat all food	some hungry man eat not all delicious food
+all man eat all delicious food	some hungry man eat not all food
+all hungry man eat all food	some man eat not all delicious food
+all hungry man eat all delicious food	some man eat not all food
+all man eat all food	all hungry man eat some delicious food
+all man eat all delicious food	all hungry man eat some food
+all hungry man eat all food	all man eat some delicious food
+all hungry man eat all delicious food	all man eat some food
+all man eat all food	all hungry man eat all delicious food
+all man eat all delicious food	all hungry man eat all food
+all hungry man eat all food	all man eat all delicious food
+all hungry man eat all delicious food	all man eat all food
+all man eat all food	all hungry man eat no delicious food
+all man eat all delicious food	all hungry man eat no food
+all hungry man eat all food	all man eat no delicious food
+all hungry man eat all delicious food	all man eat no food
+all man eat all food	all hungry man eat not all delicious food
+all man eat all delicious food	all hungry man eat not all food
+all hungry man eat all food	all man eat not all delicious food
+all hungry man eat all delicious food	all man eat not all food
+all man eat all food	no hungry man eat some delicious food
+all man eat all delicious food	no hungry man eat some food
+all hungry man eat all food	no man eat some delicious food
+all hungry man eat all delicious food	no man eat some food
+all man eat all food	no hungry man eat all delicious food
+all man eat all delicious food	no hungry man eat all food
+all hungry man eat all food	no man eat all delicious food
+all hungry man eat all delicious food	no man eat all food
+all man eat all food	no hungry man eat no delicious food
+all man eat all delicious food	no hungry man eat no food
+all hungry man eat all food	no man eat no delicious food
+all hungry man eat all delicious food	no man eat no food
+all man eat all food	no hungry man eat not all delicious food
+all man eat all delicious food	no hungry man eat not all food
+all hungry man eat all food	no man eat not all delicious food
+all hungry man eat all delicious food	no man eat not all food
+all man eat all food	not all hungry man eat some delicious food
+all man eat all delicious food	not all hungry man eat some food
+all hungry man eat all food	not all man eat some delicious food
+all hungry man eat all delicious food	not all man eat some food
+all man eat all food	not all hungry man eat all delicious food
+all man eat all delicious food	not all hungry man eat all food
+all hungry man eat all food	not all man eat all delicious food
+all hungry man eat all delicious food	not all man eat all food
+all man eat all food	not all hungry man eat no delicious food
+all man eat all delicious food	not all hungry man eat no food
+all hungry man eat all food	not all man eat no delicious food
+all hungry man eat all delicious food	not all man eat no food
+all man eat all food	not all hungry man eat not all delicious food
+all man eat all delicious food	not all hungry man eat not all food
+all hungry man eat all food	not all man eat not all delicious food
+all hungry man eat all delicious food	not all man eat not all food
+all man eat no food	some hungry man eat some delicious food
+all man eat no delicious food	some hungry man eat some food
+all hungry man eat no food	some man eat some delicious food
+all hungry man eat no delicious food	some man eat some food
+all man eat no food	some hungry man eat all delicious food
+all man eat no delicious food	some hungry man eat all food
+all hungry man eat no food	some man eat all delicious food
+all hungry man eat no delicious food	some man eat all food
+all man eat no food	some hungry man eat no delicious food
+all man eat no delicious food	some hungry man eat no food
+all hungry man eat no food	some man eat no delicious food
+all hungry man eat no delicious food	some man eat no food
+all man eat no food	some hungry man eat not all delicious food
+all man eat no delicious food	some hungry man eat not all food
+all hungry man eat no food	some man eat not all delicious food
+all hungry man eat no delicious food	some man eat not all food
+all man eat no food	all hungry man eat some delicious food
+all man eat no delicious food	all hungry man eat some food
+all hungry man eat no food	all man eat some delicious food
+all hungry man eat no delicious food	all man eat some food
+all man eat no food	all hungry man eat all delicious food
+all man eat no delicious food	all hungry man eat all food
+all hungry man eat no food	all man eat all delicious food
+all hungry man eat no delicious food	all man eat all food
+all man eat no food	all hungry man eat no delicious food
+all man eat no delicious food	all hungry man eat no food
+all hungry man eat no food	all man eat no delicious food
+all hungry man eat no delicious food	all man eat no food
+all man eat no food	all hungry man eat not all delicious food
+all man eat no delicious food	all hungry man eat not all food
+all hungry man eat no food	all man eat not all delicious food
+all hungry man eat no delicious food	all man eat not all food
+all man eat no food	no hungry man eat some delicious food
+all man eat no delicious food	no hungry man eat some food
+all hungry man eat no food	no man eat some delicious food
+all hungry man eat no delicious food	no man eat some food
+all man eat no food	no hungry man eat all delicious food
+all man eat no delicious food	no hungry man eat all food
+all hungry man eat no food	no man eat all delicious food
+all hungry man eat no delicious food	no man eat all food
+all man eat no food	no hungry man eat no delicious food
+all man eat no delicious food	no hungry man eat no food
+all hungry man eat no food	no man eat no delicious food
+all hungry man eat no delicious food	no man eat no food
+all man eat no food	no hungry man eat not all delicious food
+all man eat no delicious food	no hungry man eat not all food
+all hungry man eat no food	no man eat not all delicious food
+all hungry man eat no delicious food	no man eat not all food
+all man eat no food	not all hungry man eat some delicious food
+all man eat no delicious food	not all hungry man eat some food
+all hungry man eat no food	not all man eat some delicious food
+all hungry man eat no delicious food	not all man eat some food
+all man eat no food	not all hungry man eat all delicious food
+all man eat no delicious food	not all hungry man eat all food
+all hungry man eat no food	not all man eat all delicious food
+all hungry man eat no delicious food	not all man eat all food
+all man eat no food	not all hungry man eat no delicious food
+all man eat no delicious food	not all hungry man eat no food
+all hungry man eat no food	not all man eat no delicious food
+all hungry man eat no delicious food	not all man eat no food
+all man eat no food	not all hungry man eat not all delicious food
+all man eat no delicious food	not all hungry man eat not all food
+all hungry man eat no food	not all man eat not all delicious food
+all hungry man eat no delicious food	not all man eat not all food
+all man eat not all food	some hungry man eat some delicious food
+all man eat not all delicious food	some hungry man eat some food
+all hungry man eat not all food	some man eat some delicious food
+all hungry man eat not all delicious food	some man eat some food
+all man eat not all food	some hungry man eat all delicious food
+all man eat not all delicious food	some hungry man eat all food
+all hungry man eat not all food	some man eat all delicious food
+all hungry man eat not all delicious food	some man eat all food
+all man eat not all food	some hungry man eat no delicious food
+all man eat not all delicious food	some hungry man eat no food
+all hungry man eat not all food	some man eat no delicious food
+all hungry man eat not all delicious food	some man eat no food
+all man eat not all food	some hungry man eat not all delicious food
+all man eat not all delicious food	some hungry man eat not all food
+all hungry man eat not all food	some man eat not all delicious food
+all hungry man eat not all delicious food	some man eat not all food
+all man eat not all food	all hungry man eat some delicious food
+all man eat not all delicious food	all hungry man eat some food
+all hungry man eat not all food	all man eat some delicious food
+all hungry man eat not all delicious food	all man eat some food
+all man eat not all food	all hungry man eat all delicious food
+all man eat not all delicious food	all hungry man eat all food
+all hungry man eat not all food	all man eat all delicious food
+all hungry man eat not all delicious food	all man eat all food
+all man eat not all food	all hungry man eat no delicious food
+all man eat not all delicious food	all hungry man eat no food
+all hungry man eat not all food	all man eat no delicious food
+all hungry man eat not all delicious food	all man eat no food
+all man eat not all food	all hungry man eat not all delicious food
+all man eat not all delicious food	all hungry man eat not all food
+all hungry man eat not all food	all man eat not all delicious food
+all hungry man eat not all delicious food	all man eat not all food
+all man eat not all food	no hungry man eat some delicious food
+all man eat not all delicious food	no hungry man eat some food
+all hungry man eat not all food	no man eat some delicious food
+all hungry man eat not all delicious food	no man eat some food
+all man eat not all food	no hungry man eat all delicious food
+all man eat not all delicious food	no hungry man eat all food
+all hungry man eat not all food	no man eat all delicious food
+all hungry man eat not all delicious food	no man eat all food
+all man eat not all food	no hungry man eat no delicious food
+all man eat not all delicious food	no hungry man eat no food
+all hungry man eat not all food	no man eat no delicious food
+all hungry man eat not all delicious food	no man eat no food
+all man eat not all food	no hungry man eat not all delicious food
+all man eat not all delicious food	no hungry man eat not all food
+all hungry man eat not all food	no man eat not all delicious food
+all hungry man eat not all delicious food	no man eat not all food
+all man eat not all food	not all hungry man eat some delicious food
+all man eat not all delicious food	not all hungry man eat some food
+all hungry man eat not all food	not all man eat some delicious food
+all hungry man eat not all delicious food	not all man eat some food
+all man eat not all food	not all hungry man eat all delicious food
+all man eat not all delicious food	not all hungry man eat all food
+all hungry man eat not all food	not all man eat all delicious food
+all hungry man eat not all delicious food	not all man eat all food
+all man eat not all food	not all hungry man eat no delicious food
+all man eat not all delicious food	not all hungry man eat no food
+all hungry man eat not all food	not all man eat no delicious food
+all hungry man eat not all delicious food	not all man eat no food
+all man eat not all food	not all hungry man eat not all delicious food
+all man eat not all delicious food	not all hungry man eat not all food
+all hungry man eat not all food	not all man eat not all delicious food
+all hungry man eat not all delicious food	not all man eat not all food
+no man eat some food	some hungry man eat some delicious food
+no man eat some delicious food	some hungry man eat some food
+no hungry man eat some food	some man eat some delicious food
+no hungry man eat some delicious food	some man eat some food
+no man eat some food	some hungry man eat all delicious food
+no man eat some delicious food	some hungry man eat all food
+no hungry man eat some food	some man eat all delicious food
+no hungry man eat some delicious food	some man eat all food
+no man eat some food	some hungry man eat no delicious food
+no man eat some delicious food	some hungry man eat no food
+no hungry man eat some food	some man eat no delicious food
+no hungry man eat some delicious food	some man eat no food
+no man eat some food	some hungry man eat not all delicious food
+no man eat some delicious food	some hungry man eat not all food
+no hungry man eat some food	some man eat not all delicious food
+no hungry man eat some delicious food	some man eat not all food
+no man eat some food	all hungry man eat some delicious food
+no man eat some delicious food	all hungry man eat some food
+no hungry man eat some food	all man eat some delicious food
+no hungry man eat some delicious food	all man eat some food
+no man eat some food	all hungry man eat all delicious food
+no man eat some delicious food	all hungry man eat all food
+no hungry man eat some food	all man eat all delicious food
+no hungry man eat some delicious food	all man eat all food
+no man eat some food	all hungry man eat no delicious food
+no man eat some delicious food	all hungry man eat no food
+no hungry man eat some food	all man eat no delicious food
+no hungry man eat some delicious food	all man eat no food
+no man eat some food	all hungry man eat not all delicious food
+no man eat some delicious food	all hungry man eat not all food
+no hungry man eat some food	all man eat not all delicious food
+no hungry man eat some delicious food	all man eat not all food
+no man eat some food	no hungry man eat some delicious food
+no man eat some delicious food	no hungry man eat some food
+no hungry man eat some food	no man eat some delicious food
+no hungry man eat some delicious food	no man eat some food
+no man eat some food	no hungry man eat all delicious food
+no man eat some delicious food	no hungry man eat all food
+no hungry man eat some food	no man eat all delicious food
+no hungry man eat some delicious food	no man eat all food
+no man eat some food	no hungry man eat no delicious food
+no man eat some delicious food	no hungry man eat no food
+no hungry man eat some food	no man eat no delicious food
+no hungry man eat some delicious food	no man eat no food
+no man eat some food	no hungry man eat not all delicious food
+no man eat some delicious food	no hungry man eat not all food
+no hungry man eat some food	no man eat not all delicious food
+no hungry man eat some delicious food	no man eat not all food
+no man eat some food	not all hungry man eat some delicious food
+no man eat some delicious food	not all hungry man eat some food
+no hungry man eat some food	not all man eat some delicious food
+no hungry man eat some delicious food	not all man eat some food
+no man eat some food	not all hungry man eat all delicious food
+no man eat some delicious food	not all hungry man eat all food
+no hungry man eat some food	not all man eat all delicious food
+no hungry man eat some delicious food	not all man eat all food
+no man eat some food	not all hungry man eat no delicious food
+no man eat some delicious food	not all hungry man eat no food
+no hungry man eat some food	not all man eat no delicious food
+no hungry man eat some delicious food	not all man eat no food
+no man eat some food	not all hungry man eat not all delicious food
+no man eat some delicious food	not all hungry man eat not all food
+no hungry man eat some food	not all man eat not all delicious food
+no hungry man eat some delicious food	not all man eat not all food
+no man eat all food	some hungry man eat some delicious food
+no man eat all delicious food	some hungry man eat some food
+no hungry man eat all food	some man eat some delicious food
+no hungry man eat all delicious food	some man eat some food
+no man eat all food	some hungry man eat all delicious food
+no man eat all delicious food	some hungry man eat all food
+no hungry man eat all food	some man eat all delicious food
+no hungry man eat all delicious food	some man eat all food
+no man eat all food	some hungry man eat no delicious food
+no man eat all delicious food	some hungry man eat no food
+no hungry man eat all food	some man eat no delicious food
+no hungry man eat all delicious food	some man eat no food
+no man eat all food	some hungry man eat not all delicious food
+no man eat all delicious food	some hungry man eat not all food
+no hungry man eat all food	some man eat not all delicious food
+no hungry man eat all delicious food	some man eat not all food
+no man eat all food	all hungry man eat some delicious food
+no man eat all delicious food	all hungry man eat some food
+no hungry man eat all food	all man eat some delicious food
+no hungry man eat all delicious food	all man eat some food
+no man eat all food	all hungry man eat all delicious food
+no man eat all delicious food	all hungry man eat all food
+no hungry man eat all food	all man eat all delicious food
+no hungry man eat all delicious food	all man eat all food
+no man eat all food	all hungry man eat no delicious food
+no man eat all delicious food	all hungry man eat no food
+no hungry man eat all food	all man eat no delicious food
+no hungry man eat all delicious food	all man eat no food
+no man eat all food	all hungry man eat not all delicious food
+no man eat all delicious food	all hungry man eat not all food
+no hungry man eat all food	all man eat not all delicious food
+no hungry man eat all delicious food	all man eat not all food
+no man eat all food	no hungry man eat some delicious food
+no man eat all delicious food	no hungry man eat some food
+no hungry man eat all food	no man eat some delicious food
+no hungry man eat all delicious food	no man eat some food
+no man eat all food	no hungry man eat all delicious food
+no man eat all delicious food	no hungry man eat all food
+no hungry man eat all food	no man eat all delicious food
+no hungry man eat all delicious food	no man eat all food
+no man eat all food	no hungry man eat no delicious food
+no man eat all delicious food	no hungry man eat no food
+no hungry man eat all food	no man eat no delicious food
+no hungry man eat all delicious food	no man eat no food
+no man eat all food	no hungry man eat not all delicious food
+no man eat all delicious food	no hungry man eat not all food
+no hungry man eat all food	no man eat not all delicious food
+no hungry man eat all delicious food	no man eat not all food
+no man eat all food	not all hungry man eat some delicious food
+no man eat all delicious food	not all hungry man eat some food
+no hungry man eat all food	not all man eat some delicious food
+no hungry man eat all delicious food	not all man eat some food
+no man eat all food	not all hungry man eat all delicious food
+no man eat all delicious food	not all hungry man eat all food
+no hungry man eat all food	not all man eat all delicious food
+no hungry man eat all delicious food	not all man eat all food
+no man eat all food	not all hungry man eat no delicious food
+no man eat all delicious food	not all hungry man eat no food
+no hungry man eat all food	not all man eat no delicious food
+no hungry man eat all delicious food	not all man eat no food
+no man eat all food	not all hungry man eat not all delicious food
+no man eat all delicious food	not all hungry man eat not all food
+no hungry man eat all food	not all man eat not all delicious food
+no hungry man eat all delicious food	not all man eat not all food
+no man eat no food	some hungry man eat some delicious food
+no man eat no delicious food	some hungry man eat some food
+no hungry man eat no food	some man eat some delicious food
+no hungry man eat no delicious food	some man eat some food
+no man eat no food	some hungry man eat all delicious food
+no man eat no delicious food	some hungry man eat all food
+no hungry man eat no food	some man eat all delicious food
+no hungry man eat no delicious food	some man eat all food
+no man eat no food	some hungry man eat no delicious food
+no man eat no delicious food	some hungry man eat no food
+no hungry man eat no food	some man eat no delicious food
+no hungry man eat no delicious food	some man eat no food
+no man eat no food	some hungry man eat not all delicious food
+no man eat no delicious food	some hungry man eat not all food
+no hungry man eat no food	some man eat not all delicious food
+no hungry man eat no delicious food	some man eat not all food
+no man eat no food	all hungry man eat some delicious food
+no man eat no delicious food	all hungry man eat some food
+no hungry man eat no food	all man eat some delicious food
+no hungry man eat no delicious food	all man eat some food
+no man eat no food	all hungry man eat all delicious food
+no man eat no delicious food	all hungry man eat all food
+no hungry man eat no food	all man eat all delicious food
+no hungry man eat no delicious food	all man eat all food
+no man eat no food	all hungry man eat no delicious food
+no man eat no delicious food	all hungry man eat no food
+no hungry man eat no food	all man eat no delicious food
+no hungry man eat no delicious food	all man eat no food
+no man eat no food	all hungry man eat not all delicious food
+no man eat no delicious food	all hungry man eat not all food
+no hungry man eat no food	all man eat not all delicious food
+no hungry man eat no delicious food	all man eat not all food
+no man eat no food	no hungry man eat some delicious food
+no man eat no delicious food	no hungry man eat some food
+no hungry man eat no food	no man eat some delicious food
+no hungry man eat no delicious food	no man eat some food
+no man eat no food	no hungry man eat all delicious food
+no man eat no delicious food	no hungry man eat all food
+no hungry man eat no food	no man eat all delicious food
+no hungry man eat no delicious food	no man eat all food
+no man eat no food	no hungry man eat no delicious food
+no man eat no delicious food	no hungry man eat no food
+no hungry man eat no food	no man eat no delicious food
+no hungry man eat no delicious food	no man eat no food
+no man eat no food	no hungry man eat not all delicious food
+no man eat no delicious food	no hungry man eat not all food
+no hungry man eat no food	no man eat not all delicious food
+no hungry man eat no delicious food	no man eat not all food
+no man eat no food	not all hungry man eat some delicious food
+no man eat no delicious food	not all hungry man eat some food
+no hungry man eat no food	not all man eat some delicious food
+no hungry man eat no delicious food	not all man eat some food
+no man eat no food	not all hungry man eat all delicious food
+no man eat no delicious food	not all hungry man eat all food
+no hungry man eat no food	not all man eat all delicious food
+no hungry man eat no delicious food	not all man eat all food
+no man eat no food	not all hungry man eat no delicious food
+no man eat no delicious food	not all hungry man eat no food
+no hungry man eat no food	not all man eat no delicious food
+no hungry man eat no delicious food	not all man eat no food
+no man eat no food	not all hungry man eat not all delicious food
+no man eat no delicious food	not all hungry man eat not all food
+no hungry man eat no food	not all man eat not all delicious food
+no hungry man eat no delicious food	not all man eat not all food
+no man eat not all food	some hungry man eat some delicious food
+no man eat not all delicious food	some hungry man eat some food
+no hungry man eat not all food	some man eat some delicious food
+no hungry man eat not all delicious food	some man eat some food
+no man eat not all food	some hungry man eat all delicious food
+no man eat not all delicious food	some hungry man eat all food
+no hungry man eat not all food	some man eat all delicious food
+no hungry man eat not all delicious food	some man eat all food
+no man eat not all food	some hungry man eat no delicious food
+no man eat not all delicious food	some hungry man eat no food
+no hungry man eat not all food	some man eat no delicious food
+no hungry man eat not all delicious food	some man eat no food
+no man eat not all food	some hungry man eat not all delicious food
+no man eat not all delicious food	some hungry man eat not all food
+no hungry man eat not all food	some man eat not all delicious food
+no hungry man eat not all delicious food	some man eat not all food
+no man eat not all food	all hungry man eat some delicious food
+no man eat not all delicious food	all hungry man eat some food
+no hungry man eat not all food	all man eat some delicious food
+no hungry man eat not all delicious food	all man eat some food
+no man eat not all food	all hungry man eat all delicious food
+no man eat not all delicious food	all hungry man eat all food
+no hungry man eat not all food	all man eat all delicious food
+no hungry man eat not all delicious food	all man eat all food
+no man eat not all food	all hungry man eat no delicious food
+no man eat not all delicious food	all hungry man eat no food
+no hungry man eat not all food	all man eat no delicious food
+no hungry man eat not all delicious food	all man eat no food
+no man eat not all food	all hungry man eat not all delicious food
+no man eat not all delicious food	all hungry man eat not all food
+no hungry man eat not all food	all man eat not all delicious food
+no hungry man eat not all delicious food	all man eat not all food
+no man eat not all food	no hungry man eat some delicious food
+no man eat not all delicious food	no hungry man eat some food
+no hungry man eat not all food	no man eat some delicious food
+no hungry man eat not all delicious food	no man eat some food
+no man eat not all food	no hungry man eat all delicious food
+no man eat not all delicious food	no hungry man eat all food
+no hungry man eat not all food	no man eat all delicious food
+no hungry man eat not all delicious food	no man eat all food
+no man eat not all food	no hungry man eat no delicious food
+no man eat not all delicious food	no hungry man eat no food
+no hungry man eat not all food	no man eat no delicious food
+no hungry man eat not all delicious food	no man eat no food
+no man eat not all food	no hungry man eat not all delicious food
+no man eat not all delicious food	no hungry man eat not all food
+no hungry man eat not all food	no man eat not all delicious food
+no hungry man eat not all delicious food	no man eat not all food
+no man eat not all food	not all hungry man eat some delicious food
+no man eat not all delicious food	not all hungry man eat some food
+no hungry man eat not all food	not all man eat some delicious food
+no hungry man eat not all delicious food	not all man eat some food
+no man eat not all food	not all hungry man eat all delicious food
+no man eat not all delicious food	not all hungry man eat all food
+no hungry man eat not all food	not all man eat all delicious food
+no hungry man eat not all delicious food	not all man eat all food
+no man eat not all food	not all hungry man eat no delicious food
+no man eat not all delicious food	not all hungry man eat no food
+no hungry man eat not all food	not all man eat no delicious food
+no hungry man eat not all delicious food	not all man eat no food
+no man eat not all food	not all hungry man eat not all delicious food
+no man eat not all delicious food	not all hungry man eat not all food
+no hungry man eat not all food	not all man eat not all delicious food
+no hungry man eat not all delicious food	not all man eat not all food
+not all man eat some food	some hungry man eat some delicious food
+not all man eat some delicious food	some hungry man eat some food
+not all hungry man eat some food	some man eat some delicious food
+not all hungry man eat some delicious food	some man eat some food
+not all man eat some food	some hungry man eat all delicious food
+not all man eat some delicious food	some hungry man eat all food
+not all hungry man eat some food	some man eat all delicious food
+not all hungry man eat some delicious food	some man eat all food
+not all man eat some food	some hungry man eat no delicious food
+not all man eat some delicious food	some hungry man eat no food
+not all hungry man eat some food	some man eat no delicious food
+not all hungry man eat some delicious food	some man eat no food
+not all man eat some food	some hungry man eat not all delicious food
+not all man eat some delicious food	some hungry man eat not all food
+not all hungry man eat some food	some man eat not all delicious food
+not all hungry man eat some delicious food	some man eat not all food
+not all man eat some food	all hungry man eat some delicious food
+not all man eat some delicious food	all hungry man eat some food
+not all hungry man eat some food	all man eat some delicious food
+not all hungry man eat some delicious food	all man eat some food
+not all man eat some food	all hungry man eat all delicious food
+not all man eat some delicious food	all hungry man eat all food
+not all hungry man eat some food	all man eat all delicious food
+not all hungry man eat some delicious food	all man eat all food
+not all man eat some food	all hungry man eat no delicious food
+not all man eat some delicious food	all hungry man eat no food
+not all hungry man eat some food	all man eat no delicious food
+not all hungry man eat some delicious food	all man eat no food
+not all man eat some food	all hungry man eat not all delicious food
+not all man eat some delicious food	all hungry man eat not all food
+not all hungry man eat some food	all man eat not all delicious food
+not all hungry man eat some delicious food	all man eat not all food
+not all man eat some food	no hungry man eat some delicious food
+not all man eat some delicious food	no hungry man eat some food
+not all hungry man eat some food	no man eat some delicious food
+not all hungry man eat some delicious food	no man eat some food
+not all man eat some food	no hungry man eat all delicious food
+not all man eat some delicious food	no hungry man eat all food
+not all hungry man eat some food	no man eat all delicious food
+not all hungry man eat some delicious food	no man eat all food
+not all man eat some food	no hungry man eat no delicious food
+not all man eat some delicious food	no hungry man eat no food
+not all hungry man eat some food	no man eat no delicious food
+not all hungry man eat some delicious food	no man eat no food
+not all man eat some food	no hungry man eat not all delicious food
+not all man eat some delicious food	no hungry man eat not all food
+not all hungry man eat some food	no man eat not all delicious food
+not all hungry man eat some delicious food	no man eat not all food
+not all man eat some food	not all hungry man eat some delicious food
+not all man eat some delicious food	not all hungry man eat some food
+not all hungry man eat some food	not all man eat some delicious food
+not all hungry man eat some delicious food	not all man eat some food
+not all man eat some food	not all hungry man eat all delicious food
+not all man eat some delicious food	not all hungry man eat all food
+not all hungry man eat some food	not all man eat all delicious food
+not all hungry man eat some delicious food	not all man eat all food
+not all man eat some food	not all hungry man eat no delicious food
+not all man eat some delicious food	not all hungry man eat no food
+not all hungry man eat some food	not all man eat no delicious food
+not all hungry man eat some delicious food	not all man eat no food
+not all man eat some food	not all hungry man eat not all delicious food
+not all man eat some delicious food	not all hungry man eat not all food
+not all hungry man eat some food	not all man eat not all delicious food
+not all hungry man eat some delicious food	not all man eat not all food
+not all man eat all food	some hungry man eat some delicious food
+not all man eat all delicious food	some hungry man eat some food
+not all hungry man eat all food	some man eat some delicious food
+not all hungry man eat all delicious food	some man eat some food
+not all man eat all food	some hungry man eat all delicious food
+not all man eat all delicious food	some hungry man eat all food
+not all hungry man eat all food	some man eat all delicious food
+not all hungry man eat all delicious food	some man eat all food
+not all man eat all food	some hungry man eat no delicious food
+not all man eat all delicious food	some hungry man eat no food
+not all hungry man eat all food	some man eat no delicious food
+not all hungry man eat all delicious food	some man eat no food
+not all man eat all food	some hungry man eat not all delicious food
+not all man eat all delicious food	some hungry man eat not all food
+not all hungry man eat all food	some man eat not all delicious food
+not all hungry man eat all delicious food	some man eat not all food
+not all man eat all food	all hungry man eat some delicious food
+not all man eat all delicious food	all hungry man eat some food
+not all hungry man eat all food	all man eat some delicious food
+not all hungry man eat all delicious food	all man eat some food
+not all man eat all food	all hungry man eat all delicious food
+not all man eat all delicious food	all hungry man eat all food
+not all hungry man eat all food	all man eat all delicious food
+not all hungry man eat all delicious food	all man eat all food
+not all man eat all food	all hungry man eat no delicious food
+not all man eat all delicious food	all hungry man eat no food
+not all hungry man eat all food	all man eat no delicious food
+not all hungry man eat all delicious food	all man eat no food
+not all man eat all food	all hungry man eat not all delicious food
+not all man eat all delicious food	all hungry man eat not all food
+not all hungry man eat all food	all man eat not all delicious food
+not all hungry man eat all delicious food	all man eat not all food
+not all man eat all food	no hungry man eat some delicious food
+not all man eat all delicious food	no hungry man eat some food
+not all hungry man eat all food	no man eat some delicious food
+not all hungry man eat all delicious food	no man eat some food
+not all man eat all food	no hungry man eat all delicious food
+not all man eat all delicious food	no hungry man eat all food
+not all hungry man eat all food	no man eat all delicious food
+not all hungry man eat all delicious food	no man eat all food
+not all man eat all food	no hungry man eat no delicious food
+not all man eat all delicious food	no hungry man eat no food
+not all hungry man eat all food	no man eat no delicious food
+not all hungry man eat all delicious food	no man eat no food
+not all man eat all food	no hungry man eat not all delicious food
+not all man eat all delicious food	no hungry man eat not all food
+not all hungry man eat all food	no man eat not all delicious food
+not all hungry man eat all delicious food	no man eat not all food
+not all man eat all food	not all hungry man eat some delicious food
+not all man eat all delicious food	not all hungry man eat some food
+not all hungry man eat all food	not all man eat some delicious food
+not all hungry man eat all delicious food	not all man eat some food
+not all man eat all food	not all hungry man eat all delicious food
+not all man eat all delicious food	not all hungry man eat all food
+not all hungry man eat all food	not all man eat all delicious food
+not all hungry man eat all delicious food	not all man eat all food
+not all man eat all food	not all hungry man eat no delicious food
+not all man eat all delicious food	not all hungry man eat no food
+not all hungry man eat all food	not all man eat no delicious food
+not all hungry man eat all delicious food	not all man eat no food
+not all man eat all food	not all hungry man eat not all delicious food
+not all man eat all delicious food	not all hungry man eat not all food
+not all hungry man eat all food	not all man eat not all delicious food
+not all hungry man eat all delicious food	not all man eat not all food
+not all man eat no food	some hungry man eat some delicious food
+not all man eat no delicious food	some hungry man eat some food
+not all hungry man eat no food	some man eat some delicious food
+not all hungry man eat no delicious food	some man eat some food
+not all man eat no food	some hungry man eat all delicious food
+not all man eat no delicious food	some hungry man eat all food
+not all hungry man eat no food	some man eat all delicious food
+not all hungry man eat no delicious food	some man eat all food
+not all man eat no food	some hungry man eat no delicious food
+not all man eat no delicious food	some hungry man eat no food
+not all hungry man eat no food	some man eat no delicious food
+not all hungry man eat no delicious food	some man eat no food
+not all man eat no food	some hungry man eat not all delicious food
+not all man eat no delicious food	some hungry man eat not all food
+not all hungry man eat no food	some man eat not all delicious food
+not all hungry man eat no delicious food	some man eat not all food
+not all man eat no food	all hungry man eat some delicious food
+not all man eat no delicious food	all hungry man eat some food
+not all hungry man eat no food	all man eat some delicious food
+not all hungry man eat no delicious food	all man eat some food
+not all man eat no food	all hungry man eat all delicious food
+not all man eat no delicious food	all hungry man eat all food
+not all hungry man eat no food	all man eat all delicious food
+not all hungry man eat no delicious food	all man eat all food
+not all man eat no food	all hungry man eat no delicious food
+not all man eat no delicious food	all hungry man eat no food
+not all hungry man eat no food	all man eat no delicious food
+not all hungry man eat no delicious food	all man eat no food
+not all man eat no food	all hungry man eat not all delicious food
+not all man eat no delicious food	all hungry man eat not all food
+not all hungry man eat no food	all man eat not all delicious food
+not all hungry man eat no delicious food	all man eat not all food
+not all man eat no food	no hungry man eat some delicious food
+not all man eat no delicious food	no hungry man eat some food
+not all hungry man eat no food	no man eat some delicious food
+not all hungry man eat no delicious food	no man eat some food
+not all man eat no food	no hungry man eat all delicious food
+not all man eat no delicious food	no hungry man eat all food
+not all hungry man eat no food	no man eat all delicious food
+not all hungry man eat no delicious food	no man eat all food
+not all man eat no food	no hungry man eat no delicious food
+not all man eat no delicious food	no hungry man eat no food
+not all hungry man eat no food	no man eat no delicious food
+not all hungry man eat no delicious food	no man eat no food
+not all man eat no food	no hungry man eat not all delicious food
+not all man eat no delicious food	no hungry man eat not all food
+not all hungry man eat no food	no man eat not all delicious food
+not all hungry man eat no delicious food	no man eat not all food
+not all man eat no food	not all hungry man eat some delicious food
+not all man eat no delicious food	not all hungry man eat some food
+not all hungry man eat no food	not all man eat some delicious food
+not all hungry man eat no delicious food	not all man eat some food
+not all man eat no food	not all hungry man eat all delicious food
+not all man eat no delicious food	not all hungry man eat all food
+not all hungry man eat no food	not all man eat all delicious food
+not all hungry man eat no delicious food	not all man eat all food
+not all man eat no food	not all hungry man eat no delicious food
+not all man eat no delicious food	not all hungry man eat no food
+not all hungry man eat no food	not all man eat no delicious food
+not all hungry man eat no delicious food	not all man eat no food
+not all man eat no food	not all hungry man eat not all delicious food
+not all man eat no delicious food	not all hungry man eat not all food
+not all hungry man eat no food	not all man eat not all delicious food
+not all hungry man eat no delicious food	not all man eat not all food
+not all man eat not all food	some hungry man eat some delicious food
+not all man eat not all delicious food	some hungry man eat some food
+not all hungry man eat not all food	some man eat some delicious food
+not all hungry man eat not all delicious food	some man eat some food
+not all man eat not all food	some hungry man eat all delicious food
+not all man eat not all delicious food	some hungry man eat all food
+not all hungry man eat not all food	some man eat all delicious food
+not all hungry man eat not all delicious food	some man eat all food
+not all man eat not all food	some hungry man eat no delicious food
+not all man eat not all delicious food	some hungry man eat no food
+not all hungry man eat not all food	some man eat no delicious food
+not all hungry man eat not all delicious food	some man eat no food
+not all man eat not all food	some hungry man eat not all delicious food
+not all man eat not all delicious food	some hungry man eat not all food
+not all hungry man eat not all food	some man eat not all delicious food
+not all hungry man eat not all delicious food	some man eat not all food
+not all man eat not all food	all hungry man eat some delicious food
+not all man eat not all delicious food	all hungry man eat some food
+not all hungry man eat not all food	all man eat some delicious food
+not all hungry man eat not all delicious food	all man eat some food
+not all man eat not all food	all hungry man eat all delicious food
+not all man eat not all delicious food	all hungry man eat all food
+not all hungry man eat not all food	all man eat all delicious food
+not all hungry man eat not all delicious food	all man eat all food
+not all man eat not all food	all hungry man eat no delicious food
+not all man eat not all delicious food	all hungry man eat no food
+not all hungry man eat not all food	all man eat no delicious food
+not all hungry man eat not all delicious food	all man eat no food
+not all man eat not all food	all hungry man eat not all delicious food
+not all man eat not all delicious food	all hungry man eat not all food
+not all hungry man eat not all food	all man eat not all delicious food
+not all hungry man eat not all delicious food	all man eat not all food
+not all man eat not all food	no hungry man eat some delicious food
+not all man eat not all delicious food	no hungry man eat some food
+not all hungry man eat not all food	no man eat some delicious food
+not all hungry man eat not all delicious food	no man eat some food
+not all man eat not all food	no hungry man eat all delicious food
+not all man eat not all delicious food	no hungry man eat all food
+not all hungry man eat not all food	no man eat all delicious food
+not all hungry man eat not all delicious food	no man eat all food
+not all man eat not all food	no hungry man eat no delicious food
+not all man eat not all delicious food	no hungry man eat no food
+not all hungry man eat not all food	no man eat no delicious food
+not all hungry man eat not all delicious food	no man eat no food
+not all man eat not all food	no hungry man eat not all delicious food
+not all man eat not all delicious food	no hungry man eat not all food
+not all hungry man eat not all food	no man eat not all delicious food
+not all hungry man eat not all delicious food	no man eat not all food
+not all man eat not all food	not all hungry man eat some delicious food
+not all man eat not all delicious food	not all hungry man eat some food
+not all hungry man eat not all food	not all man eat some delicious food
+not all hungry man eat not all delicious food	not all man eat some food
+not all man eat not all food	not all hungry man eat all delicious food
+not all man eat not all delicious food	not all hungry man eat all food
+not all hungry man eat not all food	not all man eat all delicious food
+not all hungry man eat not all delicious food	not all man eat all food
+not all man eat not all food	not all hungry man eat no delicious food
+not all man eat not all delicious food	not all hungry man eat no food
+not all hungry man eat not all food	not all man eat no delicious food
+not all hungry man eat not all delicious food	not all man eat no food
+not all man eat not all food	not all hungry man eat not all delicious food
+not all man eat not all delicious food	not all hungry man eat not all food
+not all hungry man eat not all food	not all man eat not all delicious food
+not all hungry man eat not all delicious food	not all man eat not all food

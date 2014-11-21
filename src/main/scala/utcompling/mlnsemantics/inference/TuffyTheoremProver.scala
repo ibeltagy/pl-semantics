@@ -186,7 +186,7 @@ class TuffyTheoremProver(
               case _ if weight < 0.00001 => None // TODO: Set this threshold
               case _ => Some(e)
             }
-          case e @ HardWeightedExpression(folEx) => Some(e)
+          case e @ HardWeightedExpression(folEx, w) => Some(e)
         }
         .foreach {
           case SoftWeightedExpression(folEx, weight) =>
@@ -198,7 +198,10 @@ class TuffyTheoremProver(
             //   meaning that the probability of entailment (`mln`) using a weight `f(s)` based on similarity score `s <- [0,1]` will be
             //   roughly equal to the similarity score itself.
             f.write("%.15f %s\n".format(usedWeight, convert(folEx)))
-          case HardWeightedExpression(folEx) => f.write(convert(folEx) + ".\n")
+          case HardWeightedExpression(folEx, w) =>  if (w == Double.PositiveInfinity)
+        	  											f.write(convert(folEx) + ".\n")
+        	  										else
+        	  										  f.write("%.15f %s\n".format(w, convert(folEx)))
         }
 
       f.write("\n")

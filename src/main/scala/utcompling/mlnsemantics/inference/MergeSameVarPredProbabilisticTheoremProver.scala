@@ -30,7 +30,7 @@ class MergeSameVarPredProbabilisticTheoremProver(
        
     val newAssumptions: List[WeightedExpression[BoxerExpression]] =
       assumptions.map {
-        case HardWeightedExpression(e) => HardWeightedExpression(mergePred(e))
+        case HardWeightedExpression(e, w) => HardWeightedExpression(mergePred(e), w)
         case SoftWeightedExpression(e, w) => SoftWeightedExpression(mergePred(e), w)
       }
     delegate.prove(constants, declarations, evidence, newAssumptions, newGoal)

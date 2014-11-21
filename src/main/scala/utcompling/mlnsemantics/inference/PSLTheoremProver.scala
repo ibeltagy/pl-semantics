@@ -395,7 +395,7 @@ class PSLTheoremProver(
 	                case _ => throw new RuntimeException("unsupported infernece rule format"); 
 	              }
 	            }
-	          case HardWeightedExpression(folExp) => throw new RuntimeException("only simple inference rules are accepted. %s is not supported".format(folExp));
+	          case HardWeightedExpression(folExp, w) => throw new RuntimeException("only simple inference rules are accepted. %s is not supported".format(folExp));
          }
        }
        
