@@ -87,11 +87,51 @@ class AutoTypingPTP(
 					isHardRule = true;
 					isRuleR = (w != Double.PositiveInfinity); // Rule added by SetGoalPTP to solve DCA problems in Q
 					val vars = findConstVarsQuantif(e);
+
+					//propagate ONLY TO skolem predicates
+					vars.foreach(rhsVar => 
+					{
+					  if (rhsVar._1.startsWith("skolem"))
+						  vars.foreach(lhsVar => propagate(Set(lhsVar), rhsVar))
+					})
+					
+					//All propagations to skolem are done. 
+					//Now, call genPermutes from HardAssumptionAsEvidenceProbabilisticTheoremProver
+					vars.foreach(rhsVar => 
+					{
+					  if (rhsVar._1.startsWith("skolem"))
+					  {
+						val inVarCount = HardAssumptionAsEvidenceProbabilisticTheoremProver.getInputVarCount(rhsVar._1)
+						val totalVarCount = rhsVar._2.size
+						val propagatedConstToSkolem = autoConst(rhsVar._1);
+						val propagatedConstToSkolemCleaned = propagatedConstToSkolem._2.unzip._2 
+						var maxLen = 0;//longest list of constants per variable
+						val propagatedConstToSkolemIndexed = (0 until inVarCount).map(indx => {
+							val allConstAtIndex = propagatedConstToSkolemCleaned.map(tuple => tuple(indx)).toSet.toList;
+							val allConstAtIndexCleaned = allConstAtIndex.filter(_ != "any");
+						  //println(indx + "--" + allConstAtIndexCleaned)
+							maxLen = math.max(maxLen, allConstAtIndexCleaned.size)
+							allConstAtIndexCleaned
+						}).toList
+						val outVar:List[String] = rhsVar._2.slice(inVarCount, totalVarCount).toList;
+						val evidAndConst = HardAssumptionAsEvidenceProbabilisticTheoremProver.genPermutes (
+												maxLen, inVarCount, rhsVar._1, propagatedConstToSkolemIndexed, outVar);
+						extraEvid = extraEvid ++ evidAndConst._1;
+						evidAndConst._2.foreach(c =>addConst(c)) //update allConstants
+						//add to autoConst
+						autoConst(rhsVar._1)._2.clear();
+						autoConst(rhsVar._1)._2  ++= evidAndConst._1.map ( evid => evid match {
+						  case FolAtom(pred, args @ _*) =>  ("CONST", args.map(_.name))
+						})
+					  }
+					})					
 					//generate arrows from vars
 					vars.foreach(rhsVar => 
 					{
-						vars.foreach(lhsVar => propagate(Set(lhsVar), rhsVar))
-					})		
+					  //Do not propagate TO skolem predicates. DO all other propagations
+					  if (!rhsVar._1.startsWith("skolem")) 
+						  vars.foreach(lhsVar => propagate(Set(lhsVar), rhsVar))
+					})					
 				}
 				case SoftWeightedExpression(e, w) =>
 				{
@@ -145,7 +185,7 @@ class AutoTypingPTP(
     }
     
     delegate.prove(
-      constants,
+      allConstants,
       declarations,
       (evidence.toSet ++ extraEvid.toSet).toList,  //toSet to remove duplicate evidences
       assumptions,
@@ -227,10 +267,24 @@ class AutoTypingPTP(
   private def propagate(lhs: Set[(String, Seq[String])], rhs: (String, Seq[String])):Any =
   {
 	  object AllDone extends Exception { }
-	  if (rhs._1.contains( "skolem"))//do not propagate to "skolem" predicates because they are already close-world
-	    return 
-	  assert(rhs._2.size < 3)
+	  var skolemInVarsSeq :Seq[String]= rhs._2;  //Not the cleanest code ever, but who cares :P
+	  var skolemOutVarsSeq :Seq[String]= lhs.head._2;  //Not the cleanest code ever, but who cares :P
+	  if (rhs._1.contains( "skolem"))//[OLD]do not propagate to "skolem" predicates because they are already close-world
+	  {							//Propagate to "skolem" predicates because I am not generating all constants on it anymore
+		  skolemInVarsSeq = rhs._2.slice(0, HardAssumptionAsEvidenceProbabilisticTheoremProver.getInputVarCount(rhs._1))
+	  }
+	  
+	  val skolemPredsCountInLhs = lhs.filter(_._1.startsWith("skolem")).size 
+	  if (skolemPredsCountInLhs > 0)
+	  {
+	    assert(skolemPredsCountInLhs == 1);
+	    assert(lhs.size == 1);
+		skolemOutVarsSeq = lhs.head._2.slice(HardAssumptionAsEvidenceProbabilisticTheoremProver.getInputVarCount(lhs.head._1), lhs.head._2.size)
+	  }
+	  //assert(rhs._2.size < 3)  //this is wrong once we propagate to skolem predicates
+	  
 	  if((quantifiedVars & rhs._2.toSet).isEmpty) //intersection is empty, so all variables are not quantified
+		  										//In case of skolem in LHS, this does not matter
 	     return //if both rhs variables are Constants
 	  
 	  var allExtraConst:Set[(String, Seq[String])] = null; 
@@ -241,8 +295,11 @@ class AutoTypingPTP(
 		  {
 			  if(lhsEntry._1 == rhs._1) // do not add self-loops
 			    throw AllDone
-			  if (( lhsEntry._2.toSet & rhs._2.toSet ).isEmpty) //there is no variables overlap
+			  if (( lhsEntry._2.toSet & rhs._2.toSet & skolemInVarsSeq.toSet/*Initialized to rhs._2*/ ).isEmpty) //there is no variables overlap
 			    throw AllDone
+			  if (lhsEntry._1.startsWith("skolem") && (skolemOutVarsSeq.toSet & rhs._2.toSet).isEmpty) 
+			    throw AllDone //there is no variables overlap between the OUT variables of the skolem predicate, and the RHS 
+			    
 			  var lhsConstSet = autoConst(lhsEntry._1)._2;
 			  lhsEntry._2.indices.foreach(lhsVarIdx=>{
 			    val lhsVar = lhsEntry._2(lhsVarIdx);
@@ -250,7 +307,6 @@ class AutoTypingPTP(
 				  lhsConstSet = lhsConstSet.map(c=>(c._1, c._2.updated(lhsVarIdx, lhsVar)));
 			  })
 
- 
 			  val lhsConstSetPropagated = lhsConstSet.flatMap(lhsConst=>
 			  {
     			  //TODO: if lhsConst._1 does not match the conditions, return None
@@ -266,7 +322,7 @@ class AutoTypingPTP(
 			      {
 			        //println("CONST propagation canceled (IR)")
 			        None
-			      }			      
+			      }
 			      else if (lhsConst._2.contains("all"))
 			      {
 			        //Do not propagated constants with "all" 
@@ -274,7 +330,8 @@ class AutoTypingPTP(
 			      }
 			      else
 			      {
-				      val lhsConstPropagated = rhs._2.map(rhsVar=>{
+				      val lhsConstPropagated = rhs._2.map(rhsVar=>{ //loop over all vars of rhs even for skolem pred because I need
+				    	  										//the extra "any" to be output in place of the OUT variables.
 				        if(lhsEntry._2.contains(rhsVar))
 				        {
 				    	  val idx = lhsEntry._2.indexOf(rhsVar)
@@ -370,9 +427,13 @@ class AutoTypingPTP(
         	      //Special case for R generated by SetGoalPTP to solve DCA prbolems in Q
         	      if(isRuleR && args.length > 1 && (quantifiedVars.contains(args.head.name) || quantifiedVars.contains(args.last.name)))
         	      {
-        	    	  autoConst(pred.name)._2  +=  (("CONST", args.map(arg=>{
+        	    	 //Using the flag "all" means its values it unknown for all constants. 
+        	         //It also prevents these values from being propagated elsewhere. 
+        	         //Actually, we need values to be propagated TO this predicate, not from it.
+        	         //Not allowing these values to be propagated reduce has a nice effect of reducing the domain size. 
+        	         autoConst(pred.name)._2  +=  (("CONST", args.map(arg=>{
         	    		  if(quantifiedVars.contains(arg.name)) "all" else arg.name
-        	    	  })))
+        	    	  })))        	        
         	      }
         	  }
         	}
@@ -399,5 +460,8 @@ class AutoTypingPTP(
 		case _ => e.visit(findArrowsIR, (x:List[Set[(String, Seq[String])]])=> x.reduce( _ ++ _))
 	}
   }
+  
+  private def addConst(varName: String) =
+		  allConstants += (varName.substring(0, 2) -> (allConstants.apply(varName.substring(0, 2)) + varName))
 }
 

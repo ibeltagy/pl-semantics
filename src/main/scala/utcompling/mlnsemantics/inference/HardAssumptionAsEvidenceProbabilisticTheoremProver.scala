@@ -23,7 +23,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
   private var newDeclarations: Map[FolExpression, Seq[String]] = null;
   private var extraEvid: List[FolExpression] = List();
   private var skolemFunctionsCounter:Int = 0;
-  private var skolemConstCounter:Int = 0; 
+  //private var skolemConstCounter:Int = 0; 
   private var extraUnivVars: Set[String] = null;
   
   object PermutTimesout extends Exception { }
@@ -44,7 +44,6 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
     newDeclarations = declarations;
     extraEvid = List();
   	skolemFunctionsCounter = 0;
-  	skolemConstCounter = 0; 
   	extraUnivVars = null;
 
     try 
@@ -76,7 +75,6 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
     }catch {
       case PermutTimesout => Seq(-4.0)
     }
-    
   }
   
   private def conjToEvd(e: FolExpression): Any = 
@@ -92,17 +90,6 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
   private def addConst(varName: String) =
 		newConstants += (varName.substring(0, 2) -> (newConstants.apply(varName.substring(0, 2)) + varName))
   
-  //generate permutations
-  private def permut[A](as: List[A], k: Int): List[List[A]] = 
-    (List.fill(k)(as)).flatten.combinations(k).toList
-    
-   def runWithTimeout[T](timeoutMs: Long)(f: => T) : Option[T] = {
-    awaitAll(timeoutMs, future(f)).head.asInstanceOf[Option[T]]
-  }
-
-  def runWithTimeout[T](timeoutMs: Long, default: T)(f: => T) : T = {
-    runWithTimeout(timeoutMs)(f).getOrElse(default)
-  }
     
   private def goExist(e: FolExpression, univVars: List[String], existVars: List[String], isNegated: Boolean): FolExpression =
   {
@@ -118,7 +105,8 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
           else
           {
 	          skolemFunctionsCounter = skolemFunctionsCounter + 1;
-	          var skolemPred : FolExpression = FolVariableExpression(Variable("skolem_"+skolemFunctionsCounter));
+	          val skolemPredName = "skolem_"+skolemFunctionsCounter + "_" + univVars.size;
+	          var skolemPred : FolExpression = FolVariableExpression(Variable(skolemPredName));
 	          var skolemPredVarTypes:List[String] = List();
 	          var univConst: List[List[String]] = List();
 	          var maxUnivConstListLen:Int = 0;
@@ -135,48 +123,27 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 	            skolemPredVarTypes = skolemPredVarTypes  ++ List((existVar.substring(0, 2)))
 	          })
 	          
-              
-	          def genPermutes = {
-	            permut(List.range (0, maxUnivConstListLen), univVars.size).foreach(c => { c.permutations.foreach( p=> {
-	        	  var skolemEvd: FolExpression = FolVariableExpression(Variable("skolem_"+skolemFunctionsCounter));
-	        	  object AllDone extends Exception { }
-	        	  try
-	        	  {
-		        	  for(i <- 0 to p.length-1)
-		        	  {
-		        	    val idx = p.apply(i)
-		        	    val constListForI = univConst.apply(i);
-		        	    if (constListForI.size <= idx)
-		        	      throw AllDone;
-		        		skolemEvd = FolApplicationExpression(skolemEvd, FolVariableExpression(Variable(constListForI.apply(idx))));        	    
-		        	  }
-		        	  existVars.foreach(existVar =>{
-		        	    val newConstName = existVar +"_" + skolemConstCounter;
-		        	    skolemConstCounter = skolemConstCounter + 1;
-		        	    addConst(newConstName);
-			            skolemEvd = FolApplicationExpression(skolemEvd, FolVariableExpression(Variable(newConstName)));
-			          })
-			          extraEvid = skolemEvd :: extraEvid;
-	        	  }catch{
-	        	      case AllDone =>//do nothing
-	        	  }
-	            }) /*END P*/ }) /*END C*/
-	          }
-				 println ("before permute");
+	          /*
+	          println ("before permute");
 	          //Sts.opts.timeout match  //regardless of the timeout parameter, timeout here is always inforced to 30 seconds 
 	          //{
 	          // case Some(t) => 
-	              	val finish = runWithTimeout(3000, false) { genPermutes;  true }
+	              	val finish = runWithTimeout(3000, false) { 
+	              		 val evidAndConst = genPermutes (maxUnivConstListLen, univVars.size, skolemPredName: String, univConst, existVars);
+	              		 extraEvid = extraEvid  ++ evidAndConst._1;
+	              		 evidAndConst._2.foreach(x => addConst(x));
+	              		 true;
+	              	}
 	              	if(!finish)
 	              		throw PermutTimesout
 	          //  case _ => genPermutes; 
 	          //}
 				//genPermutes;
 				println("after permute");
-	          
+	           */
+			  
 	          extraUnivVars = extraUnivVars ++ existVars;  
 	          newDeclarations = newDeclarations  ++ Map(skolemPred->skolemPredVarTypes)
-	          //var exp = (skolemPred->e).asInstanceOf[FolExpression];
 	          var exp = if (isNegated)
 	        	  			(skolemPred & e).asInstanceOf[FolExpression];
 	        	  		else 
@@ -247,4 +214,60 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
     v
   }
 
+}
+
+object HardAssumptionAsEvidenceProbabilisticTheoremProver
+{
+    var skolemConstCounter = 0
+   
+	def getInputVarCount (skolemPredName: String) : Int =
+	{
+	  assert(skolemPredName.startsWith("skolem_"))
+	  assert( skolemPredName.count(_ == '_') == 2)
+	  val lastIndexOfUndescore = skolemPredName.lastIndexOf("_");
+	  return Integer.parseInt(skolemPredName.substring(lastIndexOfUndescore+1));
+	}
+        
+    def genPermutes (listLen:Int, listsCount:Int, predName: String, constMatrix: List[List[String]], outVar :List[String]) :
+    (List[FolExpression], List[String] ) = 
+    {
+    	var generatedEvid: List[FolExpression] = List();  
+    	var extraConst:List[String] = List()
+      	permut(List.range (0, listLen), listsCount).foreach(c => { c.permutations.foreach( p=> {
+		  var skolemEvd: FolExpression = FolVariableExpression(Variable(predName));
+		  object AllDone extends Exception { }
+		  try
+		  {
+	    	  for(i <- 0 to p.length-1)
+	    	  {
+	    	    val idx = p.apply(i)
+	    	    val constListForI = constMatrix.apply(i);
+	    	    if (constListForI.size <= idx)
+	    	      throw AllDone;
+	    		skolemEvd = FolApplicationExpression(skolemEvd, FolVariableExpression(Variable(constListForI.apply(idx))));        	    
+	    	  }
+	    	  outVar.foreach(existVar =>{
+	    	    val newConstName = existVar +"_" + HardAssumptionAsEvidenceProbabilisticTheoremProver.skolemConstCounter;
+	    	    HardAssumptionAsEvidenceProbabilisticTheoremProver.skolemConstCounter = 1 + HardAssumptionAsEvidenceProbabilisticTheoremProver.skolemConstCounter;
+	    	    extraConst = newConstName :: extraConst; 
+	            skolemEvd = FolApplicationExpression(skolemEvd, FolVariableExpression(Variable(newConstName)));
+	          })
+	          generatedEvid = skolemEvd :: generatedEvid;
+		  }catch{
+		      case AllDone =>//do nothing
+		  }
+	    }) /*END P*/ }) /*END C*/
+	    (generatedEvid, extraConst)
+    }
+    
+  //generate permutations
+	private def permut[A](as: List[A], k: Int): List[List[A]] = 
+			(List.fill(k)(as)).flatten.combinations(k).toList
+			
+	def runWithTimeout[T](timeoutMs: Long)(f: => T) : Option[T] = {
+			awaitAll(timeoutMs, future(f)).head.asInstanceOf[Option[T]]
+	}
+	def runWithTimeout[T](timeoutMs: Long, default: T)(f: => T) : T = {
+			runWithTimeout(timeoutMs)(f).getOrElse(default)
+	}
 }
