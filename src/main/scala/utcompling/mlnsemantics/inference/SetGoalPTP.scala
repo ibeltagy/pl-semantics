@@ -286,7 +286,7 @@ class SetGoalPTP(
       }
       case FolAtom(pred, args @ _*) =>
       {  
-    	if(isLhsOnlyIntroduction(args, inLhs, univs) )
+    	if(isLhsOnlyIntroduction(args, inLhs, univs, isNegated) )
     	{
 		val extraEvid = FolAtom.apply(pred, args.map(arg => lhsOnlyIntroduction(arg, univs) ) :_ *)
 		if (inLhs) //hard evidence
@@ -306,7 +306,7 @@ class SetGoalPTP(
       {
     	       	if(isLhsOnlyIntroduction(Seq(first.asInstanceOf[FolVariableExpression].variable, 
 					     second.asInstanceOf[FolVariableExpression].variable),
-					 inLhs, univs))
+					 inLhs, univs, isNegated))
         	{
 			val extraEvid = FolEqualityExpression(lhsOnlyIntroduction(first, inLhs, isNegated, univs).get, 
 						   lhsOnlyIntroduction(second, inLhs, isNegated, univs).get);
@@ -334,7 +334,7 @@ class SetGoalPTP(
           addConst(newVarName);
           return Variable(newVarName);
   }
-  private def isLhsOnlyIntroduction (args: Seq[Variable], inLhs:Boolean, univs:List[String]): Boolean = 
+  private def isLhsOnlyIntroduction (args: Seq[Variable], inLhs:Boolean, univs:List[String], isNegated: Boolean): Boolean = 
   {
         var univCount = 0;
         var notExistCount = 0;
@@ -365,18 +365,20 @@ class SetGoalPTP(
 			throw new RuntimeException ("Unsupported case: in LHS, and some univ are notExist");
 		else if (isQuery && !inLhs && notExistCount == 0)  /*All birds are blue*/
 		{
-			System.out.println ("All univ are univ, but in RHS")
+			System.out.println ("All univ are univ, but in RHS + " + isNegated)
 			return false;  //all birds are blue. Generate a bird, but do not generate a blue
 		}
 		else if (isQuery && !inLhs && notExistCount != 0 && notExistCount < univCount)  /*Not sure, probably do as notExistCount == univCount*/
 		{
-			System.out.println ("All univ, some Univ, some notExist")
+			System.out.println ("All univ, some Univ, some notExist + " + isNegated)
 			//e.g: "all birds do not eat all food"
+			assert (isNegated) //turns out predicates has to be negated for this to be necessary  
 			return true;  //soft evidence
 		} 
 		else if (isQuery && !inLhs && notExistCount == univCount)
 		{
-			System.out.println ("All univ, all notExist")
+			System.out.println ("All univ, all notExist + " + isNegated)
+			assert (isNegated) //turns out predicates has to be negated for this to be necessary  
 			return true;  //soft evidence
 		}
 		else
@@ -391,13 +393,15 @@ class SetGoalPTP(
 	    if (notExistCount == 1) //one exist and one negated exist
 	    {
 	        assert (!inLhs) // can not reach here and be inLhs
-       		System.out.println ("Not all univ, one exist, one notExist")
-	        return true;
+       		System.out.println ("Not all univ, one exist, one notExist + " + isNegated)
+       		if (isNegated)
+       			return true;
+       		else return false
 	    }
 	    else if (notExistCount == 0) //one exist and one univ
 	    {
 	        assert (!inLhs) //can not reach here and be inLhs
-       		System.out.println ("Not all univ, one exist, one univ")	        
+       		System.out.println ("Not all univ, one exist, one univ + " + isNegated)
 	        return false; //nothing need to be done
 	    }
 	    else 
