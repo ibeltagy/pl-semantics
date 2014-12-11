@@ -1,6 +1,8 @@
 package utcompling.scalalogic.discourse.impl
 
 import scala.collection.mutable.ListBuffer
+import opennlp.scalabha.util.FileUtils
+import opennlp.scalabha.util.FileUtils._
 import scala.collection.mutable.Map
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.BoxerExpressionInterpreter
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.Boxer2DrtExpressionInterpreter
@@ -15,6 +17,12 @@ import utcompling.scalalogic.discourse.candc.call.Candc
 import utcompling.scalalogic.discourse.candc.call.impl.BoxerImpl
 import utcompling.scalalogic.discourse.candc.call.impl.CandcImpl
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerPrs
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerNot
+import scala.util.control.Breaks
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerPred
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerRel
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerDrs
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerImp
 
 
 /**
@@ -44,7 +52,7 @@ class BoxerDiscourseInterpreter[T](
       "--candc-printer" -> "boxer",	
       "--candc-parser-kbest" -> kbest.toString(),
       "--candc-int-betas" -> "0.075 0.03 0.01 0.005 0.001")
-    val candcOut = this.candc.batchParseMultisentence(inputs, candcArgs.toMap, Some(newDiscourseIds), Some(if (question) "questions" else "boxer"), verbose = verbose)
+    var candcOut = this.candc.batchParseMultisentence(inputs, candcArgs.toMap, Some(newDiscourseIds), Some(if (question) "questions" else "boxer"), verbose = verbose)
     
     val boxerArgs = Map[String, String](
       "--box" -> "false",
@@ -56,7 +64,7 @@ class BoxerDiscourseInterpreter[T](
     //val (boxerOut, scores) = this.boxer.callBoxer(candcOut, boxerArgs.toMap, verbose = verbose)
     val boxerOut = this.boxer.callBoxer(candcOut, boxerArgs.toMap, verbose = verbose)
 
-    val drsDict = this.parseBoxerOutput(boxerOut)//(boxerOut, scores)
+    val drsDict = this.parseBoxerOutput(boxerOut, candcOut)//(boxerOut, scores)
 
     return newDiscourseIds.map(s=> {
       drsDict.find(x => x._1 == s) match {
@@ -70,15 +78,20 @@ class BoxerDiscourseInterpreter[T](
     }).toList
   }
 
-  private def parseBoxerOutput(boxerOut: String/* scores: ListBuffer[String]*/): Map[String, ListBuffer[(T, Double)]] = {
+  private def parseBoxerOutput(boxerOut: String, candcOut: String): Map[String, ListBuffer[(T, Double)]] = {
     //val drsDict = new MapBuilder[String, List[T], Map[String, List[T]]](Map[String, List[T]]())
+
+    val ccgs = candcOut.split("ccg\\(");
     val drsDict:Map[String, ListBuffer[(T, Double)]] = Map();
     val singleQuotedRe = """^'(.*)'$""".r
     //val scoresItr = scores.iterator;
-    val lines = boxerOut.split("\n").iterator
+    val lines = boxerOut.split("\n")
+    val linesItr = lines.iterator
+    assert ((ccgs.size - 1) * 4 == lines.size - 6, "ccgs count: " + ccgs.size +", boxerLinesCounts: " + lines.size );
+    var i:Int = 0;
     val IdLineRe = """^id\((\S+),\s*(\d+)\)\.$""".r
     val SemLineRe = """^sem\((\d+),$""".r
-    for (line <- lines.map(_.trim)) {
+    for (line <- linesItr.map(_.trim)) {
       //println(line)
       line match {
         case IdLineRe(discourseIdWithScore, drsId) =>
@@ -86,13 +99,18 @@ class BoxerDiscourseInterpreter[T](
           //lines.next.trim match { case l if l.startsWith("[word(") => }
           //lines.next.trim match { case l if l.startsWith("[pos(") => }
           //lines.next.trim match { case l if l.startsWith("[") => }
-          lines.next.trim match { case l if l.startsWith("sem(") => }
-          val drsInput = lines.next.trim.stripSuffix(").")
+          linesItr.next.trim match { case l if l.startsWith("sem(") => }
+          val drsInput = linesItr.next.trim.stripSuffix(").")
           val idWithScoreSplits = discourseIdWithScore.split("-", 2);
           val discourseId = idWithScoreSplits.apply(0)
           val score = idWithScoreSplits.apply(1).replace("'", "").toDouble;
           val cleanDiscourseId = singleQuotedRe.findFirstMatchIn(discourseId).map(_.group(1)).getOrElse(discourseId)
-          val parsed = this.parseOutputDrs(drsInput, cleanDiscourseId)
+          var parsed = this.parseOutputDrs(drsInput, cleanDiscourseId)
+          val ccg = ccgs(i+1 /* +1 is because the first is just the header*/); 
+          i = i+1;
+          println(parsed)
+          parsed  = this.applyNegation (parsed , ccg)
+          println(parsed)
           /*if (!scoresItr.hasNext)
             throw new RuntimeException("number of parsing scores is less than number of parses"); 
           val scoreLine = scoresItr.next;
@@ -113,7 +131,129 @@ class BoxerDiscourseInterpreter[T](
     }
     return drsDict
   }
-
+  
+    //loop over the boxerExpression, if it has any negation, find this negation in the ccg parse, 
+  	//then find its body and restrictor, then separate the body and restrictors in the boxerExpression. 
+  	//This is important when dealing with universal quantifiers in T and in H as implmeneted in SetGoalPTP
+  private var currentCcgParse:List[String] = null;
+  private var currentCcgParseTerminals:List[(String, Int)] = null;
+  private def applyNegation (exp: BoxerExpression, ccg:String):BoxerExpression = 
+  {
+    currentCcgParse = ccg.split("\n").toList;
+    currentCcgParseTerminals = currentCcgParse.indices.flatMap(indx => {
+    	if(currentCcgParse(indx).trim.startsWith("t("))
+    		Some((currentCcgParse(indx), indx))
+    	else
+    		None
+    }).toList
+	val result = applyNegationRecursive(exp)
+	currentCcgParseTerminals = null;
+	currentCcgParse = null
+	return result;
+  }
+  private def applyNegationRecursive (exp: BoxerExpression): BoxerExpression =
+  {
+  	exp match { 
+        case BoxerNot(discId, notIndices, drs) =>  {
+          var newExp = exp;
+          if (notIndices.length == 1)    //assert(, "a negation with unsupported number of indices: " + notIndices.length + "\n" + currentCcgParse)
+          {
+	          assert (notIndices.head.wordIndex >= 0 /*0 based index*/ 
+	        	   && notIndices.head.wordIndex < currentCcgParseTerminals.size /*number of terminals*/, 
+	        	   "Word index: " + notIndices.head.wordIndex  + " in a " + currentCcgParseTerminals.size + " words length sentence"); 
+	          val superTagLine = currentCcgParseTerminals(notIndices.head.wordIndex)
+	          println(superTagLine)
+	          val superTag = superTagLine._1.trim.split(",").head
+	          if (superTag == "t(np:nb/n") //a generalized quantifier NO
+	          {
+	        	  val lineIndex = superTagLine._2
+	        	  assert(lineIndex  >= 0)
+	        	  var countOpened:Int = 0;
+	        	  var countClosed:Int = 0;
+	        	  var endTokenIndex:Int = notIndices.head.wordIndex;
+	        	  var lhsExps:List[BoxerExpression] = List();       	  
+	        	  var lhsVars:List[String] = List();        	  
+	        	  val mybreaks = new Breaks
+	        	  import mybreaks.{break, breakable}
+	        	  breakable {
+	        		  for (i <- lineIndex+1 to currentCcgParse.size)
+		        	  {
+		        		  countOpened = countOpened + currentCcgParse(i).count( _ == '(' );
+		        		  countClosed = countClosed + currentCcgParse(i).count( _ == ')' );
+		        		  if (currentCcgParse(i).trim().startsWith("t(") /*terminal*/)
+		        		  {
+		        		    endTokenIndex = endTokenIndex + 1;
+		        		    var found:Boolean = false;
+/*		        		    if(currentCcgParse(i).trim().startsWith("t(conj") /*a conjunction AND*/ 
+		        		        || currentCcgParse(i).trim().startsWith("t(n/n, 'one'") /*no one*/
+		        		        || currentCcgParse(i).trim().startsWith("t(n/n, 'other'") /*other*/ 
+		        		        || currentCcgParse(i).trim().startsWith("t(comma") /*comma*/ )
+		        		    	found = true
+		        		    else
+		        		    {
+		        		    * 
+		        		    */
+		        		    drs.conds.foreach(c =>
+				        	{
+				        	    c match {
+				        	      case BoxerPred(discId, predIndices, variable, name, pos, sense) => 
+				        	      		if (predIndices.size == 1)
+				        	      		{
+				        	      			if(predIndices.head.wordIndex == endTokenIndex)
+				        	      			{
+				        	      			  found = true;
+				        	      			  lhsExps = lhsExps.+:(c)
+				        	      			  lhsVars = lhsVars.+:(variable.name)			        	      			  
+				        	      			}
+				        	      			  
+				        	      		}
+				        	      case _ => 
+				        	    }
+				        	})
+		        		    //}
+					        if (!found)
+					          println("predicate: " + currentCcgParse(i) + " could not be found in " + exp + currentCcgParse);
+					        //assert(found, "predicate: " + currentCcgParse(i) + " could not be found in " + exp + currentCcgParse);		        		    
+		        		  }
+		        		  if (countOpened  <= countClosed)
+		        			  break()
+		        	  }
+	        	  }
+	        	  
+	        	  //assert (!lhsExps.isEmpty);  //lhsExps could be empty
+	    		  //collect relations connecting lhsPreds
+	        	  //TODO: this is not perfectly correct because there could be an indirect relation, e.g.: subset
+	        	  //e.g.: There is no woman dancing and singing in the rain
+	        	  drs.conds.foreach(c =>
+	    		  {
+		        	    c match {
+		        	      case BoxerRel(discId, indices, event, variable, name, sense) => 
+		        	        if (lhsVars.contains(event.name) && lhsVars.contains(variable.name))
+		        	        	lhsExps = lhsExps.+:(c)	        	          
+		        	      case _ => 
+		        	    }
+	    		  })
+	    		  val rhsExps = drs.conds.filterNot(lhsExps.toSet);
+	        	  println (lhsExps)
+	        	  println (rhsExps)
+	        	  if (!rhsExps.isEmpty && !lhsExps.isEmpty) //if one of them is empty, do nothing
+	        	  {
+	        		  newExp = BoxerImp(discId, notIndices, 
+	        				  			BoxerDrs( drs.refs, lhsExps.map(applyNegationRecursive)), 
+	        				  			BoxerNot(discId, List(), BoxerDrs( List(), rhsExps.map(applyNegationRecursive)))
+	        				  		   )
+	        	  }
+	          }
+          }
+          if (exp == newExp)
+            BoxerNot(discId, notIndices, applyNegationRecursive(drs))
+          else 
+            newExp
+        }
+        case _ => exp.visitConstruct(applyNegationRecursive)
+    }    
+  }
+  
   private def parseOutputDrs(drsString: String, discourseId: String): BoxerExpression = {
     return new BoxerExpressionParser(discourseId).parse(drsString)
   }
@@ -157,7 +297,7 @@ sem(1,
     bdi.parseBoxerOutput ( """id(1,1).
 sem(1,[1001:[tok:'A', pos:'DT', lemma:a, namex:'O'], 1002:[tok:person, pos:'NN', lemma:person, namex:'O'], 1003:[tok: (is), pos:'VBZ', lemma:be, namex:'O'], 1004:[tok:throwing, pos:'VBG', lemma:throw, namex:'O'], 1005:[tok:a, pos:'DT', lemma:a, namex:'O'], 1006:[tok:cat, pos:'NN', lemma:cat, namex:'O'], 1007:[tok:on, pos:'IN', lemma:on, namex:'O'], 1008:[tok:to, pos:'TO', lemma:to, namex:'O'], 1009:[tok:the, pos:'DT', lemma:the, namex:'O'], 1010:[tok:ceiling, pos:'NN', lemma:ceiling, namex:'O'], 1011:[tok:'.', pos:'.', lemma:'.', namex:'O']],
 alfa(top, drs([[1009]:x0], [[1010]:pred(x0, ceiling, n, 0)]), drs([[]:x1, []:x2, [1005]:x3, [1001]:x4, []:x5], [[]:rel(x1, x4, patient, 0), []:rel(x1, x5, agent, 0), _G4379:pred(x1, event, v, 0), []:rel(x2, x3, patient, 0), []:rel(x2, x4, agent, 0), [1004]:pred(x2, throw, v, 0), [1006]:pred(x3, cat, n, 0), [1002]:pred(x4, person, n, 0), []:pred(x5, thing, n, 12), [1008]:rel(x1, x0, to, 0), [1007]:pred(x1, on, a, 0)]))).
-""");
+""", "");
 
   }
 }
