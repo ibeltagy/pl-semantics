@@ -1,0 +1,67 @@
+TODO:
+-Add EasyCCG to the pipeline (Try to find out why not all CCG parses translated )
+-Add more information to CCG parses in EasyCCG, and run experiments again. Probably Pair 1 will break
+-Missing case in Alchemy 
+-After addtion more info to EasyCCG, more errors occure
+1: revise the handling of EQ
+12-14: ??
+15: ??
+22-24: exception 
+25: ??
+30: one of X
+=====================
+DONE:
+-polish scripts and datasets
+-when negating T to calculate P(notT|H), and T has multible sentneces, and there is a corefernece resolution between these 
+sentences, scope of quantifiers get missed up. Check Pair 12.
+-Complete implmenetation of correference resoltion 
+-SetGoalPTP: change code of withExistence withFixUnivInQ withFixCWA to avoid generation of constants also, not only removing the rules.
+-SetGoalPTP: Find code that works for both FraCas and Syn
+-Revise AutoTyping and add comments
+
+1-11: correct
+12-15: (all wrong and all timeout)
+16-21: correct
+22-25: correct (25 is a bit slow. parses are correct)
+26-31: correct
+32-34: correct(wrong parses in H )
+35: withNegT timesout (parse wrong in T)
+36-39: correct
+40-42: correct(wrong parses in T)
+43: withNegT timesout (parse wrong in T)(gold standard is wrong. Worng GS: Entail, Correct GS: Neutral)
+44-46: correct
+
+
+TODO: 
+-Fix parse of 35,43. Fixing parse will get rid of the timeout  (stupid, fokkak menha)
+-Fix propagation for 12-15 
+-Run fixed propagation on 22-25
+-Fix parse parses in H for 32-34,40-42 to make sure you are on the right track (not 100% important)
+-15 and 25 have more than one connection between LHS and RHS
+
+
+correct: 1-11,16-21,26-31,36-39,44-46
+timouets: 12-15,22-25,32-35,40-43
+
+
+
+24: correct
+16: timeout and more
+6: misparse 
+
+ratio
+ppdb
+phrasal
+rules like mike lewis
+most, few
+APRIL
+
+GMCWA
+Before (or during) summer
+
+Z/Z
+WL
+End of Fall 2015
+
+
+IT IS BETTER TO RERUN FRACAS WITH POS, CHUNK AND NER

@@ -61,7 +61,7 @@ class SampleSearchTheoremProver
         case _ => None
     }.mkString(",")
     
-    val args = List("-ss", "-maxSeconds", "5", "-ssq", queryFile) ++ (Sts.opts.task match {
+    val args = List("-ss", "-maxSeconds", Sts.opts.ssTimeout.toString(), "-ssq", queryFile) ++ (Sts.opts.task match {
       case "sts" => List("-q", openWorldPreds)
       case "rte" => List("-q", openWorldPreds)
     })

@@ -66,6 +66,16 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 	          case a @ _ => List(a)
 	        }
 		 //println("done skolem")
+
+		//A default constant is added to constants types with empty constats list
+		val newConstantsCopy = newConstants;
+		newConstantsCopy.foreach {
+			case (name, tokens) => {
+				if (tokens.size == 0)
+					addConst(name + "_default")
+			}
+		}
+
 	    delegate.prove(
 	      newConstants,
 	      newDeclarations,
@@ -145,7 +155,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 	          extraUnivVars = extraUnivVars ++ existVars;  
 	          newDeclarations = newDeclarations  ++ Map(skolemPred->skolemPredVarTypes)
 	          var exp = if (isNegated)
-	        	  			(skolemPred & e).asInstanceOf[FolExpression];
+	        	  			(-(skolemPred -> -e)).asInstanceOf[FolExpression];
 	        	  		else 
 	        	  			(skolemPred->e).asInstanceOf[FolExpression];
 
@@ -228,7 +238,7 @@ object HardAssumptionAsEvidenceProbabilisticTheoremProver
 	  return Integer.parseInt(skolemPredName.substring(lastIndexOfUndescore+1));
 	}
         
-    def genPermutes (listLen:Int, listsCount:Int, predName: String, constMatrix: List[List[String]], outVar :List[String]) :
+    def genPermutes (listLen:Int, listsCount:Int, predName: String, constMatrix: List[List[String]], outVar :List[String], generatedBefore:Set[List[String]]) :
     (List[FolExpression], List[String] ) = 
     {
     	var generatedEvid: List[FolExpression] = List();  
@@ -238,21 +248,26 @@ object HardAssumptionAsEvidenceProbabilisticTheoremProver
 		  object AllDone extends Exception { }
 		  try
 		  {
-	    	  for(i <- 0 to p.length-1)
-	    	  {
+	    	 var pConst:List[String] = List(); 
+		  	 for(i <- 0 to p.length-1)
+	    	 {
 	    	    val idx = p.apply(i)
 	    	    val constListForI = constMatrix.apply(i);
 	    	    if (constListForI.size <= idx)
 	    	      throw AllDone;
-	    		skolemEvd = FolApplicationExpression(skolemEvd, FolVariableExpression(Variable(constListForI.apply(idx))));        	    
-	    	  }
-	    	  outVar.foreach(existVar =>{
-	    	    val newConstName = existVar +"_" + HardAssumptionAsEvidenceProbabilisticTheoremProver.skolemConstCounter;
-	    	    HardAssumptionAsEvidenceProbabilisticTheoremProver.skolemConstCounter = 1 + HardAssumptionAsEvidenceProbabilisticTheoremProver.skolemConstCounter;
-	    	    extraConst = newConstName :: extraConst; 
-	            skolemEvd = FolApplicationExpression(skolemEvd, FolVariableExpression(Variable(newConstName)));
-	          })
-	          generatedEvid = skolemEvd :: generatedEvid;
+	    	    pConst = pConst :+ constListForI.apply(idx);
+	    		skolemEvd = FolApplicationExpression(skolemEvd, FolVariableExpression(Variable(constListForI.apply(idx))));
+	    	 }
+		  	 if (!generatedBefore.contains(pConst))
+		  	 {
+	    	    outVar.foreach(existVar =>{
+	    	      val newConstName = existVar +"_" + HardAssumptionAsEvidenceProbabilisticTheoremProver.skolemConstCounter;
+	    	      HardAssumptionAsEvidenceProbabilisticTheoremProver.skolemConstCounter = 1 + HardAssumptionAsEvidenceProbabilisticTheoremProver.skolemConstCounter;
+	    	      extraConst = newConstName :: extraConst; 
+	              skolemEvd = FolApplicationExpression(skolemEvd, FolVariableExpression(Variable(newConstName)));
+	            })
+	            generatedEvid = skolemEvd :: generatedEvid;
+		  	 }
 		  }catch{
 		      case AllDone =>//do nothing
 		  }

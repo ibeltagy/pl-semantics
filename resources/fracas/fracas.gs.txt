@@ -9,26 +9,26 @@ Several great tenors are British	There are great tenors who are British
 Both leading tenors are excellent.Leading tenors who are excellent are indispensable	Both leading tenors are indispensable
 Neither leading tenor comes cheap.One of the leading tenors is Pavarotti	Pavarotti is a leading tenor who comes cheap
 An Irishman won the Nobel prize for literature	An Irishman won a Nobel prize
-Every European has the right to live in Europe.Every European is a person.If a person has the right to live in Europe the person can travel freely within Europe	Every European can travel freely within Europe
-All European have the right to live in Europe.Every European is a person.If a person has the right to live in Europe the person can travel freely within Europe	All European can travel freely within Europe
-Each European has the right to live in Europe.Every European is a person.If a person has the right to live in Europe the person can travel freely within Europe	Each European can travel freely within Europe
-The residents of member states have the right to live in Europe.All residents of member states are individuals.If an individual has the right to live in Europe the individual can travel freely within Europe	The residents of member states can travel freely within Europe
+Every European has the right to live in Europe.Every European is a person.Every person who has the right to live in Europe can travel freely within Europe	Every European can travel freely within Europe
+All Europeans have the right to live in Europe.Every European is a person.Every person who has the right to live in Europe can travel freely within Europe	All Europeans can travel freely within Europe
+Each European has the right to live in Europe.Every European is a person.Every person who has the right to live in Europe can travel freely within Europe	Each European can travel freely within Europe
+The residents of member states have the right to live in Europe.All residents of member states are individuals.Every individual who has the right to live in Europe can travel freely within Europe	The residents of member states can travel freely within Europe
 No delegate finished the report on time	No delegate finished the report
 Some delegates finished the survey on time	Some delegates finished the survey
 Several delegates got the results published in major national newspapers	Several delegates got the results published
 Both commissioners used to be leading businessmen	Both commissioners used to be businessmen
 Neither commissioner spends a lot of time at home	Neither commissioner spends time at home
 An Irishman won a Nobel prize	An Irishman won the Nobel prize for literature
-Every European can travel freely within Europe.Every European is a person.If a person has the right to live in Europe the person can travel freely within Europe	Every European has the right to live in Europe
-All Europeans can travel freely within Europe.Every European is a person.If a person has the right to live in Europe the person can travel freely within Europe	All Europeans have the right to live in Europe
-Each European can travel freely within Europe.Every European is a person.If a person has the right to live in Europe the person can travel freely within Europe	Each European has the right to live in Europe
-The residents of member states can travel freely within Europe.All residents of member states are individuals.If an individual has the right to live anywhere in Europe the individual can travel freely within Europe	The residents of member states have the right to live anywhere in Europe
+Every European can travel freely within Europe.Every European is a person.Every person who has the right to live in Europe can travel freely within Europe	Every European has the right to live in Europe
+All Europeans can travel freely within Europe.Every European is a person.Every person who has the right to live in Europe can travel freely within Europe	All Europeans have the right to live in Europe
+Each European can travel freely within Europe.Every European is a person.Every person who has the right to live in Europe can travel freely within Europe	Each European has the right to live in Europe
+The residents of member states can travel freely within Europe.All residents of member states are individuals.Every individual who has the right to live anywhere in Europe can travel freely within Europe	The residents of member states have the right to live anywhere in Europe
 No delegate finished the report	Some delegate finished the report on time
 Some delegates finished the survey	Some delegates finished the survey on time
 Several delegates got the results published	Several delegates got the results published in major national newspapers
 Both commissioners used to be businessmen	Both commissioners used to be leading businessmen
 Neither commissioner spends time at home	One of the commissioners spends a lot of time at home
-A Swede won a Nobel prize.Every Swede is a Scandinavian	A Scandinavian win a Nobel prize
+A Swede won a Nobel prize.Every Swede is a Scandinavian	A Scandinavian won a Nobel prize
 Every Canadian resident can travel freely within Europe.Every Canadian resident is a resident of the North American continent	Every resident of the North American continent can travel freely within Europe
 All Canadian residents can travel freely within Europe.Every Canadian resident is a resident of the North American continent	All residents of the North American continent can travel freely within Europe
 Each Canadian resident can travel freely within Europe.Every Canadian resident is a resident of the North American continent	Each resident of the North American continent can travel freely within Europe

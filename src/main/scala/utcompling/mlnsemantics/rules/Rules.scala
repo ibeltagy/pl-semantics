@@ -499,7 +499,7 @@ object Rules {
 	        case BoxerPred(discId, indices, variable, name, pos, sense) =>
 	          isPred = true;
 	          if(isRel)
-	            throw new RuntimeException("Pred and Rel at the same time");
+	            throw new RuntimeException(name + " is a Pred and Rel at the same time");
 	          if(!isLemmaExpnameMatch(token, name)) LOG.error ("Expecting token: (" + token+ ") but found pred named: (" + name + ")");
 
 	        case BoxerRel(discId, indices, event, variable, name, sense) =>
@@ -739,14 +739,14 @@ val matchAssumeRels = assumeRelsList.filter(rel =>
 
   private def createWeightedExpression(leftFOL: BoxerDrs, rightFOL: BoxerDrs, discId: String, score: Double, ruleType: RuleType.Value): Option[WeightedExpression[BoxerExpression]] =
     {
-      val lhsSet = leftFOL.refs.map(_._2).toSet
+      /*val lhsSet = leftFOL.refs.map(_._2).toSet
       val rhsSet = rightFOL.refs.map(_._2).toSet
       val diff = rhsSet -- lhsSet; 
-      if( ! diff.isEmpty )
+      if( ! diff.isEmpty ) //WRONG, some valid rules have same predicates names, but different variable assingment
       {
         LOG.trace("Rule ignored: " + leftFOL + " => " + rightFOL )
         return None //RHS has variables that are not in the LHS
-      }
+      }*/
 
       val changedLHS = changeExpDirection(leftFOL);
       var lhs = changedLHS.asInstanceOf[BoxerDrs]();      

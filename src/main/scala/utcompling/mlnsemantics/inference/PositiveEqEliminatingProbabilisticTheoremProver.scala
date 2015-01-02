@@ -10,6 +10,7 @@ import support.HardWeightedExpression
 import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 import utcompling.mlnsemantics.run.Sts
 import org.apache.commons.logging.LogFactory
+import utcompling.mlnsemantics.inference.support.GoalExpression
 
 class PositiveEqEliminatingProbabilisticTheoremProver(
   delegate: ProbabilisticTheoremProver[FolExpression])
@@ -27,23 +28,14 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
 
     newConstants = constants;//extra constants are added by skolemConstAsEvd
     equalities = List();
-    
+    val newGoal = apply(goal)
     //Remove it only from the Text because that help generating the evidence.
     //No need to do it for the hypothesis 
     val newAssumptions:List[WeightedExpression[FolExpression]] = assumptions.map
     {
-	case HardWeightedExpression(e, w) => {
-			equalities = List();
-			var newExpr = findRemoveEq(e, Set(), false);
-			equalities = groupEqvClasses(equalities);
-			LOG.trace(equalities)
-			newExpr = applyEq(newExpr);
-			newConstants = newConstants.map(constant=>{
-				(constant._1, constant._2.map(applyEq(_)).toSet )
-			}).toMap
-			HardWeightedExpression(newExpr, w)
-	}
-	case a @ _ => a
+		case HardWeightedExpression(e, w) =>	HardWeightedExpression(apply(e), w)
+		case GoalExpression(e, w) =>	GoalExpression(apply(e), w)
+		case a @ _ => a
     }
     
     delegate.prove(
@@ -51,10 +43,26 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
       declarations,
       evidence,
       newAssumptions,
-      goal)
+      newGoal)
   }
-  
+  private def apply (exp:FolExpression):FolExpression = 
+  {
+  	if (exp == null)
+  		return exp;
+  	equalities = List();
+	var newExpr = findRemoveEq(exp, Set(), false);
+	equalities = groupEqvClasses(equalities);
+	LOG.trace(equalities + " in " + exp)
+	q = List();
+	newExpr = applyEq(newExpr);
+	newConstants = newConstants.map(constant=>{
+		(constant._1, constant._2.map(applyEq(_)).toSet )
+	}).toMap
+	//println(newExpr);
+	return newExpr
+  }
   private var equalities:List[Set[String]] = List();
+  private var q:List[String] = List();  //quantifiers
   private var newConstants: Map[String, Set[String]] = null;
   
   def addConst(varName: String) =
@@ -247,25 +255,25 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
       		{
       		  case ('r', 'r') => removeFolExp
       		  case ('r', 'o') => mSecond
-      		  case ('o', 'r') => mFirst
+      		  case ('o', 'r') => FolNegatedExpression(mFirst)
       		  case ('o', 'o') => FolIfExpression(mFirst, mSecond);      		    
       		}      		
-      	case FolIffExpression(first, second) => throw new RuntimeException("not reachable")
+        case FolIffExpression(first, second) => throw new RuntimeException("not reachable")
         case FolEqualityExpression(first, second) => {
           val vFirst = first.asInstanceOf[FolVariableExpression].variable.name;
           val vSecond = second.asInstanceOf[FolVariableExpression].variable.name;
           if(quantifiers.contains(vFirst) && quantifiers.contains(vSecond))
           {
-        	  if(!isNegated)
-        		  equalities = equalities ++ List(Set(vFirst, vSecond));
-        	  removeFolExp
+        	  //if(!isNegated)
+        	equalities = equalities ++ List(Set(vFirst, vSecond));
+        	removeFolExp
           }
-		  else
-			  e
+		  	 else
+			 	e
         }
           
         case FolAtom(pred, args @ _*) => e 
-        case _ => throw new RuntimeException("not reachable")
+        case _ => throw new RuntimeException("not reachable" + e)
       }
   }
     
@@ -409,11 +417,31 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
 	Variable(applyEq(v.name))
   }
   
+
   private def applyEq(e: FolExpression): FolExpression = 
   {
     e match {
-    	case FolExistsExpression(v, term) => FolExistsExpression(applyEq(v), applyEq(term))	
-    	case FolAllExpression(v, term) => FolAllExpression(applyEq(v), applyEq(term))
+    	case FolExistsExpression(v, term) => 
+			val changedVar = applyEq(v);
+			//println ("changedVar: " + changedVar.name + " from: " + v.name + " q: " + q)
+			if (q.contains(changedVar.name))
+				applyEq(term)
+			else
+			{
+				q = q :+ (changedVar.name);
+				FolExistsExpression(changedVar, applyEq(term))	
+			}
+
+    	case FolAllExpression(v, term) => 
+         val changedVar = applyEq(v);
+         //println ("changedVar: " + changedVar.name + " from: " + v.name + " q: " + q)
+         if (q.contains(changedVar.name))
+            applyEq(term)
+         else
+         {
+            q = q :+ (changedVar.name);
+            FolAllExpression(changedVar, applyEq(term))
+         }
     	case FolAtom(pred, args @ _*) => FolAtom(pred, args.map(applyEq(_)) :_ * )	
     	case FolVariableExpression(v) => FolVariableExpression(applyEq(v)) 
     	case _=>e.visitStructured(applyEq, e.construct)

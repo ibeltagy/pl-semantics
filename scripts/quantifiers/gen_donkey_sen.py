@@ -4,6 +4,7 @@ import argparse
 import sys
 import difflib
 import operator
+import commands
 
 def simplify (d1, pos1, d2, pos2, pos3):
 	if (d1 == "no" or d1 == "not all"):
@@ -14,7 +15,7 @@ def simplify (d1, pos1, d2, pos2, pos3):
 		d2 = evaluateQ(d2)
 #		pos2 = flip(pos2)
 		pos3 = flip(pos3)
-#	print d1 + " "+ pos1 + " " + d2 + " " + pos2 + " " + pos3
+	print d1 + " "+ pos1 + " " + d2 + " " + pos2 + " " + pos3
 	return (d1, pos1, d2, pos2, pos3)
 
 def flip(sign):
@@ -94,3 +95,4 @@ def main():
 								entailResult = 1
 							print q11 + " "+ lhss[lhs] + " "+ v + " " + q12 + " "+ rhss[rhs] + "\t" + q21 + " "+ lhss[(lhs+1)%2] + " "+ v +" "+ q22+ " "+ rhss[(rhs+1)%2] + "\t" + str(entailResult)  
 main()
+print(commands.getoutput('echo  "hi dude" | tr " " "\n"'))

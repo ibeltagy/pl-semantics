@@ -1,0 +1,346 @@
+An Italian became the world's greatest tenor. 	There was an Italian who became the world's greatest tenor.
+Every Italian man wants to be a great tenor. Some Italian men are great tenors. 	There are Italian men who want to be a great tenor.
+All Italian men want to be a great tenor. Some Italian men are great tenors. 	There are Italian men who want to be a great tenor.
+Each Italian tenor wants to be great. Some Italian tenors are great. 	There are Italian tenors who want to be great.
+The really ambitious tenors are Italian. 	There are really ambitious tenors who are Italian.
+No really great tenors are modest. 	There are really great tenors who are modest.
+Some great tenors are Swedish. 	There are great tenors who are Swedish.
+Many great tenors are German. 	There are great tenors who are German.
+Several great tenors are British. 	There are great tenors who are British.
+Most great tenors are Italian. 	There are great tenors who are Italian.
+A few great tenors sing popular music. Some great tenors like popular music. 	There are great tenors who sing popular music.
+Few great tenors are poor. 	There are great tenors who are poor.
+Both leading tenors are excellent. Leading tenors who are excellent are indispensable. 	Both leading tenors are indispensable.
+Neither leading tenor comes cheap. One of the leading tenors is Pavarotti. 	Pavarotti is a leading tenor who comes cheap.
+At least three tenors will take part in the concert. 	There are tenors who will take part in the concert.
+At most two tenors will contribute their fees to charity. 	There are tenors who will contribute their fees to charity.
+An Irishman won the Nobel prize for literature. 	An Irishman won a Nobel prize.
+Every European has the right to live in Europe. Every European is a person. Every person who has the right to live in Europe can travel freely within Europe. 	Every European can travel freely within Europe.
+All Europeans have the right to live in Europe. Every European is a person. Every person who has the right to live in Europe can travel freely within Europe. 	All Europeans can travel freely within Europe.
+Each European has the right to live in Europe. Every European is a person. Every person who has the right to live in Europe can travel freely within Europe. 	Each European can travel freely within Europe.
+The residents of member states have the right to live in Europe. All residents of member states are individuals. Every individual who has the right to live in Europe can travel freely within Europe. 	The residents of member states can travel freely within Europe.
+No delegate finished the report on time. 	No delegate finished the report.
+Some delegates finished the survey on time. 	Some delegates finished the survey.
+Many delegates obtained interesting results from the survey. 	Many delegates obtained results from the survey.
+Several delegates got the results published in major national newspapers. 	Several delegates got the results published.
+Most Europeans are resident in Europe. All Europeans are people. All people who are resident in Europe can travel freely within Europe. 	Most Europeans can travel freely within Europe.
+A few committee members are from Sweden. All committee members are people. All people who are from Sweden are from Scandinavia. 	At least a few committee members are from Scandinavia.
+Few committee members are from Portugal. All committee members are people. All people who are from Portugal are from southern Europe. 	There are few committee members from southern Europe.
+Both commissioners used to be leading businessmen. 	Both commissioners used to be businessmen.
+Neither commissioner spends a lot of time at home. 	Neither commissioner spends time at home.
+At least three commissioners spend a lot of time at home. 	At least three commissioners spend time at home.
+At most ten commissioners spend a lot of time at home. 	At most ten commissioners spend time at home.
+An Irishman won a Nobel prize. 	An Irishman won the Nobel prize for literature.
+Every European can travel freely within Europe. Every European is a person. Every person who has the right to live in Europe can travel freely within Europe. 	Every European has the right to live in Europe.
+All Europeans can travel freely within Europe. Every European is a person. Every person who has the right to live in Europe can travel freely within Europe. 	All Europeans have the right to live in Europe.
+Each European can travel freely within Europe. Every European is a person. Every person who has the right to live in Europe can travel freely within Europe. 	Each European has the right to live in Europe.
+The residents of member states can travel freely within Europe. All residents of member states are individuals. Every individual who has the right to live anywhere in Europe can travel freely within Europe. 	The residents of member states have the right to live anywhere in Europe.
+No delegate finished the report. 	Some delegate finished the report on time.
+Some delegates finished the survey. 	Some delegates finished the survey on time.
+Many delegates obtained results from the survey. 	Many delegates obtained interesting results from the survey.
+Several delegates got the results published. 	Several delegates got the results published in major national newspapers.
+Most Europeans can travel freely within Europe. All Europeans are people. All people who are resident in Europe can travel freely within Europe. 	Most Europeans are resident in Europe.
+A few committee members are from Scandinavia. All committee members are people. All people who are from Sweden are from Scandinavia. 	At least a few committee members are from Sweden.
+Few committee members are from southern Europe. All committee members are people. All people who are from Portugal are from southern Europe. 	There are few committee members from Portugal.
+Both commissioners used to be businessmen. 	Both commissioners used to be leading businessmen.
+Neither commissioner spends time at home. 	One of the commissioners spends a lot of time at home.
+At least three commissioners spend time at home. 	At least three commissioners spend a lot of time at home.
+At most ten commissioners spend time at home. 	At most ten commissioners spend a lot of time at home.
+A Swede won a Nobel prize. Every Swede is a Scandinavian. 	A Scandinavian won a Nobel prize.
+Every Canadian resident can travel freely within Europe. Every Canadian resident is a resident of the North American continent. 	Every resident of the North American continent can travel freely within Europe.
+All Canadian residents can travel freely within Europe. Every Canadian resident is a resident of the North American continent. 	All residents of the North American continent can travel freely within Europe.
+Each Canadian resident can travel freely within Europe. Every Canadian resident is a resident of the North American continent. 	Each resident of the North American continent can travel freely within Europe.
+The residents of major western countries can travel freely within Europe. All residents of major western countries are residents of western countries. 	The residents of western countries have the right to live in Europe.
+No Scandinavian delegate finished the report on time. 	Some delegate finished the report on time.
+Some Irish delegates finished the survey on time. 	Some delegates finished the survey on time.
+Many British delegates obtained interesting results from the survey. 	Many delegates obtained interesting results from the survey.
+Several Portuguese delegates got the results published in major national newspapers. 	Several delegates got the results published in major national newspapers.
+Most Europeans who are resident in Europe can travel freely within Europe. 	Most Europeans can travel freely within Europe.
+A few female committee members are from Scandinavia. 	At least a few committee members are from Scandinavia.
+Few female committee members are from southern Europe. 	Few committee members are from southern Europe.
+Both female commissioners used to be in business. 	Both commissioners used to be in business.
+Neither female commissioner spends a lot of time at home. 	One of the commissioners spends a lot of time at home.
+At least three female commissioners spend time at home. 	At least three commissioners spend time at home.
+At most ten female commissioners spend time at home. 	At most ten commissioners spend time at home.
+A Scandinavian won a Nobel prize. Every Swede is a Scandinavian. 	A Swede won a Nobel prize.
+Every resident of the North American continent can travel freely within Europe. Every Canadian resident is a resident of the North American continent. 	Every Canadian resident can travel freely within Europe.
+All residents of the North American continent can travel freely within Europe. Every Canadian resident is a resident of the North American continent. 	All Canadian residents can travel freely within Europe.
+Each resident of the North American continent can travel freely within Europe. Every Canadian resident is a resident of the North American continent. 	Each Canadian resident can travel freely within Europe.
+The residents of western countries can travel freely within Europe. All residents of major western countries are residents of western countries. 	The residents of major western countries have the right to live in Europe.
+No delegate finished the report on time. 	Some Scandinavian delegate finished the report on time.
+Some delegates finished the survey on time. 	Some Irish delegates finished the survey on time.
+Many delegates obtained interesting results from the survey. 	Many British delegates obtained interesting results from the survey.
+Several delegates got the results published in major national newspapers. 	Several Portuguese delegates got the results published in major national newspapers.
+Most Europeans can travel freely within Europe. 	Most Europeans who are resident outside Europe can travel freely within Europe.
+A few committee members are from Scandinavia. 	At least a few female committee members are from Scandinavia.
+Few committee members are from southern Europe. 	Few female committee members are from southern Europe.
+Both commissioners used to be in business. 	Both female commissioners used to be in business.
+Neither commissioner spends a lot of time at home. 	One of the female commissioners spends a lot of time at home.
+At least three commissioners spend time at home. 	At least three male commissioners spend time at home.
+At most ten commissioners spend time at home. 	At most ten female commissioners spend time at home.
+Smith, Jones and Anderson signed the contract. 	Jones signed the contract.
+Smith, Jones and several lawyers signed the contract. 	Jones signed the contract.
+Either Smith, Jones or Anderson signed the contract. 	Jones signed the contract.
+Either Smith, Jones or Anderson signed the contract. 	If Smith and Anderson did not sign the contract, Jones signed the contract.
+Exactly two lawyers and three accountants signed the contract. 	Six lawyers signed the contract.
+Exactly two lawyers and three accountants signed the contract. 	Six accountants signed the contract.
+Every representative and client was at the meeting. 	Every representative was at the meeting.
+Every representative and client was at the meeting. 	Every representative was at the meeting.
+Every representative or client was at the meeting. 	Every representative and every client was at the meeting.
+The chairman read out the items on the agenda. 	The chairman read out every item on the agenda.
+The people who were at the meeting voted for a new chairman. 	Everyone at the meeting voted for a new chairman.
+All the people who were at the meeting voted for a new chairman. 	Everyone at the meeting voted for a new chairman.
+The people who were at the meeting all voted for a new chairman. 	Everyone at the meeting voted for a new chairman.
+The inhabitants of Cambridge voted for a Labour MP. 	Every inhabitant of Cambridge voted for a Labour MP.
+The Ancient Greeks were noted philosophers. 	Every Ancient Greek was a noted philosopher.
+The Ancient Greeks were all noted philosophers. 	Every Ancient Greek was a noted philosopher.
+Software faults were blamed for the system failure. 	The system failure was blamed on one or more software faults.
+Software faults were blamed for the system failure. Bug # 32-985 is a known software fault. 	Bug # 32-985 was blamed for the system failure.
+Clients at the demonstration were all impressed by the system&apos;s performance. Smith was a client at the demonstration. 	Smith was impressed by the system&apos;s performance.
+Clients at the demonstration were impressed by the system&apos;s performance. 	Most clients at the demonstration were impressed by the system&apos;s performance.
+University graduates make poor stock-market traders. Smith is a university graduate. 	Smith is likely to make a poor stock market trader.
+University graduates make poor stock-market traders. Smith is a university graduate. 	Smith will make a poor stock market trader.
+All APCOM managers have company cars. Jones is an APCOM manager. 	Jones has a company car.
+All APCOM managers have company cars. Jones is an APCOM manager. 	Jones has more than one company car.
+Just one accountant attended the meeting. 	No accountants attended the meeting.
+Just one accountant attended the meeting. 	No accountant attended the meeting.
+Just one accountant attended the meeting. 	Some accountants attended the meeting.
+Just one accountant attended the meeting. 	Some accountant attended the meeting.
+Just one accountant attended the meeting. 	Some accountants attended the meeting.
+Just one accountant attended the meeting. 	Some accountant attended the meeting.
+Smith signed one contract. Jones signed another contract. 	Smith and Jones signed two contracts.
+Smith signed two contracts. Jones signed two contracts. 	Smith and Jones signed two contracts.
+Smith signed two contracts. Jones also signed them. 	Smith and Jones signed two contracts.
+Mary used her workstation. 	Mary&apos;s workstation was used.
+Mary used her workstation. 	Mary has a workstation.
+Mary used her workstation. 	Mary is female.
+Every student used her workstation. Mary is a student. 	Mary used her workstation.
+Every student used her workstation. Mary is a student. 	Mary has a workstation.
+No student used her workstation. Mary is a student. 	Mary used a workstation.
+Smith attended a meeting. She chaired it. 	Smith chaired a meeting.
+Smith delivered a report to ITEL. She also delivered them an invoice. And she delivered them a project proposal. 	Smith delivered a report, an invoice and a project proposal to ITEL.
+Every committee has a chairman. He is appointed its members. 	Every committee has a chairman appointed by members of the committee.
+ITEL has sent most of the reports Smith needs. They are on her desk. 	There are some reports from ITEL on Smith&apos;s desk.
+Two out of ten machines are missing. They have been removed. 	Two machines have been removed.
+Two out of ten machines are missing. They have been removed. 	Eight machines have been removed.
+Two out of ten machines are missing. They were all here yesterday. 	Ten machines were here yesterday.
+Smith took a machine on Tuesday, and Jones took a machine on Wednesday. They put them in the lobby. 	Smith and Jones put two machines in the lobby.
+John and his colleagues went to a meeting. They hated it. 	John&apos;s colleagues hated the meeting.
+John and his colleagues went to a meeting. They hated it. 	John hated the meeting.
+John and his colleagues went to a meeting. They hated it. 	John hated the meeting.
+Each department has a dedicated line. They rent them from BT. 	Every department rents a line from BT.
+Each department has a dedicated line. The sales department rents it from BT. 	The sales department rents a line from BT.
+GFI owns several computers. ITEL maintains them. 	ITEL maintains all the computers that GFI owns.
+Every customer who owns a computer has a service contract for it. MFI is a customer that owns exactly one computer. 	MFI has a service contract for all its computers.
+Every customer who owns a computer has a service contract for it. MFI is a customer that owns several computers. 	MFI has a service contract for all its computers.
+Every executive who had a laptop computer brought it to take notes at the meeting. Smith is a executive who owns five different laptop computers. 	Smith took five laptop computers to the meeting.
+There are 100 companies. ICM is one of the companies and owns 150 computers. It does not have service contracts for any of its computers. Each of the other 99 companies owns one computer. They have service contracts for them. 	Most companies that own a computer have a service contract for it.
+Every report has a cover page. R-95-103 is a report. Smith signed the cover page. 	Smith signed the cover page of R-95-103.
+A company director awarded himself a large payrise. 	A company director has awarded and been awarded a payrise.
+John said Bill had hurt himself. 	John said Bill had been hurt.
+John said Bill had hurt himself. 	Someone said John had been hurt.
+John spoke to Mary. So did Bill. 	Bill spoke to Mary.
+John spoke to Mary. So did Bill. John spoke to Mary at four o&apos;clock. 	Bill spoke to Mary at four o&apos;clock.
+John spoke to Mary at four o&apos;clock. So did Bill. 	Bill spoke to Mary at four o&apos;clock.
+John spoke to Mary at four o&apos;clock. And Bill did at five o&apos;clock. 	Bill spoke to Mary at five o&apos;clock.
+John has spoken to Mary. Bill is going to. 	Bill will speak to Mary.
+John spoke to Mary on Monday. Bill didn&apos;t. 	Bill spoke to Mary on Monday.
+Has John spoken to Mary? Bill has. 	Bill has spoken to Mary.
+John has spoken to Mary. The students have too. 	The students have spoken to Mary.
+John went to Paris by car, and Bill by train. 	Bill went to Paris by train.
+John went to Paris by car, and Bill by train to Berlin. 	Bill went to Berlin by train.
+John went to Paris by car, and Bill to Berlin. 	Bill went to Berlin by car.
+John is going to Paris by car, and the students by train. 	The students are going to Paris by train.
+John went to Paris by car. Bill by train. 	Bill went to Paris by train.
+John owns a car. Bill owns one too. 	Bill owns a car.
+John owns a car. Bill owns one too. 	There is a car that John and Bill own.
+John owns a red car. Bill owns a blue one. 	Bill owns a blue car.
+John owns a red car. Bill owns a blue one. 	Bill owns a red car.
+John owns a red car. Bill owns a fast one. 	Bill owns a fast car.
+John owns a red car. Bill owns a fast one. 	Bill owns a fast red car.
+John owns a red car. Bill owns a fast one. 	Bill owns a fast red car.
+John owns a fast red car. Bill owns a slow one. 	Bill owns a slow red car.
+John had his paper accepted. Bill doesn&apos;t know why. 	Bill knows why John had his paper accepted.
+John spoke to Mary. And to Sue. 	John spoke to Sue.
+John spoke to Mary. On Friday. 	John spoke to Mary on Friday.
+John spoke to Mary on Thursday. And on Friday. 	John spoke to Mary on Friday.
+Twenty men work in the Sales Department. But only one woman. 	Two women work in the Sales Department.
+Five men work part time. And forty five women. 	Forty five women work part time.
+John found Mary before Bill. 	John found Mary before Bill found Mary.
+John found Mary before Bill. 	John found Mary before John found Bill.
+John wants to know how many men work part time. And women. 	John wants to know how many women work part time.
+John wants to know how many men work part time, and which. 	John wants to know which men work part time.
+Bill spoke to everyone that John did. John spoke to Mary. 	Bill spoke to Mary.
+Bill spoke to everyone that John did. Bill spoke to Mary. 	John spoke to Mary.
+John said Mary wrote a report, and Bill did too. 	Bill said Mary wrote a report.
+John said Mary wrote a report, and Bill did too. 	John said Bill wrote a report.
+John said that Mary wrote a report, and that Bill did too. 	Bill said Mary wrote a report.
+John wrote a report, and Bill said Peter did too. 	Bill said Peter wrote a report.
+If John wrote a report, then Bill did too. John wrote a report. 	Bill wrote a report.
+John wanted to buy a car, and he did. 	John bought a car.
+John needed to buy a car, and Bill did. 	Bill bought a car.
+Smith represents his company and so does Jones. 	Jones represents Jones&apos; company.
+Smith represents his company and so does Jones. 	Jones represents Smith&apos;s company.
+Smith represents his company and so does Jones. 	Smith represents Jones&apos; company.
+Smith claimed he had costed his proposal and so did Jones. 	Jones claimed he had costed his own proposal.
+Smith claimed he had costed his proposal and so did Jones. 	Jones claimed he had costed Smith&apos;s proposal.
+Smith claimed he had costed his proposal and so did Jones. 	Jones claimed Smith had costed Smith&apos;s proposal.
+Smith claimed he had costed his proposal and so did Jones. 	Jones claimed Smith had costed Jones&apos; proposal.
+John is a man and Mary is a woman. John represents his company and so does Mary. 	Mary represents her own company.
+John is a man and Mary is a woman. John represents his company and so does Mary. 	Mary represents John&apos;s company.
+Bill suggested to Frank&apos;s boss that they should go to the meeting together, and Carl to Alan&apos;s wife. 	If it was suggested that Bill and Frank should go together, it was suggested that Carl and Alan should go together.
+Bill suggested to Frank&apos;s boss that they should go to the meeting together, and Carl to Alan&apos;s wife. 	If it was suggested that Bill and Frank should go together, it was suggested that Carl and Alan&apos;s wife should go together.
+Bill suggested to Frank&apos;s boss that they should go to the meeting together, and Carl to Alan&apos;s wife. 	If it was suggested that Bill and Frank&apos;s boss should go together, it was suggested that Carl and Alan&apos;s wife should go together.
+Bill suggested to Frank&apos;s boss that they should go to the meeting together, and Carl to Alan&apos;s wife. 	If it was suggested that Bill and Frank&apos;s boss should go together, it was suggested that Carl and Alan should go together.
+Bill suggested to Frank&apos;s boss that they should go to the meeting together, and Carl to Alan&apos;s wife. 	If it was suggested that Bill, Frank and Frank&apos;s boss should go together, it was suggested that Carl, Alan and Alan&apos;s wife should go together.
+A lawyer signed every report, and so did an auditor. That is, there was one lawyer who signed all the reports. 	There was one auditor who signed all the reports.
+John has a genuine diamond. 	John has a diamond.
+John is a former university student. 	John is a university student.
+John is a successful former university student. 	John is successful.
+John is a former successful university student. 	John is successful.
+John is a former successful university student. 	John is a university student.
+Every mammal is an animal. 	Every four-legged mammal is a four-legged animal.
+Dumbo is a four-legged animal. 	Dumbo is four-legged.
+Mickey is a small animal. 	Mickey is a large animal.
+Dumbo is a large animal. 	Dumbo is a small animal.
+Fido is not a small animal. 	Fido is a large animal.
+Fido is not a large animal. 	Fido is a small animal.
+Mickey is a small animal. Dumbo is a large animal. 	Mickey is smaller than Dumbo.
+Mickey is a small animal. Dumbo is a large animal. 	Mickey is larger than Dumbo.
+All mice are small animals. Mickey is a large mouse. 	Mickey is a large animal.
+All elephants are large animals. Dumbo is a small elephant. 	Dumbo is a small animal.
+All mice are small animals. All elephants are large animals. Mickey is a large mouse. Dumbo is a small elephant. 	Dumbo is larger than Mickey.
+All mice are small animals. Mickey is a large mouse. 	Mickey is small.
+All legal authorities are law lecturers. All law lecturers are legal authorities. 	All fat legal authorities are fat law lecturers.
+All legal authorities are law lecturers. All law lecturers are legal authorities. 	All competent legal authorities are competent law lecturers.
+John is a fatter politician than Bill. 	John is fatter than Bill.
+John is a cleverer politician than Bill. 	John is cleverer than Bill.
+Kim is a clever person. 	Kim is clever.
+Kim is a clever politician. 	Kim is clever.
+The PC-6082 is faster than the ITEL-XZ. The ITEL-XZ is fast. 	The PC-6082 is fast.
+The PC-6082 is faster than the ITEL-XZ. 	The PC-6082 is fast.
+The PC-6082 is faster than the ITEL-XZ. The PC-6082 is fast. 	The ITEL-XZ is fast.
+The PC-6082 is faster than the ITEL-XZ. The PC-6082 is slow. 	The ITEL-XZ is fast.
+The PC-6082 is as fast as the ITEL-XZ. The ITEL-XZ is fast. 	The PC-6082 is fast.
+The PC-6082 is as fast as the ITEL-XZ. 	The PC-6082 is fast.
+The PC-6082 is as fast as the ITEL-XZ. The PC-6082 is fast. 	The ITEL-XZ is fast.
+The PC-6082 is as fast as the ITEL-XZ. The PC-6082 is slow. 	The ITEL-XZ is fast.
+The PC-6082 is as fast as the ITEL-XZ. 	The PC-6082 is faster than the ITEL-XZ.
+The PC-6082 is as fast as the ITEL-XZ. 	The PC-6082 is slower than the ITEL-XZ.
+ITEL won more orders than APCOM did. 	ITEL won some orders.
+ITEL won more orders than APCOM did. 	APCOM won some orders.
+ITEL won more orders than APCOM did. APCOM won ten orders. 	ITEL won at least eleven orders.
+ITEL won more orders than APCOM. 	ITEL won some orders.
+ITEL won more orders than APCOM. 	APCOM won some orders.
+ITEL won more orders than APCOM. APCOM won ten orders. 	ITEL won at least eleven orders.
+ITEL won more orders than the APCOM contract. 	ITEL won the APCOM contract.
+ITEL won more orders than the APCOM contract. 	ITEL won more than one order.
+ITEL won twice as many orders than APCOM. APCOM won ten orders. 	ITEL won twenty orders.
+ITEL won more orders than APCOM lost. 	ITEL won some orders.
+ITEL won more orders than APCOM lost. 	APCOM lost some orders.
+ITEL won more orders than APCOM lost. APCOM lost ten orders. 	ITEL won at least eleven orders.
+The PC-6082 is faster than 500 MIPS. The ITEL-ZX is slower than 500 MIPS. 	The PC-6082 is faster than the ITEL-ZX.
+ITEL sold 3000 more computers than APCOM. APCOM sold exactly 2500 computers. 	ITEL sold 5500 computers.
+APCOM has a more important customer than ITEL. 	APCOM has a more important customer than ITEL is.
+APCOM has a more important customer than ITEL. 	APCOM has a more important customer than ITEL has.
+The PC-6082 is faster than every ITEL computer. The ITEL-ZX is an ITEL computer. 	The PC-6082 is faster than the ITEL-ZX.
+The PC-6082 is faster than some ITEL computer. The ITEL-ZX is an ITEL computer. 	The PC-6082 is faster than the ITEL-ZX.
+The PC-6082 is faster than any ITEL computer. The ITEL-ZX is an ITEL computer. 	The PC-6082 is faster than the ITEL-ZX.
+The PC-6082 is faster than the ITEL-ZX and the ITEL-ZY. 	The PC-6082 is faster than the ITEL-ZX.
+The PC-6082 is faster than the ITEL-ZX or the ITEL-ZY. 	The PC-6082 is faster than the ITEL-ZX.
+ITEL has a factory in Birmingham. 	ITEL currently has a factory in Birmingham.
+Since 1992 ITEL has been in Birmingham. It is now 1996. 	Itel was in Birmingham in 1993.
+ITEL has developed a new editor since 1992. It is now 1996. 	ITEL developed a new editor in 1993.
+ITEL has expanded since 1992. It is now 1996. 	ITEL expanded in 1993.
+Since 1992 ITEL has made a loss. It is now 1996. 	ITEL made a loss in 1993.
+ITEL has made a loss since 1992. It is now 1996. 	ITEL made a loss in 1993.
+ITEL has made a loss since 1992. It is now 1996. 	ITEL made a loss in 1993.
+In March 1993 APCOM founded ITEL. 	ITEL existed in 1992.
+The conference started on July 4th, 1994. It lasted 2 days. 	The conference was over on July 8th, 1994.
+Yesterday APCOM signed the contract. Today is Saturday, July 14th. 	APCOM signed the contract Friday, 13th.
+Smith left before Jones left. Jones left before Anderson left. 	Smith left before Anderson left.
+Smith left after Jones left. Jones left after Anderson left. 	Smith left after Anderson left.
+Smith was present after Jones left. Jones left after Anderson was present. 	Smith was present after Anderson was present.
+Smith left. Jones left. Smith left before Jones left. 	Jones left after Smith left.
+Smith left. Jones left. Smith left after Jones left. 	Jones left before Smith left.
+Smith left. Jones left. Jones left before Smith left. 	Smith left after Jones left.
+Jones revised the contract. Smith revised the contract. Jones revised the contract before Smith did. 	Smith revised the contract after Jones did.
+Jones revised the contract. Smith revised the contract. Jones revised the contract after Smith did. 	Smith revised the contract before Jones did.
+Smith swam. Jones swam. Smith swam before Jones swam. 	Jones swam after Smith swam.
+Smith swam to the shore. Jones swam to the shore. Smith swam to the shore before Jones swam to the shore. 	Jones swam to the shore after Smith swam to the shore.
+Smith was present. Jones was present. Smith was present after Jones was present. 	Jones was present before Smith was present.
+Smith was present. Jones was present. Smith was present before Jones was present. 	Jones was present after Smith was present.
+Smith was writing a report. Jones was writing a report. Smith was writing a report before Jones was writing a report. 	Jones was writing a report after Smith was writing a report.
+Smith was writing a report. Jones was writing a report. Smith was writing a report after Jones was writing a report. 	Jones was writing a report before Smith was writing a report.
+Smith left the meeting before he lost his temper. 	Smith lost his temper.
+When they opened the M25, traffic increased. 	XXX
+Smith lived in Birmingham in 1991. 	Smith lived in Birmingham in 1992.
+Smith wrote his first novel in 1991. 	Smith wrote his first novel in 1992.
+Smith wrote a novel in 1991. 	Smith wrote it in 1992.
+Smith wrote a novel in 1991. 	Smith wrote a novel in 1992.
+Smith was running a business in 1991. 	Smith was running it in 1992.
+Smith discovered a new species in 1991. 	Smith discovered it in 1992.
+Smith discovered a new species in 1991. 	Smith discovered a new species in 1992.
+Smith wrote a report in two hours. Smith started writing the report at 8 am. 	Smith had finished writing the report by 11 am.
+Smith wrote a report in two hours. 	Smith spent two hours writing the report.
+Smith wrote a report in two hours. 	Smith spent more than two hours writing the report.
+Smith wrote a report in two hours. 	Smith wrote a report in one hour.
+Smith wrote a report in two hours. 	Smith wrote a report.
+Smith discovered a new species in two hours. 	Smith spent two hours discovering the new species.
+Smith discovered a new species in two hours. 	Smith discovered a new species.
+Smith discovered many new species in two hours. 	Smith spent two hours discovering new species.
+Smith was running his own business in two years. 	Smith spent two years running his own business.
+Smith was running his own business in two years. 	Smith spent more than two years running his own business.
+Smith was running his own business in two years. 	Smith ran his own business.
+In two years Smith owned a chain of businesses. 	Smith owned a chain of business for two years.
+In two years Smith owned a chain of businesses. 	Smith owned a chain of business for more than two years.
+In two years Smith owned a chain of businesses. 	Smith owned a chain of business.
+Smith lived in Birmingham for two years. 	Smith lived in Birmingham for a year.
+Smith lived in Birmingham for two years. 	Smith lived in Birmingham for exactly a year.
+Smith lived in Birmingham for two years. 	Smith lived in Birmingham.
+Smith ran his own business for two years. 	Smith ran his own business for a year.
+Smith ran his own business for two years. 	Smith ran his own business.
+Smith wrote a report for two hours. 	Smith wrote a report for an hour.
+Smith wrote a report for two hours. 	Smith wrote a report.
+Smith discovered a new species for an hour. 	XXX
+Smith discovered new species for two years. 	Smith discovered new species.
+In 1994 ITEL sent a progress report every month. 	ITEL sent a progress report in July 1994.
+Smith wrote to a representative every week. 	There is a representative that Smith wrote to every week.
+Smith left the house at a quarter past five. She took a taxi to the station and caught the first train to Luxembourg. 	XXX
+Smith lost some files. They were destroyed when her hard disk crashed. 	XXX
+Smith had left the house at a quarter past five. Then she took a taxi to the station. 	Smith left the house before she took a taxi to the station.
+ITEL always delivers reports late. In 1993 ITEL delivered reports. 	ITEL delivered reports late in 1993.
+ITEL never delivers reports late. In 1993 ITEL delivered reports. 	ITEL delivered reports late in 1993.
+Smith arrived in Paris on the 5th of May, 1995. Today is the 15th of May, 1995. She is still in Paris. 	Smith was in Paris on the 7th of May, 1995.
+When Smith arrived in Katmandu she had been travelling for three days. 	Smith had been travelling the day before she arrived in Katmandu.
+Jones graduated in March and has been employed ever since. Jones has been unemployed in the past. 	Jones was unemployed at some time before he graduated.
+Every representative has read this report. No two representatives have read it at the same time. No representative took less than half a day to read the report. There are sixteen representatives. 	It took the representatives more than a week to read the report.
+While Jones was updating the program, Mary came in and told him about the board meeting. She finished before he did. 	Mary&apos;s story lasted as long as Jones&apos;s updating the program.
+Before APCOM bought its present office building, it had been paying mortgage interest on the previous one for 8 years. Since APCOM bought its present office building it has been paying mortgage interest on it for more than 10 years. 	APCOM has been paying mortgage interest for a total of 15 years or more.
+When Jones got his job at the CIA, he knew that he would never be allowed to write his memoirs. 	It is the case that Jones is not and will never be allowed to write his memoirs.
+Smith has been to Florence twice in the past. Smith will go to Florence twice in the coming year. 	Two years from now Smith will have been to Florence at least four times.
+Last week I already knew that when, in a month&apos;s time, Smith would discover that she had been duped she would be furious. 	It will be the case that in a few weeks Smith will discover that she has been duped; and she will be furious.
+No one gambling seriously stops until he is broke. No one can gamble when he is broke. 	Everyone who starts gambling seriously stops the moment he is broke.
+No one who starts gambling seriously stops until he is broke. 	Everyone who starts gambling seriously continues until he is broke.
+Nobody who is asleep ever knows that he is asleep. But some people know that they have been asleep after they have been asleep. 	Some people discover that they have been asleep.
+ITEL built MTALK in 1993. 	ITEL finished MTALK in 1993.
+ITEL was building MTALK in 1993. 	ITEL finished MTALK in 1993.
+ITEL won the contract from APCOM in 1993. 	ITEL won a contract in 1993.
+ITEL was winning the contract from APCOM in 1993. 	ITEL won a contract in 1993.
+ITEL owned APCOM from 1988 to 1992. 	ITEL owned APCOM in 1990.
+Smith and Jones left the meeting. 	Smith left the meeting.
+Smith and Jones left the meeting. 	Jones left the meeting.
+Smith, Anderson and Jones met. 	There was a group of people that met.
+Smith knew that ITEL had won the contract in 1992. 	ITEL won the contract in 1992.
+Smith believed that ITEL had won the contract in 1992. 	ITEL won the contract in 1992.
+ITEL managed to win the contract in 1992. 	ITEL won the contract in 1992.
+ITEL tried to win the contract in 1992. 	ITEL won the contract in 1992.
+It is true that ITEL won the contract in 1992. 	ITEL won the contract in 1992.
+It is false that ITEL won the contract in 1992. 	ITEL won the contract in 1992.
+Smith saw Jones sign the contract. If Jones signed the contract, his heart was beating. 	Smith saw Jones&apos; heart beat.
+Smith saw Jones sign the contract. When Jones signed the contract, his heart was beating. 	Smith saw Jones&apos; heart beat.
+Smith saw Jones sign the contract. 	Jones signed the contract.
+Smith saw Jones sign the contract. Jones is the chairman of ITEL. 	Smith saw the chairman of ITEL sign the contract.
+Helen saw the chairman of the department answer the phone. The chairman of the department is a person. 	There is someone whom Helen saw answer the phone.
+Smith saw Jones sign the contract and his secretary make a copy.	Smith saw Jones sign the contract.
+Smith saw Jones sign the contract or cross out the crucial clause.	Smith either saw Jones sign the contract or saw Jones cross out the crucial clause.

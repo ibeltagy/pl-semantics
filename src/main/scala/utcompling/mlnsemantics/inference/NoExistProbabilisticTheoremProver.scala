@@ -317,8 +317,17 @@ class NoExistProbabilisticTheoremProver(
       		}
       		
       	case FolIffExpression(first, second) => throw new RuntimeException("not reachable")
-        case FolEqualityExpression(first, second) => FolEqualityExpression(replaceSimplify(first, quantifiers), 
-        													replaceSimplify(second, quantifiers));
+        case FolEqualityExpression(first, second) => 
+        	if (!quantifiers.contains(first.asInstanceOf[FolVariableExpression].variable.name )
+        		&& !quantifiers.contains(second.asInstanceOf[FolVariableExpression].variable.name ))
+        	{
+        		if(first == second)
+        			trueFolExp
+        		else 
+        			falseFolExp
+        	}
+        	else
+        		FolEqualityExpression(replaceSimplify(first, quantifiers), replaceSimplify(second, quantifiers));
         case FolAtom(pred, args @ _*) => 
           val changedArgs = args.map(replaceSimplify(_, quantifiers))
           val changedE = FolAtom(pred,changedArgs:_*);

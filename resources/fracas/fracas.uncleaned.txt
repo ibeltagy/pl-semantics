@@ -1,0 +1,46 @@
+An Italian became the world&apos;s greatest tenor. 	There was an Italian who became the world&apos;s greatest tenor.	1
+Every Italian man wants to be a great tenor. Some Italian men are great tenors. 	There are Italian men who want to be a great tenor.	1
+All Italian men want to be a great tenor. Some Italian men are great tenors. 	There are Italian men who want to be a great tenor.	1
+Each Italian tenor wants to be great. Some Italian tenors are great. 	There are Italian tenors who want to be great.	1
+The really ambitious tenors are Italian. 	There are really ambitious tenors who are Italian.	1
+No really great tenors are modest. 	There are really great tenors who are modest.	0
+Some great tenors are Swedish. 	There are great tenors who are Swedish.	1
+Several great tenors are British. 	There are great tenors who are British.	1
+Both leading tenors are excellent. Leading tenors who are excellent are indispensable. 	Both leading tenors are indispensable.	1
+Neither leading tenor comes cheap. One of the leading tenors is Pavarotti. 	Pavarotti is a leading tenor who comes cheap.	0
+An Irishman won the Nobel prize for literature. 	An Irishman won a Nobel prize.	1
+Every European has the right to live in Europe. Every European is a person. Every person who has the right to live in Europe can travel freely within Europe. 	Every European can travel freely within Europe.	1
+All Europeans have the right to live in Europe. Every European is a person. Every person who has the right to live in Europe can travel freely within Europe. 	All Europeans can travel freely within Europe.	1
+Each European has the right to live in Europe. Every European is a person. Every person who has the right to live in Europe can travel freely within Europe. 	Each European can travel freely within Europe.	1
+The residents of member states have the right to live in Europe. All residents of member states are individuals. Every individual who has the right to live in Europe can travel freely within Europe. 	The residents of member states can travel freely within Europe.	1
+No delegate finished the report on time. 	No delegate finished the report.	0.5
+Some delegates finished the survey on time. 	Some delegates finished the survey.	1
+Several delegates got the results published in major national newspapers. 	Several delegates got the results published.	1
+Both commissioners used to be leading businessmen. 	Both commissioners used to be businessmen.	1
+Neither commissioner spends a lot of time at home. 	Neither commissioner spends time at home.	0.5
+An Irishman won a Nobel prize. 	An Irishman won the Nobel prize for literature.	0.5
+Every European can travel freely within Europe. Every European is a person. Every person who has the right to live in Europe can travel freely within Europe. 	Every European has the right to live in Europe.	0.5
+All Europeans can travel freely within Europe. Every European is a person. Every person who has the right to live in Europe can travel freely within Europe. 	All Europeans have the right to live in Europe.	0.5
+Each European can travel freely within Europe. Every European is a person. Every person who has the right to live in Europe can travel freely within Europe. 	Each European has the right to live in Europe.	0.5
+The residents of member states can travel freely within Europe. All residents of member states are individuals. Every individual who has the right to live anywhere in Europe can travel freely within Europe. 	The residents of member states have the right to live anywhere in Europe.	0.5
+No delegate finished the report. 	Some delegate finished the report on time.	0
+Some delegates finished the survey. 	Some delegates finished the survey on time.	0.5
+Several delegates got the results published. 	Several delegates got the results published in major national newspapers.	0.5
+Both commissioners used to be businessmen. 	Both commissioners used to be leading businessmen.	0.5
+Neither commissioner spends time at home. 	One of the commissioners spends a lot of time at home.	0
+A Swede won a Nobel prize. Every Swede is a Scandinavian. 	A Scandinavian won a Nobel prize.	1
+Every Canadian resident can travel freely within Europe. Every Canadian resident is a resident of the North American continent. 	Every resident of the North American continent can travel freely within Europe.	0.5
+All Canadian residents can travel freely within Europe. Every Canadian resident is a resident of the North American continent. 	All residents of the North American continent can travel freely within Europe.	0.5
+Each Canadian resident can travel freely within Europe. Every Canadian resident is a resident of the North American continent. 	Each resident of the North American continent can travel freely within Europe.	0.5
+The residents of major western countries can travel freely within Europe. All residents of major western countries are residents of western countries. 	The residents of western countries have the right to live in Europe.	0.5
+No Scandinavian delegate finished the report on time. 	Some delegate finished the report on time.	0.5
+Some Irish delegates finished the survey on time. 	Some delegates finished the survey on time.	1
+Several Portuguese delegates got the results published in major national newspapers. 	Several delegates got the results published in major national newspapers.	1
+A Scandinavian won a Nobel prize. Every Swede is a Scandinavian. 	A Swede won a Nobel prize.	0.5
+Every resident of the North American continent can travel freely within Europe. Every Canadian resident is a resident of the North American continent. 	Every Canadian resident can travel freely within Europe.	1
+All residents of the North American continent can travel freely within Europe. Every Canadian resident is a resident of the North American continent. 	All Canadian residents can travel freely within Europe.	1
+Each resident of the North American continent can travel freely within Europe. Every Canadian resident is a resident of the North American continent. 	Each Canadian resident can travel freely within Europe.	1
+The residents of western countries can travel freely within Europe. All residents of major western countries are residents of western countries. 	The residents of major western countries have the right to live in Europe.	1
+No delegate finished the report on time. 	Some Scandinavian delegate finished the report on time.	0
+Some delegates finished the survey on time. 	Some Irish delegates finished the survey on time.	0.5
+Several delegates got the results published in major national newspapers. 	Several Portuguese delegates got the results published in major national newspapers.	0.5

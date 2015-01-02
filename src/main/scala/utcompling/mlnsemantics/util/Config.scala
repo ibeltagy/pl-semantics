@@ -30,6 +30,7 @@ class Config(opts: Map[String, String] = Map()) {
   val validArgs:List[String] = List(
 	    "-log",
 		"-timeout",
+		"-ssTimeout",
 		"-vectorSpace",
 		"-distWeight",
 		"-phrases",
@@ -68,7 +69,11 @@ class Config(opts: Map[String, String] = Map()) {
 		"-metaW",
 		"-relW",
 		"-kbest",
-		"-multiOut"
+		"-multiOut",
+		"-withExistence",
+		"-withFixUnivInQ",
+		"-withFixCWA",
+		"-evdIntroSingleVar"
 	);
   
   val diff = opts.keys.toSet.diff(validArgs.toSet)
@@ -84,6 +89,11 @@ class Config(opts: Map[String, String] = Map()) {
   	case Some("-1") => None;  //no timeout 
   	case Some(t) => Some(t.toLong);
     case _ => Some(120000L); //by default, timeout is 5 minutes
+  }
+  //Timeout for SampleSearch inference
+  var ssTimeout = opts.get("-ssTimeout") match {
+  	case Some(t) => t.toInt;
+    case _ => 5; //by default, timeout is 5 secoonds
   }
 
   //-------------------------------------------Precompiled distributional phrases (like Marco Baroni's phrases)
@@ -315,7 +325,35 @@ class Config(opts: Map[String, String] = Map()) {
     case Some("false") => false;
     case _ => true;
   }
- 
+
+ //with or without existance assumption 
+ val withExistence = opts.get("-withExistence") match {
+    case Some("false") => false;
+    case _ => true;
+  }
+
+ //with or without fixing effect of DCA for Univ in Q
+ val withFixUnivInQ = opts.get("-withFixUnivInQ") match {
+    case Some("false") => false;
+    case _ => true;
+  }
+
+ //with or without fixing effect of CWA  in Q
+ val withFixCWA = opts.get("-withFixCWA") match {
+    case Some("false") => false;
+    case _ => true;
+  }
+
+ //with or without introduction of hard evidence for all universally 
+ //quantified predicates with single variables. 
+ //This is actually a hack because our code of detection of 
+ //LHS and RHS or quantifiers is not complete
+ //This hack is necesery for the synthetic dataset
+ val evdIntroSingleVar = opts.get("-evdIntroSingleVar") match {
+    case Some("true") => true;
+    case _ => false;
+  }
+
  //ground EXIST before calling alchemy
  val groundExist = opts.get("-groundExist") match {
     case Some("false") => false;

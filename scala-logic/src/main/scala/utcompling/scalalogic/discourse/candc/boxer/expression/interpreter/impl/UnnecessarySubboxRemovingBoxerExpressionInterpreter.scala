@@ -139,7 +139,12 @@ class UnnecessarySubboxRemovingBoxerExpressionInterpreter extends BoxerExpressio
   private def merge(firstCrushed:Option[BoxerExpression], secondCrushed:Option[BoxerExpression]): Option[BoxerExpression] = 
   {
 	if(firstCrushed.isDefined && secondCrushed.isDefined)
-		Some(BoxerDrs(firstCrushed.get.refs ++ secondCrushed.get.refs, firstCrushed.get.conds ++ secondCrushed.get.conds))
+	{
+		if(firstCrushed.get.isInstanceOf[BoxerNot] || secondCrushed.get.isInstanceOf[BoxerNot])
+			Some(BoxerDrs(List(), List(firstCrushed.get, secondCrushed.get)))
+		else
+			Some(BoxerDrs(firstCrushed.get.refs ++ secondCrushed.get.refs, firstCrushed.get.conds ++ secondCrushed.get.conds))
+	}
     else if(firstCrushed.isDefined)
     	firstCrushed
     else if(secondCrushed.isDefined)

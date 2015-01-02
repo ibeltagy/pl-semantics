@@ -229,8 +229,8 @@ object Sts {
 		                  }, 
 		                  new SetVarBindPTP( //with or without Variable Binding 		
 		                   new SetPriorPTP( //
-		                    new SetGoalPTP( //
-		                     new PositiveEqEliminatingProbabilisticTheoremProver( //Apply skolemized positive equalities and remove skolmeized negated equalities.		                        
+		                    new PositiveEqEliminatingProbabilisticTheoremProver( //Apply skolemized positive equalities and remove skolmeized negated equalities.
+		                     new SetGoalPTP( //
 		                      new HardAssumptionAsEvidenceProbabilisticTheoremProver( // 15<== Generate evidence from premise.
 		                       new PositiveEqEliminatingProbabilisticTheoremProver( //Apply skolemized positive equalities and remove skolmeized negated equalities.		                          
 		                        new AutoTypingPTP( //generate negative evidence

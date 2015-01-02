@@ -55,7 +55,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     
     assumptions.foreach(x => LOG.info("\n" + d(x.expression).pretty))
     LOG.info("\n" + d(goal).pretty)
-    
+/*
     var preds = assumptions.head.expression.getPredicates
     var rels = assumptions.head.expression.getRelations
     var simplePh = PhrasalRules.findSimplePhrases(preds);
@@ -104,7 +104,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     LOG.trace("VerbPhrase: ")
     verbPh.foreach(LOG.trace(_))    
         
-
+*/
     //query lucene for pre-compiled distributional rules
 	val distributionalRules = new DistributionalRules().getRules();
 

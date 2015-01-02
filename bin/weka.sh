@@ -109,7 +109,8 @@ esac
    case $CMD in
       classify)
 #        result=$(java -Xmx1024m -cp $wekaJarPath weka.classifiers.meta.AdaBoostM1 -i $testCV  )
-         java -Xmx1024m -cp $wekaJarPath:$libsvmPath weka.Run -no-scan -no-load  weka.classifiers.functions.LibSVM -i $testCV 
+			echo "java -Xmx1024m -cp $wekaJarPath:$libsvmPath weka.Run -no-scan -no-load  weka.classifiers.functions.LibSVM -i $testCV"        
+			java -Xmx1024m -cp $wekaJarPath:$libsvmPath weka.Run -no-scan -no-load  weka.classifiers.functions.LibSVM -i $testCV 
 			java -Xmx1024m -cp $wekaJarPath:$libsvmPath weka.Run -no-scan -no-load  weka.classifiers.functions.LibSVM -i -t tmp-train.arff -p 0 -no-cv
          ;;
       regress)  

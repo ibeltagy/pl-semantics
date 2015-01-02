@@ -142,7 +142,7 @@ class SetGoalPTP(
       }
       
       goalExist._2 match {
-        case Some(g) => extraExpressions = HardWeightedExpression(g, 0.99999) :: extraExpressions;   //<<--- this is correct 
+        case Some(g) => extraExpressions = HardWeightedExpression(g, 0.99) :: extraExpressions;   //<<--- this is correct 
         case _ =>
       }
 
@@ -154,16 +154,22 @@ class SetGoalPTP(
 		      //quantifiers = Map();	//moved to introductionEntry
 		      //constantsCounter = 0;	//moved to introductionEntry
 		      isQuery = false;
-		      val textExit = if(e.isInstanceOf[FolVariableExpression])
+		      val textExist = if(e.isInstanceOf[FolVariableExpression])
 	    	  					(None, None)  //handling a very special case of parsing error
 	    	  						//where the expression is just an empty box
 	    	  				else 
 	    	  					introductionEntry(e);
-		      assert(textExit._2.isEmpty);
-		      textExit._1 match {
+		      assert(textExist._2.isEmpty);
+		      textExist._1 match {
  	          	case Some(t) => extraExpressions = HardWeightedExpression(t, Double.PositiveInfinity) :: extraExpressions; true;	//<<--- this is correct 
 		        case _ => false;
 		      }
+/*				textExist._2 match {
+					 case Some(g) => extraExpressions = HardWeightedExpression(g, 0.99) :: extraExpressions;   //<<--- this is correct 
+					 case _ =>
+				}
+*/
+
           }
           case _ => false;
         }
@@ -206,10 +212,10 @@ class SetGoalPTP(
   //first expression is for universal quantifiers, second is for negated existentials
   private def introductionEntry(expr: FolExpression): (Option[FolExpression], Option[FolExpression]) =
   {
-    extraSoftEvidence = Set();
+  	 extraSoftEvidence = Set();
     quantifiers = Map();
     constantsCounter = 0;
-    val first = (if (Sts.opts.lhsOnlyIntro )
+    var first = (if (Sts.opts.lhsOnlyIntro )
     	lhsOnlyIntroduction(expr, false, false, List());
     else
     	introduction(expr, false, null)
@@ -231,7 +237,7 @@ class SetGoalPTP(
 		  val vname = v.name.replace(newVarNameSuffix, "");
 		  require(quantifiers.contains(vname), vname + " not found in  " + quantifiers);
           val q = quantifiers(vname);
-          if (q._1 == "A" && q._2 == false || q._1 == "E" && q._2 == true)
+          if (!isQuery /*for univ in E, all generated preds are exist*/ || q._1 == "A" && q._2 == false || q._1 == "E" && q._2 == true)
         	  univVars = univVars + v
           else
         	  extraSoftEvidenceRule = Some(FolAllExpression(v, extraSoftEvidenceRule.get))
@@ -243,7 +249,20 @@ class SetGoalPTP(
     }
     else
     	extraSoftEvidenceRule = None
+/*   
+    if (!Sts.opts.withExistence && !isQuery)
+    {
+		first = None
+		extraSoftEvidenceRule = None
+	 }
     
+	if (!Sts.opts.withFixUnivInQ && isQuery)
+   	first = None
+
+   if (!Sts.opts.withFixCWA && isQuery)
+      extraSoftEvidenceRule = None
+
+ */
     return (first, extraSoftEvidenceRule)
   }
   
@@ -285,42 +304,31 @@ class SetGoalPTP(
 		  else return  Some(FolAndExpression(f.get, s.get));
       }
       case FolAtom(pred, args @ _*) =>
-      {  
-    	if(isLhsOnlyIntroduction(args, inLhs, univs, isNegated) )
-    	{
-		val extraEvid = FolAtom.apply(pred, args.map(arg => lhsOnlyIntroduction(arg, univs) ) :_ *)
-		if (inLhs) //hard evidence
-	    		Some(extraEvid);
-		else
-		{
-			assert(isQuery);
-			extraSoftEvidence = extraSoftEvidence + extraEvid;
-			None
-		}
-    	}
-    	else 
-    	  None
+      {
+			val introStatus = isLhsOnlyIntroduction(pred.name, args, inLhs, univs, isNegated)
+			var extraEvid:FolExpression = null
+			if (introStatus != NO_EVD) 
+				extraEvid = FolAtom.apply(pred, args.map(arg => lhsOnlyIntroduction(arg, univs) ) :_ *)
+			introStatus match {
+				case NO_EVD => None
+				case HARD_EVD => Some(extraEvid)
+				case SOFT_EVD => extraSoftEvidence = extraSoftEvidence + extraEvid; None;
+			}
       }
       case FolVariableExpression(v) => Some(FolVariableExpression(lhsOnlyIntroduction(v, univs)));
       case FolEqualityExpression(first, second) => 
       {
-    	       	if(isLhsOnlyIntroduction(Seq(first.asInstanceOf[FolVariableExpression].variable, 
-					     second.asInstanceOf[FolVariableExpression].variable),
-					 inLhs, univs, isNegated))
-        	{
-			val extraEvid = FolEqualityExpression(lhsOnlyIntroduction(first, inLhs, isNegated, univs).get, 
-						   lhsOnlyIntroduction(second, inLhs, isNegated, univs).get);
-			if (inLhs) //hard evidence
-		    		Some(extraEvid);
-			else
-			{
-				assert(isQuery);
-				extraSoftEvidence = extraSoftEvidence + extraEvid;
-				None
-			}
-        	}
-        	else 
-        	  None
+         val introStatus = isLhsOnlyIntroduction("eq", Seq(first.asInstanceOf[FolVariableExpression].variable,
+                    second.asInstanceOf[FolVariableExpression].variable), inLhs, univs, isNegated)
+         var extraEvid:FolExpression = null
+         if (introStatus != NO_EVD)
+            extraEvid = FolEqualityExpression(lhsOnlyIntroduction(first, inLhs, isNegated, univs).get,
+								                     lhsOnlyIntroduction(second, inLhs, isNegated, univs).get)
+         introStatus match {
+            case NO_EVD => None
+            case HARD_EVD => Some(extraEvid)
+            case SOFT_EVD => extraSoftEvidence = extraSoftEvidence + extraEvid; None;
+         }
       }
       case FolIffExpression(first, second) => throw new RuntimeException(expr + " is not a valid expression")      
       case _ => throw new RuntimeException(expr + " is not a valid expression")
@@ -334,7 +342,11 @@ class SetGoalPTP(
           addConst(newVarName);
           return Variable(newVarName);
   }
-  private def isLhsOnlyIntroduction (args: Seq[Variable], inLhs:Boolean, univs:List[String], isNegated: Boolean): Boolean = 
+  private val SOFT_EVD = 'S';
+  private val HARD_EVD = 'H';
+  private val NO_EVD = 'N';
+
+  private def isLhsOnlyIntroduction (predName: String, args: Seq[Variable], inLhs:Boolean, univs:List[String], isNegated: Boolean): Char  = 
   {
         var univCount = 0;
         var notExistCount = 0;
@@ -348,27 +360,77 @@ class SetGoalPTP(
           true
         })
 	var allUniv:Boolean = false;
+
 	if(univCount == 0)
-		return false; //Nothing need to be done in case no Univ quantifiers
+	{
+		if (isNegated && isQuery)  //Existentially quantified negated predicate in query "e.g: tweety is not black"
+			return if(Sts.opts.withFixCWA)  SOFT_EVD; else NO_EVD;
+		return NO_EVD; //Nothing need to be done in case no Univ quantifiers
+	}
 	else if (univCount == args.length)
 		allUniv = true;
 
-	if(!isQuery /*the existance pragmatic*/ && inLhs && notExistCount == 0 && allUniv)  /*Introduction for the exsitance case in Text*/
+//	println ("QE: " + isQuery + " isNegated: "+ isNegated + " allUniv: " + allUniv + " univCount: " + univCount)
+//	if (!isNegated && !isQuery && allUniv)
+//		println ("!isNegated && !isQuery && allUniv") 
+
+	if(!isNegated)  //all evidence generated for unviersally quantified predicates is for negated predicates 
+		return NO_EVD;
+	
+	if (inLhs /*hard evidence for stuff in the LHS (both in Text and Hypothesis) */
+   || (allUniv && univCount == 1 && Sts.opts.evdIntroSingleVar /*&& (predName.contains("hungry") || predName.contains("man") || predName.contains("delicious") || predName.contains("food") ) ugly special case for sentences in the synthetic dataset, because we do not fully recognize all LHS and RHS of all quantifier*/ ))
+   {
+      if(Sts.opts.withExistence && !isQuery)
+         return HARD_EVD;
+      else if (Sts.opts.withFixUnivInQ && isQuery)
+         return HARD_EVD;
+      else 
+         return NO_EVD;
+   }
+
+   if (isQuery) //soft evidence for all univ not in the LHS (only in Hypothesis)
+      return if(Sts.opts.withFixCWA)  SOFT_EVD; else NO_EVD;
+			
+	return NO_EVD;
+
+/*
+	if (!isNegated)
+		return false
+	else if (isQuery) 
+		return true  
+	else if (allUniv && !predName.contains("agent") && !predName.contains("patient") && !predName.contains("eat") && univCount == 1) // in the Evidence. 
+		return true   
+	else 
+		return false
+*/
+/*
+	if(!isQuery  && inLhs && notExistCount == 0 && allUniv)  //Introduction for the exsitance case in Text
 		return true;  //hard evidence
+	else if (!isQuery  && isNegated && allUniv )  //Introduction for the exsitance case in Text
+	{
+		if(predName.contains("agent") || predName.contains("patient"))
+			return false;  //hard evidence
+		else return true;
+	}
 	else if(!isQuery)
 		return false; //all other cases of Univ in Text should be ignored
-	else if (allUniv)
+	else if (isNegated)
+		return true
+	else  (!isNegated)
+		return false
+*/
+/*	else if (allUniv)
 	{
-		if (isQuery && inLhs && notExistCount == 0)  /*LHS introduction in Q*/
+		if (isQuery && inLhs && notExistCount == 0)  /1LHS introduction in Q
 			return true;  //hard evidence
-		else if (isQuery && inLhs && notExistCount != 0)  /*Impossible case*/
+		else if (isQuery && inLhs && notExistCount != 0)  //Impossible case
 			throw new RuntimeException ("Unsupported case: in LHS, and some univ are notExist");
-		else if (isQuery && !inLhs && notExistCount == 0)  /*All birds are blue*/
+		else if (isQuery && !inLhs && notExistCount == 0)  //All birds are blue
 		{
 			System.out.println ("All univ are univ, but in RHS + " + isNegated)
 			return false;  //all birds are blue. Generate a bird, but do not generate a blue
 		}
-		else if (isQuery && !inLhs && notExistCount != 0 && notExistCount < univCount)  /*Not sure, probably do as notExistCount == univCount*/
+		else if (isQuery && !inLhs && notExistCount != 0 && notExistCount < univCount)  //Not sure, probably do as notExistCount == univCount
 		{
 			System.out.println ("All univ, some Univ, some notExist + " + isNegated)
 			//e.g: "all birds do not eat all food"
@@ -406,7 +468,7 @@ class SetGoalPTP(
 	    }
 	    else 
    			throw new RuntimeException ("Unreachable point");
-	}
+	}*/
   }
   //---------------------------
   private def introduction(expr: FolExpression, isNegated:Boolean, parent:FolExpression): Option[FolExpression] =

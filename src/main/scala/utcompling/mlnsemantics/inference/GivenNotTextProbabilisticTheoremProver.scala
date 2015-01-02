@@ -31,7 +31,8 @@ class GivenNotTextProbabilisticTheoremProver(
     	    case HardWeightedExpression(exp, w) => HardWeightedExpression (negateText(exp), w)
           case a @ _ => a
         }
-    	val hGivenNotT = delegate.prove(constants, declarations, evidence, newAssumptions, goal);
+    	//val hGivenNotT = delegate.prove(constants, declarations, evidence, newAssumptions, goal);
+    	val hGivenNotT:Seq[Double] = Seq(0.0)
     	assert(hGivenNotT.length == 1)
     	
     	var newGoal:BoxerExpression = null;
@@ -40,9 +41,11 @@ class GivenNotTextProbabilisticTheoremProver(
     	    	//newGoal = exp;
     	    	//HardWeightedExpression (negateText(goal)) 
     	    	//newGoal = negateText(exp);
-    	    	newGoal = BoxerNot("h", List(), exp).asInstanceOf[BoxerExpression]
+    	    	newGoal = negateWithoutPresupposed(exp)
     	    	HardWeightedExpression (goal, w)
     	    }
+    	  case SoftWeightedExpression(BoxerImp(discId, List(), lhs, rhs), w) => SoftWeightedExpression(
+    	  								BoxerImp(discId, List(), BoxerDrs(lhs.refs, rhs.conds), BoxerDrs(List(), lhs.conds)).asInstanceOf[BoxerExpression], w) 
           case a @ _ => a
         }
     	
@@ -59,6 +62,17 @@ class GivenNotTextProbabilisticTheoremProver(
     }
     else
       delegate.prove(constants, declarations, evidence, assumptions, goal)   
+  }
+  
+  private def negateWithoutPresupposed(e:BoxerExpression) : BoxerExpression = 
+  {
+	e match {
+		case BoxerMerge("smerge", first, second) => 
+			BoxerOr("h", List(), negateWithoutPresupposed(first), negateWithoutPresupposed(second)) 
+		case BoxerMerge("merge", first, second) => 
+			BoxerDrs (List(), List(first,  BoxerNot("h", List(), second)))
+		case e => BoxerNot("h", List(), e)
+	}
   }
   
   private var negationFound = false;
