@@ -18,6 +18,25 @@ def simplify (d1, pos1, d2, pos2, pos3):
 	print d1 + " "+ pos1 + " " + d2 + " " + pos2 + " " + pos3
 	return (d1, pos1, d2, pos2, pos3)
 
+def negateAtom (x):
+	if x == "+":
+		return "-"
+	elif x == "-":
+		return "+"
+	elif x == "some":
+		return "all"
+	elif x == "all":
+		return "some"
+	else:
+		raise
+
+def negate (d1, pos1, d2, pos2, pos3):
+	nd1 = negateAtom(d1)
+	nd2 = negateAtom(d2)
+	npos3 = negateAtom(pos3)
+	print nd1 + " "+ pos1 + " " + nd2 + " " + pos2 + " " + npos3
+	return (nd1, pos1, nd2, pos2, npos3)
+
 def flip(sign):
 	if sign == "+":
 		return "-"
@@ -51,6 +70,30 @@ def isEntail (q, polarity, direction):
 		return True
 	return False
 
+def isEntailSentence (ed1, epos1, ed2, epos2, epos3, lhs, qd1, qpos1, qd2, qpos2, qpos3, rhs):
+	entail = True
+	if (epos1 != qpos1):
+		entail = False
+	if (epos2 != qpos2):
+		entail = False
+	if (epos3 != qpos3):
+		entail = False
+
+	if (ed1 == "some" and qd1 == "all"):
+		entail = False
+	elif (ed1 == "all" and qd1 == "some"):
+		ed1 = "some"
+
+	if (ed2 == "some" and qd2 == "all"):
+		entail = False
+	elif (ed2 == "all" and qd2 == "some"):
+		ed2 = "some"
+
+	if ( not isEntail (ed1, epos1, lhs)):
+		entail = False
+	if ( not isEntail (ed2, epos2, rhs)):
+		entail = False
+	return entail
 
 def main():
 	Qs = ["some", "all", "no", "not all"]
@@ -67,32 +110,16 @@ def main():
 						for rhs in [0, 1]:
 							(ed1, epos1, ed2, epos2, epos3) = simplify(q11, "+", q12, "+", "+")
 							(qd1, qpos1, qd2, qpos2, qpos3) = simplify(q21, "+", q22, "+", "+")
-							entail = True
-							if (epos1 != qpos1):
-								entail = False
-							if (epos2 != qpos2):
-								entail = False
-							if (epos3 != qpos3):
-								entail = False
-
-							if (ed1 == "some" and qd1 == "all"):
-								entail = False
-							elif (ed1 == "all" and qd1 == "some"):
-								ed1 = "some"
-
-							if (ed2 == "some" and qd2 == "all"):
-								entail = False
-							elif (ed2 == "all" and qd2 == "some"):
-								ed2 = "some"
-
-							if ( not isEntail (ed1, epos1, lhs)):
-								entail = False
-							if ( not isEntail (ed2, epos2, rhs)):
-								entail = False
-
+							(nqd1, nqpos1, nqd2, nqpos2, nqpos3) = negate (qd1, qpos1, qd2, qpos2, qpos3)
 							entailResult = 0
+							entail = isEntailSentence(ed1, epos1, ed2, epos2, epos3, lhs, qd1, qpos1, qd2, qpos2, qpos3, rhs)
+							contradict = isEntailSentence(ed1, epos1, ed2, epos2, epos3, lhs, nqd1, nqpos1, nqd2, nqpos2, nqpos3, rhs)
 							if (entail):
 								entailResult = 1
+							elif (contradict):
+								entailResult = 0
+							else:
+								entailResult = 0.5
 							print q11 + " "+ lhss[lhs] + " "+ v + " " + q12 + " "+ rhss[rhs] + "\t" + q21 + " "+ lhss[(lhs+1)%2] + " "+ v +" "+ q22+ " "+ rhss[(rhs+1)%2] + "\t" + str(entailResult)  
 main()
 print(commands.getoutput('echo  "hi dude" | tr " " "\n"'))
