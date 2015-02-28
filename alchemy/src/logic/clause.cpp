@@ -131,13 +131,17 @@ bool Clause::createAndAddUnknownClause(
 { 
   PredicateSet predSet; // used to detect duplicates
   PredicateSet::iterator iter;
-  
+ 
+  Predicate * firstFalsePred = NULL; 
   Clause* clause = NULL;
+  Clause * negationClause = NULL;
+  bool clauseKnownPredsTruthValue = false; 
   for (int i = 0; i < predicates_->size(); i++)
   {
-	Predicate* predicate = (*predicates_)[i];
+    Predicate* predicate = (*predicates_)[i];
     assert(predicate->isGrounded());
-    if (db->getValue(predicate) == UNKNOWN)
+    TruthValue predValue = db->getValue(predicate);
+    if (predValue == UNKNOWN)
     {
       if ( (iter=predSet.find(predicate)) != predSet.end() )
       {
@@ -157,8 +161,35 @@ bool Clause::createAndAddUnknownClause(
       Predicate* pred = new Predicate(*predicate, clause);
       clause->appendPredicate(pred);
     }
+    else
+    {
+       bool predValueBool =  (predValue == TRUE);
+       clauseKnownPredsTruthValue = clauseKnownPredsTruthValue || (predicate->getSense() && predValueBool );
+       if (  !(predicate->getSense() && predValueBool)  && firstFalsePred == NULL) //false ground atom
+          firstFalsePred = predicate;
+    }
   }
-  
+
+  //If all predicates in the clause are known + the claus's value is False
+  if (clause == NULL && clauseKnownPredsTruthValue == false ) // isHardClause_ 
+  {
+      //Add a rule and its negation to the inference problem 
+      //so that we do not miss this negation. 
+      clause = new Clause();
+      Predicate* pred = new Predicate(*firstFalsePred, clause);
+      clause->appendPredicate(pred);
+
+      negationClause = new Clause();
+      firstFalsePred->setSense(!firstFalsePred->getSense());
+      Predicate* pred2 = new Predicate(*firstFalsePred, clause);
+      negationClause->appendPredicate(pred2);
+
+      cout << "Predicate "<< pred->getName() << " and its negation added in place of its clause" ;
+      this->print(cout, db->getDomain());
+      cout << endl;
+
+  }
+
   if (clause)  //if clause contains unknown predicates ?
   {
     if (numUnknownClauses) (*numUnknownClauses)++;
@@ -176,9 +207,29 @@ bool Clause::createAndAddUnknownClause(
       }
       MRF::addUnknownGndClause(agcs, this, clause, isHardClause_);
     }
+
+   if (negationClause)
+   {
+    if (numUnknownClauses) (*numUnknownClauses)++;
+
+    negationClause->setWt(wt_);
+    negationClause->canonicalizeWithoutVariables();
+
+    if (agcs)
+    {
+      if (clausedebug >= 2)
+      {
+        cout << "Appending unknown clause to MRF ";
+        negationClause->print(cout, db->getDomain());
+        cout << endl;
+      }
+      MRF::addUnknownGndClause(agcs, this, negationClause, isHardClause_);
+    }
+   }
+
     
     // MARC: The case with unknownGndClauses appears to be obsolete!
-	if (unknownGndClauses)
+    if (unknownGndClauses)
     {
       if (clausedebug >= 2)
       {
@@ -187,7 +238,7 @@ bool Clause::createAndAddUnknownClause(
         cout << endl;
       }
       unknownGndClauses->append(new GroundClause(clause, agcs->gndPreds));
-	  if (isHardClause_) unknownGndClauses->lastItem()->setWtToHardWt();
+      if (isHardClause_) unknownGndClauses->lastItem()->setWtToHardWt();
     }
     else if (unknownClauses)
     {
@@ -223,7 +274,23 @@ bool Clause::createAndAddUnknownClause(
  	//False, Soft: (denum)terminate inference with probability 0. If ignored, WRONG INFERENCE
 	//3)NO WAY TO CHECK FOR INCONSISTENCY WITHIN THE MLN ITSELF. IN THIS CASE, WE GET 0/0 PROBABILITY
 
-	  cerr << "Unsatisfiable clause found with weight: " << wt_ << endl;
+	//Rules above can be summerized in the following simple rule: 
+	//=> For known formulas, if formula is *Hard* and equals *False*, keep it. Drop otherwise.
+	//This simple rule is enough to handle all cases.
+	//Keeping the false rule will be detected lated in SampleSearch. 
+	//If it is in the MLN, we will get 0/0 (inconsistency)
+	//If it is the numerator of Q, we will get 0/Z = 0
+	
+	//Variable wt_ and isHardClause_ tell if Hard or Soft
+	//Still need a way to evalaute if True or False
+	
+	//Update to the discussion above: 
+	//It is not enough to keep only the Hard rules. 
+	//If the False ground clause is part of the query, this means 
+	//that I keep the rule for {MLN U Q_inf} and drop it in {MLN U Q_zero}
+	//which is a problem because the two Zs may not have the same number of ground atoms anymore. 
+
+	  cout  << "Unsatisfiable clause found with weight: " << wt_ << endl;
 	  //exit(7);
   }
 
