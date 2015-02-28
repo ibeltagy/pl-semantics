@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_run_jar" name="Create Runnable Jar for Project easyccg with Jar-in-Jar Loader">
+    <!--this file was created by Eclipse Runnable JAR Export Wizard-->
+    <!--ANT 1.7 is required                                        -->
+	<path id="easyccg.lib">
+		<pathelement location="bin"/>
+		<pathelement location="jar-in-jar-loader.zip"/>
+		<pathelement location="/u/beltagy/workspace/deft/mln-semantics/easyccg/lib/edu.mit.jwi_2.3.0.jar" />
+		<pathelement location="/u/beltagy/workspace/deft/mln-semantics/easyccg/lib/guava-15.0.jar" />
+		<pathelement location="/u/beltagy/workspace/deft/mln-semantics/easyccg/lib/jewelcli-0.7.6.jar" />
+		<pathelement location="/u/beltagy/workspace/deft/mln-semantics/easyccg/lib/mtj-1.0-snapshot.jar" />
+		<pathelement location="/u/beltagy/workspace/deft/mln-semantics/easyccg/lib/stanford-corenlp-1.3.4.jar" />
+
+	</path>
+	<target name="create_run_jar" depends="build">
+        <jar destfile="/u/beltagy/workspace/deft/mln-semantics/easyccg/easyccg.jar" >
+            <manifest>
+                <attribute name="Main-Class" value="org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader"/>
+                <attribute name="Rsrc-Main-Class" value="uk.ac.ed.easyccg.main.EasyCCG"/>
+                <attribute name="Class-Path" value="."/>
+                <attribute name="Rsrc-Class-Path" value="./ edu.mit.jwi_2.3.0.jar guava-15.0.jar jewelcli-0.7.6.jar mtj-1.0-snapshot.jar stanford-corenlp-1.3.4.jar"/>
+            </manifest>
+            <zipfileset src="jar-in-jar-loader.zip"/>
+            <fileset dir="/u/beltagy/workspace/deft/mln-semantics/easyccg/bin"/>
+            <zipfileset dir="/u/beltagy/workspace/deft/mln-semantics/easyccg/lib" includes="edu.mit.jwi_2.3.0.jar"/>
+            <zipfileset dir="/u/beltagy/workspace/deft/mln-semantics/easyccg/lib" includes="guava-15.0.jar"/>
+            <zipfileset dir="/u/beltagy/workspace/deft/mln-semantics/easyccg/lib" includes="jewelcli-0.7.6.jar"/>
+            <zipfileset dir="/u/beltagy/workspace/deft/mln-semantics/easyccg/lib" includes="mtj-1.0-snapshot.jar"/>
+            <zipfileset dir="/u/beltagy/workspace/deft/mln-semantics/easyccg/lib" includes="stanford-corenlp-1.3.4.jar"/>
+        </jar>
+   </target>
+	<target name="build">
+		<javac includeantruntime="false" debug="true" debuglevel="source,lines,vars" destdir="bin">
+			<src path="src"/>
+			<classpath refid="easyccg.lib"/>
+		</javac>
+	</target>
+</project>
