@@ -32,7 +32,7 @@ class BoxerExpressionParser(discourseId: String = "0") extends LogicParser[Boxer
             this.parseApp()
         else if (tok0 == "date")
         	this.parseDate()
-        else if (tok0 == "[" || tok0.startsWith("_"))  {
+        else if (tok0 == "[" || tok0.startsWith("_") || tok0 == "B" /*very ugly hack for the broken output that Boxer produces*/)  {
         	var predIdx = 0;
         	if (tok0 == "[" )
         		predIdx = this.findToken("]") + 2;
@@ -42,6 +42,7 @@ class BoxerExpressionParser(discourseId: String = "0") extends LogicParser[Boxer
         										//--instantiate true.
         										//Sometimes, it outoputs "_G???" instead of 
         										// "[idx]:"	
+        										// Sometimes, it also outputs B: instead of [idx]: 
             val pred = this.getToken(predIdx)
             if (pred == "not")
                 this.parseNot()
@@ -108,11 +109,22 @@ class BoxerExpressionParser(discourseId: String = "0") extends LogicParser[Boxer
 
         val exps = ListBuffer[(BoxerExpression, Double)]()
         while (this.getToken(0) != ")") {
-            if (exps.nonEmpty)
-                this.assertNextToken(",")
-            val p = this.doParseExpression()
-            this.assertNextToken(",")
-            val s = this.parseDouble()
+            //if (exps.nonEmpty)
+            //   this.assertNextToken(",")
+        	var p:BoxerExpression = null;
+        	var s:Double = 0;
+            if (this.getToken(0) == ":")
+            {
+            	p = BoxerDrs();
+            	this.nextToken();
+            }
+            else
+            {
+            	p = this.doParseExpression();
+            	this.assertNextToken(",")
+            	s = this.parseDouble()
+            	this.assertNextToken(":")
+            }
             
             exps += ((p, s))
         }
@@ -270,7 +282,7 @@ class BoxerExpressionParser(discourseId: String = "0") extends LogicParser[Boxer
 
     protected def parseIndexList(): List[BoxerIndex] = {
     	val nextTok =  this.nextToken();
-    	if (nextTok.startsWith("_") )  //this is to handle the --instantiate bug
+    	if (nextTok.startsWith("_") || nextTok == "B" )  //this is to handle the --instantiate bug
     	  return List ();
     	else if (!nextTok.equals("["))
     	  throw new UnexpectedTokenException (this.getCurrentIndex, Some(nextTok), List("["));

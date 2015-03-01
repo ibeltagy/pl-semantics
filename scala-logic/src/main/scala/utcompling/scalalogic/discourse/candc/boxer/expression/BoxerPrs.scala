@@ -9,7 +9,7 @@ case class BoxerPrs(exps: List[(BoxerExpression, Double)]) extends BoxerExpressi
     BoxerPrs(exps.map(p=>(function(p._1), p._2)))
 
   override def toString(): String = {
-    return "prs(%s)".format(exps.flatMap(p=> List(p._1.toString(), p._2)).mkString(","))
+    return "prs(%s:)".format(exps.map(p=> List(p._1.toString(), p._2).mkString(",") ).mkString(":"))
   }
 }
 

@@ -72,7 +72,7 @@ class BoxerDiscourseInterpreter[T](
           val e = BoxerPrs(exps.toList.asInstanceOf[List[(BoxerExpression, Double)]])
           Some (this.boxerExpressionInterpreter.interpret(e))
         }
-        case _ => None 
+        case _ => Some (this.boxerExpressionInterpreter.interpret( BoxerPrs()) ) 
       }
        
     }).toList
@@ -87,6 +87,8 @@ class BoxerDiscourseInterpreter[T](
     //val scoresItr = scores.iterator;
     val lines = boxerOut.split("\n")
     val linesItr = lines.iterator
+    //println (lines);
+    //println (ccgs.mkString("\n"));
     assert ((ccgs.size - 1) * 4 == lines.size - 6, "ccgs count: " + ccgs.size +", boxerLinesCounts: " + lines.size );
     var i:Int = 0;
     val IdLineRe = """^id\((\S+),\s*(\d+)\)\.$""".r
