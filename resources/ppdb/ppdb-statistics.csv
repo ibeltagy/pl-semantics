@@ -1,0 +1,62 @@
+ALL				X				NP	
+1	(v0-a,v1-n)	(v0-a)					1	(v0-a,v1-n)	(v0-a)
+11	(v0-a,v1-r)	(v0-a)	11	(v0-a,v1-r)	(v0-a)	I			
+522	(v0-a)	(v0-a)	117	(v0-a)	(v0-a)	M	91	(v0-a)	(v0-a)
+3	(v0-n,v1-n)	(v0-a)					3	(v0-n,v1-n)	(v0-a)
+31	(v0-n,v1-n)	(v0-n,v1-n)	8	(v0-n,v1-n)	(v0-n,v1-n)	M	19	(v0-n,v1-n)	(v0-n,v1-n)
+787	(v0-n,v1-n)	(v0-n)	326	(v0-n,v1-n)	(v0-n)	M	405	(v0-n,v1-n)	(v0-n)
+4	(v0-n,v1-r,v2-r)	(v0-a,v1-r,v2-r)	4	(v0-n,v1-r,v2-r)	(v0-a,v1-r,v2-r)	M			
+1	(v0-n,v1-r,v2-r)	(v0-n,v1-n)	1	(v0-n,v1-r,v2-r)	(v0-n,v1-n)	I			
+6	(v0-n,v1-r,v2-r)	(v0-n,v1-r,v2-r)	3	(v0-n,v1-r,v2-r)	(v0-n,v1-r,v2-r)	M			
+18	(v0-n,v1-r,v2-r)	(v0-n,v1-r)	13	(v0-n,v1-r,v2-r)	(v0-n,v1-r)	M			
+8	(v0-n,v1-r,v2-r)	(v0-n)	7	(v0-n,v1-r,v2-r)	(v0-n)	I			
+1	(v0-n,v1-r,v2-v)	(v0-n,v1-r)	1	(v0-n,v1-r,v2-v)	(v0-n,v1-r)	I			
+1	(v0-n,v1-r)	(v0-a,v1-n)	1	(v0-n,v1-r)	(v0-a,v1-n)	I			
+25	(v0-n,v1-r)	(v0-a,v1-r)	25	(v0-n,v1-r)	(v0-a,v1-r)	M			
+68	(v0-n,v1-r)	(v0-a)	52	(v0-n,v1-r)	(v0-a)	I			
+298	(v0-n,v1-r)	(v0-n,v1-n)	298	(v0-n,v1-r)	(v0-n,v1-n)	I			
+390	(v0-n,v1-r)	(v0-n,v1-r)	217	(v0-n,v1-r)	(v0-n,v1-r)	M	6	(v0-n,v1-r)	(v0-n,v1-r)
+621	(v0-n,v1-r)	(v0-n)	444	(v0-n,v1-r)	(v0-n)	I	141	(v0-n,v1-r)	(v0-n)
+2	(v0-n,v1-v)	(v0-a,v1-v)	1	(v0-n,v1-v)	(v0-a,v1-v)	M			
+3	(v0-n,v1-v)	(v0-a)							
+3	(v0-n,v1-v)	(v0-n,v1-r)	3	(v0-n,v1-v)	(v0-n,v1-r)	I			
+1	(v0-n,v1-v)	(v0-n,v1-v)	1	(v0-n,v1-v)	(v0-n,v1-v)	M			
+70	(v0-n,v1-v)	(v0-n)	20	(v0-n,v1-v)	(v0-n)	I	31	(v0-n,v1-v)	(v0-n)
+10	(v0-n)	(v0-a,v1-n)	9	(v0-n)	(v0-a,v1-n)	M			
+4	(v0-n)	(v0-a,v1-r,v2-r)	4	(v0-n)	(v0-a,v1-r,v2-r)	I			
+22	(v0-n)	(v0-a,v1-r)	22	(v0-n)	(v0-a,v1-r)	I			
+2469	(v0-n)	(v0-a)	410	(v0-n)	(v0-a)	M	1873	(v0-n)	(v0-a)
+12505	(v0-n)	(v0-n)	2555	(v0-n)	(v0-n)	M	9027	(v0-n)	(v0-n)
+5	(v0-r,v1-r,v2-r)	(v0-n,v1-r)	5	(v0-r,v1-r,v2-r)	(v0-n,v1-r)	I			
+12	(v0-r,v1-r,v2-r)	(v0-r,v1-r)	8	(v0-r,v1-r,v2-r)	(v0-r,v1-r)	M			
+100	(v0-r,v1-r)	(v0-a,v1-r)	68	(v0-r,v1-r)	(v0-a,v1-r)	I			
+190	(v0-r,v1-r)	(v0-a)	180	(v0-r,v1-r)	(v0-a)	I	5	(v0-r,v1-r)	(v0-a)
+838	(v0-r,v1-r)	(v0-n,v1-r,v2-r)	279	(v0-r,v1-r)	(v0-n,v1-r,v2-r)	M			
+1506	(v0-r,v1-r)	(v0-n,v1-r)	863	(v0-r,v1-r)	(v0-n,v1-r)	I			
+227	(v0-r,v1-r)	(v0-n)	192	(v0-r,v1-r)	(v0-n)	I	35	(v0-r,v1-r)	(v0-n)
+885	(v0-r,v1-r)	(v0-r,v1-r)	474	(v0-r,v1-r)	(v0-r,v1-r)	M			
+230	(v0-r,v1-r)	(v0-r)	121	(v0-r,v1-r)	(v0-r)	I			
+23	(v0-r,v1-v)	(v0-n,v1-r,v2-r)	23	(v0-r,v1-v)	(v0-n,v1-r,v2-r)	I			
+10	(v0-r,v1-v)	(v0-n,v1-r,v2-v)							
+67	(v0-r,v1-v)	(v0-n,v1-r)	55	(v0-r,v1-v)	(v0-n,v1-r)	I			
+22	(v0-r,v1-v)	(v0-n)	1	(v0-r,v1-v)	(v0-n)	I			
+106	(v0-r,v1-v)	(v0-r,v1-r)	99	(v0-r,v1-v)	(v0-r,v1-r)	I			
+147	(v0-r,v1-v)	(v0-r,v1-v)	29	(v0-r,v1-v)	(v0-r,v1-v)	M			
+1	(v0-r)	(v0-a,v1-r)	1	(v0-r)	(v0-a,v1-r)	M			
+34	(v0-r)	(v0-a)	14	(v0-r)	(v0-a)	I	5	(v0-r)	(v0-a)
+9	(v0-r)	(v0-n,v1-r,v2-r)	6	(v0-r)	(v0-n,v1-r,v2-r)	I			
+51	(v0-r)	(v0-n,v1-r)	23	(v0-r)	(v0-n,v1-r)	M			
+39	(v0-r)	(v0-n)	4	(v0-r)	(v0-n)	I	35	(v0-r)	(v0-n)
+32	(v0-r)	(v0-r)	11	(v0-r)	(v0-r)	M			
+5	(v0-v)	(v0-a,v1-r)	5	(v0-v)	(v0-a,v1-r)	I			
+10	(v0-v)	(v0-a,v1-v)							
+4	(v0-v)	(v0-a)							
+5	(v0-v)	(v0-n,v1-n)					4	(v0-v)	(v0-n,v1-n)
+11	(v0-v)	(v0-n,v1-r,v2-r)	11	(v0-v)	(v0-n,v1-r,v2-r)	I			
+46	(v0-v)	(v0-n,v1-r)	31	(v0-v)	(v0-n,v1-r)	I	7	(v0-v)	(v0-n,v1-r)
+65	(v0-v)	(v0-n,v1-v)	1	(v0-v)	(v0-n,v1-v)	M	21	(v0-v)	(v0-n,v1-v)
+706	(v0-v)	(v0-n)	30	(v0-v)	(v0-n)	I	625	(v0-v)	(v0-n)
+769	(v0-v)	(v0-r,v1-r)	747	(v0-v)	(v0-r,v1-r)	I			
+934	(v0-v)	(v0-r,v1-v)	523	(v0-v)	(v0-r,v1-v)	M			
+57	(v0-v)	(v0-r)	42	(v0-v)	(v0-r)	I			
+1684	(v0-v)	(v0-v)	666	(v0-v)	(v0-v)	M	1	(v0-v)	(v0-v)

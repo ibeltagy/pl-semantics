@@ -1,0 +1,387 @@
+TODO for PPDB: 
+------------
+-DONE (parking lot -> parking) should NOT match (parking lot -> parking lot)
+-DONE Weird rules resulting from parsing errors can still be used with the robinson resolution
+-weights 
+-skolemization (rules are disabled )
+-revise incompatible rules because some of them are actually compatible
+-revise ordering of rules where FanOut > 1. They are in (1:rnr--,1:rnr--nn,1:rrn--n,1:vnr--nr,1:v--rnr,1:vr--vnr,3:rrrn--n,4:rnn--nn,4:rnr--nr,6:rnr--rnr,6:rr--rnr,8:rnr--n,15:rnn--n)
+-error analysis, why are the rules added did not make big difference ? 
+-error analysis, what is the kind of worng infernece rules ??
+163: water -> sea
+1393: lady -> girl
+1917: boy -> young man
+2236: boy -> young man
+2691: recruit -> soldier
+2836: look -> look around
+2838: look -> look around
+2928: little boy -> baby
+2958: boy -> man
+3714: child -> girl
+3744: court -> yard
+4330: person -> man
+4803: man -> young man
+
+======Templates====================
+1-NPs in logic are:   n, n-of-n(match with first n), null, a, n-of-a(match with n )
+NPs in logic are NOT: v (drop all rules with v), r (revise rules with r again. I may missed something)
+---To revise--
+      1 v0-a,v1-n) =>  v0-a)
+      1 v0-n,v1-n) =>  v0-a)
+      1 v0-r) =>  v0-a)
+      2 v0-a) =>  v0-r,v1-r)
+      2 v0-r,v1-r) =>  v0-a)
+      4 v0-a) =>  v0-r)
+      4 v0-n,v1-r) =>  v0-n,v1-r)
+      9 v0-n) =>  v0-r)
+     10 v0-r,v1-r) =>  v0-n)
+     11 v0-n) =>  v0-r,v1-r)
+     12 v0-r) =>  v0-n)
+     32 v0-n,v1-r) =>  v0-n)
+     34 v0-n) =>  v0-n,v1-r)
+---End To revise--
+$ grep POS tmp/afterProposal.ppdb.xxxl.t*| sort | uniq | grep "\[np\]" | grep "(v0-n) => (v0-n)"  -v | grep "()" -v  | grep "(v0-a) => (v0-a)" -v  | grep "(v0-n) => (v0-a)" -v | grep "(v0-a) => (v0-n)" -v | grep "\-v"   -v  | grep "(v0-n,v1-n)" -v | grep "\-r"  
+
+
+2-VPs are in: v, v-prep-r (match with v-patient-r or v-prep-r), v-patient-n( match with v)
+VPs not in: n, a-agent-v(all cases are because of parsing errors, do not know if there are reasonable cases that are not parsing erroers), r, a, n-r 
+$ grep POS tmp/afterProposal.ppdb.xxxl.t*| sort | uniq | grep "\[vp\]"  | grep "(v0-v) => (v0-v)" -v | grep "()" -v  | grep "(v0-n)" -v | grep "(v0-a)" -v| grep "(v0-r)" -v |  grep -E "(v.-a)|(v.-n)|(v.-r)" | grep "\(v0-v\)"  | grep "(v0-r,v1-v)" -v | grep "\-n"  | grep "v0-n,v1-v"  
+---To revise--
+      1 v0-r) => (v0-r)
+      1 v0-v) => (v0-r,v1-r)
+      2 v0-r,v1-r) => (v0-v)
+      2 v0-v) => (v0-a,v1-v)
+      2 v0-v) => (v0-r)
+      3 v0-a,v1-v) => (v0-v)
+      3 v0-r) => (v0-v)
+---End To revise--
+
+
+3-PP: 
+(v0-r,v1-r) <=> (v0-r,v1-r): trivial
+(v0-n,v1-r) <=> (v0-n,v1-r): trivial
+
+(v0-r,v1-r) <=> (v0-n,v1-r,v2-r)	(match first r with first r and second r with second r)
+EG)
+([pp])(on, in front of) (on-r-x108-x203) => (of-r-x107-x106, front-n-x106, in-r-x106-x202)
+([pp])(on, in front of) (v0-r,v1-r) => (v0-n,v1-r,v2-r)
+
+v0-n,v1-r) <=> (v0-r)			(match r with r)
+EG)
+a large white dog is jumping in the air over an area covered by snow
+a large white dog is jumping up in the snow
+([pp])(in the air, up) (in-r-x102-x201, air-n-x102) => (up-r-x201)
+([pp])(in the air, up) (v0-n,v1-r) => (v0-r)
+EG)
+a boy is sitting on the ground
+a toddler is sitting down
+([pp])(on the ground, down) (ground-n-x102, on-r-x102-x201) => (down-r-x201)
+([pp])(on the ground, down) (v0-n,v1-r) => (v0-r)
+
+
+PP not it: 
+(v0-r,v1-r) <=> (v0-n,v1-r)
+EG)
+([pp])(from, in front) (v0-r,v1-r) => (v0-n,v1-r)
+([pp])(of, of people) (v0-r,v1-r) => (v0-n,v1-r)
+
+(v0-n,v1-r) <=> (v0-a)
+EG)   (because of parsing error, "down" has POS "a" not "r" which does not make it apply)
+([pp])(on the ground, down) (ground-n-x102, on-r-x102-x201) => (down-a-x101)
+([pp])(on the ground, down) (v0-n,v1-r) => (v0-a)
+two young girls are sitting on the ground
+several children are sitting down and have their knees raised
+
+(v0-n,v1-r) <=> (v0-n,v1-r,v2-r)
+EG)   (parsing error or the subset predicate)
+([pp])(in the ocean, in the water) (in-r-x102-x201, ocean-n-x102) => (in-r-x103-x201, of-r-x104-x103, water-n-x104)
+([pp])(in the ocean, in the water) (v0-n,v1-r) => (v0-n,v1-r,v2-r)
+
+(v0-r) => (v0-r,v1-r)
+EG)
+([pp])(around, in the) (around-r-x201) => (in-r-x103-x201)
+([pp])(around, in the) (v0-r) => (v0-r,v1-r)
+
+(v0-n,v1-r,v2-r) <=> (v0-r)
+EG)
+([pp])(in front of, outside) (of-r-x106-x105, in-r-x105-x104, front-n-x105) => (outside-r-x201)
+([pp])(in front of, outside) (v0-n,v1-r,v2-r) => (v0-r)
+
+4-PP/NN
+
+(v0-r,v1-r) => (v0-r,v1-r):   trivial
+EG)  (normal prepositions)
+([pp/nn])(across a, through the) (v0-r,v1-r) => (v0-r,v1-r)
+
+(v0-r,v1-r) <=> (v0-n,v1-r,v2-r) : match r-r with r-r
+EG)
+([pp/nn])(outside a, in front of the) (v0-r,v1-r) => (v0-n,v1-r,v2-r)
+
+(v0-r) => (v0-r):   trivial
+EG)
+([pp/nn])(up the, down the) (v0-r) => (v0-r)
+
+(v0-n,v1-r,v2-r) => (v0-n,v1-r,v2-r):  trivial
+EG)
+([pp/nn])(against his, on his) (v0-n,v1-r,v2-r) => (v0-n,v1-r,v2-r)
+
+
+PP/NN not in:
+(v0-r,v1-r) <=> (v0-r)   (malformed rules)
+EG)
+([pp/nn])(into a, down a) (into-r-x103-x201) => (down-r-x201)
+([pp/nn])(into a, down a) (v0-r,v1-r) => (v0-r)
+
+(v0-r,v1-r) <=> (v0-n,v1-r)   (malformed rules)
+EG)
+([pp/nn])(on the, in front) (on-r-x102-x201) => (front-n-x106, in-r-x106-x103)
+([pp/nn])(on the, in front) (v0-r,v1-r) => (v0-n,v1-r)
+EG)
+([pp/nn])(in the, in the country) (in-r-x103-x201) => (country-n-x103, in-r-x103-x201)
+([pp/nn])(in the, in the country) (v0-r,v1-r) => (v0-n,v1-r)
+
+(v0-r,v1-r) <=> (v0-a,v1-r)   (malformed rules)
+EG)
+([pp/nn])(in the, in the same) (in-r-x119-x204) => (in-r-x117-x204, same-a-x117)
+([pp/nn])(in the, in the same) (v0-r,v1-r) => (v0-a,v1-r)
+EG)
+([pp/nn])(for the, for the next) (for-r-x105-x202) => (next-a-x105, for-r-x105-x202)
+([pp/nn])(for the, for the next) (v0-r,v1-r) => (v0-a,v1-r)
+
+(v0-a) <=> (v0-r)	(not logically compatible, a and r)
+EG)
+([pp/nn])(over a, down a) (over-a-x104) => (down-r-x201)
+([pp/nn])(over a, down a) (v0-a) => (v0-r)
+
+5-NP/NN
+a<=>a
+n<=>n
+a<=>n
+n-r<=>n-r
+n-of-n<=>n  (match first argument of "of": cell phone, a cell)
+
+Not in:
+(v0-n,v1-r) <=> (v0-a)
+(v0-n,v1-r) <=> (v0-n)
+(v0-r,v1-r) <=> (v0-a)
+(v0-v) <=> (v0-n)
+
+6-VP/NP
+In:
+(v0-v) <=> (v0-r,v1-v)    (change v to v-patient-r, then match v and r)
+v<=>v
+r-v<=>r-v
+(v0-r,v1-v) => (v0-n,v1-r,v2-v): (match v to v and r to r)
+  EG) ([vp/np])(competing in, taking part in) 
+
+Not in:
+(v0-v) <=> (v0-r,v1-r)
+(v0-r,v1-v) <=> (v0-r,v1-r)
+(v0-n,v1-r) <=> (v0-r,v1-v)
+(v0-a,v1-r) <=> (v0-r,v1-r)
+
+7-S
+In:
+(v0-v) => (v0-v)
+(v0-n,v1-v) <=> (v0-v)   (n, v are connected with a patient. Match v with v)
+(v0-a,v1-v) <=> (v0-v)   (n, v are connected with an agent. Match v with v)
+(v0-n) => (v0-n)
+(v0-r,v1-v) <=> (v0-v)     (change v to v-patient-r, then match v and r)
+(v0-a) => (v0-a)
+(v0-n) => (v0-a)
+
+Not in:
+(v0-v) <=> (v0-r)
+(v0-v) <=> (v0-n)
+(v0-a) => (v0-v)
+
+8-X:
+$grep POS tmp/afterProposal.ppdb.xxxl.t* | grep -E "\[x\]" | grep "()"  -v | awk  '{ if($NF > $(NF-2)) { print $NF" => "$(NF-2)} else { print $(NF-2)" => "$NF } }' | sort  | uniq -c | sort  -n 
+In: 
+1	(v0-n,v1-v)		(v0-a,v1-v)	M
+1	(v0-r)		(v0-a,v1-r)	M
+1	(v0-v)		(v0-n,v1-v)	M
+4	(v0-n,v1-r,v2-r)		(v0-a,v1-r,v2-r)	M
+8	(v0-r,v1-r,v2-r)		(v0-r,v1-r)	M
+9	(v0-n)		(v0-a,v1-n)	M
+13	(v0-n,v1-r,v2-r)		(v0-n,v1-r)	M
+23	(v0-r)		(v0-n,v1-r)	M
+25	(v0-n,v1-r)		(v0-a,v1-r)	M
+279	(v0-r,v1-r)		(v0-n,v1-r,v2-r)	M
+326	(v0-n,v1-n)		(v0-n)	M
+410	(v0-n)		(v0-a)	M
+523	(v0-v)		(v0-r,v1-v)	M
+1	(v0-n,v1-v)		(v0-n,v1-v)	P
+3	(v0-n,v1-r,v2-r)		(v0-n,v1-r,v2-r)	P
+8	(v0-n,v1-n)		(v0-n,v1-n)	P
+11	(v0-r)		(v0-r)	P
+29	(v0-r,v1-v)		(v0-r,v1-v)	P
+117	(v0-a)		(v0-a)	P
+217	(v0-n,v1-r)		(v0-n,v1-r)	P
+474	(v0-r,v1-r)		(v0-r,v1-r)	P
+666	(v0-v)		(v0-v)	P
+2555	(v0-n)		(v0-n)	P
+
+Not In:
+1	(v0-n,v1-r,v2-r)		(v0-n,v1-n)	I	
+1	(v0-n,v1-r,v2-v)		(v0-n,v1-r)	I	
+1	(v0-n,v1-r)		(v0-a,v1-n)	I	
+1	(v0-r,v1-v)		(v0-n)	I	
+3	(v0-n,v1-v)		(v0-n,v1-r)	I	
+4	(v0-r)		(v0-n)	I	
+4	(v0-n)		(v0-a,v1-r,v2-r)	I	
+5	(v0-r,v1-r,v2-r)		(v0-n,v1-r)	I	
+5	(v0-v)		(v0-a,v1-r)	I	
+6	(v0-r)		(v0-n,v1-r,v2-r)	I	
+7	(v0-n,v1-r,v2-r)		(v0-n)	I	
+11	(v0-a,v1-r)		(v0-a)	I	
+11	(v0-v)		(v0-n,v1-r,v2-r)	I	
+14	(v0-r)		(v0-a)	I	
+20	(v0-n,v1-v)		(v0-n)	I	
+22	(v0-n)		(v0-a,v1-r)	I	
+23	(v0-r,v1-v)		(v0-n,v1-r,v2-r)	I	
+30	(v0-v)		(v0-n)	I	
+31	(v0-v)		(v0-n,v1-r)	I	
+42	(v0-v)		(v0-r)	I	
+52	(v0-n,v1-r)		(v0-a)	I	
+55	(v0-r,v1-v)		(v0-n,v1-r)	I	
+68	(v0-r,v1-r)		(v0-a,v1-r)	I	
+99	(v0-r,v1-v)		(v0-r,v1-r)	I	
+121	(v0-r,v1-r)		(v0-r)	I	
+180	(v0-r,v1-r)		(v0-a)	I	
+192	(v0-r,v1-r)		(v0-n)	I	
+298	(v0-n,v1-r)		(v0-n,v1-n)	I	
+444	(v0-n,v1-r)		(v0-n)	I	
+747	(v0-v)		(v0-r,v1-r)	I	Matchable (add agent-patine)
+863	(v0-r,v1-r)		(v0-n,v1-r)	I	
+
+9-NP/POS
+n<=>n
+
+10-VP/PP
+In: 
+(v0-v) <=> (v0-r,v1-v)    (change v to v-patient-r, then match v and r)
+v<=>v
+r-v<=>r-v
+
+Not in:
+(v0-n,v1-r) <=> (v0-v)
+(v0-v) <=> (v0-a,v1-v)
+
+11-NPDT
+In: 
+(v0-n) => (v0-n)
+(v0-n,v1-n) => (v0-n,v1-n)
+n<=>n-of-n(match with first n)
+n<=> a-of-n (match with first n)
+(v0-n) => (v0-a)
+Not in:
+(v0-n,v1-r) <=> (v0-n)
+(v0-v) <=> (v0-v)
+
+12-Other: 
+$ grep POS tmp/afterProposal.ppdb.xxxl.t*| sort | grep -E "\[s\]|\[npdt\]|\[vp/pp\]|\[vp/np\]|\[np/pos\]|\[np/nn\]|\[pp/nn\]|\[vp\]|\[pp\]|\[x\]|\[np\]" -v | grep "()"  -v | awk -F "(" '{print "("$4"("$5}' | sort | uniq -c | sort -n  
+
+In:
+(v0-n) => (v0-n)
+(v0-r,v1-v) => (v0-r,v1-v)
+(v0-r,v1-r) => (v0-r,v1-r)
+(v0-n,v1-r) => (v0-n,v1-r)
+(v0-v) => (v0-v)
+(v0-a) => (v0-a)
+(v0-r,v1-r) <=> (v0-n,v1-r,v2-r)   (match r-r with r-r)
+(v0-v) <=> (v0-r,v1-v)   (change v to v-patient-r, then match v and r)
+n-of-n<=>n  (match first argument of "of": cell phone, a cell)
+(v0-r) => (v0-r)
+(v0-n) <=> (v0-a)
+(v0-r,v1-v) => (v0-n,v1-r,v2-v)  (match r with r and v with v)
+v0-r,v1-r) <=> (v0-r,v1-r,v2-r)   (tricky, match first r with first r and last r with last r)
+(v0-n,v1-r,v2-r) => (v0-n,v1-r,v2-r)
+(v0-n,v1-v) <=> (v0-v)    (match v with v)
+(v0-n,v1-v) <=> (v0-a,v1-v)   (match v with v and n with a)
+(v0-n,v1-r) <=> (v0-r)    (match r with r)
+
+Not in:
+(v0-r) <=> (v0-a)
+(v0-r) <=> (v0-r,v1-r)
+(v0-r,v1-r) <=> (v0-n,v1-r)
+(v0-r,v1-r) <=> (v0-a,v1-r)
+(v0-n) <=> (v0-n,v1-r)
+(v0-n,v1-r) <=> (v0-r,v1-v)
+(v0-v) <=> (v0-r,v1-r)
+(v0-n,v1-r) <=> (v0-a)
+(v0-v) <=> (v0-n,v1-r)
+(v0-v) <=> (v0-n,v1-n)
+(v0-r,v1-r) <=> (v0-a)
+(v0-n,v1-v) <=> (v0-a)
+(v0-n,v1-v) <=> (v0-n)
+(v0-n,v1-r) <=> (v0-n,v1-r,v2-r): (parsing error or the subset predicate)
+================================================================
+      1  rnr--nn
+      1  rrn--n
+      1  vnr--nr
+      2  rn--nrr
+      2  rrn--rrn
+      3  nn--
+      3  rrn--rn
+      3  rrrn--n
+      3  vn--rn
+      3  vn--vn
+      4  rnn--nn
+      5  rnr--
+      5  rrr--nr
+      5  vn--
+      5  v--nn
+      8  rnr--n
+      8  rnr--rnr
+      9  rnr--r
+     10  vr--vnr
+     11  v--rnr
+     12  rrr--rr
+     13  rnr--nr
+     15  rnn--n
+     18  r--nr
+     19  vr--rn
+     22  v--rn
+     22  vr--n
+     23  vr--rnr
+     25  vr--
+     27  nn--nn
+     29  v--nr
+     32  r--r
+     34  rn--r
+     34  rrn--rr
+     47  rn--nr
+     48  vr--nr
+     57  rn--
+     57  v--r
+     60  r--
+     71  --
+     73  r--n
+     73  vn--n
+     75  vn--v
+    106  vr--rr
+    110  rn--rn
+    123  rr--
+    147  rn--nn
+    147  vr--vr
+    152  nr--nn
+    230  rr--r
+    258  nr--nr
+    311  nr--
+    325  rr--nr
+    344  nr--n
+    378  rn--n
+    417  rr--n
+    710  v--n
+    769  v--rr
+    786  nn--n
+    804  rr--rnr
+    885  rr--rr
+    934  vr--v
+   1281  rr--rn
+   1684  v--v
+   2073  v--
+  10883  n--
+  15496  n--n
+================================================================
