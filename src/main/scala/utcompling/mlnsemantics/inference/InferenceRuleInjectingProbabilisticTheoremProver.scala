@@ -28,6 +28,9 @@ import utcompling.mlnsemantics.rules.Rules
 import utcompling.mlnsemantics.rules.OnTheFlyRules
 import utcompling.mlnsemantics.rules.WordNetRules
 import utcompling.mlnsemantics.rules.PhrasalRules
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerCard
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerTimex
+import utcompling.mlnsemantics.rules.DiffRules
 
 class InferenceRuleInjectingProbabilisticTheoremProver(
 
@@ -105,6 +108,16 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     verbPh.foreach(LOG.trace(_))    
         
 */
+    val simplifiedDeclarations = declarations.map( d => {
+		val name = d._1 match {
+			case BoxerPred(discId, indices, variable, name, pos, sense) => name
+			case BoxerRel(discId, indices, event, variable, name, sense) => name
+			case BoxerNamed(discId, indices, variable, name, typ, sense) => name
+			case BoxerCard(discId, indices, variable, num, typ) => "card_" + num
+			case BoxerTimex(discId, indices, variable, timeExp) => "time"
+		}
+		name -> d._2
+	} )
     //query lucene for pre-compiled distributional rules
 	val distributionalRules = new DistributionalRules().getRules();
 
@@ -119,11 +132,13 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 										.map(r=> (r._1, r._2, r._3 * Sts.opts.distWeight, r._4)) //scale weights of all onthefly rules
 										
           //Hard rules from WordNet
-	val wordNetRules = new WordNetRules().getRules(assumptions.head.expression, goal);
+	val wordNetRules = new WordNetRules().getRules(assumptions.head.expression, goal, simplifiedDeclarations);
+	
+	val diffRule = new DiffRules().getRule(assumptions.head.expression, goal);
     
     val rules:List[WeightedExpression[BoxerExpression]] = Sts.opts.inferenceRulesLevel match {
 		case -1 => List();
-		case _ => (precompiledRules ++  onthefulyRules ++ wordNetRules).flatMap(r=>Rules.createWeightedExpression(r._1, r._2, r._3, r._4));
+		case _ => (precompiledRules ++  onthefulyRules ++ wordNetRules ++ diffRule).flatMap(r=>Rules.createWeightedExpression(r._1, r._2, r._3, r._4, simplifiedDeclarations));
 	 } 
   
     delegate.prove(constants, declarations, evidence, assumptions ++ (rules.toSet.toList), goal)

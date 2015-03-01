@@ -236,7 +236,10 @@ object Rules {
 	val (goalIndexMap, goalMetaRel) = buildIndexMap(goalPredsList, goalRelsList, goalSentence);
 
 	val folRules = rules.flatMap { rule =>
-		val Array(id, left, right, score) = rule.split("\t")
+		val Array(id, ruleLhs, ruleRhs, score, direction) = rule.split("\t")
+		val (left, right) = if (direction == ""+RuleType.Implication) (ruleLhs, ruleRhs);
+								else (ruleRhs, ruleLhs);
+		//println (rule + " ## "  + left + " ## " + right + "##" +direction + "#")
 		var inclusion : Boolean = false; // the "parking lot -> parking" case 
 		if(left.contains(right) && Sts.hypothesis.contains(left) || right.contains(left) && Sts.text.contains(right))
 		{
@@ -315,8 +318,10 @@ object Rules {
 	("rrrn--n" /*4*/, "I")
 					).toMap;
 	
-					assert(knownPatterns.contains(ruleTemplate));
-					val matchOrIgnore = knownPatterns.get(ruleTemplate).get;
+					if (!knownPatterns.contains(ruleTemplate))
+						LOG.error("Rule template not exist: " + ruleTemplate);
+					
+					val matchOrIgnore = knownPatterns.getOrElse(ruleTemplate, "I")
 					if(matchOrIgnore == "P") // add patient or remove agent 
 					{
 						assert(pattern2._2 == "v" && pattern1._2 == "vr" || pattern2._2 == "vr" && pattern1._2 == "v")
@@ -373,22 +378,22 @@ object Rules {
 					}
 					if (matchOrIgnore == "P" || matchOrIgnore == "M")
 					{
-						def getVariables(exp:BoxerExpression):List[BoxerVariable] = 
-						{
-							return exp match 
-							{
-								 case BoxerPred(discId, indices, variable, name, pos, sense) => List(variable);
-								 case BoxerRel(discId, indices, event, variable, name, sense) => List(event, variable)
-							}
-						}
-						val lhsVars:List[String] = pattern1._1.toList.flatMap(exp => getVariables(exp).map(v=>v.name));
-						val rhsVars:List[String] = pattern2._1.toList.flatMap (exp => getVariables(exp).map(v=>v.name));
-						val lhsDrs = BoxerDrs(lhsVars.map(v => (List[BoxerIndex]() -> BoxerVariable(v))),
-									pattern1._1.toList);
-						val rhsDrs = BoxerDrs(rhsVars.map(v => (List[BoxerIndex]() -> BoxerVariable(v))),
-									pattern2._1.toList);
+						//val lhsVars:List[String] = pattern1._1.toList.flatMap(exp => getVariables(exp).map(v=>v.name));
+						//val rhsVars:List[String] = pattern2._1.toList.flatMap (exp => getVariables(exp).map(v=>v.name));
+						val lhsDrs = boxerAtomsToBoxerDrs(pattern1._1.toSet) //BoxerDrs(lhsVars.map(v => (List[BoxerIndex]() -> BoxerVariable(v))), pattern1._1.toList);
+						val rhsDrs = boxerAtomsToBoxerDrs(pattern2._1.toSet)//BoxerDrs(rhsVars.map(v => (List[BoxerIndex]() -> BoxerVariable(v))), pattern2._1.toList);
 						LOG.trace ("ParaphraseRule added: " + lhsDrs + " => " + rhsDrs);
-						List((lhsDrs, rhsDrs, score.toDouble, RuleType.Implication))
+						var s = score;
+						if(s ==  "inf") s = "Infinity";
+						else if (s == "-inf") s = "-Infinity";
+
+						val (lhsDrsWithDirection, rhsDrsWithDirection) = if (direction == ""+RuleType.Implication)
+																								(lhsDrs, rhsDrs)
+																						else (rhsDrs, lhsDrs)
+						if (s.toDouble > 0)
+							List((lhsDrsWithDirection, rhsDrsWithDirection, s.toDouble, RuleType.Implication))
+						else 
+							List((lhsDrsWithDirection, rhsDrsWithDirection, -s.toDouble, RuleType.Opposite))
 					}
 					else
 						None
@@ -397,6 +402,19 @@ object Rules {
       }
       return folRules;
     }
+	def getVariables(exp:BoxerExpression):List[BoxerVariable] = 
+	{
+		return exp match 
+		{
+			 case BoxerPred(discId, indices, variable, name, pos, sense) => List(variable);
+			 case BoxerRel(discId, indices, event, variable, name, sense) => List(event, variable)
+		}
+	}
+  def boxerAtomsToBoxerDrs (atoms: scala.collection.immutable.Set[BoxerExpression]): BoxerDrs = 
+  {
+  	val vars :List[String] = atoms.toList.flatMap(exp => getVariables(exp).map(v=>v.name));
+  	return BoxerDrs(vars.map(v => (List[BoxerIndex]() -> BoxerVariable(v))), atoms.toList);
+  }
   
   private def buildIndexMap (preds: Seq[BoxerPred], rels: Seq[BoxerRel], lemma:String): (MultiMap[Int, BoxerExpression], Set[BoxerRel]) = 
   {
@@ -716,41 +734,74 @@ val matchAssumeRels = assumeRelsList.filter(rel =>
 	selectedExp;
   }
   
+  var discIdToUse:String = "";
   private def changeExpDirection(e: BoxerExpression): BoxerExpression =
     {
       e match {
-        case BoxerRel(discId, indices, event, variable, name, sense) => BoxerRel(discId match { case "h" => "t"; case "t" => "h"; }, indices, event, variable, name, sense);
-        case BoxerPred(discId, indices, variable, name, pos, sense) => BoxerPred(discId match { case "h" => "t"; case "t" => "h"; }, indices, variable, name, pos, sense);
+        case BoxerRel(discId, indices, event, variable, name, sense) => BoxerRel(discIdToUse, indices, event, variable, name, sense);
+        case BoxerPred(discId, indices, variable, name, pos, sense) => BoxerPred(discIdToUse, indices, variable, name, pos, sense);
         case _ => e.visitConstruct(changeExpDirection);
       }
     }
 
-  def createWeightedExpression(leftFOL: BoxerDrs, rightFOL: BoxerDrs, score: Double, ruleType: RuleType.Value): List[WeightedExpression[BoxerExpression]] =
+  def renameVariablesAddTypes(drs: BoxerDrs, declarations: Map[String, Seq[String]]) : BoxerDrs = 
+  {
+  	var drsNewRefs : Set[BoxerVariable] = Set(); 
+  	val drsNewConds = drs.conds.indices.map { index => 
+  		drs.conds(index) match 
+		{
+			case BoxerPred(discId, indices, variable, name, pos, sense) => 
+			{
+				var newVarName = BoxerVariable(declarations(name).head + "_" + variable.name);
+				drsNewRefs = drsNewRefs + newVarName; 
+				BoxerPred(discId, indices, newVarName, name, pos, sense)	
+			} 
+			case BoxerRel(discId, indices, event, variable, name, sense) =>
+			{
+				var newVar1Name = BoxerVariable(declarations(name).head + "_" + event.name);
+				var newVar2Name = BoxerVariable(declarations(name).last + "_" + variable.name);
+				drsNewRefs = drsNewRefs ++ Set(newVar1Name, newVar2Name); 
+				BoxerRel(discId, indices, newVar1Name, newVar2Name, name, sense)	
+			}
+			
+			//case BoxerNamed(discId, indices, variable, name, typ, sense) => name
+			//case BoxerCard(discId, indices, variable, num, typ) => "card_" + num
+			//case BoxerTimex(discId, indices, variable, timeExp) => "time"
+		}
+  	}
+  	assert(drsNewRefs.size == drs.refs.toSet.size)
+
+	BoxerDrs(drsNewRefs.map((List[BoxerIndex]() -> _)).toList, drsNewConds.toList)
+  }
+  def createWeightedExpression(leftFOL: BoxerDrs, rightFOL: BoxerDrs, score: Double, ruleType: RuleType.Value, declarations: Map[String, Seq[String]]): List[WeightedExpression[BoxerExpression]] =
   {
     if(score < Sts.opts.weightThreshold )
       return List();
-  
-    List(createWeightedExpression(leftFOL, rightFOL, "h", score, ruleType)).flatten ++
+    val varRenamedLeftFol = renameVariablesAddTypes(leftFOL, declarations)
+    val varRenamedRightFol = renameVariablesAddTypes(rightFOL, declarations)
+    List(createWeightedExpression(varRenamedLeftFol, varRenamedRightFol, "h", score, ruleType)).flatten ++
     (
       if (Sts.opts.task == "sts")
-        List(createWeightedExpression(rightFOL, leftFOL, "t", score, ruleType)).flatten
+        List(createWeightedExpression(varRenamedRightFol, varRenamedLeftFol, "t", score, ruleType)).flatten
       else List())
   }
 
   private def createWeightedExpression(leftFOL: BoxerDrs, rightFOL: BoxerDrs, discId: String, score: Double, ruleType: RuleType.Value): Option[WeightedExpression[BoxerExpression]] =
     {
-      /*val lhsSet = leftFOL.refs.map(_._2).toSet
+      val lhsSet = leftFOL.refs.map(_._2).toSet
       val rhsSet = rightFOL.refs.map(_._2).toSet
       val diff = rhsSet -- lhsSet; 
-      if( ! diff.isEmpty ) //WRONG, some valid rules have same predicates names, but different variable assingment
+      if( ! diff.isEmpty ) 
       {
+      	//TODO: add existential quantifier, but ignore the rule for now.
         LOG.trace("Rule ignored: " + leftFOL + " => " + rightFOL )
         return None //RHS has variables that are not in the LHS
-      }*/
+      }
 
+		discIdToUse = discId
       val changedLHS = changeExpDirection(leftFOL);
       var lhs = changedLHS.asInstanceOf[BoxerDrs]();      
-      var rhs = rightFOL
+      var rhs = changeExpDirection(rightFOL).asInstanceOf[BoxerDrs]();
       val allRefs = (lhs.refs ++ rhs.refs).toSet.toList
       if(ruleType  == RuleType.BackwardImplication )
       {

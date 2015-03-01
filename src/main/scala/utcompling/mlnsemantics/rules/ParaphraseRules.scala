@@ -13,33 +13,51 @@ class ParaphraseRules extends Rules{
 
   // Search phrases in Text-Hypothesis pair
 
-  def getRules(): List[String] = {
+	def getRules(): List[String] = 
+	{
+		val returnedRules = if (Sts.opts.rulesMatchLemma)
+			Sts.luceneParaphrases.map(_.query(Sts.text + " " + Sts.textLemma, Sts.hypothesis + " " + Sts.hypothesisLemma)).flatten
+			else
+				Sts.luceneParaphrases.map(_.query(Sts.text  , Sts.hypothesis )).flatten
 
-  	val returnedRules = if (Sts.opts.rulesMatchLemma)
-  			Sts.luceneParaphrases.query(Sts.text + " " + Sts.textLemma, Sts.hypothesis + " " + Sts.hypothesisLemma)
-  		else
-  			Sts.luceneParaphrases.query(Sts.text  , Sts.hypothesis )
+				LOG.trace("Paraphrase rules before filtring: ");
+		returnedRules.foreach(rule => LOG.trace(rule))
 
-    val filterStart = System.nanoTime
-    val paraphraseRules = returnedRules
-      .filter { rule =>
-        val Array(id, ruleLhs, ruleRhs, score) = rule.split("\t")
 
-        if (Sts.opts.rulesMatchLemma)//Some datasets use lemmas, other use non-lemmas, so, search in the sentence and the lemmatized sentence
-        	process(Sts.textLemma).contains(process(Tokenize.separateTokens(Lemmatize.lemmatizeWords(ruleLhs)))) &&
-        	process(Sts.hypothesisLemma).contains(process(Tokenize.separateTokens(Lemmatize.lemmatizeWords(ruleRhs))))
-        else
-        	process(Sts.text).contains(process(Tokenize.separateTokens(ruleLhs))) &&
-        	process(Sts.hypothesis).contains(process(Tokenize.separateTokens(ruleRhs)))
-        	
-      }.toList
+		val filterStart = System.nanoTime
+		val paraphraseRules = returnedRules
+			.flatMap { rule =>
+				val Array(id, ruleLhs, ruleRhs, score) = rule.split("\t")
+		
+				var textSen = Sts.text;
+				var hypSen = Sts.hypothesis;
+				var lhs = ruleLhs;
+				var rhs = ruleRhs;
+				if (Sts.opts.rulesMatchLemma)//Some datasets use lemmas, other use non-lemmas, so, search in the sentence and the lemmatized sentence
+				{
+					textSen = Sts.textLemma
+					hypSen = Sts.hypothesisLemma;
+					lhs = Lemmatize.lemmatizeWords(ruleLhs);
+					rhs = Lemmatize.lemmatizeWords(ruleRhs);
+				}
+				if(process(textSen).contains(process(Tokenize.separateTokens(lhs))) &&
+					process(hypSen).contains(process(Tokenize.separateTokens(rhs)))
+				)
+					Some(rule + "\t" + RuleType.Implication);
+				else if (process(hypSen).contains(process(Tokenize.separateTokens(lhs))) &&
+					process(textSen).contains(process(Tokenize.separateTokens(rhs)))
+				)
+					Some(rule + "\t" + RuleType.BackwardImplication)
+				else 
+					None 
+			}.toList
 
-    val filterEnd = System.nanoTime
-    LOG.debug("Filtering time: " + (filterEnd - filterStart) / 1e9 + " s")
-    LOG.trace("Paraphrase rules: ");
-    paraphraseRules.foreach(rule => LOG.trace(rule))
-    paraphraseRules
-  }
+		val filterEnd = System.nanoTime
+		LOG.debug("Filtering time: " + (filterEnd - filterStart) / 1e9 + " s")
+		LOG.trace("Paraphrase rules: ");
+		paraphraseRules.foreach(rule => LOG.trace(rule))
+		paraphraseRules
+	}
   
   //process to match Barent rules. 
   def process(s:String):String = {

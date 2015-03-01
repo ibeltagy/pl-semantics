@@ -23,7 +23,7 @@ class WordNetRules extends Rules {
   private val LOG = LogFactory.getLog(classOf[WordNetRules])
 
 
-  def getRules(text: BoxerExpression, hypothesis: BoxerExpression): List[(BoxerDrs, BoxerDrs, Double, RuleType.Value)] =
+  def getRules(text: BoxerExpression, hypothesis: BoxerExpression, declarations: Map[String, Seq[String]]): List[(BoxerDrs, BoxerDrs, Double, RuleType.Value)] =
     {
 	  if(!Sts.opts.wordnet)
 	    return List();
@@ -40,23 +40,27 @@ class WordNetRules extends Rules {
 		  val hyponyms = WordNetRules.wordnet.getHyponyms(txtPred.name, txtPred.pos);
 		  val antonyms = WordNetRules.wordnet.getAntonyms(txtPred.name, txtPred.pos);
 		  //println (txtPred.name + " -->" + antonyms )
-
-          for (hypPred <- hypPreds )
+		  
+		  if (!hypPreds.map(_.name).contains(txtPred.name))
           {
-        	 if (hypPred.pos == txtPred.pos && hypPred.name != txtPred.name)
-        	 {
-        		 if (synonyms.contains(hypPred.name))
-        		 {								//DoubleImplication
-        		   rules = rules :+ createRule (txtPred, hypPred, RuleType.Implication); 
-        		   rules = rules :+ createRule (txtPred, hypPred, RuleType.BackwardImplication);
-        		 }
-        		 if (hypernyms.contains(hypPred.name))
-        			  rules = rules :+ createRule (txtPred, hypPred, RuleType.Implication);
-        		 //if (hyponyms.contains(hypPred.name))   //backward implication 
-        		 //	  rules = rules :+ createRule (txtPred, hypPred, RuleType.BackwardImplication); //backward implication 
-        		 //if (antonyms.contains(hypPred.name) && Sts.opts.softLogicTool != "psl" /*PSL does not like this rule*/)
-        		 //	  rules = rules :+ createRule (txtPred, hypPred, RuleType.Opposite);
-        	 }
+		  	for (hypPred <- hypPreds )
+	        {
+	        	 if (hypPred.pos == txtPred.pos && hypPred.name != txtPred.name)
+	        	 {
+	        		 if (synonyms.contains(hypPred.name))
+	        		 {								//DoubleImplication
+	        		   rules = rules :+ createRule (txtPred, hypPred, RuleType.Implication); 
+	        		   //rules = rules :+ createRule (txtPred, hypPred, RuleType.BackwardImplication);
+	        		 }
+	        		 if (hypernyms.contains(hypPred.name))
+	        			  rules = rules :+ createRule (txtPred, hypPred, RuleType.Implication);
+	        		 if (hyponyms.contains(hypPred.name))   //backward implication 
+	        		 	  rules = rules :+ createRule (txtPred, hypPred, RuleType.BackwardImplication); //backward implication 
+	        		 if (antonyms.contains(hypPred.name) && Sts.opts.softLogicTool != "psl" /*PSL does not like this rule*/
+							&& hypPred.pos != "n" /*hypPred.name != "man" && hypPred.name != "woman"*/ )
+						rules = rules :+ createRule (txtPred, hypPred, RuleType.Opposite);
+	        	 }
+	        }
           }
        } 
 	   return rules;
@@ -64,7 +68,7 @@ class WordNetRules extends Rules {
   	
   	def createRule(lhs: BoxerPred, rhs:BoxerPred, ruleType: RuleType.Value):(BoxerDrs, BoxerDrs, Double, RuleType.Value) = 
   	{
-        val lhsDrs = BoxerDrs(List(List() -> BoxerVariable("x0")), List(
+  		val lhsDrs = BoxerDrs(List(List() -> BoxerVariable("x0")), List(
 						BoxerPred(lhs.discId, lhs.indices, BoxerVariable("x0"), lhs.name, lhs.pos, lhs.sense)
 						));
         val rhsDrs = BoxerDrs(List(List() -> BoxerVariable("x0")), List(
