@@ -98,8 +98,10 @@ def isEntailSentence (ed1, epos1, ed2, epos2, epos3, lhs, qd1, qpos1, qd2, qpos2
 def main():
 	Qs = ["some", "all", "no", "not all"]
 	v = "eat"
-	lhss = ["man", "hungry man"]
-	rhss = ["food", "delicious food"]
+	lhss = ["person", "man"]
+	rhss = ["food", "meat"]
+	#lhss = ["man", "hungry man"]
+	#rhss = ["food", "delicious food"]
 	direction = ["down", "up"]
 
 	for q11 in Qs:
@@ -111,9 +113,12 @@ def main():
 							(ed1, epos1, ed2, epos2, epos3) = simplify(q11, "+", q12, "+", "+")
 							(qd1, qpos1, qd2, qpos2, qpos3) = simplify(q21, "+", q22, "+", "+")
 							(nqd1, nqpos1, nqd2, nqpos2, nqpos3) = negate (qd1, qpos1, qd2, qpos2, qpos3)
+							(ned1, nepos1, ned2, nepos2, nepos3) = negate (ed1, epos1, ed2, epos2, epos3)
 							entailResult = 0
 							entail = isEntailSentence(ed1, epos1, ed2, epos2, epos3, lhs, qd1, qpos1, qd2, qpos2, qpos3, rhs)
 							contradict = isEntailSentence(ed1, epos1, ed2, epos2, epos3, lhs, nqd1, nqpos1, nqd2, nqpos2, nqpos3, rhs)
+							#contradict2 = isEntailSentence(qd1, qpos1, qd2, qpos2, qpos3, (lhs+1)%2, ned1, nepos1, ned2, nepos2, nepos3, (rhs+1)%2)
+							print str(contradict) # + ", " + str(contradict2)
 							if (entail):
 								entailResult = 1
 							elif (contradict):
