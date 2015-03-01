@@ -1,4 +1,6 @@
+An old woman is wearing a shirt with a rose pattern upon it and is clumsily carrying two newspapers	A woman is wearing sunglasses of large size and is holding newspapers in both hands
 A person is throwing a cat on to the ceiling.	A person throws a cat on the ceiling.
+Mary forgot to lock the door.	Mary locked the door.
 Several young people are posing for a photo and holding beers	Several young people are posing for a photo and holding drinks
 A young girl in a blue leotard is jumping in the air	There is no girl in blue jumping in the air
 A person is not quickly chopping mushrooms with a knife	A person is quickly chopping mushrooms with a knife
@@ -35,7 +37,6 @@ some guy does not own no compnay	some guy does not own no compnay
 all guys do not own no compnay	all guys do not own no compnay
 The kids are wearing bathing suits and water is splashing around	The kids are not wearing suits and water is splashing around
 A man is cutting onion.	A woman is slicing tomato.
-A B C hi dude no parse break break hi no try out hey ha ha ha damn it no way.	XYZ
 The Prosecutor-General explained, in a statement received by Agence France Presse, that the investigation judge's request was sent today, Monday, to the Federal Police Authority, which has the responsibility of deciding whether or not it will forward this request to the British authorities..	Indicated the Prosecutor in statement received by AFP that requested the investigative judge rose today, Monday to the Federal Court of the police dating back to the responsibility to determine whether will transform this request to the British authorities.
 Heemeyer equipped an old bulldozer with three television cameras and monitors so he could see to steer.	Heemeyer had installed television cameras connected to three monitors so he could see where he was going.
 The board of Marks & Spencer will take another look at Philip Green's increased takeover offer.	Philip Green tries to take over Marks & Spencer.
@@ -60,5 +61,4 @@ SCAF dissolved the Parliament.	A dissolution of parliament happened.
 The little blue ball chases the big dog.	A tall person makes a big cake.
 A woman slices no vegetable.	A man plays no acoustic guitar.
 There is no boy walking across a bridge	A boy is walking across a bridge
-Mary forgot to lock the door.	Mary locked the door.
 Mary locked the door.	Mary forgot to lock the door.

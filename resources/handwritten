@@ -2,3 +2,20 @@
 [NP]	commissioner	one of the commissioners	1
 [NP]	lot of time	time	1
 [NP]	time	lot of time	1
+[NP]	a boy	one boy	1
+[NP]	a girl	one girl	1
+[NP]	a man	one man	1
+[NP]	a person	one person	1
+[NP]	a woman	one woman	1
+[NP]	a cat	one cat	1
+[NP]	a dog	one dog	1
+[NP]	a herd	one herd	1
+[NP]	the man	one person	1
+[NP]	someone	nobody	-inf
+[NP]	nobody	someone	-inf
+[VP]	cutting	slicing	1
+[VP]	cutting	chopping down	1
+[VP]	jumping	bouncing	1
+[VP]	climbing	climbing up	1
+[NP]	man	person	1
+[NP]	meat	food	1

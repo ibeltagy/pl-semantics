@@ -23,3 +23,12 @@ psl/run
 lib/ws4j-1.0.1.jar
 temp-*.mln
 *.arff
+easyccg/bin/
+easyccg/model.tar.gz
+easyccg/model/
+easyccg/model_rebank.tar.gz
+easyccg/easyccg.jar
+easyccg/lib/
+resources/*.idx/
+resources/ppdb/*.idx
+results

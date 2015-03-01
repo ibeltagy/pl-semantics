@@ -1,3 +1,48 @@
+TODO:
+->>New parser
+-Weight learning (good way to remove bad rules)
+->>Phrasal rules (read Mike Lewis)
+-PPDB: rules with exist on the RHS
+->>More handwritten rules
+-Z(Q+MLN)/Z(MLN) using Vibhav's suggestion
+-Formal MCWA (compare it with PSL, try it on STS on MLN)
+-Most, Few
+->>Use Katrin's robinson's resolution to find differences between two rules, and build vector only for the difference
+-Coref and Contradictions errors below
+-Bad IR 
+-In the next paper, talk why CWA is good (because this is how RTE is defined)
+
+Contradiction: tmp/ratio-60-analysis lists problems with doing coreference resolution
+Examples: 
+1)476: the man is denying an interview			the man is granting an interview
+2)1098: a person is not playing the keyboard			a man is playing a keyboard
+3)4036: there is no brown dog jumping in the air		the brown dog is jumping in the air
+
+IR: 
+Investigate errors in tmp/ratio-56-2-analysis-investigateLater again.  THey are the difference between ratio-55 and ratio-56-2
+Hyponem rules from PPDB to. 
+Use Katrin's resolution algorithm to find the difference between two formulas, then build and IR for that differnece
+**Ratio**
+-propagation should also propagate for the goal.
+-even propagating for the goal will not solve the problem. Eg: T: a man is not driving, H: a man is driving a car with one hand. Propagation will not create "a car with one hand". 
+-ratio can easily get confused between neutral and entail in case of sentneces with a big overlap.
+-introduction of entities should take care of cases where there is a discourse variable, but not an entity like pair 4285,4823
+-Delete ground clauses that are not necessery, or that are not affecting the ratio, or that are affecting the ratio but not affecting flipping it. 
+-H|T, H, notT|H, notT
+-Fracas pair 6 is an example of what goes wrong becaues of the missed up handling of existence
+-FraCas pair 44,26,16 is an example for why applying the MCW does not work for Ratio (monotonicity missed up)
+-FraCas pair 42 is an example for a problem with the generation of Skolem functions. Generated constatns for T|H and H are different
+================
+-Flipping the direction of the rules in GivenNotTextProbabilisticTheoremProver is wrong. E.g: Pair 2319 (food => pizza). GivenNotTextProbabilisticTheoremProver should be moved above InferenceRuleInjectingProbabilisticTheoremProver
+-I have to do repeat in AutoTyping. Example: Pair 501
+-Negate or not negate presupposed ? Example for negate: Fracas 26, Example for NotNegate: SICK-rte 3096
+-Take presuppposed back into negation. Example: SICK-rte 1125
+============================
+-Correference resolution is so missedup for FraCas
+===========================
+-A paper comparing between MLN+MCW vs. PSL. Use my email to the PSL group as a guideline
+=======================
+
 -When generating R, how to deal with pred(Univ, Exist) ??
 -When generating R, do we need to check if negated or not negated predicates  ? e.g. pair 13
 

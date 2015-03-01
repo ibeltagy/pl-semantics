@@ -184,7 +184,7 @@ case $CMD in
    ;;
    eval)
       if [ "$task" == "rte" ]; then
-		   tail -n 1 $outputDir/result | bin/weka.sh classify $gs 3
+		   tail -n 1 $outputDir/result | bin/weka.sh classify $gs 4
       else
 		   tail -n 1 $outputDir/result | bin/weka.sh regress $gs
       fi
