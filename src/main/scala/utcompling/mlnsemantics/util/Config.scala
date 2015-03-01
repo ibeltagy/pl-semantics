@@ -48,6 +48,7 @@ class Config(opts: Map[String, String] = Map()) {
 		"-lexInferModelFile",
 		"-lexInferMethod",
 		"-wordnet",
+		"-diffRules",
 		"-task",
 		"-varBind",
 		"-chopLvl",
@@ -73,7 +74,12 @@ class Config(opts: Map[String, String] = Map()) {
 		"-withExistence",
 		"-withFixUnivInQ",
 		"-withFixCWA",
-		"-evdIntroSingleVar"
+		"-evdIntroSingleVar",
+		"-prior",
+		"-wFixCWA",
+		"-ratio",
+		"-coref",
+		"-errorCode"
 	);
   
   val diff = opts.keys.toSet.diff(validArgs.toSet)
@@ -88,7 +94,7 @@ class Config(opts: Map[String, String] = Map()) {
   var timeout = opts.get("-timeout") match {
   	case Some("-1") => None;  //no timeout 
   	case Some(t) => Some(t.toLong);
-    case _ => Some(120000L); //by default, timeout is 5 minutes
+    case _ => Some(75000L);
   }
   //Timeout for SampleSearch inference
   var ssTimeout = opts.get("-ssTimeout") match {
@@ -190,7 +196,7 @@ class Config(opts: Map[String, String] = Map()) {
   //-1)no rules at all  0)pre-compiled rules. No on-the-fly rules 1)pre-compiled rules + lexical rules, 2)all rules(precompiled, lexical, phrasal)
   val inferenceRulesLevel = opts.get("-irLvl") match {
     case Some(vst) => vst.toInt;
-    case _ => 1;
+    case _ => 0;
   }
   
   //weight threshold
@@ -217,6 +223,12 @@ class Config(opts: Map[String, String] = Map()) {
   val wordnet = opts.get("-wordnet") match {
     case Some("false") => false;
     case _ => true;
+  }
+  
+  //Enable or Disable Difference rules
+  val diffRules = opts.get("-diffRules") match {
+    case Some("true") => true;
+    case _ => false;
   }
   
   //-------------------------------------------task
@@ -339,7 +351,7 @@ class Config(opts: Map[String, String] = Map()) {
   }
 
  //with or without fixing effect of CWA  in Q
- val withFixCWA = opts.get("-withFixCWA") match {
+ var withFixCWA = opts.get("-withFixCWA") match {
     case Some("false") => false;
     case _ => true;
   }
@@ -408,8 +420,46 @@ class Config(opts: Map[String, String] = Map()) {
     case _ => "multiOut"
   }
   
+  //----------------------------------------------
+  // Predicates prior in the RTE task   
+  var prior = opts.get("-prior") match {
+    case Some(weight) => weight.toDouble
+    case _ => 0
+  }
+
+  // Weight of the FixCWA rule   
+  var wFixCWA = opts.get("-wFixCWA") match {
+    case Some(weight) => weight.toDouble
+    case _ => 0.99
+  }
+  
+  //detect contradiction through Ratio or notTGivenH
+  val ratio = opts.get("-ratio") match {
+     case Some("true") => true;
+     case _ => false;
+  }
+  
+  //doing coreference resolution between T and H 
+  val coref = opts.get("-coref") match {
+     case Some("true") => true;
+     case _ => true;
+  }
+  
+  //Return system generated error codes, or an inputed error code 
+  val errorCode = opts.get("-errorCode") match {
+     case Some(x) => Some(x.toDouble);
+     case _ => None;
+  }
+  def errorCode(x:Double):Double = {
+  	if (x >=0) //no error
+  		return x;
+  	if(this.errorCode.isDefined)
+  		return errorCode.get
+  	return x
+  }
+  
 }
 
 object Config {
-
+	
 }

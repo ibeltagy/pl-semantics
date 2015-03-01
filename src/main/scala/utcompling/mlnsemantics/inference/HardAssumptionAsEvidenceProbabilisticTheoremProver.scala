@@ -110,6 +110,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
         case _ => {
           if(univVars.size == 0)
           {
+        	  //existVars.foreach(addConst(_))
         	  goUniv(e, univVars, existVars, isNegated)
           }
           else
@@ -126,7 +127,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 	            val constList = oldConstants .get(univVar.substring(0, 2)).get;
 	            univConst = univConst ++ List(constList.toList)
 	            maxUnivConstListLen = scala.math.max(maxUnivConstListLen, constList.size);
-	            println( oldConstants .get(univVar.substring(0, 2)))
+	            //println( oldConstants .get(univVar.substring(0, 2)))
 	          })
 	          existVars.foreach(existVar =>{
 	            skolemPred = FolApplicationExpression(skolemPred, FolVariableExpression(Variable(existVar)));

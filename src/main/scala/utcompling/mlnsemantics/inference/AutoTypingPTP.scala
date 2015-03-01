@@ -29,6 +29,19 @@ class AutoTypingPTP(
   private var isRuleR = false; //Rule added by SetGoalPTP to solve DCA problems in Q
   //private var repeat = true;
   private var first = true;
+  private var goalExp:FolExpression = null; //process Goal at the end
+  private var goalW:Double = 0;
+
+  private var textExp:FolExpression = null; //process Text second time at the end
+  private var textW:Double = 0;
+
+  private var goalPredsPolarity:scala.collection.mutable.Map[String, String] = null //predName->polarity
+  private val POSITIVE = "P";
+  private val NEGATIVE = "N";
+  private val BOTH = "B";
+  private val INTRODUCTION = "I"
+
+  
   def runWithTimeout[T](timeoutMs: Long)(f: => T) : Option[T] = {
           awaitAll(timeoutMs, future(f)).head.asInstanceOf[Option[T]]
   }
@@ -49,11 +62,18 @@ class AutoTypingPTP(
     
     allConstants = constants;
     extraEvid = List();
-  	quantifiedVars = scala.collection.mutable.Set();
+  	 quantifiedVars = scala.collection.mutable.Set();
     autoConst = scala.collection.mutable.Map(); //predName#varIndx -> HX1, HX2 ....
     //arrows =  scala.collection.mutable.Set(); //an x -> y means all constants of x should be propagated to y
+    goalExp = null; //process Goal at the end
+    goalW = 0;
+
+    textExp = null; //process Text a second time at end
+    textW = 0;
+
+	 goalPredsPolarity = null;
     //repeat = true;
-	first = true;
+	 first = true;
     if(Sts.opts.negativeEvd && Sts.opts.task == "rte" && (Sts.opts.softLogicTool == "mln"|| Sts.opts.softLogicTool == "ss"))
     {
 	    
@@ -74,142 +94,39 @@ class AutoTypingPTP(
 
 		def findApply = 
 		{
-			//while (repeat)
-			//{
-				//repeat = false;
-			//1)collect constants, and propagate them according to the Text
-			first = true;
-			assumptions.foreach 
-			{
-				case HardWeightedExpression(e, w) => 
-				{
-					quantifiedVars.clear();
-					isHardRule = true;
-					isRuleR = (w != Double.PositiveInfinity); // Rule added by SetGoalPTP to solve DCA problems in Q
-					val vars = findConstVarsQuantif(e);
-					var allPropagatedConstToSkolemIndexed:Map[String, List[List[String]]] = Map();//dataset to store previously propagated skolem
-																										//constants to avoid propagating it twice 
-
-               var lastAutoConstSize:Int = autoConst.map(_._2._2.size).reduce(_+_);
-					findArrowsIR(e); //Run it at least once 
-					while (lastAutoConstSize != autoConst.map(_._2._2.size).reduce(_+_))
-					{
-						lastAutoConstSize = autoConst.map(_._2._2.size).reduce(_+_)
-						println (lastAutoConstSize)
-						
-						//val skolemFunctionsCount = vars.count(_._1.startsWith("skolem"));
-						//repeat the propagation cycle: propagate, generate on Skolem, propagate, ....
-						//for (i <- 0 to skolemFunctionsCount)
-						//{
-							//println("iteration " + i);
-							//Propagate all from LHS of IMP to RHS (note that this also propagates to SKOLEM)
-							//findArrowsIR(e)  //<<------------this "was" the right thing to do 
-							/*vars.foreach(rhsVar => 
-							{
-							  //if (rhsVar._1.startsWith("skolem"))
-								  vars.foreach(lhsVar => propagate(Set(lhsVar), rhsVar))
-							})*/
-	
-							 //All propagations to skolem are done. 
-							//Now, call genPermutes from HardAssumptionAsEvidenceProbabilisticTheoremProver
-							vars.foreach(rhsVar => 
-							{
-							  if (rhsVar._1.startsWith("skolem"))
-							  {
-								val inVarCount = HardAssumptionAsEvidenceProbabilisticTheoremProver.getInputVarCount(rhsVar._1)
-								val totalVarCount = rhsVar._2.size
-								val propagatedConstToSkolem = autoConst(rhsVar._1);
-								val propagatedConstToSkolemCleaned = propagatedConstToSkolem._2.unzip._2
-								autoConst(rhsVar._1)._2.retain(!_._2.contains("any"));
-								var maxLen = 0;//longest list of constants per variable
-								val propagatedConstToSkolemIndexed = (0 until inVarCount).map(indx => {
-									val allConstAtIndex = propagatedConstToSkolemCleaned.map(tuple => tuple(indx)).toSet.toList;
-									val previouslyPropagated = allPropagatedConstToSkolemIndexed.getOrElse(rhsVar._1, List());
-									val allConstAtIndexCleaned = allConstAtIndex.filter(c => c != "any" && 
-																		(previouslyPropagated.isEmpty || !previouslyPropagated(indx).contains(c) ));
-								  //println(indx + "--" + allConstAtIndexCleaned)
-									maxLen = math.max(maxLen, allConstAtIndexCleaned.size)
-									allConstAtIndexCleaned
-								}).toList
-								/*
-								if (allPropagatedConstToSkolemIndexed.getOrElse(rhsVar._1, List()).isEmpty)
-									//initialize it
-									allPropagatedConstToSkolemIndexed = allPropagatedConstToSkolemIndexed + (rhsVar._1 -> propagatedConstToSkolemIndexed.toList)
-								else
-									//add to the previous
-									allPropagatedConstToSkolemIndexed = allPropagatedConstToSkolemIndexed + (rhsVar._1 -> ((0 until inVarCount).map(indx => { 
-										allPropagatedConstToSkolemIndexed.get(rhsVar._1).get(indx) ++ propagatedConstToSkolemIndexed(indx)
-									})).toList)
-									* 
-									*/
-								val outVar:List[String] = rhsVar._2.slice(inVarCount, totalVarCount).toList;
-								val evidAndConst = HardAssumptionAsEvidenceProbabilisticTheoremProver.genPermutes (
-														maxLen, inVarCount, rhsVar._1, propagatedConstToSkolemIndexed, outVar, autoConst(rhsVar._1)._2.map(_._2.take(inVarCount).toList).toSet);
-								extraEvid = extraEvid ++ evidAndConst._1;
-								evidAndConst._2.foreach(c =>addConst(c)) //update allConstants
-								//add to autoConst
-								autoConst(rhsVar._1)._2  ++= evidAndConst._1.map ( evid => evid match {
-								  case FolAtom(pred, args @ _*) =>  ("CONST", args.map(_.name))
-								})
-							  }
-							})
-							//generate arrows from vars
-							 findArrowsIR(e)
-
-							//I would love to remove this code and replace it with findArrowsIR (Done above)
-/*							vars.foreach(rhsVar => 
-							{
-							  //Do not propagate TO skolem predicates. DO all other propagations
-							  //if (!rhsVar._1.startsWith("skolem")) 
-								  vars.foreach(lhsVar => if (lhsVar._1.startsWith("skolem")) propagate(Set(lhsVar), rhsVar))
-							})
-*/
-						}
-//               findArrowsIR(e)
-					//}
-				}
-				case SoftWeightedExpression(e, w) =>
-				{
-					quantifiedVars.clear();
-					isHardRule = false;
-					findArrowsIR (e)
-				}
-				case _ => ;
-			}
-/*
-			//2)apply infernece rules 
-			assumptions.foreach 
-			{			
-	          case SoftWeightedExpression(e, w) => 
-	          {
-	            quantifiedVars.clear(); 
-	            isHardRule = false; 
-	            findArrowsIR (e)
-	          }
-	          case _ => ;
-	        }
 			
-		   //3)propagate collected constants again according to the Text (if any)
-			first = false;
-			assumptions.foreach 
+			first = true;
+			var repeat = 0;
+			while (repeat <= 1)
 			{
-	          case HardWeightedExpression(e) => 
-	          {
-	            quantifiedVars.clear();
-	            isHardRule = true;
-	            val vars = findConstVarsQuantif(e);
-	            //generate arrows from vars
-	   			vars.foreach(rhsVar => 
-	   			{
-	   				vars.foreach(lhsVar =>
-	   					propagate(Set(lhsVar), rhsVar)
-	      			)
-	      		})	            
-	           }
-	          case _ => ;
-			}
-*/	    	 
-			//}//Repeat
+				repeat = repeat + 1;
+				//1)collect constants, and propagate them according to the Text
+							  
+				assumptions.foreach 
+				{
+					case HardWeightedExpression(e, w) => 
+					{
+						processExp(e, w);
+                  textExp = e //last HardWeightedExpression is the Text. This is ugly but works (hopefully)
+                  textW = w
+					}
+					case GoalExpression(e, w) => 
+					{
+						goalExp = e
+						goalW = w
+					}
+					case SoftWeightedExpression(e, w) =>
+					{
+						quantifiedVars.clear();
+						isHardRule = false;
+						findArrowsIR (e)
+					}
+					case _ => ;
+				}
+				//processExp(goalExp, goalW) //process Goal rule at the end
+            //processExp(textExp, textW) //process Text rule again at the end
+            first = false;
+			}//Repeat
 			genNegativeEvd(declarations);
 		}
 	
@@ -227,10 +144,162 @@ class AutoTypingPTP(
       goal)
     
   }
+  private def processExp (e:FolExpression, w:Double) =
+  {
+	quantifiedVars.clear();
+	isHardRule = true;
+	isRuleR = (w != Double.PositiveInfinity && w == Sts.opts.wFixCWA ); // Rule added by SetGoalPTP to solve DCA problems in Q
+	val vars = findConstVarsQuantif(e);
+	var allPropagatedConstToSkolemIndexed:Map[String, List[List[String]]] = Map();//dataset to store previously propagated skolem
+																						//constants to avoid propagating it twice 
+	var lastAutoConstSize:Int = autoConst.map(_._2._2.size).reduce(_+_);
+	findArrowsIR(e); //Run it at least once
+	/*
+	vars.foreach(rhsVar => {
+		vars.foreach(lhsVar => {
+			if (!lhsVar._1.startsWith("r_"))
+				propagate(Set(lhsVar), rhsVar)
+		})
+	})
+	 */
+	while (lastAutoConstSize != autoConst.map(_._2._2.size).reduce(_+_))
+	{
+		lastAutoConstSize = autoConst.map(_._2._2.size).reduce(_+_)
+		//println (lastAutoConstSize)
+		
+	//val skolemFunctionsCount = vars.count(_._1.startsWith("skolem"));
+	//repeat the propagation cycle: propagate, generate on Skolem, propagate, ....
+	//for (i <- 0 to skolemFunctionsCount)
+	//{
+			//println("iteration " + i);
+			//Propagate all from LHS of IMP to RHS (note that this also propagates to SKOLEM)
+			//findArrowsIR(e)  //<<------------this "was" the right thing to do 
+			/*vars.foreach(rhsVar => 
+			{
+			  //if (rhsVar._1.startsWith("skolem"))
+				  vars.foreach(lhsVar => propagate(Set(lhsVar), rhsVar))
+			})*/
 
+			 //All propagations to skolem are done. 
+			//Now, call genPermutes from HardAssumptionAsEvidenceProbabilisticTheoremProver
+			vars.foreach(rhsVar => 
+			{
+			  if (rhsVar._1.startsWith("skolem"))
+			  {
+				val inVarCount = HardAssumptionAsEvidenceProbabilisticTheoremProver.getInputVarCount(rhsVar._1)
+				val totalVarCount = rhsVar._2.size
+				val propagatedConstToSkolem = autoConst(rhsVar._1);
+				val propagatedConstToSkolemCleaned = propagatedConstToSkolem._2.unzip._2
+				autoConst(rhsVar._1)._2.retain(!_._2.contains("any"));
+				var maxLen = 0;//longest list of constants per variable
+				val propagatedConstToSkolemIndexed = (0 until inVarCount).map(indx => {
+					val allConstAtIndex = propagatedConstToSkolemCleaned.map(tuple => tuple(indx)).toSet.toList;
+					val previouslyPropagated = allPropagatedConstToSkolemIndexed.getOrElse(rhsVar._1, List());
+					val allConstAtIndexCleaned = allConstAtIndex.filter(c => c != "any" && 
+														(previouslyPropagated.isEmpty || !previouslyPropagated(indx).contains(c) ));
+				  //println(indx + "--" + allConstAtIndexCleaned)
+					maxLen = math.max(maxLen, allConstAtIndexCleaned.size)
+					allConstAtIndexCleaned
+				}).toList
+				/*
+				if (allPropagatedConstToSkolemIndexed.getOrElse(rhsVar._1, List()).isEmpty)
+					//initialize it
+					allPropagatedConstToSkolemIndexed = allPropagatedConstToSkolemIndexed + (rhsVar._1 -> propagatedConstToSkolemIndexed.toList)
+				else
+					//add to the previous
+					allPropagatedConstToSkolemIndexed = allPropagatedConstToSkolemIndexed + (rhsVar._1 -> ((0 until inVarCount).map(indx => { 
+						allPropagatedConstToSkolemIndexed.get(rhsVar._1).get(indx) ++ propagatedConstToSkolemIndexed(indx)
+					})).toList)
+					* 
+					*/
+				val outVar:List[String] = rhsVar._2.slice(inVarCount, totalVarCount).toList;
+				val evidAndConst = HardAssumptionAsEvidenceProbabilisticTheoremProver.genPermutes (
+										maxLen, inVarCount, rhsVar._1, propagatedConstToSkolemIndexed, outVar, autoConst(rhsVar._1)._2.map(_._2.take(inVarCount).toList).toSet);
+				extraEvid = extraEvid ++ evidAndConst._1;
+				evidAndConst._2.foreach(c =>addConst(c)) //update allConstants
+				//add to autoConst
+				autoConst(rhsVar._1)._2  ++= evidAndConst._1.map ( evid => evid match {
+				  case FolAtom(pred, args @ _*) =>  ("CONST", args.map(_.name))
+				})
+			  }
+			})
+			//generate arrows from vars
+			 findArrowsIR(e)
+
+			//I would love to remove this code and replace it with findArrowsIR (Done above)
+			/*vars.foreach(rhsVar => 
+			{
+			  //Do not propagate TO skolem predicates. DO all other propagations
+			  //if (!rhsVar._1.startsWith("skolem")) 
+				  vars.foreach(lhsVar => if (lhsVar._1.startsWith("skolem")) propagate(Set(lhsVar), rhsVar))
+			})
+			*/
+		}
+		//findArrowsIR(e)
+  }
+  
+  private def collectGoalPredsPolarity(expr: FolExpression, univs: Set[String], isNegated:Boolean, lhs:Boolean):Any = 
+  {
+	expr match {
+      case FolExistsExpression(variable, term) => if (isNegated) collectGoalPredsPolarity(term, univs + variable.name, isNegated, lhs);
+																  else collectGoalPredsPolarity(term, univs, isNegated, lhs);
+      case FolAllExpression(variable, term) => if(!isNegated) collectGoalPredsPolarity(term, univs + variable.name, isNegated, lhs);
+                                                  else collectGoalPredsPolarity(term, univs, isNegated, lhs);
+      case FolNegatedExpression(term) => collectGoalPredsPolarity(term, univs, !isNegated, false /*lhs*/)
+      case FolAndExpression(first, second) => collectGoalPredsPolarity(first, univs, isNegated, lhs);
+      										collectGoalPredsPolarity(second, univs, isNegated, lhs);
+      case FolOrExpression(first, second) => collectGoalPredsPolarity(first, univs, isNegated, lhs);
+      										collectGoalPredsPolarity(second, univs, isNegated, lhs);
+      case FolIfExpression(first, second) => collectGoalPredsPolarity(first, univs, !isNegated, true/*lhs*/);  //no negation here. This is not a typo
+      										collectGoalPredsPolarity(second, univs, isNegated, false/*lhs*/);
+      case FolIffExpression(first, second) => throw new RuntimeException("FolIffExpression is not a valid expression")
+      case FolEqualityExpression(first, second) => collectGoalPredsPolarity(first, univs, isNegated, lhs);
+      										collectGoalPredsPolarity(second, univs, isNegated, lhs);	
+      case FolAtom(pred, args @ _*) =>{
+      	  val NOTHING = "Nothing"
+      	  val univIntroduction = lhs || (args.size == 1 && univs.contains(args.head.name) && Sts.opts.evdIntroSingleVar);
+      	  val polarity:String = if  (isNegated && univIntroduction )
+										POSITIVE //INTRODUCTION
+									else if (isNegated)
+      	  							NEGATIVE 
+      	  						else POSITIVE;
+    	  val previous = goalPredsPolarity.getOrElse(pred.name, NOTHING)
+    	  if (previous  == NOTHING)
+    	  	goalPredsPolarity += (pred.name -> polarity)
+    	  else if (previous != polarity)
+    	  	goalPredsPolarity += (pred.name -> BOTH)
+    	  
+      } 
+	  case FolVariableExpression(v) => 
+	  case _ => throw new RuntimeException(expr + " is not a valid expression")
+	}
+  }
+
+  private def toNegateOrNot(exp:FolExpression) : FolExpression=
+  {
+	/*val polarity  = exp match 
+	{
+		case FolAtom(pred, args @ _*) => goalPredsPolarity.getOrElse(pred.name, POSITIVE)
+	}
+	assert(polarity != BOTH)
+	
+  	if((GivenNotTextProbabilisticTheoremProver.negativeEvd && polarity == POSITIVE) 
+  	|| (!GivenNotTextProbabilisticTheoremProver.negativeEvd && polarity == NEGATIVE)
+	|| polarity == INTRODUCTION)
+		return FolNegatedExpression(exp);
+	else return exp
+	* 
+	*/
+  	return FolNegatedExpression(exp);
+  }
+  	
   private def genNegativeEvd(declarations:Map[FolExpression, Seq[String]]) = 
   {    
-    declarations.foreach(d => {
+	//collect goal predicates polarity
+  	goalPredsPolarity = scala.collection.mutable.Map()
+  	collectGoalPredsPolarity(goalExp, Set(), SetGoalPTP.negatedGoal, false)
+  	//println (autoConst);
+  	declarations.foreach(d => {
     d match 
     {
           case (FolAtom(pred, args @ _*), s) => {
@@ -248,7 +317,7 @@ class AutoTypingPTP(
             	      {
             	    	  var negEvd: FolExpression = FolVariableExpression(Variable(pred.name));
             	    	  negEvd = FolApplicationExpression(negEvd, FolVariableExpression(Variable( c )));
-            	    	  negEvd = FolNegatedExpression(negEvd);
+            	    	  negEvd = toNegateOrNot(negEvd);
             	    	  extraEvid = negEvd :: extraEvid;
             	      }
             	  })
@@ -264,12 +333,13 @@ class AutoTypingPTP(
             		          && !( possibleConst.contains(c1, "any") && possibleConst.contains("any", c2))
             		          && !possibleConst.contains(c1, "all") 
             		          && !possibleConst.contains("all", c2)
+            		          && !possibleConst.contains("all", "all")
             		        )
 	            	      {
 			            	  var negEvd: FolExpression = FolVariableExpression(Variable(pred.name));
 			              	  negEvd = FolApplicationExpression(negEvd, FolVariableExpression(Variable( c1 )));
 			            	  negEvd = FolApplicationExpression(negEvd, FolVariableExpression(Variable( c2 )));
-			              	  negEvd = FolNegatedExpression(negEvd);
+			            	  negEvd = toNegateOrNot(negEvd)
 			              	  extraEvid = negEvd :: extraEvid;
 	            	      }
             		  })
@@ -356,12 +426,13 @@ class AutoTypingPTP(
 			        //println("CONST propagation canceled (TEXT)")
 			        None
 			      }
-			      else if(!isHardRule && lhsConst._1 == "IR") //do not propagate is in IR and the const is resulting from 
+/*			      else if(!isHardRule && lhsConst._1 == "IR") //do not propagate is in IR and the const is resulting from 
 			    	  										//a former application of IR
 			      {
 			        //println("CONST propagation canceled (IR)")
 			        None
 			      }
+*/
 			      else if (lhsConst._2.contains("all"))
 			      {
 			        //Do not propagated constants with "all" 
@@ -507,7 +578,7 @@ class AutoTypingPTP(
   {
       e match 
       {
-      	case FolExistsExpression(v, term) => quantifiedVars += v.name; findConstVarsQuantif(term);  
+        case FolExistsExpression(v, term) => quantifiedVars += v.name; findConstVarsQuantif(term);  
         case FolAllExpression(v, term) => quantifiedVars += v.name; findConstVarsQuantif(term);
         case FolEqualityExpression(first, second) => Set()
         case FolAtom(pred, args @ _*) =>
@@ -520,7 +591,8 @@ class AutoTypingPTP(
         	  if(first) //add constants only in the first iteration
         	  {
 				 //repeat = true;   //TODO: this should be uncommented but after reducing constatns from SetGoal, and fix AutoTyping
-        	      autoConst(pred.name)._2  +=  (("CONST", args.map(arg=>{
+				   val label = if(isRuleR) "POS"; else "CONST";
+        	      autoConst(pred.name)._2  +=  ((label, args.map(arg=>{
         	    	  if(quantifiedVars.contains(arg.name)) "any" else arg.name
         	      })))
         	    
@@ -531,7 +603,7 @@ class AutoTypingPTP(
         	         //It also prevents these values from being propagated elsewhere. 
         	         //Actually, we need values to be propagated TO this predicate, not from it.
         	         //Not allowing these values to be propagated reduce has a nice effect of reducing the domain size. 
-        	         autoConst(pred.name)._2  +=  (("CONST", args.map(arg=>{
+        	         autoConst(pred.name)._2  +=  ((label, args.map(arg=>{
         	    		  if(quantifiedVars.contains(arg.name)) "all" else arg.name
         	    	  })))        	        
         	      }
@@ -557,6 +629,14 @@ class AutoTypingPTP(
 			});
 			lhsVars ++ rhsVars
 		}
+      case FolIffExpression(lhs, rhs) => {
+         val lhsVars = findArrowsIR(lhs);
+         val rhsVars = findArrowsIR(rhs)
+         rhsVars.foreach(rhsVar =>{
+            propagate(lhsVars, rhsVar)
+         });
+         lhsVars ++ rhsVars
+      }
 		case FolAtom(pred, args @ _*) => 
 		  Set((pred.name, args.map(_.name)));
 		case _ => e.visit(findArrowsIR, (x:List[Set[(String, Seq[String])]])=> x.reduce( _ ++ _))

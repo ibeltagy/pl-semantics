@@ -36,6 +36,17 @@ class DoMultipleParsesTheoremProver(
     //var scoreDenum: Double = 0;
     var index = 0;
 
+    def misParseResult : List[Double] = 
+    {
+		return { 
+			if(Sts.opts.task == "sts")
+				List(-2.0, -2.0)
+			else  if (Sts.opts.task == "rte" && Sts.opts.withNegT && Sts.opts.softLogicTool != "psl")
+				List(-2.0, -2.0, -2.0, -2.0)
+			else List(-2.0)
+		}
+    }
+
     goal match
     {
       case BoxerPrs(goalParses) => 
@@ -48,28 +59,27 @@ class DoMultipleParsesTheoremProver(
 	    		{
 	    			for(j <- 0 to Sts.opts.kbest-1)
 		    		{
-	    				if (goalParses.length <= i)
-						{
-							if(Sts.opts.task == "sts")
-			    				  score = score ++ List(-2.0, -2.0)
-							else score = score ++ List(-2.0)
-						}
-	    				else if (assumptionParses.length <= j)
-						{
-                     if(Sts.opts.task == "sts")
-                          score = score ++ List(-2.0, -2.0)
-                     else score = score ++ List(-2.0)
-						}
+						var result: List[Double] = List();
+	    				if (goalParses.length <= i || assumptionParses.length <= /*i*/ j)
+							result = misParseResult
 	    				else
 	    				{
-							
-							val result = delegate.prove(Map(), Map(), List(), List(HardWeightedExpression(assumptionParses.apply(j)._1)), goalParses.apply(i)._1)
+							val assumption = assumptionParses.apply( /*i*/ j)._1;
+							val goal = goalParses.apply(i)._1
+							//println(assumption);
+							//println(goal)
+							result  = 
+							{
+								if(assumption == BoxerDrs() || goal == BoxerDrs())
+									misParseResult
+								else 
+									delegate.prove(Map(), Map(), List(), List(HardWeightedExpression(assumption)), goal).toList
+							}
 							if(Sts.opts.task == "sts")
 								assert(result.length == 2);
 							else  if (Sts.opts.task == "rte" && Sts.opts.withNegT && Sts.opts.softLogicTool != "psl")
-								assert(result.length == 3); //check GivenNotTextProbabilisticTheoremProver for details
+								assert(result.length == 4); //check GivenNotTextProbabilisticTheoremProver for details
 							else assert(result.length == 1);
-							score = score ++ result;
 							/*
 							val oneScore = result match { case Seq(s) => s; case Seq() => -1 /* unknown error*/};
 							if(Sts.opts.task == "sts")
@@ -90,6 +100,10 @@ class DoMultipleParsesTheoremProver(
 								score = score ++ List(oneScore)
 							*/	    					
 	    				}
+						if (score.length == 0)
+							score = score ++ result;
+						else
+							score = score.indices.map (idx => scala.math.max(score(idx), result(idx))).toList
 		    		} 
 	    		}
 			}//end case BoxerPrs(assumptionParses)
@@ -98,6 +112,6 @@ class DoMultipleParsesTheoremProver(
       }//end of case BoxerPrs(goalParses)
       case _ => return delegate.prove(constants, declarations, evidence, assumptions, goal)
      } //eng goal match 
-     return score;
+     return score
   }  
 }

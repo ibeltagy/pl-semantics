@@ -49,9 +49,11 @@ object Sts {
   var textLemma = "";		//Text lemmatized 
   var hypothesis = "";		//Hypothesis
   var hypothesisLemma = "";	//Hypothesis lemmatized
+  var goldStandard:Double = 0;	// Gold standard annotation
   var pairIndex = 0;		//Pair index
   var luceneDistPhrases:Lucene = null;	// Lucene repository of precompiled distributional phrases 
-  var luceneParaphrases:Lucene = null;	// Lucene repository of precompiled paraphrases
+  var luceneParaphrases:List[Lucene] = null;	// Lucene repository of precompiled paraphrases
+
 
   var resultOnePair: Seq[Double] = Seq(); //passing result to the adept code
   
@@ -103,7 +105,8 @@ object Sts {
 	      // Index distributional phrases into Lucene repository
 	      luceneDistPhrases = new Lucene(opts.phrasesFile )
 	      // Index paraphrase rules into Lucene repository
-	      luceneParaphrases = new Lucene (opts.rulesFile)
+	      luceneParaphrases = opts.rulesFile.split(":").map(new Lucene (_)).toList
+	      //luceneParaphrases = new Lucene (opts.rulesFile)
 	      //def depParser = DepParser.load();
 	      Sts.pairIndex = 1;
 	      Sts.text = sen1;
@@ -165,7 +168,7 @@ object Sts {
           for (i <- 0 to itrCount-1 )
           {
         	  val from  = i * step;
-            val to = min((i+1)*step, totalSen);
+        	  val to = min((i+1)*step, totalSen);
 	          for (x <- di.batchInterpret(sentences.slice(from, to)))
 	          {
 	            f.write(x + "\n")
@@ -209,12 +212,12 @@ object Sts {
 	         new HandleSpecialCharProbabilisticTheoremProver( // 2<== class name is misleading. Just remove the surrounding quotes if the predicate name is quoted. 
 	            		  											//This is necessary before generating inference rules, because generating inference rules searches vector space
             	new FindEventsProbabilisticTheoremProver(   //3,4<== Find event variables and prop variables. This is important to reduce domain size. 
+				  new GivenNotTextProbabilisticTheoremProver(
             	    new InferenceRuleInjectingProbabilisticTheoremProver( // 6<== Generate Inference rules on the fly + convert the other rules to FOL then add them to the inference problem. 
 		                words => vectorSpace,
 		                new SameLemmaHardClauseRuleWeighter(
 		                  new AwithCvecspaceWithSpellingSimilarityRuleWeighter(compositeVectorMaker)),
 		              new FromEntToEqvProbabilisticTheoremProver( // 6.5<== goal =  premise ^  hypothesis. This is for STS
-		               new GivenNotTextProbabilisticTheoremProver( // 6.6<== get p(h|t) and p(h|-t)		                  
 		                 new TypeConvertingPTP( // 7<== Entry point for final modifications on Boxer's representation before converting to FOL
 		                  new BoxerExpressionInterpreter[FolExpression] {
 		                    def interpret(x: BoxerExpression): FolExpression = {
@@ -230,12 +233,13 @@ object Sts {
 		                  new SetVarBindPTP( //with or without Variable Binding 		
 		                   new SetPriorPTP( //
 		                    new PositiveEqEliminatingProbabilisticTheoremProver( //Apply skolemized positive equalities and remove skolmeized negated equalities.
+		                    new CorefProbabilisticTheoremProver( // Coreference resolution between T and H for predicates in LHS of Merge
 		                     new SetGoalPTP( //
 		                      new HardAssumptionAsEvidenceProbabilisticTheoremProver( // 15<== Generate evidence from premise.
 		                       new PositiveEqEliminatingProbabilisticTheoremProver( //Apply skolemized positive equalities and remove skolmeized negated equalities.		                          
 		                        new AutoTypingPTP( //generate negative evidence
 		                         new NoExistProbabilisticTheoremProver( //
-		                        softLogicTool))))))))))))))))) // 16<== run Alchemy or PSL
+		                        softLogicTool)))))))))))))))))) // 16<== run Alchemy or PSL
 
           val p = ttp.prove(Sts.text, Sts.hypothesis) //Sts.text and Sts.hypothesis are already tokenized 
           return p;
@@ -263,7 +267,7 @@ object Sts {
 		luceneDistPhrases = new Lucene(opts.phrasesFile )
 	
 		// Index paraphrase rules into Lucene repository
-		luceneParaphrases = new Lucene (opts.rulesFile)
+		luceneParaphrases = opts.rulesFile.split(":").map(new Lucene (_)).toList
 	
 		def depParser:DepParser = opts.logicFormSource match {
 			case "dep" => DepParser.load();
@@ -279,12 +283,13 @@ object Sts {
 			Sts.hypothesis = Tokenize.separateTokens(hyp.toLowerCase());
 			Sts.textLemma = Lemmatize.lemmatizeWords(Sts.text);
 			Sts.hypothesisLemma = Lemmatize.lemmatizeWords(Sts.hypothesis);
+			Sts.goldStandard = goldSim;
 			println("=============\n  Pair %s\n=============".format(i + 1))
 			println(Sts.text)
 			println(Sts.hypothesis)
 			
 			val p = runOnePair(boxPair, vectorSpace, depParser)
-			println("Some(%s) [actual: %s, gold: %s]".format(p.mkString(":"), p.map(probOfEnt2simScore).mkString(":"), goldSim))
+			println("Some(%s) [actual: %s, gold: %s]".format(p.mkString(":"), p.map(probOfEnt2simScore).map("%1.1f".format(_)).mkString(":"), goldSim))
 			i -> (p.map(probOfEnt2simScore), goldSim)
 	    }
 			

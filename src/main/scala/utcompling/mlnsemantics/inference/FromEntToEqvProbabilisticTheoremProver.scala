@@ -43,7 +43,8 @@ class FromEntToEqvProbabilisticTheoremProver(
       }
     }
 
-    val prem = assumptions.head.expression;
+   // val premRule:HardWeightedExpression[BoxerExpression] = assumptions.head;
+ 	 val (prem, w) = assumptions.head match { case HardWeightedExpression(e, w) => (e, w)}
     val hyp = goal;
 
     val (newAssumptions, newGoal) = 
@@ -59,7 +60,7 @@ class FromEntToEqvProbabilisticTheoremProver(
         }
         val premH = renameVars(modifiedPrem) //goFlat removes IMP, NOT, OR, but not for RTE on MLN
         val hypH = renameVars(modifiedHyp)
-        (List (HardWeightedExpression (premH)) ++ 
+        (List (HardWeightedExpression (premH, w)) ++ 
             assumptions.filterNot( _ == assumptions.head), 
 	     hypH)
       }

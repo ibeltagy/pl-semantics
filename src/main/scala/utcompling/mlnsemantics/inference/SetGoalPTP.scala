@@ -12,6 +12,11 @@ import scala.collection.mutable.MutableList
 import utcompling.mlnsemantics.inference.support.GoalExpression
 import org.apache.commons.logging.LogFactory
 
+
+object SetGoalPTP{
+	  var negatedGoal: Boolean = false; //used in AutoTyping when generating negative evd
+	}
+
 class SetGoalPTP(
   delegate: ProbabilisticTheoremProver[FolExpression])
   extends ProbabilisticTheoremProver[FolExpression] {
@@ -29,7 +34,7 @@ class SetGoalPTP(
     assumptions: List[WeightedExpression[FolExpression]],
     goal: FolExpression): Seq[Double] = {
 
-    var negatedGoal = false;
+	SetGoalPTP.negatedGoal = false;
     var extraExpressions: List[WeightedExpression[FolExpression]] = List();
     newConstants = constants;//extra constants are added by skolemNew
 	 flipQ = false;
@@ -40,6 +45,7 @@ class SetGoalPTP(
 	 notEqMap = List();
 	 impMap = List();
 	 entPred = null;
+ 	 extraHardEvidence = Set();
 	 
   	//=====================Start STS=============================    
     if (Sts.opts.task == "sts")
@@ -115,7 +121,7 @@ class SetGoalPTP(
 				        introductionEntry(goal);
 
       var expr = goal;
-      negatedGoal = false;
+      SetGoalPTP.negatedGoal = false;
       var countUniv = 0;
       quantifiers.foreach(q=>{
         if(q._2._1 == "A" && q._2._2 == false ||q._2._1 == "E" && q._2._2 == true)
@@ -126,8 +132,9 @@ class SetGoalPTP(
       {
 	      if (2*countUniv < quantifiers.size) //if Univs are less than Exists, negate
 	      {
-	        expr = -goal;
-	        negatedGoal = true;
+	        None
+	    	expr = -goal;
+	        SetGoalPTP.negatedGoal = true;
 	      }
       }
       else
@@ -142,7 +149,7 @@ class SetGoalPTP(
       }
       
       goalExist._2 match {
-        case Some(g) => extraExpressions = HardWeightedExpression(g, 0.99) :: extraExpressions;   //<<--- this is correct 
+        case Some(g) => extraExpressions = HardWeightedExpression(g, Sts.opts.wFixCWA) :: extraExpressions;   //<<--- this is correct 
         case _ =>
       }
 
@@ -164,11 +171,11 @@ class SetGoalPTP(
  	          	case Some(t) => extraExpressions = HardWeightedExpression(t, Double.PositiveInfinity) :: extraExpressions; true;	//<<--- this is correct 
 		        case _ => false;
 		      }
-/*				textExist._2 match {
-					 case Some(g) => extraExpressions = HardWeightedExpression(g, 0.99) :: extraExpressions;   //<<--- this is correct 
+				textExist._2 match {
+					 case Some(g) => extraExpressions = HardWeightedExpression(g, Sts.opts.wFixCWA) :: extraExpressions;   //<<--- this is correct 
 					 case _ =>
 				}
-*/
+
 
           }
           case _ => false;
@@ -189,9 +196,10 @@ class SetGoalPTP(
     else if (Sts.opts.softLogicTool != "none")
       throw new RuntimeException("Not possible to reach this point")
 
-    val res = delegate.prove(newConstants, declarations, evidence,/*TODO*/ /*(This is wrong)-->*/ /*assumptions ++ extraExpressions  */  /*(This is correct)-->*/ extraExpressions ++ assumptions, null)
+	 //println (">>>>>>>>>Extra Evid" + extraHardEvidence.toList)
+    val res = delegate.prove(newConstants, declarations, extraHardEvidence.toList ++ evidence,/*TODO*/ /*(This is wrong)-->*/ /*assumptions ++ extraExpressions  */  /*(This is correct)-->*/ extraExpressions ++ assumptions, null)
     //val res = Seq(0.0)
-    if (negatedGoal)
+    if (SetGoalPTP.negatedGoal)
     {
       require(res.size == 1);
       if (res.head >= 0)
@@ -206,13 +214,14 @@ class SetGoalPTP(
   private var constantsCounter = 0;
   private var isQuery = true;
   private var extraSoftEvidence:Set[FolExpression] = Set();
-
+  private var extraHardEvidence:Set[FolExpression] = Set();
   //private var parent: FolExpression = null;
   
   //first expression is for universal quantifiers, second is for negated existentials
   private def introductionEntry(expr: FolExpression): (Option[FolExpression], Option[FolExpression]) =
   {
   	 extraSoftEvidence = Set();
+    //extraHardEvidence = Set();
     quantifiers = Map();
     constantsCounter = 0;
     var first = (if (Sts.opts.lhsOnlyIntro )
@@ -221,6 +230,7 @@ class SetGoalPTP(
     	introduction(expr, false, null)
     )
     
+	 //println("####" + extraHardEvidence)
     var extraSoftEvidenceRule:Option[FolExpression]  = None
     extraSoftEvidence.foreach (x=> {
 		if (extraSoftEvidenceRule == None)
@@ -235,12 +245,15 @@ class SetGoalPTP(
 		extraSoftEvidenceVariables.foreach (v => 
 		{
 		  val vname = v.name.replace(newVarNameSuffix, "");
-		  require(quantifiers.contains(vname), vname + " not found in  " + quantifiers);
-          val q = quantifiers(vname);
-          if (!isQuery /*for univ in E, all generated preds are exist*/ || q._1 == "A" && q._2 == false || q._1 == "E" && q._2 == true)
-        	  univVars = univVars + v
-          else
-        	  extraSoftEvidenceRule = Some(FolAllExpression(v, extraSoftEvidenceRule.get))
+		  //require(quantifiers.contains(vname), vname + " not found in  " + quantifiers);
+		  if (quantifiers.contains(vname)) //if the variable is not in quantifiers, then it is a constant, and should not be quantified
+		  {
+	          val q = quantifiers(vname);
+	          if (/*(isQuery && Sts.opts.ratio) ||*/ !isQuery /*for univ in E, all generated preds are exist*/ || q._1 == "A" && q._2 == false || q._1 == "E" && q._2 == true)
+	        	  univVars = univVars + v
+	          else
+	        	  extraSoftEvidenceRule = Some(FolAllExpression(v, extraSoftEvidenceRule.get))
+		  }
         })
 		univVars.foreach (v => 
 		{
@@ -311,7 +324,7 @@ class SetGoalPTP(
 				extraEvid = FolAtom.apply(pred, args.map(arg => lhsOnlyIntroduction(arg, univs) ) :_ *)
 			introStatus match {
 				case NO_EVD => None
-				case HARD_EVD => Some(extraEvid)
+				case HARD_EVD => extraHardEvidence = extraHardEvidence + extraEvid; Some(extraEvid);
 				case SOFT_EVD => extraSoftEvidence = extraSoftEvidence + extraEvid; None;
 			}
       }
@@ -326,7 +339,7 @@ class SetGoalPTP(
 								                     lhsOnlyIntroduction(second, inLhs, isNegated, univs).get)
          introStatus match {
             case NO_EVD => None
-            case HARD_EVD => Some(extraEvid)
+            case HARD_EVD => extraHardEvidence = extraHardEvidence + extraEvid; Some(extraEvid)
             case SOFT_EVD => extraSoftEvidence = extraSoftEvidence + extraEvid; None;
          }
       }
@@ -336,11 +349,14 @@ class SetGoalPTP(
   }
   private def lhsOnlyIntroduction(v: Variable, univs:List[String]): Variable =
   {
-          var newVarName = v.name;  
-          if(isQuery)
-            newVarName = newVarName + newVarNameSuffix;
-          addConst(newVarName);
-          return Variable(newVarName);
+	var newVarName = v.name;
+	if(quantifiers.contains(newVarName))
+	{
+		if(isQuery)
+			newVarName = newVarName + newVarNameSuffix;
+		addConst(newVarName);
+	}
+	return Variable(newVarName);
   }
   private val SOFT_EVD = 'S';
   private val HARD_EVD = 'H';
@@ -350,17 +366,24 @@ class SetGoalPTP(
   {
         var univCount = 0;
         var notExistCount = 0;
-        args.forall(arg=>{
-          require(quantifiers.contains(arg.name));
-          val q = quantifiers(arg.name);
-          if (q._1 == "A" && q._2 == false || q._1 == "E" && q._2 == true)
-            univCount = univCount + 1;
-          if (q._1 == "E" && q._2 == true)
-        	  notExistCount = notExistCount + 1;          
-          true
+        var constCount = 0
+        args.foreach(arg=>{
+          if (!quantifiers.contains(arg.name))//"Quntifiers: " + quantifiers + " do not contain " + arg.name);
+          	constCount = constCount + 1  //this is a constant that was generated from the coreference resolution step. Do nothing with it.
+          else
+          {
+	          val q = quantifiers(arg.name);
+	          if (q._1 == "A" && q._2 == false || q._1 == "E" && q._2 == true)
+	            univCount = univCount + 1;
+	          if (q._1 == "E" && q._2 == true)
+	        	  notExistCount = notExistCount + 1;
+          }
         })
 	var allUniv:Boolean = false;
 
+/*	if (!isQuery && Sts.opts.ratio && isNegated)
+		return SOFT_EVD
+*/
 	if(univCount == 0)
 	{
 		if (isNegated && isQuery)  //Existentially quantified negated predicate in query "e.g: tweety is not black"
@@ -384,6 +407,8 @@ class SetGoalPTP(
          return HARD_EVD;
       else if (Sts.opts.withFixUnivInQ && isQuery)
          return HARD_EVD;
+      else if(Sts.opts.withFixCWA && isQuery) //if FixUnivInQ is disabled, then fall-back to FixCWA
+         return SOFT_EVD;
       else 
          return NO_EVD;
    }

@@ -65,11 +65,14 @@ class TextualTheoremProver(
 
 	 if (parseError)
 	 {
-	   if(Sts.opts.task == "sts")
-			  return Seq.fill(Sts.opts.kbest * Sts.opts.kbest * 2)(-2);
-	   else  if (Sts.opts.task == "rte" && Sts.opts.withNegT && Sts.opts.softLogicTool != "psl")
-   		  return Seq.fill(Sts.opts.kbest * Sts.opts.kbest * 3)(-2); //check GivenNotTextProbabilisticTheoremProver for details
-	   else return Seq.fill(Sts.opts.kbest * Sts.opts.kbest)(-2);
+	   val res:Seq[Double] = {
+	  	 if(Sts.opts.task == "sts")
+	  		 Seq.fill(Sts.opts.kbest * Sts.opts.kbest * 2)(-2)
+	  	 else  if (Sts.opts.task == "rte" && Sts.opts.withNegT && Sts.opts.softLogicTool != "psl")
+	  		 Seq.fill(Sts.opts.kbest * Sts.opts.kbest * 4)(-2); //check GivenNotTextProbabilisticTheoremProver for details
+	  	 else Seq.fill(Sts.opts.kbest * Sts.opts.kbest)(-2)
+	   }
+	   return res.map(Sts.opts.errorCode);
 	 }
         
     //return Seq(0)
@@ -79,6 +82,6 @@ class TextualTheoremProver(
     val evidence = List();
     val assumptions = List(HardWeightedExpression(txtEx))
     val goal = hypEx
-    probabilisticTheoremProver.prove(constants, declarations, evidence, assumptions, goal)
+    probabilisticTheoremProver.prove(constants, declarations, evidence, assumptions, goal).map(Sts.opts.errorCode);
   }
 }

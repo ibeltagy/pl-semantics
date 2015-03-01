@@ -47,11 +47,35 @@ class EditDRSTheoremProver(
   def process(e:BoxerExpression, sentence: String) : BoxerExpression =
   {
   	this.sentence = sentence;
-	removeTopic(  
-		removeDanglingEqualities(
-				removeTheres(
-					corref(
-						applySMerge(e)))));
+  	replaceCardName(
+		removeTopic(
+			removeDanglingEqualities(
+					removeTheres(
+						corref(
+							applySMerge(e))))));
+  }
+  /////////////////////////////////////////////
+  val numbers:List[String] = List("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve");
+  def replaceCardName(e:BoxerExpression):BoxerExpression = {
+	e match {
+		case BoxerNamed(discId, indices, variable, name, typ, sense) => BoxerPred(discId, indices, variable, name, "n", sense)
+		case BoxerCard(discId, indices, variable, num, typ) => 
+		try
+		{
+			if(num.toInt > numbers.size)
+				BoxerPred(discId, indices, variable, "card_" + num, "n", 0) 
+			else
+				BoxerPred(discId, indices, variable, numbers(num.toInt), "n", 0)
+		}
+		catch 
+		{
+			case _ => BoxerPred(discId, indices, variable, "card_" + num, "n", 0)
+		}
+		//case BoxerDate(indicesPol, pol, indicesYear, year, indicesMonth, month, indicesDay, day) => 
+		//		BoxerDate(increment(indicesPol), pol, increment(indicesYear), year, increment(indicesMonth), month, increment(indicesDay), day)
+		//case BoxerTimex(discId, indices, variable, timeExp) => BoxerTimex(discId, increment(indices), variable, increment(timeExp))
+		case _ => e.visitConstruct(replaceCardName)
+	}
   }
   /////////////////////////////////////////////
   var entities:Map[Set[String], (String, BoxerExpression)] = Map();
@@ -72,7 +96,7 @@ class EditDRSTheoremProver(
   	entities = Map();
   	toMerge = null
   	mergeTo = null
-    val result = correfRecursive(e);
+   val result = e //correfRecursive(e);
   	assert (mergeTo == null)
   	assert (toMerge == null)
   	result;
@@ -150,13 +174,14 @@ class EditDRSTheoremProver(
       	  	})
       	  	//println (clusteredPred )
       	  	var renamed:BoxerExpression = null;
+				var toBeAddedToEntities:Map[Set[String], (String, BoxerExpression)] = Map();// to avoid coreferences within the same sentence
       	  	intersection.indices.foreach(intersectionIndex => {
       	  		val variable = intersection(intersectionIndex)
       	  		val variablePreds = clusteredPred(intersectionIndex)
       	  		var exists = entities.get(variablePreds);
 				if (exists.isEmpty)
 				{
-					entities = entities  + ((variablePreds -> (variable, e)))
+					toBeAddedToEntities = toBeAddedToEntities  + ((variablePreds -> (variable, e)))
 				}
 				else
 				{
@@ -169,6 +194,7 @@ class EditDRSTheoremProver(
 					println ("<<<<<Coreference resolution done>>>>>")
 				}
       	  	})
+				entities = entities ++ toBeAddedToEntities;
       	  	if (renamed == null)
       	  		e
       	  	else
@@ -229,7 +255,7 @@ class EditDRSTheoremProver(
   }
   def countEntities(e:BoxerExpression):Int = {
      e match {
-    	case BoxerDrs(refs, conds) => return refs.size + conds.map(countEntities).reduce(_ + _)
+    	case BoxerDrs(refs, conds) => return refs.size + (conds.map(countEntities) :+ 0 ).reduce(_ + _); 
     	case _ => e.visit(countEntities, (parts: List[Int]) => parts.reduce(_ + _), 0)  
      }
   }

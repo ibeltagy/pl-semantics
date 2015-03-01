@@ -112,7 +112,7 @@ class AlchemyTheoremProver{
 	        	  if(weight == Double.PositiveInfinity)
 	        		  f.write("%s .\n".format(convert(folExp)))
 	        	  else
-	        	      f.write("%.5f %s\n".format(weight, convert(folExp)))  
+	        	      f.write("%.5f %s\n".format(weight, convert(folExp)))
 	          }
 	          case SoftWeightedExpression(folExp, weight) =>
 	            // DONE: Convert [0,1] weight into alchemy weight

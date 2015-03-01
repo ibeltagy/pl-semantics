@@ -15,6 +15,7 @@ import scala.actors.threadpool.TimeoutException
 import utcompling.mlnsemantics.inference.support.GoalExpression
 import org.joda.time.DateTimeUtils
 import org.joda.time.Duration
+import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 
 
 class NoExistProbabilisticTheoremProver(
@@ -25,7 +26,11 @@ class NoExistProbabilisticTheoremProver(
   private var allConstants: Map[String, Set[String]] = null;
   private var allEvidence: List[FolExpression] = null;
   private val trueFolExp:FolExpression = FolVariableExpression(Variable("true"));
-  private val falseFolExp:FolExpression = FolVariableExpression(Variable("false"));  
+  private val falseFolExp:FolExpression = FolVariableExpression(Variable("false"));
+  private var isIR = false; //is inference rule ?
+  private var groundIR:List[FolExpression] = null
+  private var doNotSimplify:Boolean = false;
+  private var quantifiersForRenameFun:List[String] = null;
   /**
    * Return the proof, or None if the proof failed
    */
@@ -43,34 +48,56 @@ class NoExistProbabilisticTheoremProver(
     {
 		  var constCount :Integer = 0;
 		  allConstants.forall(c=>{
-				println(c);
+				//println(c);
 				constCount = constCount + c._2.size
 				true
 		  })
-		  println("const count = " + constCount);
+		  //println("const count = " + constCount);
 
         val newAssumptions:List[WeightedExpression[FolExpression]] = 
         if(! (Sts.opts.groundExist 	&& Sts.opts.task == "rte" && Sts.opts.negativeEvd/*this is only useful if there are negative evd*/ 
 												&& constCount > 1/*in case of no constants in the domain, skip this step*/) ) 
           assumptions
 	    else
-	      assumptions.map 
+	      assumptions.flatMap
 	      {
 	          case GoalExpression(e, w) => 
 	          {
 	        	  if(e == trueFolExp)
 	        		  return Seq(1.0)
-	        	  val expVarRenamed = rename(e); //all variables have to be renamed to avoid conflict between variables and constants. 
+	        	  quantifiersForRenameFun = List();
+	        	  val expVarRenamed = rename(e); //all "quantified" variables have to be renamed to avoid conflict between variables and constants.
+	        	  isIR = false;
+	        	  doNotSimplify = false;
 	        	  var exp = goUniv(expVarRenamed, List(), List(), false);
+	        	  
+	        	  replaceWith = List();
+	        	  varToReplace = List();
 	        	  exp = replaceSimplify(exp, Set());
 	        	  getBoolean3(exp) match 
 			      {
 			      	case 't' => return Seq(1.0);
 			      	case 'f' => return Seq(0.0);
-			      	case 'd' => GoalExpression(exp, w)
+			      	case 'd' => Some(GoalExpression(/*CNF.toCNF*/(exp), w))
 		      	  }
 	          }
-	          case a @ _ => a
+	          case SoftWeightedExpression(e, w) => 
+	          {
+	        	  isIR = true;
+	        	  groundIR = List();
+	        	  var exp = goUniv(e, List(), List(), false)
+	        	  groundIR.map(SoftWeightedExpression(_, w))
+	        	  /*
+	        	  exp = replaceSimplify(exp, Set());
+	        	  getBoolean3(exp) match 
+			      {
+			      	case 't' => None
+			      	case 'f' => throw new RuntimeException("not reachable")
+			      	case 'd' => Some(SoftWeightedExpression(exp, w))
+		      	  }*/
+	        	  
+	          }
+	          case a @ _ => Some(a)
 	      }
 	    val beforeInfTime = DateTimeUtils.currentTimeMillis();
 	    val totalTimeout = Sts.opts.timeout;
@@ -132,10 +159,11 @@ class NoExistProbabilisticTheoremProver(
             val constList = allConstants.get(existVar.substring(0, 2)).get;
             existConst = existConst ++ List(constList.toList)
             maxUnivConstListLen = scala.math.max(maxUnivConstListLen, constList.size);
-            println( allConstants .get(existVar.substring(0, 2)))
+            //println( allConstants .get(existVar.substring(0, 2)))
           })
           
           var newExp: FolExpression = null;
+          var peices:collection.mutable.Set[FolExpression] = scala.collection.mutable.Set();
           def genPermutes = {
             permut(List.range (0, maxUnivConstListLen), existVars.size).foreach(c => { c.permutations.foreach(p=>{
         	  object AllDone extends Exception { }
@@ -151,42 +179,47 @@ class NoExistProbabilisticTheoremProver(
 	        	    replaceWith = replaceWith :+ constListForI.apply(idx);
 	        	  }
         	      varToReplace = existVars;
+        	      
         	      val oneNewExp = replaceSimplify(e, univVars.toSet);
-        	      if(newExp == null)
-        	        newExp = oneNewExp;
-        	      else if(isNegated)
-					{
-        	           //newExp = FolAndExpression(newExp, oneNewExp);
-					     newExp = (getBoolean3(newExp),getBoolean3(oneNewExp)) match
-						  {
-							 case ('t', 't') => trueFolExp
-							 case ('t', 'f') => falseFolExp
-							 case ('t', 'd') => oneNewExp
-							 case ('f', 't') => falseFolExp
-							 case ('f', 'f') => falseFolExp
-							 case ('f', 'd') => falseFolExp
-							 case ('d', 't') => newExp
-							 case ('d', 'f') => falseFolExp
-							 case ('d', 'd') => FolAndExpression(newExp, oneNewExp);
-						  }
-					}
-        	      else
-					{
-        	           //newExp = FolOrExpression(newExp, oneNewExp);
-						  newExp = (getBoolean3(newExp),getBoolean3(oneNewExp)) match
-						  {
-							 case ('t', 't') => trueFolExp
-							 case ('t', 'f') => trueFolExp
-							 case ('t', 'd') => trueFolExp
-							 case ('f', 't') => trueFolExp
-							 case ('f', 'f') => falseFolExp
-							 case ('f', 'd') => oneNewExp
-							 case ('d', 't') => trueFolExp
-							 case ('d', 'f') => newExp
-							 case ('d', 'd') => FolOrExpression(newExp, oneNewExp);
-						  }
-
-					}
+        	      if (!peices.contains(oneNewExp))
+        	      {
+        	      	  peices.add(oneNewExp);
+	        	      if(newExp == null)
+	        	        newExp = oneNewExp;
+	        	      else if(isNegated)
+						{
+	        	           //newExp = FolAndExpression(newExp, oneNewExp);
+						     newExp = (getBoolean3(newExp),getBoolean3(oneNewExp)) match
+							  {
+								 case ('t', 't') => trueFolExp
+								 case ('t', 'f') => falseFolExp
+								 case ('t', 'd') => oneNewExp
+								 case ('f', 't') => falseFolExp
+								 case ('f', 'f') => falseFolExp
+								 case ('f', 'd') => falseFolExp
+								 case ('d', 't') => newExp
+								 case ('d', 'f') => falseFolExp
+								 case ('d', 'd') => FolAndExpression(newExp, oneNewExp);
+							  }
+						}
+	        	      else
+						{
+	        	           //newExp = FolOrExpression(newExp, oneNewExp);
+							  newExp = (getBoolean3(newExp),getBoolean3(oneNewExp)) match
+							  {
+								 case ('t', 't') => trueFolExp
+								 case ('t', 'f') => trueFolExp
+								 case ('t', 'd') => trueFolExp
+								 case ('f', 't') => trueFolExp
+								 case ('f', 'f') => falseFolExp
+								 case ('f', 'd') => oneNewExp
+								 case ('d', 't') => trueFolExp
+								 case ('d', 'f') => newExp
+								 case ('d', 'd') => FolOrExpression(newExp, oneNewExp);
+							  }
+	
+						}
+        	      }
         	      //println(oneNewExp);
         	  }catch{
         	      case AllDone =>//do nothing
@@ -230,13 +263,15 @@ class NoExistProbabilisticTheoremProver(
   }
   
   private def rename(v: Variable): Variable =
-	Variable(v.name + "_q")	  
+  	if (quantifiersForRenameFun.contains(v.name))
+  		Variable(v.name + "_q")
+  	else v //this is a constant. Do not change the name
     
   private def rename(e: FolExpression): FolExpression =
   {
     e match {
-    	case FolExistsExpression(v, term) => FolExistsExpression(rename(v), rename(term))	
-    	case FolAllExpression(v, term) => FolAllExpression(rename(v), rename(term))
+    	case FolExistsExpression(v, term) => quantifiersForRenameFun = quantifiersForRenameFun :+ v.name; FolExistsExpression(rename(v), rename(term))	
+    	case FolAllExpression(v, term) => quantifiersForRenameFun = quantifiersForRenameFun :+ v.name; FolAllExpression(rename(v), rename(term))
     	case FolAtom(pred, args @ _*) => FolAtom(pred, args.map(rename(_)) :_ * )	
     	case FolVariableExpression(v) => FolVariableExpression(rename(v)) 
     	case _=>e.visitStructured(rename, e.construct)
@@ -283,9 +318,10 @@ class NoExistProbabilisticTheoremProver(
       		  case ('f', 'd') => falseFolExp
       		  case ('d', 't') => mFirst
       		  case ('d', 'f') => falseFolExp
-      		  case ('d', 'd') => FolAndExpression(mFirst, mSecond);      		    
+      		  case ('d', 'd') => FolAndExpression(mFirst, mSecond);
       		}
       	case FolOrExpression(first, second) =>
+				//println (e)
       	   val mFirst = replaceSimplify(first, quantifiers) 
       		val mSecond = replaceSimplify(second, quantifiers)
       		(getBoolean3(mFirst),getBoolean3(mSecond)) match 
@@ -298,7 +334,7 @@ class NoExistProbabilisticTheoremProver(
       		  case ('f', 'd') => mSecond
       		  case ('d', 't') => trueFolExp
       		  case ('d', 'f') => mFirst
-      		  case ('d', 'd') => FolOrExpression(mFirst, mSecond);      		    
+      		  case ('d', 'd') => FolOrExpression(mFirst, mSecond);
       		}
       	case FolIfExpression(first, second) => 
       		val mFirst = replaceSimplify(first, quantifiers) 
@@ -313,10 +349,25 @@ class NoExistProbabilisticTheoremProver(
       		  case ('f', 'd') => trueFolExp
       		  case ('d', 't') => trueFolExp
       		  case ('d', 'f') => FolNegatedExpression(mFirst)
-      		  case ('d', 'd') => FolIfExpression(mFirst, mSecond);      		    
+      		  case ('d', 'd') => FolIfExpression(mFirst, mSecond);
       		}
       		
-      	case FolIffExpression(first, second) => throw new RuntimeException("not reachable")
+      	case FolIffExpression(first, second) => 
+      		val mFirst = replaceSimplify(first, quantifiers) 
+      		val mSecond = replaceSimplify(second, quantifiers)
+      		(getBoolean3(mFirst),getBoolean3(mSecond)) match 
+      		{
+      		  case ('t', 't') => trueFolExp
+      		  case ('t', 'f') => falseFolExp
+      		  case ('t', 'd') => mSecond
+      		  case ('f', 't') => falseFolExp
+      		  case ('f', 'f') => trueFolExp
+      		  case ('f', 'd') => FolNegatedExpression(mSecond)
+      		  case ('d', 't') => mFirst
+      		  case ('d', 'f') => FolNegatedExpression(mFirst)
+      		  case ('d', 'd') => FolIffExpression(mFirst, mSecond);      		    
+      		}
+      		
         case FolEqualityExpression(first, second) => 
         	if (!quantifiers.contains(first.asInstanceOf[FolVariableExpression].variable.name )
         		&& !quantifiers.contains(second.asInstanceOf[FolVariableExpression].variable.name ))
@@ -332,7 +383,7 @@ class NoExistProbabilisticTheoremProver(
           val changedArgs = args.map(replaceSimplify(_, quantifiers))
           val changedE = FolAtom(pred,changedArgs:_*);
           
-          if( (changedArgs.map(_.name).toSet & quantifiers).isEmpty )
+          if( (changedArgs.map(_.name).toSet & quantifiers).isEmpty && !doNotSimplify)
           { //all constants
             if(allEvidence.contains(changedE))
               trueFolExp
@@ -348,7 +399,76 @@ class NoExistProbabilisticTheoremProver(
         case _ => println (e); throw new RuntimeException("not reachable")
       }
   }
-    
+
+  private def goIR(e: FolExpression, univVars: List[String], first: FolExpression): FolExpression =
+  {
+		assert(univVars.size > 0);
+  		var univConst: List[List[String]] = List();
+  		var maxUnivConstListLen:Int = 0;
+  		univVars.foreach(univVar =>{
+  			val constList = allConstants.get(univVar.substring(0, 2)).get;
+  			univConst = univConst ++ List(constList.toList)
+  			maxUnivConstListLen = scala.math.max(maxUnivConstListLen, constList.size);
+  		})
+  		//var newExp: FolExpression = null;
+  		def genPermutes = {
+  				permut(List.range (0, maxUnivConstListLen), univVars.size).foreach(c => { c.permutations.foreach(p=>{
+  					object AllDone extends Exception { }
+  					try
+  					{
+  						replaceWith = List();
+  						for(i <- 0 to p.length-1)
+  						{
+  							val idx = p.apply(i)
+  							val constListForI = univConst.apply(i);
+  							if (constListForI.size <= idx)
+  								throw AllDone;
+  							replaceWith = replaceWith :+ constListForI.apply(idx);
+  						}
+  						varToReplace = univVars;
+
+  						doNotSimplify = false;
+  						val testLhs = replaceSimplify(first, Set[String]());
+  						getBoolean3(testLhs) match 
+  						{
+  							case 't' | 'd' =>
+  							{
+  								doNotSimplify = true;
+  								val oneNewExp = replaceSimplify(e, Set[String]());
+  								getBoolean3(oneNewExp) match
+  								{
+  									case 't' =>  throw new RuntimeException("unreachable")
+  									case 'f' =>  throw new RuntimeException("unreachable")
+  									case 'd' => 
+  									{
+  										groundIR = groundIR :+ oneNewExp;
+  										/*
+		  								if(newExp == null)
+		  									newExp = oneNewExp;
+		  								else 
+		  									newExp = FolAndExpression(newExp, oneNewExp);
+		  									* 
+		  									*/
+  									}
+  								}
+  							}
+  							case 'f' => //do nothing
+  						}
+  					}catch{
+  					case AllDone =>//do nothing
+  					}
+  				})/*END P*/ }) /*END C*/ 
+  		}
+  		val finish = runWithTimeout(3000, false) { genPermutes;  true }
+  		if(!finish)
+  			throw PermutTimesout
+
+  		replaceWith = List();
+  		varToReplace = List();
+
+  		trueFolExp
+
+  }
   private def goUniv(e: FolExpression, univVars: List[String], existVars: List[String], isNegated: Boolean): FolExpression = 
   {
       e match 
@@ -370,9 +490,26 @@ class NoExistProbabilisticTheoremProver(
         														goUniv(second, univVars, existVars, isNegated))
       	case FolOrExpression(first, second) => FolOrExpression(goUniv(first, univVars, existVars, isNegated),
       														goUniv(second, univVars, existVars, isNegated))
-      	case FolIfExpression(first, second) => FolIfExpression(goUniv(first, univVars, existVars, !isNegated),
-      														goUniv(second, univVars, existVars, isNegated))
-      	case FolIffExpression(first, second) => goUniv(FolAndExpression(FolIfExpression(first, second), FolIfExpression(second, first)), univVars, existVars, isNegated)
+      	case FolIfExpression(first, second) => 
+      	{
+      		if (!isIR)
+      			FolIfExpression(goUniv(first, univVars, existVars, !isNegated), goUniv(second, univVars, existVars, isNegated))
+      		else
+      		{
+      			assert(existVars.size == 0);
+      			goIR(e, univVars, first);
+      		}
+      	}
+      	case FolIffExpression(first, second) =>
+      	{
+      		if (!isIR)
+      			goUniv(FolAndExpression(FolIfExpression(first, second), FolIfExpression(second, first)), univVars, existVars, isNegated)
+      		else
+      		{
+      			assert(existVars.size == 0);
+      			goIR(e, univVars, first);
+      		}		
+      	}
         case FolEqualityExpression(first, second) => e
         case FolAtom(pred, args @ _*) => e
         case _ => throw new RuntimeException("not reachable")

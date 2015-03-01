@@ -40,7 +40,7 @@ class SetPriorPTP(
     SetPriorPTP.predPrior = Sts.opts.task match //prior of the negated predicate 
     {
         case "sts" => 3; //prior in case of STS
-        case "rte" => 0.5; //prior in case of RTE
+        case "rte" => Sts.opts.prior; //prior in case of RTE
     }
     SetPriorPTP.entPrior = SetPriorPTP.predPrior //entailment prior equals the other predicates priors
 

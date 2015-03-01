@@ -9,6 +9,11 @@ import support.HardWeightedExpression
 import utcompling.mlnsemantics.run.Sts
 import utcompling.scalalogic.discourse.candc.boxer.expression._
 
+object GivenNotTextProbabilisticTheoremProver{
+  var negativeEvd: Boolean = true;
+}
+
+
 class GivenNotTextProbabilisticTheoremProver(
   delegate: ProbabilisticTheoremProver[BoxerExpression])
   extends ProbabilisticTheoremProver[BoxerExpression] {
@@ -16,53 +21,175 @@ class GivenNotTextProbabilisticTheoremProver(
   /**
    * Return the proof, or None if the proof failed
    */
-  def prove(
-    constants: Map[String, Set[String]], // type -> constant
-    declarations: Map[BoxerExpression, Seq[String]], // predicate -> seq[type] 
-    evidence: List[BoxerExpression],
-    assumptions: List[WeightedExpression[BoxerExpression]],
-    goal: BoxerExpression): Seq[Double] = {
+	def prove(
+			constants: Map[String, Set[String]], // type -> constant
+			declarations: Map[BoxerExpression, Seq[String]], // predicate -> seq[type] 
+			evidence: List[BoxerExpression],
+			assumptions: List[WeightedExpression[BoxerExpression]],
+			goal: BoxerExpression): Seq[Double] = 
+	{
+		if (Sts.opts.task == "rte" && Sts.opts.withNegT && Sts.opts.softLogicTool != "psl")
+		{
+			/*if (Sts.opts.ratio)
+			{
+				//Sts.opts.withFixCWA = false;
+				Sts.opts.wFixCWA = 0.5
+						//Sts.opts.prior = 1
+			}*/
+			GivenNotTextProbabilisticTheoremProver.negativeEvd = true;
+			var hGivenT = delegate.prove(constants, declarations, evidence, assumptions, goal);
+			assert(hGivenT.length == 1)
 
-    if (Sts.opts.task == "rte" && Sts.opts.withNegT && Sts.opts.softLogicTool != "psl")
-    {
-    	val hGivenT = delegate.prove(constants, declarations, evidence, assumptions, goal);
-    	assert(hGivenT.length == 1)
-    	val newAssumptions = assumptions.map{
-    	    case HardWeightedExpression(exp, w) => HardWeightedExpression (negateText(exp), w)
-          case a @ _ => a
-        }
-    	//val hGivenNotT = delegate.prove(constants, declarations, evidence, newAssumptions, goal);
-    	val hGivenNotT:Seq[Double] = Seq(0.0)
-    	assert(hGivenNotT.length == 1)
-    	
-    	var newGoal:BoxerExpression = null;
-    	val newAssumptions2 = assumptions.map{
-    	    case HardWeightedExpression(exp, w) => {
-    	    	//newGoal = exp;
-    	    	//HardWeightedExpression (negateText(goal)) 
-    	    	//newGoal = negateText(exp);
-    	    	newGoal = negateWithoutPresupposed(exp)
-    	    	HardWeightedExpression (goal, w)
-    	    }
-    	  case SoftWeightedExpression(BoxerImp(discId, List(), lhs, rhs), w) => SoftWeightedExpression(
-    	  								BoxerImp(discId, List(), BoxerDrs(lhs.refs, rhs.conds), BoxerDrs(List(), lhs.conds)).asInstanceOf[BoxerExpression], w) 
-          case a @ _ => a
-        }
-    	
-    	//Wrong
-    	//val tGivenNotH = delegate.prove(constants, declarations, evidence, newAssumptions2, newGoal);
-    	//assert(tGivenNotH.length == 1)
-    	
-    	//Hoefully correct
-    	val notTGivenH = delegate.prove(constants, declarations, evidence, newAssumptions2, newGoal);
-    	//val notTGivenH:Seq[Double] = Seq(0.0)
-    	assert(notTGivenH.length == 1)
-    	
-    	hGivenT ++ hGivenNotT ++ notTGivenH
-    }
-    else
-      delegate.prove(constants, declarations, evidence, assumptions, goal)   
-  }
+			GivenNotTextProbabilisticTheoremProver.negativeEvd = true;
+			var notHGivenT = //if (Sts.opts.ratio)
+					delegate.prove(constants, declarations, evidence, assumptions, negateWithoutPresupposed(goal));
+			//else
+			//	Seq(0.0)
+			assert(notHGivenT.length == 1)
+			
+			
+         val newAssumptions = assumptions.map{
+         case HardWeightedExpression(exp, w) => HardWeightedExpression (exp, 0.5)
+         case a @ _ => a
+         }
+
+         var hGivenT2 = Seq(0.0)
+			if (Sts.opts.ratio)
+         	hGivenT2 = delegate.prove(constants, declarations, evidence, newAssumptions, goal);
+         assert(hGivenT2.length == 1)
+
+         var notHGivenT2 = Seq(0.0)
+         if (Sts.opts.ratio)
+            notHGivenT2 = delegate.prove(constants, declarations, evidence, newAssumptions, negateWithoutPresupposed(goal));
+         assert(notHGivenT2.length == 1)
+
+/*
+			GivenNotTextProbabilisticTheoremProver.negativeEvd = true;
+
+			var hGivenNothing = (
+					if (Sts.opts.ratio)
+						delegate.prove(constants, declarations, evidence, newAssumptions, goal);
+					else Seq(0.0)
+					)
+					assert(hGivenNothing.length == 1)
+
+					GivenNotTextProbabilisticTheoremProver.negativeEvd = false;
+			var hGivenNothing2 = (
+					if (Sts.opts.ratio)
+						delegate.prove(constants, declarations, evidence, newAssumptions, goal);
+					else Seq(0.0)
+					)
+					assert(hGivenNothing2.length == 1)
+
+					var newGoal:BoxerExpression = null;
+					var newText:HardWeightedExpression[BoxerExpression] = null
+							val newAssumptions2 = assumptions.map{
+							case HardWeightedExpression(exp, w) => {
+								//newGoal = exp;
+								//HardWeightedExpression (negateText(goal)) 
+								//newGoal = negateText(exp);
+								if(Sts.opts. ratio)
+								{
+									newGoal = /*negateWithoutPresupposed*/(exp)
+									newText = HardWeightedExpression (/*moveAllIntoNegation*/(goal), w)
+								}
+								else
+								{
+									newGoal = negateWithoutPresupposed(exp)
+									newText = HardWeightedExpression (goal, w)
+								}
+								var swp = Sts.textLemma;
+								Sts.textLemma = Sts.hypothesisLemma
+								Sts.hypothesisLemma = swp;
+								swp = Sts.text;
+								Sts.text = Sts.hypothesis
+								Sts.hypothesis = swp;
+
+								newText
+							}
+							//    	  case SoftWeightedExpression(BoxerImp(discId, List(), lhs, rhs), w) => SoftWeightedExpression(
+							//    	  								BoxerImp(discId, List(), BoxerDrs(lhs.refs, rhs.conds), BoxerDrs(List(), lhs.conds)).asInstanceOf[BoxerExpression], w) 
+							//          case a @ _ => a
+					}
+					//Wrong
+					//val tGivenNotH = delegate.prove(constants, declarations, evidence, newAssumptions2, newGoal);
+					//assert(tGivenNotH.length == 1)
+					var notTGivenH = Seq(0.0)
+					var notTGivenNotH = (
+							if (Sts.opts.ratio)
+							{
+								var resNum = hGivenT
+								var resDenum = hGivenNothing
+
+								assert(resNum.length == 1)
+								assert(resDenum.length == 1)
+
+								var errorCode:Double = 0.0;
+								if (resNum.head < 0)
+									errorCode = errorCode + 1
+									if (resDenum.head < 0)
+										errorCode = errorCode + 1
+
+										hGivenT = (if (resNum.head == resDenum.head && resNum.head == 0)
+											Seq(1.0)
+											else if (resDenum.head == 0)
+												Seq(100.0)
+												else if (resNum.head == 0)
+													Seq(-1/resDenum.head)
+													else
+														Seq(resNum.head/resDenum.head)
+												)
+												//hGivenNothing = Seq(0.0)
+
+												resNum = hGivenT2 //delegate.prove(constants, declarations, evidence, newAssumptions2, newGoal)
+												val newAssumptions3  = newAssumptions2.filterNot (_ == newText) :+ HardWeightedExpression(newText.expression, 0.5);
+												resDenum = hGivenNothing2 //delegate.prove(constants, declarations, evidence, newAssumptions3, newGoal)
+														assert(resNum.length == 1)
+												assert(resDenum.length == 1)
+
+												if (resNum.head < 0)
+													errorCode = errorCode + 1
+													if (resDenum.head < 0)
+														errorCode = errorCode + 1
+
+														hGivenNothing = (if (resNum.head == resDenum.head && resNum.head == 0)
+															Seq(1.0)
+															else if (resDenum.head == 0)
+																Seq(100.0)
+																else if (resNum.head == 0)
+																	Seq(-1/resDenum.head)
+																	else
+																		Seq(resNum.head/resDenum.head)
+																)
+
+																/*				if (hGivenT.head < 1)
+				hGivenT
+			else if (hGivenNothing.head < 1)
+				hGivenNothing
+			else
+				hGivenT
+																 */
+																Seq(errorCode)
+							}
+							else
+							{
+								notTGivenH = delegate.prove(constants, declarations, evidence, newAssumptions2, newGoal)
+								val newAssumptions3  = newAssumptions2.filterNot (_ == newText) :+ HardWeightedExpression(negateWithoutPresupposed(newText.expression), newText.weight);
+								delegate.prove(constants, declarations, evidence, newAssumptions3, newGoal)
+							}
+
+							)
+							assert(notTGivenH.length == 1)
+
+							//hGivenT ++ hGivenNothing ++ notTGivenH
+							hGivenT ++ notTGivenNotH ++ notHGivenT ++ notTGivenH
+							 * 
+							 */
+			hGivenT ++ hGivenT2  ++ notHGivenT ++ notHGivenT2
+		}
+		else
+			delegate.prove(constants, declarations, evidence, assumptions, goal)   
+	}
   
   private def negateWithoutPresupposed(e:BoxerExpression) : BoxerExpression = 
   {
@@ -73,6 +200,33 @@ class GivenNotTextProbabilisticTheoremProver(
 			BoxerDrs (List(), List(first,  BoxerNot("h", List(), second)))
 		case e => BoxerNot("h", List(), e)
 	}
+  }
+  private def moveAllIntoNegation (exp:BoxerExpression): BoxerExpression = 
+  {
+    exp match {
+      case BoxerDrs(refs, conds) => {
+    	  var negation:BoxerNot = null
+    	  var foundOther:Boolean = false;
+    	  conds.foreach(c=>{
+    	   c match {
+		      case BoxerPred(discId, indices, variable, name, pos, sense) => 
+		      case BoxerNamed(discId, indices, variable, name, typ, sense) => 
+		      case BoxerCard(discId, indices, variable, num, typ) => 
+   		      case BoxerRel(discId, indices, event, variable, name, sense) => 
+   		      case BoxerEq(discId, indices, first, second) =>
+   		      case BoxerNot(discId, indices, drs) =>  negation = c.asInstanceOf[BoxerNot];
+		      case _ => foundOther = true;
+    	   } 
+    	  });
+    	  if (negation != null && !foundOther)
+    	  {
+    	  	val filteredConds = conds.filter(!_.isInstanceOf[BoxerNot]);
+    	  	return BoxerNot (negation.discId, negation.indices, BoxerDrs(refs ++ negation.drs.refs, filteredConds ++ negation.drs.conds))
+    	  }
+    	  else return exp
+      }
+      case _ =>  return exp
+    }
   }
   
   private var negationFound = false;
