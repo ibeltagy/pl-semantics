@@ -66,7 +66,8 @@ class NoExistProbabilisticTheoremProver(
 	        	  if(e == trueFolExp)
 	        		  return Seq(1.0)
 	        	  quantifiersForRenameFun = List();
-	        	  val expVarRenamed = rename(e); //all "quantified" variables have to be renamed to avoid conflict between variables and constants.
+	        	  //val expVarRenamed = rename(e); //all "quantified" variables have to be renamed to avoid conflict between variables and constants.
+					val expVarRenamed = e; //no rename here. Rename is moved to CorefProbabilisticTheoremProver
 	        	  isIR = false;
 	        	  doNotSimplify = false;
 	        	  var exp = goUniv(expVarRenamed, List(), List(), false);
@@ -459,7 +460,7 @@ class NoExistProbabilisticTheoremProver(
   					}
   				})/*END P*/ }) /*END C*/ 
   		}
-  		val finish = runWithTimeout(3000, false) { genPermutes;  true }
+  		val finish = runWithTimeout(5000, false) { genPermutes;  true }
   		if(!finish)
   			throw PermutTimesout
 

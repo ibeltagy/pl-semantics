@@ -1,3 +1,11 @@
+This is why small(x) ^ elephant(x): 
+T1: Kaline is a small elephant
+T2: All elephents are mammals
+==>Kaline is a small mammal. (Wrong)
+That is why: small(x) ^ elephant(x) is wrong
+and it should be: elephent(x) ^ rel(x,y) ^ small(y)
+-----------
+
 TODO:
 ->>New parser
 -Weight learning (good way to remove bad rules)

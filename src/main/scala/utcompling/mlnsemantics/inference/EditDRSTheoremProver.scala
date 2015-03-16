@@ -47,12 +47,33 @@ class EditDRSTheoremProver(
   def process(e:BoxerExpression, sentence: String) : BoxerExpression =
   {
   	this.sentence = sentence;
-  	replaceCardName(
-		removeTopic(
-			removeDanglingEqualities(
-					removeTheres(
-						corref(
-							applySMerge(e))))));
+	addGroupHeadPred(
+  		replaceCardName(
+			removeTopic(
+				removeDanglingEqualities(
+						removeTheres(
+							corref(
+								applySMerge(e)))))));
+  }
+
+  /////////////////////////////////////////////
+  def addGroupHeadPred(e:BoxerExpression):BoxerExpression = {
+   e match {
+		case BoxerDrs(refs, conds) => { 
+			var expDiscId:String = ""
+			val groupHeads = conds.flatMap(cond => cond match 
+			{
+				case BoxerRel(discId, indices, event, variable, "subset_of", sense) => expDiscId = discId;  Some(variable);
+				case _ => None
+			}).toSet
+			val extraPreds = groupHeads.map (v => BoxerPred(expDiscId, List(), v, "group_head", "r", 0))
+			BoxerDrs(refs, conds.map(addGroupHeadPred) ++ extraPreds)
+		}
+//case BoxerPred(discId, indices, variable, name, pos, sense) => BoxerPred(discId, indices, variable, name, pos, sense)
+//case BoxerRel(discId, indices, event, variable, name, sense) =>  BoxerRel(discId, indices, event, variable, name, sense)
+
+      case _ => e.visitConstruct(addGroupHeadPred)
+   }
   }
   /////////////////////////////////////////////
   val numbers:List[String] = List("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve");

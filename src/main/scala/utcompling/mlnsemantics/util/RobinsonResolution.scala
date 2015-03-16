@@ -57,6 +57,8 @@ import scala.util.matching.Regex
 import scala.util.control.Exception._
 import scala.Option.option2Iterable
 import utcompling.mlnsemantics.datagen.Lemmatize
+import scala.collection.mutable.ListBuffer
+import utcompling.mlnsemantics.run.Sts
 
 
 //----------------------------------------------------------
@@ -87,6 +89,7 @@ object Equivalences
 	def isEquivalent (l: String, r:String):Boolean = {
 		if (l == r) return true;
 		if (Lemmatize.lemmatizeWord(l) == Lemmatize.lemmatizeWord(r)) return true;
+		//if (l.substring(0, l.length()-1) == r.substring(0, r.length()-1) ) return true;
 		//if (l == "deer" && r == "wall") return true;
 		//if (l == "fence" && r == "deer") return true;
 		return false;
@@ -379,10 +382,15 @@ class Literal(val originalLiteralString: String) extends Unification {
   }
 
   // for inspection: represent this class as the literal string
-  override def toString :String = (if (isNegated) "-" else "") + 
-  predSymbol + 
-  (if (argList.size > 0) "(" + argList.mkString(",") + ")"
-   else "") 
+  override def toString :String = 
+  	(if (isNegated) "-" else "") + toPositiveString 
+   
+  // for inspection: print always positive
+  def toPositiveString :String = predSymbol + 
+	  (if (argList.size > 0) "(" + argList.mkString(",") + ")"
+	   else "")
+   
+   
 }
 
 class TestLiteral {
@@ -513,6 +521,8 @@ class CNF(val listlist: List[List[String]]) {
   var clauses : mutable.Map[Int,Clause] = listlist.zipWithIndex.map { case (clauselist, index) => 
 								    (index, new Clause(clauselist)) }(collection.breakOut)
 
+  var deletedLiterals : mutable.ListBuffer[Literal] = ListBuffer();
+
   // clauseIndices: set of indices in the clauses map
   def clauseIndices :Set[Int] = clauses.keySet
 
@@ -570,8 +580,11 @@ class CNF(val listlist: List[List[String]]) {
     if (!this.clauses.contains(clauseIx)) {
       throw new Exception("Shouldn't be here: trying to resolve nonexisting clause as singleton " + clauseIx.toString)
     }
-    this.clauses -= clauseIx
+    
     applySubstitution(substitution)
+    val deletedClause = this.clauses.get(clauseIx).get;
+    this.clauses -= clauseIx
+    this.deletedLiterals ++= deletedClause.literals.map(l => new Literal(l.toPositiveString) /*dropping the negation -if any-*/);
  }
 
   // clauseIx is a clause that has just been involved in a resolution step with a singleton
@@ -587,8 +600,11 @@ class CNF(val listlist: List[List[String]]) {
       throw new Exception("Shouldn't be here: trying to resolve with nonexisting literal " + literal.toString)
     }
 
-    clauses(clauseIx).literals = clauses(clauseIx).literals - literal
     applySubstitution(substitution)
+    clauses(clauseIx).literals = clauses(clauseIx).literals - literal
+    deletedLiterals += new Literal(literal.toPositiveString) /*dropping the negation -if any-*/;
+    applySubstitution(substitution) //recall applySubstitution because it throws an exception that terminates abduction in case the rule is fully unified 
+
   }
 
   // apply substitution:
@@ -702,6 +718,11 @@ class InferenceRule(lhsCNF:CNF, rhsCNF:CNF) {
   // sorted alphabetically by predicate symbols
   val lhsOld :List[Literal] = cnfToLitList(lhsCNF)
   val rhsOld :List[Literal] = cnfToLitList(rhsCNF)
+  
+  // left-hand side of the rule (with old variable names, to be changed below),
+  // sorted alphabetically by predicate symbols
+  val lhsUnified:List[Literal] = lhsCNF.deletedLiterals.toList
+  val rhsUnified:List[Literal] = rhsCNF.deletedLiterals.toList
 
   val constantVariableRegex = new Regex("""^[A-Za-z][A-Za-z0-9_]*$""")
 
@@ -752,13 +773,16 @@ class InferenceRule(lhsCNF:CNF, rhsCNF:CNF) {
   }
 
   override def toString :String = {
+  	//val literals =  getCleanedExtendedRule;
     // forall X,Y,Z exists A,B,C
     quantifiers.map (q => q._1 + " " + q._2.mkString(",")).mkString(" ") + ": " + 
     // LHS
-    lhs.mkString(" & ") + 
-    " -> " + 
+    lhsCNF.deletedLiterals.mkString(" & ") + " + " +  lhsOld.mkString(" & ") +
+    //literals._1.mkString(" & ")
+    " => " + 
     // RHS
-    rhs.mkString(" & ")
+    rhsOld.mkString(" & ")  + " + " + rhsCNF.deletedLiterals.mkString(" & ")
+    //literals._2.mkString(" & ")
   }
 
   // ===============================
@@ -768,9 +792,20 @@ class InferenceRule(lhsCNF:CNF, rhsCNF:CNF) {
   // The variables introduced in the LHS are universally quantified and non-nested.
   // The variables introduced in the RHS, if any, are existentially quantified and nested below the universal quantifiers
   val quantifiers :List[(String,Set[String])] = 
-    if (rhsArgumentMap.size > 0) 
-      { List(("forall", lhsArgumentMap.values.toSet), ("exists", rhsArgumentMap.values.toSet)) }
-    else { List(("forall", lhsArgumentMap.values.toSet)) }
+  {
+  //  if (rhsArgumentMap.size > 0) 
+  //    { List(("forall", lhsArgumentMap.values.toSet), ("exists", rhsArgumentMap.values.toSet)) }
+  //  else { List(("forall", lhsArgumentMap.values.toSet)) }
+
+	//uppercase varaibles are existentially quantifier and lowercase varaibles are universally quantifier
+	val allVars = (lhsOld ++ rhsOld ).flatMap (l =>  l.argList).toSet
+	val lowerCaseVars = allVars.filter (v =>  ! v(0).isUpper )
+   val upperCaseVars = allVars.filter (v =>   v(0).isUpper )
+   if (upperCaseVars.size > 0) 
+      { List(("forall", lowerCaseVars ), ("exists", upperCaseVars)) }
+   else { List(("forall", lowerCaseVars)) }
+
+  }
 
   // lhs is a conjunction of literals, realized as a list of strings.
   // negation is realized as "-".
@@ -794,6 +829,67 @@ class InferenceRule(lhsCNF:CNF, rhsCNF:CNF) {
   	true
   	//TODO: fix this
   	
+  }
+  
+  val getCleanedExtendedRule : (scala.collection.immutable.Set[Literal], scala.collection.immutable.Set[Literal]) = 
+  {
+  	var lhsLiterals = scala.collection.immutable.Set[Literal]();
+  	var rhsLiterals = scala.collection.immutable.Set[Literal]();
+
+  	if (!Sts.opts.extendDiffRules)
+  	{
+  		rhsLiterals = rhsOld.toSet //all RHS literals should be added to the RHS 
+  		lhsLiterals = lhsOld.toSet //all LHS literals should be added to the LHS
+  	}
+  	else
+  	{
+	  	val rhsVars = rhsOld.flatMap(l => l.argList);
+	
+	  	if (rhsVars.filter(v => v(0).isUpper).size > 0) //if RHS has an existentially quantifier variable
+	  		lhsLiterals = lhsOld.toSet;  //then keep all un-unified LHS literals.
+	  	
+	  	rhsLiterals = rhsOld.toSet //all RHS literals should be added to the RHS 
+	  	
+	  	val rhsConst = rhsVars.filter( v => !v(0).isUpper); //lowercase variables are unified constants. 
+	  	
+	
+	  	//some unified literals in RHS should be added back to the rule if: 
+	  	//1)literal has arity 1 
+	  	//2)literal has ground constant that is already used somewhere in the non-unified literals in RHS
+	  	rhsLiterals ++= rhsUnified.flatMap(l => { 
+	  		if (l.argList.size == 1 && rhsConst.contains(l.argList.head))
+	  			Some(l)
+	  		else
+	  			None
+	  	}).toSet
+	
+	  	//some unified literals in LHS should be added back to the rule if: 
+	  	//1)literal has arity 1 
+	  	//2)literal has ground constant that is already used somewhere in the non-unified literals in RHS
+	  	//Note that here I am collecting the part of LHS that fits the RHS 
+	  	lhsLiterals ++= lhsUnified.flatMap(l => {
+	  		if (l.argList.size == 1 && rhsConst.contains(l.argList.head))
+	  			Some(l)
+	  		else
+	  			None
+	  	}).toSet
+	  	
+	  	//some non-unified literals in LHS should be added to the rule if: 
+	  	//all variables of the literal is being used in the RHS 
+	  	/*
+	  	lhsLiterals ++= rhsOld.flatMap(l => {
+	  		if ( (rhsConst.toSet & l.argList.toSet).size  == l.argList.toSet.size)
+	  			Some(l.toString)
+	  		else
+	  			None
+	  	}).toSet
+	  	* 
+	  	*/
+	  	//No, for now, let's add them all. 
+	  	lhsLiterals ++= lhsOld.toSet;
+  	}
+  	
+  	(lhsLiterals, rhsLiterals);
   }
 }
 
@@ -881,12 +977,18 @@ object Resolution extends TakeLiteralApart {
 
     try { 
       singletonClauseIndices(formula1).foreach ( ix => 
-	singletonClauseUnificationStep(formula1, formula2, ix, isContentLiteral)
-      )
+		{
+			val res = singletonClauseUnificationStep(formula1, formula2, ix, isContentLiteral);
+			//println ("1: (" + ix+ ") " + formula1 +" => "+ formula2);
+			res
+		})
 
       singletonClauseIndices(formula2).foreach ( ix => 
-	singletonClauseUnificationStep(formula2, formula1, ix, isContentLiteral)
-      )
+		{
+			val res = singletonClauseUnificationStep(formula2, formula1, ix, isContentLiteral);
+			//println ("2: (" + ix+ ") " + formula1 +" => "+ formula2);
+			res
+		})
 
       // Now do resolution on L1 of C1 and L2 of C2 only if 
       // * either C1 or C2 is singleton, 
@@ -900,11 +1002,44 @@ object Resolution extends TakeLiteralApart {
       var change:Boolean = false
       do {
 	change = 
-	  singletonClauseIndices(formula1).exists ( ix => 
-	    singletonClauseUnificationStep(formula1, formula2, ix, isContentOrGrounded)) || 
+	singletonClauseIndices(formula1).exists ( ix => 
+	{
+	   val res = singletonClauseUnificationStep(formula1, formula2, ix, isContentOrGrounded);
+		//println ("3: (" + ix+ ") " + formula1 +" => "+ formula2);
+		res
+	}) || 
 	singletonClauseIndices(formula2).exists ( ix =>
-	    singletonClauseUnificationStep(formula2, formula1, ix, isContentOrGrounded))
+	{
+	   val res = singletonClauseUnificationStep(formula2, formula1, ix, isContentOrGrounded);
+		//println ("4: (" + ix+ ") " + formula1 +" => "+ formula2);
+		res
+	})
       } while (change)
+
+///---------------
+
+      val isAlwaysTrue = (l:Literal) => true
+
+      change = false;
+
+      do {
+   change =
+   singletonClauseIndices(formula1).exists ( ix =>
+   {
+      val res = singletonClauseUnificationStep(formula1, formula2, ix, isAlwaysTrue);
+      //println ("5: (" + ix+ ") " + formula1 +" => "+ formula2);
+      res
+   }) ||
+   singletonClauseIndices(formula2).exists ( ix =>
+   {
+      val res = singletonClauseUnificationStep(formula2, formula1, ix, isAlwaysTrue);
+      //println ("6: (" + ix+ ") " + formula1 +" => "+ formula2);
+      res
+   })
+      } while (change)
+
+
+
     } catch {
       case e:EmptyClauseException => return None
     }
@@ -923,7 +1058,9 @@ object Resolution extends TakeLiteralApart {
       List(negateStringLiteral(oldL.toString))
     )
 
-    new CNF(newclauses)
+    val newCNF = new CNF(newclauses);
+    newCNF.deletedLiterals = f.deletedLiterals;
+    newCNF
   }
 
   // filter for singleton clause indices in formula f
@@ -1055,9 +1192,17 @@ List(List("n1fireC44(a1)"), List("n1cause(b1)"), List("r1under(b1, i1)"), List("
 testSentpair("""    UN Secretary-general Boutros Boutros-Ghali called Thursday in a statement  published in New York for the boundaries of the safe areas, where Moslems are  under siege from Serbs, to be clearly defined.""", """    UN Secretary-general Boutros Boutros-Ghali called Thursday in a statement  published in New York for the boundaries of the safe areas, where Moslems are  since siege from Serbs, to be clearly defined.""", """under->since""", 
 List(List("nam1serbsC44(a1)"), List("n1areasC44(b1)"), List("a1safe(b1)"), List("n1boundary(c1)"), List("loc1new_york(d1)"), List("tim1thursday(e1)"), List("org1un_secretaryC45general_bout(f1)"), List("r1in(j1, i1)"), List("r1for(h1, c1)"), List("r1of(c1, b1)"), List("n1moslem(l1)"), List("r1under(l1, n1)"), List("a1clearly(n1)"), List("a1definedC46(n1)"), List("n1siege(n1)"), List("r1from(o1, a1)"), List("n1siege(o1)"), List("r1where(b1, g1)"), List("r1in(h1, d1)"), List("r1patient(h1, i1)"), List("v1publish(h1)"), List("n1statement(i1)"), List("r1patient(j1, e1)"), List("r1agent(j1, f1)"), List("v1call(j1)")), List(List("-nam1serbsC44(A2)", "-n1areasC44(B2)", "-a1safe(B2)", "-n1boundary(C2)", "-loc1new_york(D2)", "-tim1thursday(E2)", "-org1un_secretaryC45general_bout(F2)", "-r1in(J2, I2)", "-r1for(H2, C2)", "-r1of(C2, B2)", "-n1moslem(L2)", "-r1since(L2, N2)", "-a1clearly(N2)", "-a1definedC46(N2)", "-n1siege(N2)", "-r1from(O2, A2)", "-n1siege(O2)", "-r1where(B2, G2)", "-r1in(H2, D2)", "-r1patient(H2, I2)", "-v1publish(H2)", "-n1statement(I2)", "-r1patient(J2, E2)", "-r1agent(J2, F2)", "-v1call(J2)")))
 */
-testSentpair("""    A deer is jumping over the wall""", """    A deer is jumping over the fence""", """jump over->jump over""", 
+
+  /*
+  	testSentpair("""    A deer is jumping over the wall""", """    A deer is jumping over the fence""", """jump over->jump over""", 
 List(List("deer(d1)"), List("agent(j1, d1)"), List("jump(j1)"), List("over(j1, f1)"), List("wall(f1)")), 
 List(List("-deer(d1)", "-agent(j1, d1)", "-jump(j1)", "-over(j1)", "-patient(j1, f1)", "-fence(f1)") ))
+*/
+
+testSentpair(""" A man is walking fast""", """    A man is moving fast""", """walk->move""", 
+List(List("man(m1)"), List("agent(w1, m1)"), List("walk(w1)"), List("fast(w1)")), 
+List(List("-man(M2)", "-agent(W2, M2)", "-move(W2)", "-fast(W2)") ))
+
 
 }
 

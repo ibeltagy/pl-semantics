@@ -9,8 +9,15 @@ import support.HardWeightedExpression
 import utcompling.mlnsemantics.run.Sts
 import utcompling.scalalogic.discourse.candc.boxer.expression._
 
+object Phase extends Enumeration {
+	  type Phase = Value
+	  val hGivenT = Value("hGivenT") 
+	  val notHGivenT = Value("notHGivenT")
+  }
+
 object GivenNotTextProbabilisticTheoremProver{
   var negativeEvd: Boolean = true;
+  var phase : Phase.Value = Phase.hGivenT;
 }
 
 
@@ -37,10 +44,12 @@ class GivenNotTextProbabilisticTheoremProver(
 						//Sts.opts.prior = 1
 			}*/
 			GivenNotTextProbabilisticTheoremProver.negativeEvd = true;
+			GivenNotTextProbabilisticTheoremProver.phase = Phase.hGivenT
 			var hGivenT = delegate.prove(constants, declarations, evidence, assumptions, goal);
 			assert(hGivenT.length == 1)
 
 			GivenNotTextProbabilisticTheoremProver.negativeEvd = true;
+			GivenNotTextProbabilisticTheoremProver.phase = Phase.notHGivenT
 			var notHGivenT = //if (Sts.opts.ratio)
 					delegate.prove(constants, declarations, evidence, assumptions, negateWithoutPresupposed(goal));
 			//else

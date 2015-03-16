@@ -6,12 +6,62 @@ import org.apache.commons.logging.LogFactory
 import utcompling.mlnsemantics.run.Sts
 import scala.Array.canBuildFrom
 import utcompling.mlnsemantics.datagen.Tokenize
+import utcompling.mlnsemantics.datagen.Lemmatize
+import utcompling.scalalogic.discourse.impl.PreparsedBoxerDiscourseInterpreter
+import utcompling.scalalogic.discourse.DiscourseInterpreter
+import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl._
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerDrs
 
 class DistributionalRules extends Rules{
   
   private val LOG = LogFactory.getLog(classOf[DistributionalRules])
 
-  def getRules(): List[String] = {
+  
+  	def getRules() : List[(BoxerDrs, BoxerDrs, Double, RuleType.Value)] = 
+	{
+		val returnedRules = Sts.luceneDistPhrases.exactMatchingQuery("\t"+Sts.text + "\t" + Sts.hypothesis + "\n")
+		LOG.trace("Distributioanl rules: ");
+		returnedRules.foreach(rule => LOG.trace(rule))
+
+
+		val filterStart = System.nanoTime
+		val distRules = returnedRules
+			.flatMap { rule =>
+				val Array(id, ruleLhs, ruleRhs, score, gs, inWN, sen1, sen2, expLhs, expRhs) = rule.split("\t")
+				if (Sts.text != sen1 || Sts.hypothesis != sen2)
+					None
+				else
+				{
+					val lhs = ruleLhs //.split(" ").map(_.split("-")(0)).mkString(" ")   //keep the index and the POS. It will be used in reconstructing the logical represetnation of the phrase
+					val rhs = ruleRhs //.split(" ").map(_.split("-")(0)).mkString(" ")
+					val pair = List(Some(expLhs), Some(expRhs));
+					val discourseIterpreter	= new PreparsedBoxerDiscourseInterpreter(pair, new PassthroughBoxerExpressionInterpreter());
+					val List(lhsDrs, rhsDrs) = discourseIterpreter.batchInterpretMultisentence(List(List((expLhs)), List((expRhs))), Some(List("t", "h")), false, false)
+					println (lhsDrs)
+					println (rhsDrs)
+					if (lhsDrs.isEmpty || rhsDrs.isEmpty)
+						throw new RuntimeException ("Unparsable rule");
+					//Some(id + "\t" + lhs + "\t" + rhs + "\t" + score + "\t" + RuleType.Implication)
+					Some(lhsDrs.get.asInstanceOf[BoxerDrs], rhsDrs.get.asInstanceOf[BoxerDrs], score.toDouble, RuleType.Implication)
+				}
+			}.toList
+			
+		distRules
+	}
+  
+  //process to match Barent rules. 
+  def process(s:String):String = {
+    val sLowerCase = s;
+    val tokens = sLowerCase.split(" "); //It is enough to use "split" because the string is already tokenized
+    val filteredTokens = tokens.filterNot(Rules.tokensToRemoveFromRules.contains(_))
+    //the # are to avoid matching part of a token
+    val stringToCompare = "#" + filteredTokens.mkString("#")+"#";
+    return stringToCompare; 
+  }
+  
+  
+  
+  def getRulesOld(): List[String] = {
     // Search phrases in Text
     val txtPhrases = Sts.luceneDistPhrases.query(Sts.text + " " + Sts.textLemma)
       .filter { phrase =>

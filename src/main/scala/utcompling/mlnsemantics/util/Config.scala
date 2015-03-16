@@ -34,6 +34,7 @@ class Config(opts: Map[String, String] = Map()) {
 		"-vectorSpace",
 		"-distWeight",
 		"-phrases",
+		"-genPhrases",
 		"-phraseVecs",
 		"-rulesWeight",
 		"-rules",
@@ -49,6 +50,7 @@ class Config(opts: Map[String, String] = Map()) {
 		"-lexInferMethod",
 		"-wordnet",
 		"-diffRules",
+		"-extendDiffRules",
 		"-task",
 		"-varBind",
 		"-chopLvl",
@@ -79,6 +81,7 @@ class Config(opts: Map[String, String] = Map()) {
 		"-wFixCWA",
 		"-ratio",
 		"-coref",
+		"-corefOnIR",
 		"-errorCode"
 	);
   
@@ -121,6 +124,13 @@ class Config(opts: Map[String, String] = Map()) {
     case Some(phrasesFile) => phrasesFile;
     case _ => "";
   }
+
+  //file contains list of phrases (resources/phrases.lst)
+  val genPhrases = opts.get("-genPhrases") match {
+    case Some(genPhrases) => genPhrases.toBoolean;
+    case _ => false;
+  }
+  
 
   //files contains vectors of these phrases (resources/phrase-vectors/word_phrase_sentence_*)
   val phraseVecsFile = opts.get("-phraseVecs") match {
@@ -230,6 +240,12 @@ class Config(opts: Map[String, String] = Map()) {
     case Some("true") => true;
     case _ => false;
   }
+  
+  //Enable or Disable extending Difference rules
+  val extendDiffRules = opts.get("-extendDiffRules") match {
+    case Some("true") => true;
+    case _ => false;
+  }  
   
   //-------------------------------------------task
     
@@ -441,9 +457,15 @@ class Config(opts: Map[String, String] = Map()) {
   
   //doing coreference resolution between T and H 
   val coref = opts.get("-coref") match {
-     case Some("true") => true;
+     case Some("false") => false;
      case _ => true;
   }
+  //doing coreference resolution between T and H 
+  val corefOnIR = opts.get("-corefOnIR") match {
+     case Some("true") => true;
+     case _ => false;
+  }
+  
   
   //Return system generated error codes, or an inputed error code 
   val errorCode = opts.get("-errorCode") match {

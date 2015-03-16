@@ -58,56 +58,90 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     
     assumptions.foreach(x => LOG.info("\n" + d(x.expression).pretty))
     LOG.info("\n" + d(goal).pretty)
-/*
-    var preds = assumptions.head.expression.getPredicates
-    var rels = assumptions.head.expression.getRelations
-    var simplePh = PhrasalRules.findSimplePhrases(preds);
-    var relationalPh = PhrasalRules.findRelationalPhrases(rels, simplePh);
-    var nounPh = PhrasalRules.findNounPhrases(simplePh);
-    var prepPh = PhrasalRules.findPrepPhrase(simplePh, relationalPh);
-    var verbPh = PhrasalRules.findVerbPhrase(simplePh, relationalPh);
 
-    LOG.trace("Assumption: ----------------")        
-    LOG.trace("Preds: ")
-    preds.sortBy(_.variable).foreach(LOG.trace(_))
-    LOG.trace("Rels: ")
-    rels.sortBy(_.variable).foreach(LOG.trace(_))
-    LOG.trace("SimplePhrase: ")
-    simplePh.foreach(LOG.trace(_))
-    LOG.trace("RelationalPhrase: ")
-    relationalPh.foreach(LOG.trace(_))
-    LOG.trace("NounPhrase: ")
-    nounPh.foreach(LOG.trace(_))
-    LOG.trace("PrepPhrase: ")
-    prepPh.foreach(LOG.trace(_))    
-    LOG.trace("VerbPhrase: ")
-    verbPh.foreach(LOG.trace(_))    
-
-    LOG.trace("Goal: ----------------")
-    preds = goal.getPredicates
-    rels = goal.getRelations
-    simplePh = PhrasalRules.findSimplePhrases(preds);
-    relationalPh = PhrasalRules.findRelationalPhrases(rels, simplePh);
-    nounPh = PhrasalRules.findNounPhrases(simplePh);
-    prepPh = PhrasalRules.findPrepPhrase(simplePh, relationalPh);
-    verbPh = PhrasalRules.findVerbPhrase(simplePh, relationalPh);
+    if (Sts.opts.genPhrases)
+    {
+	    var tpreds = assumptions.head.expression.getPredicates
+	    var trels = assumptions.head.expression.getRelations
+	    var tsimplePh = PhrasalRules.findSimplePhrases(tpreds);
+	    var trelationalPh = PhrasalRules.findRelationalPhrases(trels, tsimplePh);
+	    var tnounPh = PhrasalRules.findNounPhrases(tsimplePh);
+	    var tprepPh = PhrasalRules.findPrepPhrase(tsimplePh, trelationalPh);
+	    var tverbPh = PhrasalRules.findVerbPhrase(tsimplePh, trelationalPh);
+	
+	    LOG.trace("Assumption: ----------------")        
+	    LOG.trace("Preds: ")
+	    tpreds.sortBy(_.variable).foreach(LOG.trace(_))
+	    LOG.trace("Rels: ")
+	    trels.sortBy(_.variable).foreach(LOG.trace(_))
+	    LOG.trace("SimplePhrase: ")
+	    tsimplePh.foreach(LOG.trace(_))
+	    LOG.trace("RelationalPhrase: ")
+	    trelationalPh.foreach(LOG.trace(_))
+	    LOG.trace("NounPhrase: ")
+	    tnounPh.foreach(LOG.trace(_))
+	    LOG.trace("PrepPhrase: ")
+	    tprepPh.foreach(LOG.trace(_))    
+	    LOG.trace("VerbPhrase: ")
+	    tverbPh.foreach(LOG.trace(_))    
+	
+	    LOG.trace("Goal: ----------------")
+	    var hpreds = goal.getPredicates
+	    var hrels = goal.getRelations
+	    var hsimplePh = PhrasalRules.findSimplePhrases(hpreds);
+	    var hrelationalPh = PhrasalRules.findRelationalPhrases(hrels, hsimplePh);
+	    var hnounPh = PhrasalRules.findNounPhrases(hsimplePh);
+	    var hprepPh = PhrasalRules.findPrepPhrase(hsimplePh, hrelationalPh);
+	    var hverbPh = PhrasalRules.findVerbPhrase(hsimplePh, hrelationalPh);
+	    
+	    LOG.trace("Preds: ")
+	    hpreds.sortBy(_.variable).foreach(LOG.trace(_))
+	    LOG.trace("Rels: ")
+	    hrels.sortBy(_.variable).foreach(LOG.trace(_))
+	    LOG.trace("SimplePhrase: ")
+	    hsimplePh.foreach(LOG.trace(_))
+	    LOG.trace("RelationalPhrase: ")
+	    hrelationalPh.foreach(LOG.trace(_))
+	    LOG.trace("NounPhrase: ")
+	    hnounPh.foreach(LOG.trace(_))
+	    LOG.trace("PrepPhrase: ")
+	    hprepPh.foreach(LOG.trace(_))    
+	    LOG.trace("VerbPhrase: ")
+	    hverbPh.foreach(LOG.trace(_))   
+	
+	    //Templates: 
+	    //1) NounPhrase <=> NounPhrase
+	    //2) PrepPhrase <=> PrepPhrase
+	    //3) PrepPhrase <=> NounPhrase  //match NounPhrase variable with Head of PrepPhrase variable
+	    //4) VerbPhrase <=> VerbPhrase
+	    
+	    var tphrases = tnounPh ++ tprepPh ++ tverbPh
+	    var hphrases = hnounPh ++ hprepPh ++ hverbPh
+	    
+	    tphrases.foreach(tPhrase => {
+			hphrases.foreach(hPhrase => {
+				if (PhrasalRules.isCompatible(tPhrase, hPhrase))
+				{
+					for( i <- 0 until tPhrase.size)
+					{
+						 for( j <- 0 until hPhrase.size)
+						 {
+							 val lhs = PhrasalRules.ruleSideToString(tPhrase.getBoxerExpressionList(i), Sts.text, false)
+							 val rhs = PhrasalRules.ruleSideToString(hPhrase.getBoxerExpressionList(i), Sts.hypothesis, false)
+							 if (lhs == "" || rhs == "")
+								 println("No DIST rule for: " + tPhrase.getBoxerExpressionList(i) + "=>" +  hPhrase.getBoxerExpressionList(i))
+							 else
+								 println ("[X]\t" + lhs + "\t" + rhs+ "\t" + "0.5" + "\t" +Sts.text + "\t" + Sts.hypothesis)
+						 }
+					}
+				}
+			})
+	    })
+    }
     
-    LOG.trace("Preds: ")
-    preds.sortBy(_.variable).foreach(LOG.trace(_))
-    LOG.trace("Rels: ")
-    rels.sortBy(_.variable).foreach(LOG.trace(_))
-    LOG.trace("SimplePhrase: ")
-    simplePh.foreach(LOG.trace(_))
-    LOG.trace("RelationalPhrase: ")
-    relationalPh.foreach(LOG.trace(_))
-    LOG.trace("NounPhrase: ")
-    nounPh.foreach(LOG.trace(_))
-    LOG.trace("PrepPhrase: ")
-    prepPh.foreach(LOG.trace(_))    
-    LOG.trace("VerbPhrase: ")
-    verbPh.foreach(LOG.trace(_))    
-        
-*/
+    
+
+
     val simplifiedDeclarations = declarations.map( d => {
 		val name = d._1 match {
 			case BoxerPred(discId, indices, variable, name, pos, sense) => name
@@ -124,7 +158,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 	//query lucene for pre-compiled paraphrase rules
 	val paraphraseRules = new ParaphraseRules().getRules();
 		
-	val precompiledRules = Rules.convertRulesToFOL(distributionalRules ++  paraphraseRules, assumptions.head.expression, goal)
+	val precompiledRules = Rules.convertRulesToFOL( /*distributionalRules ++ */ paraphraseRules, assumptions.head.expression, goal)
 								.map(r=> (r._1, r._2, r._3 * Sts.opts.rulesWeight, r._4)) //scale weights of all precompiles rules
 	
 	    //generate distributional inference rules on the fly
@@ -134,13 +168,21 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
           //Hard rules from WordNet
 	val wordNetRules = new WordNetRules().getRules(assumptions.head.expression, goal, simplifiedDeclarations);
 	
-	val diffRule = new DiffRules().getRule(assumptions.head.expression, goal);
+	val diffRule = new DiffRules().getRule(assumptions.head.expression, goal, ruleWeighter, vecspaceFactory);
     
+	var newConstants: Map[String, Set[String]] = constants;
+	def addConst(varName: String) =
+		newConstants += (varName.substring(0, 2) -> (newConstants.apply(varName.substring(0, 2)) + varName))
+		
     val rules:List[WeightedExpression[BoxerExpression]] = Sts.opts.inferenceRulesLevel match {
 		case -1 => List();
-		case _ => (precompiledRules ++  onthefulyRules ++ wordNetRules ++ diffRule).flatMap(r=>Rules.createWeightedExpression(r._1, r._2, r._3, r._4, simplifiedDeclarations));
+		case _ => (precompiledRules ++  onthefulyRules ++ wordNetRules ++ diffRule ++ distributionalRules).flatMap(r=>{
+			val result = Rules.createWeightedExpression(r._1, r._2, r._3, r._4, simplifiedDeclarations)
+			result._2.map( c => addConst(c));
+			result._1
+		});
 	 } 
   
-    delegate.prove(constants, declarations, evidence, assumptions ++ (rules.toSet.toList), goal)
+    delegate.prove(newConstants, declarations, evidence, assumptions ++ (rules.toSet.toList), goal)
   }
 }

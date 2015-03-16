@@ -9,6 +9,8 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerVariable
 import scala.collection.mutable.MultiMap
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.Set
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerIndex
 
 
 object PhrasalRules {
@@ -35,7 +37,7 @@ object PhrasalRules {
 	        2
 	      else if (x.pos == "a" || x.pos == "r" )
 	        1	        
-	      else throw new RuntimeException("Unknown POS: " + x.pos + " in predicate: " + x)	        
+	      else throw new RuntimeException("Unknown POS: " + x.pos + " in predicate: " + x)	
 	    });
 	    sortedPreds  = sortedPreds.reverse;
 	    //assert(sortedPreds.head.pos == "n" ||sortedPreds.head.pos == "v" || sortedPreds.head.pos == "a"/*TODO: Pair 85*/ ||sortedPreds.head.pos == "r"/*TODO: Pair 237*/ )
@@ -130,5 +132,64 @@ object PhrasalRules {
 	  }
 	  else None
 	})
+  }
+  
+  def ruleSideToString (exps:List[BoxerExpression], sentence: String, simple: Boolean): String = 
+  {
+  	  val sentenceTokens = sentence.split(" ");
+  	  def indicesToOneIndex ( l:List[BoxerIndex]) : List[BoxerIndex] = 
+  	  {
+  	  	if (l.size <= 1)
+  	  		return l;
+  	  	return List(l.head);
+  	  }
+	  val namesList = exps.flatMap(exp => {
+	  		exp match
+	  		{
+	  			case BoxerPred(discId, indices, variable, name, pos, sense) => 
+	  			{
+	  				val index = Rules.indicesToIndex(indicesToOneIndex(indices));
+	  				if (index == 0)
+	  					None
+	  				else
+	  				{
+	  					if (simple)
+	  						Some((index, sentenceTokens(index-1)))
+	  					else 
+	  						Some((index, sentenceTokens(index-1) + "-" + pos + "-" + index))
+	  				}
+	  			}
+	  			case BoxerRel(discId, indices, event, variable, name, sense) => 
+	  			{
+	  				val index = Rules.indicesToIndex(indicesToOneIndex(indices));
+	  				if (index == 0)
+	  					None
+	  				else
+	  				{
+	  					if (simple)
+	  						Some((index, sentenceTokens(index-1)))
+	  					else
+	  						Some((index, sentenceTokens(index-1) + "-r-" + index))
+	  				}
+	  			}
+	  		}
+	  })
+	  val filteredSorted = namesList.toSet.toList.filter(_._1 != 0).sortBy(_._1);
+	  filteredSorted.map(_._2).mkString(" ")
+  }
+    
+  def isCompatible(lhs:Phrase, rhs:Phrase):Boolean = 
+  {
+	if (lhs.isInstanceOf[NounPhrase] &&  rhs.isInstanceOf[NounPhrase])
+		return true;
+	if (lhs.isInstanceOf[PrepPhrase] &&  rhs.isInstanceOf[PrepPhrase])
+		return true;
+	if (lhs.isInstanceOf[NounPhrase] &&  rhs.isInstanceOf[PrepPhrase])
+		return true;
+	if (lhs.isInstanceOf[PrepPhrase] &&  rhs.isInstanceOf[NounPhrase])
+		return true;
+	if (lhs.isInstanceOf[VerbPhrase] &&  rhs.isInstanceOf[VerbPhrase])
+		return true;
+	return false
   }
 }

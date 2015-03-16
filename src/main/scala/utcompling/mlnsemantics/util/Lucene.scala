@@ -124,15 +124,10 @@ class Lucene(rulesFileName: String) {
 	.toSeq
 	.distinct
 	.mkString(" ")
-	val r = this.read(query);
-	val end = System.nanoTime
-	LOG.debug("Searching time: " + (end - start) / 1e9 + " s")       
-	LOG.debug("# returned rules: " + r.size)
-	r;
+	return this.queryWithTimeLog(query)
   }
   def query(sen1: String, sen2: String): Seq[String] = 
   {
-	val start = System.nanoTime    
 	val query1 = sen1.split(" ")
 	.filter(token => token.length > 1 && !ignoredTokens.contains(token))
 	.toSeq
@@ -143,12 +138,24 @@ class Lucene(rulesFileName: String) {
 	.toSeq
 	.distinct
 	.mkString(" ")
-	val r = this.read("( " + query1 + " ) AND (" + query2 +" )");
+	return this.queryWithTimeLog("(" + query1 + ") AND (" + query2 +")" )
+  }
+  
+  def exactMatchingQuery(q: String): Seq[String] = 
+  {
+	return this.queryWithTimeLog("\" " + q + " \"");
+  }
+  
+  def queryWithTimeLog(q: String): Seq[String] = 
+  {
+	val start = System.nanoTime    
+	val r = this.read(q);
 	val end = System.nanoTime
 	LOG.debug("Searching time: " + (end - start) / 1e9 + " s")       
 	LOG.debug("# returned rules: " + r.size)
 	r;
-  }  
+  }
+  
 
 
   /**

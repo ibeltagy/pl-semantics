@@ -13,7 +13,7 @@ import utcompling.mlnsemantics.datagen.Lemmatize
 import scala.util.control.Breaks._
 import scala.collection.mutable.MultiMap
 import scala.collection.mutable.HashMap
-import scala.collection.mutable.Set
+//import scala.collection.mutable.Set
 import scala.collection.mutable.MutableList
 import scala.collection.mutable.Queue
 
@@ -100,21 +100,21 @@ object Rules {
   //return a pattern describing the expression consist of POS tags of variables ordered
   //POS tags are: 1)v: verb, 2)n: noun or adjectave (all "a" are renamed to "n"), 3)r: relation variable.
   //Return expression with variables renames, and pattern as strng
-  private def sortVarsRenameVarsGetPattern(exps:Set[BoxerExpression]):(Set[BoxerExpression], String)= 
+  def sortVarsRenameVarsGetPattern(exps:Set[BoxerExpression]):(Set[BoxerExpression], String)= 
   {
   	if(exps.size == 0) //empty expression 
   		return (exps, "");
 	//1)Build the sorting order of the variables using relations  
 	var singleVariable:String = null;
-  	var fromTo:Set[(String, String)] = Set()
+  	var fromTo:Map[(String, String), String] = Map() // ((from, to) -> relationName)
 	exps.foreach( exp=> exp match {
 		case BoxerPred(discId, indices, variable, name, pos, sense) => singleVariable = variable.name;
 		case BoxerRel(discId, indices, event, variable, name, sense) =>
-			fromTo   = fromTo + ((event.name, variable.name))
+			fromTo   = fromTo + ((event.name, variable.name) ->  name)
 	})
 
   	var startPoint:scala.collection.immutable.Set[String]  = null;
-  	var (from, to) = fromTo.unzip;
+  	var (from, to) = fromTo.keys.unzip;
   	if(fromTo.size == 0 /*special case, rules with no relations*/)
   	{
   		startPoint = scala.collection.immutable.Set((singleVariable));
@@ -138,12 +138,12 @@ object Rules {
 		if(!visitedSorted.contains(head))
 		{
 			visitedSorted += head;
-			val matchedRelations = fromTo.filter(_._1 == head).toList;
+			val matchedRelations = fromTo.filter(_._1._1 == head).toList;
 			if(matchedRelations.size > 1)
 			{
 				LOG.debug("FanOut > 1: " + exps);
 			}
-			matchedRelations.sortBy(x=>x._2).foreach(x=>queue.enqueue(x._2));
+			matchedRelations.sortBy(x=>x._2).foreach(x=>queue.enqueue(x._1._2));
 		}
 	}
 	LOG.trace("SORTED: "+visitedSorted.mkString(", ") + " of rule: " + exps);
@@ -175,7 +175,12 @@ object Rules {
 		}
   	}
   	if(varsPOS.size != visitedSorted.size)
-  		LOG.error ("size mismatch")
+  	{
+  		LOG.error ("size mismatch") //because the predicates and relations are not connected.
+  		//In this case, add the missed ones to the end of visitedSorted
+  		
+  		visitedSorted ++= (varsPOS.keys.toSet -- visitedSorted.toSet).toList
+  	}
   	assert(varsPOS.size == visitedSorted.size)
 
   	val pattern = visitedSorted.map(varsPOS.get(_).get)
@@ -207,7 +212,7 @@ object Rules {
 				"m" + varIndex;
 			}
 		)
-		return BoxerVariable(varPos + newVarSuffix);
+		return BoxerVariable("x" + varPos + newVarSuffix);
   	}
 	val expsNamesChanged: Set[BoxerExpression] = exps.map
   	{
@@ -273,22 +278,22 @@ object Rules {
 			  else  //both patterns are not empty
 			  {
 	        		val knownPatterns = List(
-	("n--n" /*15496*/, "M"),
-	("nn--n" /*786*/, "M"),
-	("nn--nn" /*27*/, "M"),
-	("nr--nr" /*258*/, "M"), ("rn--nr" /*47*/, "I"), ("rn--rn" /*110*/, "M"),
-	("rnr--rnr" /*8*/, "M"), ("rrn--rrn" /*2*/, "M"),
-	("vn--vn" /*3*/, "M"),
-	("r--nr" /*18*/, "M"), ("rn--r" /*34*/, "M"),
-	("r--r" /*32*/, "M"),
-	("rr--rnr" /*804*/, "M"), ("rrn--rr" /*34*/, "I"),
-	("rr--rr" /*885*/, "M"),
-	("rrr--rr" /*12*/, "M"),
-	("vr--vnr" /*10*/, "M"),
-	("vr--vr" /*147*/, "M"),
-	("vn--v" /*75*/, "M"),
-	("vr--v" /*934*/, "P"),
-	("v--v" /*1684*/, "M"),
+	("n--n" /*15496*/, "M"), // boy => little kid
+	("nn--n" /*786*/, "M"), // cell [of] phone => phone, piece of paper => paper
+	("nn--nn" /*27*/, "M"), // cell [of] phone => piece of paper
+	("nr--nr" /*258*/, "M"), ("rn--nr" /*47*/, "I"), ("rn--rn" /*110*/, "M"), // X into the water => X in the sea
+	("rnr--rnr" /*8*/, "M"), ("rrn--rrn" /*2*/, "M"), // X in front of Y => X with Y
+	("vn--vn" /*3*/, "M"),  // drinking water => drinking
+	("r--nr" /*18*/, "M"), ("rn--r" /*34*/, "M"), //in the air => up
+	("r--r" /*32*/, "M"), //quickly => very fast
+	("rr--rnr" /*804*/, "M"), ("rrn--rr" /*34*/, "I"),  //X at Y => X in front of Y
+	("rr--rr" /*885*/, "M"), // X in Y => X near Y
+	("rrr--rr" /*12*/, "M"), // X next to Y => X outside of Y
+	("vr--vnr" /*10*/, "M"), // looking at Y, standing in front of Y
+	("vr--vr" /*147*/, "M"), // looking at X => staring at X
+	("vn--v" /*75*/, "M"), // drinking water => drinking
+	("vr--v" /*934*/, "P"), // looking at X => watching X
+	("v--v" /*1684*/, "M"), // carrying => holding
 	("rnn--n" /*15*/, "I"),
 	("nr--n" /*344*/, "I"), ("rn--n" /*378*/, "I"),
 	("nr--nn" /*152*/, "I"), ("rn--nn" /*147*/, "I"),
@@ -315,7 +320,9 @@ object Rules {
 	("v--rr" /*769*/, "I"),
 	("rn--nrr" /*2*/, "I"), ("rnr--nr" /*13*/, "I"), ("rrn--rn" /*3*/, "I"),
 	("rnn--nn" /*4*/, "I"),
-	("rrrn--n" /*4*/, "I")
+	("rrrn--n" /*4*/, "I"),
+   ("vnn--vnn", "M"), //subject-verb-object => subject-verb-object from distributional rules 
+   ("vnn--vn", "M") //subject-verb-object => subject-verb from distributional rules
 					).toMap;
 	
 					if (!knownPatterns.contains(ruleTemplate))
@@ -342,7 +349,7 @@ object Rules {
 							}
 							else
 							{
-								val patient = BoxerRel(arg2._1.head.getPredicates.head.discId, List(), BoxerVariable("vf"), BoxerVariable("rf"), "patient", 0);
+								val patient = BoxerRel(arg2._1.head.getPredicates.head.discId, List(), BoxerVariable("xvf"), BoxerVariable("xrf"), "patient", 0);
 								newArg2 = (arg2._1 + patient, "vr");
 							}
 							(newArg1, newArg2)
@@ -418,7 +425,7 @@ object Rules {
   
   private def buildIndexMap (preds: Seq[BoxerPred], rels: Seq[BoxerRel], lemma:String): (MultiMap[Int, BoxerExpression], Set[BoxerRel]) = 
   {
-	  val indexMap = new HashMap[Int, Set[BoxerExpression]] with MultiMap[Int, BoxerExpression]
+	  val indexMap = new HashMap[Int, scala.collection.mutable.Set[BoxerExpression]] with MultiMap[Int, BoxerExpression]
 	  var metaRelations: Set[BoxerRel] = Set();
 	  preds.foreach(pred=>{
 	    if(pred.indices.size == 0)  //Ignore them. I do not need them in the inference rules: 
@@ -584,35 +591,57 @@ object Rules {
 	//println(sentenceTokens.mkString(" "))
 	//println(lemmaTokens.mkString(" "))
 	//require(sentenceTokens.length == lemmaTokens.length)
- 
-	val phraseTokens = if(Sts.opts.rulesMatchLemma)
-			Tokenize(phrase.toLowerCase()).map(Lemmatize.lemmatizeWord).filterNot(Rules.tokensToRemoveFromRules.contains(_)).toArray
-		else
-			Tokenize(phrase.toLowerCase()).filterNot(Rules.tokensToRemoveFromRules.contains(_)).toArray
-
-	if(!sentenceTokens.containsSlice(phraseTokens))
-	  throw new RuntimeException("A matched rule "+phraseTokens.mkString(",")+" could not be found in the sentnece(" + lemmaTokens.mkString(", "));
 	
-	var sliceIndex:Int = sentenceTokens.indexOfSlice(phraseTokens)
-	val lemmaIndicesSlice = lemmaIndices.slice(sliceIndex, sliceIndex + phraseTokens.length )
-
-	val firstBoxerIndex = lemmaIndicesSlice.head
-	val LastBoxerIndex = lemmaIndicesSlice.last
-
-	//TODO: collect preds and rels from indexMap on indices on the range (firstBoxerIndex, LastBoxerIndex)
-	LOG.trace("Rule part (" + phrase + ") is mapped to the sets: ")
-	val predsAndRels = Range(firstBoxerIndex, LastBoxerIndex+1).map(index=>indexMap.getOrElse(index, Set())).flatMap(s=> {
-		if(s.size > 1)
-		  LOG.trace ("Set of size > 1: " + s);
-		else 
-		  LOG.trace (s);
-		if (s.size >= 1)
-		  Some(s);
-		else 
-		  None
-	}).toList
-
-	predsAndRels
+ 
+	var predsAndRels:List[Set[BoxerExpression]] = null;
+	val phraseSplits = phrase.split(" "); 
+	if (phraseSplits.head.split("-").size >= 3) //Distributional rule word-pos-index
+	{
+		predsAndRels = phraseSplits.flatMap(word => {
+			val index = word.split("-").last;
+			var predSet:Set[BoxerExpression] = indexMap.getOrElse(index.toInt-1, Set()).toSet
+			
+			if (predSet.size == 0)
+			{
+				LOG.error("Token ("+word+") in Dist rule not found in sentence");
+				println("Token ("+word+") in Dist rule not found in sentence");
+				None
+			}
+			else
+			//println(predSet);
+			Some(predSet) 
+		}).toList
+	}
+	else
+	{
+		val phraseTokens = if(Sts.opts.rulesMatchLemma)
+				Tokenize(phrase.toLowerCase()).map(Lemmatize.lemmatizeWord).filterNot(Rules.tokensToRemoveFromRules.contains(_)).toArray
+			else
+				Tokenize(phrase.toLowerCase()).filterNot(Rules.tokensToRemoveFromRules.contains(_)).toArray
+	
+		if(!sentenceTokens.containsSlice(phraseTokens))
+		  throw new RuntimeException("A matched rule "+phraseTokens.mkString(",")+" could not be found in the sentnece(" + lemmaTokens.mkString(", "));
+		
+		var sliceIndex:Int = sentenceTokens.indexOfSlice(phraseTokens)
+		val lemmaIndicesSlice = lemmaIndices.slice(sliceIndex, sliceIndex + phraseTokens.length )
+	
+		val firstBoxerIndex = lemmaIndicesSlice.head
+		val LastBoxerIndex = lemmaIndicesSlice.last
+	
+		//TODO: collect preds and rels from indexMap on indices on the range (firstBoxerIndex, LastBoxerIndex)
+		LOG.trace("Rule part (" + phrase + ") is mapped to the sets: ")
+		predsAndRels = Range(firstBoxerIndex, LastBoxerIndex+1).map(index=>indexMap.getOrElse(index, Set())).flatMap(s=> {
+			if(s.size > 1)
+			  LOG.trace ("Set of size > 1: " + s);
+			else 
+			  LOG.trace (s);
+			if (s.size >= 1)
+			  Some(s.toSet);
+			else 
+			  None
+		}).toList
+	}
+	return predsAndRels;
   }
   private def addMetaRels(nonmetaPredRel: List[Set[BoxerExpression]], metaRel: Set[BoxerRel]): Set[BoxerExpression] = 
   {
@@ -744,20 +773,24 @@ val matchAssumeRels = assumeRelsList.filter(rel =>
       }
     }
 
-  def renameVariablesAddTypes(drs: BoxerDrs, declarations: Map[String, Seq[String]]) : BoxerDrs = 
+  def renameVariablesAddTypes(drs: BoxerDrs, declarations: Map[String, Seq[String]]) : Option[BoxerDrs] = 
   {
   	var drsNewRefs : Set[BoxerVariable] = Set(); 
-  	val drsNewConds = drs.conds.indices.map { index => 
-  		drs.conds(index) match 
+  	val drsNewConds = drs.conds.map { cond => 
+  		cond match 
 		{
 			case BoxerPred(discId, indices, variable, name, pos, sense) => 
 			{
+				if (declarations.get(name).isEmpty)
+					return None;
 				var newVarName = BoxerVariable(declarations(name).head + "_" + variable.name);
 				drsNewRefs = drsNewRefs + newVarName; 
 				BoxerPred(discId, indices, newVarName, name, pos, sense)	
 			} 
 			case BoxerRel(discId, indices, event, variable, name, sense) =>
 			{
+				if (declarations.get(name).isEmpty || declarations.get(name).get.size!=2)
+					return None;
 				var newVar1Name = BoxerVariable(declarations(name).head + "_" + event.name);
 				var newVar2Name = BoxerVariable(declarations(name).last + "_" + variable.name);
 				drsNewRefs = drsNewRefs ++ Set(newVar1Name, newVar2Name); 
@@ -771,38 +804,71 @@ val matchAssumeRels = assumeRelsList.filter(rel =>
   	}
   	assert(drsNewRefs.size == drs.refs.toSet.size)
 
-	BoxerDrs(drsNewRefs.map((List[BoxerIndex]() -> _)).toList, drsNewConds.toList)
+	Some(BoxerDrs(drsNewRefs.map((List[BoxerIndex]() -> _)).toList, drsNewConds.toList))
   }
-  def createWeightedExpression(leftFOL: BoxerDrs, rightFOL: BoxerDrs, score: Double, ruleType: RuleType.Value, declarations: Map[String, Seq[String]]): List[WeightedExpression[BoxerExpression]] =
+  def createWeightedExpression(leftFOL: BoxerDrs, rightFOL: BoxerDrs, score: Double, ruleType: RuleType.Value, declarations: Map[String, Seq[String]]): (List[WeightedExpression[BoxerExpression]], Set[String]) =
   {
     if(score < Sts.opts.weightThreshold )
-      return List();
+      return (List(), Set());
     val varRenamedLeftFol = renameVariablesAddTypes(leftFOL, declarations)
     val varRenamedRightFol = renameVariablesAddTypes(rightFOL, declarations)
-    List(createWeightedExpression(varRenamedLeftFol, varRenamedRightFol, "h", score, ruleType)).flatten ++
-    (
-      if (Sts.opts.task == "sts")
-        List(createWeightedExpression(varRenamedRightFol, varRenamedLeftFol, "t", score, ruleType)).flatten
-      else List())
+
+    // this case is very important. If renameVariablesAddTypes fails, then this is because it could not find a declaration for the predicates used in the rules.
+    //This case happens with handcoded rules, and with diffRules generated from diffferent parses.  
+    if (varRenamedLeftFol.isEmpty || varRenamedRightFol.isEmpty) 
+    	return (List(), Set())
+    val rule1 = createWeightedExpression(varRenamedLeftFol.get, varRenamedRightFol.get, "h", score, ruleType)
+    var rule2 : (Option[WeightedExpression[BoxerExpression]], Set[String]) = (None, Set()); 
+    if (Sts.opts.task == "sts")
+        rule2 = createWeightedExpression(varRenamedRightFol.get, varRenamedLeftFol.get, "t", score, ruleType);
+    return (List(rule1._1, rule2._1).flatten, rule1._2 ++ rule2._2)
   }
 
-  private def createWeightedExpression(leftFOL: BoxerDrs, rightFOL: BoxerDrs, discId: String, score: Double, ruleType: RuleType.Value): Option[WeightedExpression[BoxerExpression]] =
+  private def createWeightedExpression(inputLeftFOL: BoxerDrs, inputRightFOL: BoxerDrs, discId: String, score: Double, ruleType: RuleType.Value): (Option[WeightedExpression[BoxerExpression]], Set[String]) =
     {
+      val leftFOL = inputLeftFOL;
+      var rightFOL = inputRightFOL;
+      
       val lhsSet = leftFOL.refs.map(_._2).toSet
       val rhsSet = rightFOL.refs.map(_._2).toSet
-      val diff = rhsSet -- lhsSet; 
+      val diff = rhsSet -- lhsSet;
+      
+      //Replace every existentially quantified variable in the RHS with a skolem constant  
+      //This is a hack. The correct thing to do is to replace it with a skolem function
+      //but I am lazy to code it (especialy before the deadline on April 1st)
+      var extraConst:Set[String] = Set();
+      def existVarToConst (v:BoxerVariable) : BoxerVariable = 
+      {
+      	if (diff.contains(v))
+      	{
+      		//the new name is ugly hack. 
+      		//but it works as long as we are doing RTE only
+      		val newVarName = ("h" + v.name.split("_")(1)).toLowerCase()//(0) + "IR";
+      		extraConst = extraConst + newVarName;
+      		return BoxerVariable(newVarName);
+      	}
+      	else return v;
+      }
+      rightFOL = BoxerDrs(rightFOL.refs.map( x => (x._1, existVarToConst(x._2))), rightFOL.conds.map( cond => {
+      	cond match 
+		{
+			case BoxerPred(discId, indices, variable, name, pos, sense) => BoxerPred(discId, indices, existVarToConst(variable), name, pos, sense)	
+			case BoxerRel(discId, indices, event, variable, name, sense) => BoxerRel(discId, indices, existVarToConst(event), existVarToConst(variable), name, sense)	
+		}
+      }))
+/*      
       if( ! diff.isEmpty ) 
       {
       	//TODO: add existential quantifier, but ignore the rule for now.
         LOG.trace("Rule ignored: " + leftFOL + " => " + rightFOL )
         return None //RHS has variables that are not in the LHS
       }
-
-		discIdToUse = discId
+*/
+      discIdToUse = discId
       val changedLHS = changeExpDirection(leftFOL);
       var lhs = changedLHS.asInstanceOf[BoxerDrs]();      
       var rhs = changeExpDirection(rightFOL).asInstanceOf[BoxerDrs]();
-      val allRefs = (lhs.refs ++ rhs.refs).toSet.toList
+      val allRefs = (lhs.refs /*++ rhs.refs*/).toSet.toList //allRefs are the references in the lhs only. All varaibles in rhs should be constants. 
       if(ruleType  == RuleType.BackwardImplication )
       {
     	  rhs = BoxerDrs(allRefs, rhs.conds);
@@ -819,6 +885,14 @@ val matchAssumeRels = assumeRelsList.filter(rel =>
         case RuleType.DoubleImplication => BoxerEqv(discId, List(), lhs, rhs)
         case RuleType.Opposite => BoxerEqv(discId, List(), lhs, BoxerNot(discId, List(), rhs))
       }
-      return Some(SoftWeightedExpression(unweightedRule, score))
+      return (Some(SoftWeightedExpression(unweightedRule, score)), extraConst)
     }
+  
+   def indicesToIndex(l:List[BoxerIndex]):Int = 
+   {
+    if( l.length != 1)
+      0 // index is not unique or does not exist 
+    else
+      l.head.wordIndex + 1//1 based indexing 
+   }
 }

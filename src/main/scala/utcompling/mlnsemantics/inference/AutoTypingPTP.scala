@@ -119,6 +119,7 @@ class AutoTypingPTP(
 					{
 						quantifiedVars.clear();
 						isHardRule = false;
+						findConstVarsQuantif(e);
 						findArrowsIR (e)
 					}
 					case _ => ;
@@ -483,31 +484,40 @@ class AutoTypingPTP(
 		     Some(lhsConstSetPropagated)
 		  } catch {case AllDone => None}
 	  })
-     if (lhs.size > 1)
+     if (lhs.size > 0) //always 
 	  {
-				 var found = true;
-				 //println (lhs + " -> " + rhs + " ==>" + lhsConstSetsPropagated);
-				 val combined:List[List[String]] /*list of possible constants for each variable on the RHS*/= rhs._2.indices.map(rhsVarIndex=>{
-				  //for each column in the table lhsConstSetsPropagated 
-					  var foundConstInVar: Set[String] = null;
-					  lhsConstSetsPropagated.foreach ( lhsPredConst => {
-						  val constInPredInVar = lhsPredConst.unzip._2.filter(!_.contains("X")).map(_.apply(rhsVarIndex)).toSet
-						  //println ("constInPredInVar at index " +rhsVarIndex + " => "+ constInPredInVar);
-						  if (foundConstInVar == null)
-							  foundConstInVar = constInPredInVar
-						  else
-							  foundConstInVar = (if (foundConstInVar.contains("any"))  constInPredInVar
-													  else if (constInPredInVar.contains("any")) foundConstInVar
-													  else foundConstInVar & constInPredInVar)
-						  //println ("current foundConstInVar" + foundConstInVar)
-					  })
-					   if (foundConstInVar == null || foundConstInVar.isEmpty)
+				var found = true;
+				//println (lhs + " -> " + rhs + " ==>" + lhsConstSetsPropagated);
+				val combined:List[List[String]] /*list of possible constants for each variable on the RHS*/= rhs._2.indices.map(rhsVarIndex=>
+				{
+					//variable not quantified, then it is a constant. 
+					if (!quantifiedVars.contains(rhs._2(rhsVarIndex)))
+					{
+						List((rhs._2(rhsVarIndex))) //do not propagate, just return the constant as it is.
+					}
+					else
+					{
+						//for each column in the table lhsConstSetsPropagated 
+						var foundConstInVar: Set[String] = null;
+						lhsConstSetsPropagated.foreach ( lhsPredConst => {
+							val constInPredInVar = lhsPredConst.unzip._2.filter(!_.contains("X")).map(_.apply(rhsVarIndex)).toSet
+							//println ("constInPredInVar at index " +rhsVarIndex + " => "+ constInPredInVar);
+							if (foundConstInVar == null)
+								foundConstInVar = constInPredInVar
+							else
+								foundConstInVar = (if (foundConstInVar.contains("any"))  constInPredInVar
+														else if (constInPredInVar.contains("any")) foundConstInVar
+														else foundConstInVar & constInPredInVar)
+							//println ("current foundConstInVar" + foundConstInVar)
+						})
+						if (foundConstInVar == null || foundConstInVar.isEmpty)
 						{
-							found = false
+							//found = false
 							List[String]();
 						}
-						else 
-						  foundConstInVar.toList
+						else
+							foundConstInVar.toList
+					}
 				 }).toList
 				//if (found)
 				//	allExtraConst = Set( ( "TEXT", combined));

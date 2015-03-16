@@ -13,8 +13,12 @@ import commands
 
 
 def main():
+## Prerequisitics: 1) (IGNORE THIS STEP ) remove all "." from the text file, and replace "," with " ," because EasyCCG does not do that automatically. 
+## 2) bin/mlnsem box sick-rte
+## 3) mv resources/sick/sick-rte.box resources/sick/sick-rte.box_candc
+## 4) /scripts/parseEasyccg.py  resources/sick/sick-rte.txt  resources/sick/sick-rte.box_candc  > resources/sick/sick-rte.box
 	print(commands.getoutput('ant -f easyccg/build.xml'))
-	print(commands.getoutput('cat '+sys.argv[1]+' | tr "\\t" "\\n" | candc/bin/pos -model candc/models/pos | candc/bin/ner -model candc/models/ner -ofmt "%w|%p|%n \\n" | java -jar easyccg/easyccg.jar --model easyccg/model -i POSandNERtagged -o prolog -r S[dcl] --nbest 1  > ' + sys.argv[1]+".easyccg_ccg"))
+	print(commands.getoutput('cat '+sys.argv[1]+' | tr "\\t" "\\n" | java -cp  easyccg/lib/stanford-corenlp-1.3.4.jar  edu.stanford.nlp.process.PTBTokenizer -preserveLines | candc/bin/pos -model candc/models/pos | candc/bin/ner -model candc/models/ner -ofmt "%w|%p|%n \\n" | java -jar easyccg/easyccg.jar --model easyccg/model -i POSandNERtagged -o prolog -r S[dcl] --nbest 1  > ' + sys.argv[1]+".easyccg_ccg"))
 	print(commands.getoutput('candc/bin/boxer --input '+sys.argv[1]+".easyccg_ccg"+'  --box false --resolve true --elimeq true --instantiate true  --semantics drs | grep -E "drs\\(|id\\("   > ' + sys.argv[1]+".easyccg_boxer"))
 
 
