@@ -50,7 +50,9 @@ class Config(opts: Map[String, String] = Map()) {
 		"-lexInferMethod",
 		"-wordnet",
 		"-diffRules",
-		"-extendDiffRules",
+		"-printDiffRules",
+		"-diffRulesSimpleText",
+		"-extendDiffRulesLvl",
 		"-task",
 		"-varBind",
 		"-chopLvl",
@@ -241,10 +243,27 @@ class Config(opts: Map[String, String] = Map()) {
     case _ => false;
   }
   
-  //Enable or Disable extending Difference rules
-  val extendDiffRules = opts.get("-extendDiffRules") match {
+  //Enable or Disable printing Difference rules
+  val printDiffRules = opts.get("-printDiffRules") match {
     case Some("true") => true;
     case _ => false;
+  }
+  
+ //if printing Difference rules is enabled, use simple text or full text 
+  val diffRulesSimpleText = opts.get("-diffRulesSimpleText") match {
+    case Some("true") => true;
+    case _ => false;
+  }
+  
+  //Enable or Disable extending Difference rules
+  //None means, generate rules for the three levels of extension
+  //Levels:
+  // 0) no extension
+  // 1) enhanced extension
+  // 2) full extension
+  var extendDiffRulesLvl = opts.get("-extendDiffRulesLvl") match {
+    case Some(lvl) => Some(lvl.toInt);
+    case _ => None;
   }  
   
   //-------------------------------------------task

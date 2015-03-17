@@ -168,7 +168,25 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
           //Hard rules from WordNet
 	val wordNetRules = new WordNetRules().getRules(assumptions.head.expression, goal, simplifiedDeclarations);
 	
-	val diffRule = new DiffRules().getRule(assumptions.head.expression, goal, ruleWeighter, vecspaceFactory);
+	val diffRule = if (Sts.opts.extendDiffRulesLvl.isDefined)
+	{
+	  //Generate rules for whatever current level
+	  new DiffRules().getRule(assumptions.head.expression, goal, ruleWeighter, vecspaceFactory);
+	}
+	else 
+	{
+	  //generate rules for the three levels
+	  Sts.opts.extendDiffRulesLvl = Some(0)
+	  val rulesLvl0 = new DiffRules().getRule(assumptions.head.expression, goal, ruleWeighter, vecspaceFactory);
+	  Sts.opts.extendDiffRulesLvl = Some(1)
+	  val rulesLvl1 = new DiffRules().getRule(assumptions.head.expression, goal, ruleWeighter, vecspaceFactory);
+	  Sts.opts.extendDiffRulesLvl = Some(2)
+	  val rulesLvl2 = new DiffRules().getRule(assumptions.head.expression, goal, ruleWeighter, vecspaceFactory);
+	  
+	  Sts.opts.extendDiffRulesLvl = None //return it to None again 
+
+	  (rulesLvl0 ++ rulesLvl1 ++ rulesLvl2)
+	}
     
 	var newConstants: Map[String, Set[String]] = constants;
 	def addConst(varName: String) =

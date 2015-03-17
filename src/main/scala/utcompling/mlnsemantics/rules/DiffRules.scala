@@ -26,6 +26,7 @@ import utcompling.mlnsemantics.inference.Phase
 object DiffRules {
   var isTextNegated:Boolean = false; //set them when GivenNotTextProbabilisticTheoremProver.phase == Phase.notHGivenT
   var isHypNegated:Boolean = false;  //then use them when GivenNotTextProbabilisticTheoremProver.phase == Phase.hGivenT
+  println ("[pattern]" + "\t" + "lhsText" + "\t" + "rhsText"+ "\t" + "w" + "\t"+ "gsw" +"\t" + "notSure" + "\t" + "isInWordnet" + "\t" + "extentionLevel" + "\t" + "textSentense" + "\t" + "hypothesisSentence" + "\t" + "lhsDrs" + "\t" + "rhsDrs")
 }
 
 class DiffRules {
@@ -45,7 +46,7 @@ class DiffRules {
   def getRule(text: BoxerExpression, hypothesis: BoxerExpression, ruleWeighter: RuleWeighter,
     vecspaceFactory: ((String => Boolean) => BowVectorSpace)) : List[(BoxerDrs, BoxerDrs, Double, RuleType.Value)] =
   {
-  	if (!Sts.opts.diffRules)
+  	if (!Sts.opts.diffRules && !Sts.opts.printDiffRules)
   		return List();
   	
 	//List(List("deer(d1)"), List("agent(j1, d1)"), List("jump(j1)"), List("over(j1, f1)"), List("wall(f1)")), 
@@ -136,7 +137,7 @@ class DiffRules {
   		{
   			if (unmatchedLhsLiterals.size == 0) // if all of LHS was matched
   			{
-  				if (matchedSets.size > 0  && Sts.opts.extendDiffRules)  //do this ugly trick ONLY if I am extending rules. 
+  				if (matchedSets.size > 0  && Sts.opts.extendDiffRulesLvl == 2 /*full extend*/)  //do this ugly trick ONLY if I am extending rules. 
   					unmatchedLhsLiterals = matchedSets.head._1 //ugly. 
   			}
   			matchedSets = matchedSets + ((unmatchedLhsLiterals, unmatchedRhsLiterals))
@@ -169,7 +170,7 @@ class DiffRules {
 
   		*/
   		
-		return rules;
+		return if (Sts.opts.diffRules)rules; else List(); //return rules, or just print them
   	}
   	return List()
   }
@@ -234,9 +235,10 @@ class DiffRules {
 		val lhsVars = lhsSet.flatMap(_.argList);
 		val rhsVars = rhsSet.flatMap(_.argList.filter(_.charAt(0).isUpper));
 		val varsStatistics = "("+ lhsVars.size + "," + (lhsVars & rhsVars).size + "," + (lhsVars -- rhsVars).size + "," + (rhsVars -- lhsVars).size + ")"
-		if (lhsSet.size == 0)
+		if (lhsSet.size == 0 )
 		{
-			println ("["+pattern+"]\t" + varsStatistics + "\t"+ "UNMATCHED" + "\t" + rhsSet.mkString(",")+ "\t" + gs + "\t" + Sts.pairIndex )
+			//no rectangular brackets printed because I do not want these rules in the output file
+			println ("UNMATCHED\t" +pattern+"\t" + varsStatistics + "\t"+ rhsSet.mkString(",") + "\t" + rhsSet.mkString(",")+ "\t" + gs + "\t" + Sts.pairIndex )
 			return None;
 		}
 		else
@@ -248,15 +250,24 @@ class DiffRules {
 				if (splits.size == 2 && splits(0).length()<= 3 && splits(1).length()<= 3)
 				println ("["+pattern+"]\t" + lhs + "\t" + rhs+ "\t" + gs + "\t"+ gs + "\t" + isInWordnet +"\t" +Sts.text + "\t" + Sts.hypothesis + "\t" + lhsDrs + "\t" + rhsDrs)
 			}*/
-			var gsText:String = gs.toString;
-			if (gsText == "0.0" && rulesCountPerPair != 1)
-				gsText = gsText + "/" + rulesCountPerPair.toString();
+			var notSure:Int = if (gs == 0 && rulesCountPerPair != 1) rulesCountPerPair 
+							  else
+							    0
 
-			//println ("["+pattern+"]\t" + varsStatistics + "\t"+ lhs + "\t" + rhs+ "\t" + lhsSet.mkString(",") + "\t" + rhsSet.mkString(",")+ "\t" + gsText + "\t" + Sts.pairIndex + "\t" + lhsDrs + "\t" + rhsDrs )				
-			println ("["+pattern+"]\t" + lhs + "\t" + rhs+ "\t" + gs + "\t"+ gsText  + "\t" + isInWordnet +"\t" +Sts.text + "\t" + Sts.hypothesis + "\t" + lhsDrs + "\t" + rhsDrs)
-			
 			val simpleLhsText = PhrasalRules.ruleSideToString(lhsExps.toList, lhsSentence, true);
 			val simpleRhsText = PhrasalRules.ruleSideToString(rhsExps.toList, rhsSentence, true);
+			
+			if (lhs == "" || rhs == "") //do not print rectangular brackets becaus I do not need empty rules to be printed
+				pattern = "EMPTY: "+pattern;
+			else 
+				pattern = "["+pattern+"]";
+			
+			if (Sts.opts.diffRulesSimpleText)
+				//println ("["+pattern+"]\t" + simpleLhsText + "\t" + simpleRhsText+ "\t" + gs + "\t"+ gsText  + "\t" + isInWordnet +"\t" +Sts.text + "\t" + Sts.hypothesis + "\t" + lhsDrs + "\t" + rhsDrs)
+				println (pattern + "\t" + varsStatistics + "\t"+ simpleLhsText + "\t" + simpleRhsText+ "\t" + gs +"\t" + notSure + "\t" + lhsSet.mkString(",") + "\t" + rhsSet.mkString(",")+ "\t" + Sts.opts.extendDiffRulesLvl.get + "\t" + Sts.pairIndex )
+			else 
+				println (pattern + "\t" + lhs + "\t" + rhs+ "\t" + gs + "\t"+ gs +"\t" + notSure + "\t" + isInWordnet + "\t" + Sts.opts.extendDiffRulesLvl.get + "\t" +Sts.text + "\t" + Sts.hypothesis + "\t" + lhsDrs + "\t" + rhsDrs)
+			
 			if (simpleLhsText == simpleRhsText)
 				//return  Some((((lhsDrs, rhsDrs, /*rw.head._2.get*/ if(gs != 0) Double.PositiveInfinity else 0.6, ruleType))))
 				return  Some((((lhsDrs, rhsDrs,  Double.PositiveInfinity, RuleType.Implication))))

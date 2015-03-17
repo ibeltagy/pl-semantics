@@ -836,12 +836,103 @@ class InferenceRule(lhsCNF:CNF, rhsCNF:CNF) {
   	var lhsLiterals = scala.collection.immutable.Set[Literal]();
   	var rhsLiterals = scala.collection.immutable.Set[Literal]();
 
-  	if (!Sts.opts.extendDiffRules)
+  	if (Sts.opts.extendDiffRulesLvl.get == 0) //no extension
   	{
   		rhsLiterals = rhsOld.toSet //all RHS literals should be added to the RHS 
   		lhsLiterals = lhsOld.toSet //all LHS literals should be added to the LHS
   	}
-  	else
+  	else if (Sts.opts.extendDiffRulesLvl.get == 1) //enhanced extension
+  											//can not differenciate between "olive oil => cooking old" and "empty pool => full pool" 
+  	{
+    	def isContent(l:Literal) : Boolean = 
+		{
+			return ( l.argList.size == 1 ) && ( l.predSymbol.endsWith("-n") ||  l.predSymbol.endsWith("-v") ||  l.predSymbol.endsWith("-a"));
+		}
+		//("v", if not then "n", if not then "a", if not then do nothing because it is not attached to any additional content words)
+		def findMostImportantContentLiteral (literals: List[Literal]): Option[Literal] = 
+		{
+		  val sortedContentLit = literals.filter (isContent).sortBy(_.predSymbol.takeRight(1)  /*last character is the POS, a, n, v*/)
+		  if (!sortedContentLit.isEmpty)
+		    return Some(sortedContentLit.last); // a, n, v, so the last one is the highest priority
+		  else return None
+		}
+  			
+  		//select all variables in the RHS
+  		val rhsVars = rhsOld.flatMap(l => l.argList).toSet;
+  		
+	  	//if (rhsVars.filter(v => v(0).isUpper).size > 0) //if RHS has an existentially quantifier variable (WORNG)
+
+  		//ALL non-unified literals of the LHS should be kept.
+  		//e.g: person riding a bike => biker 
+
+	  	lhsLiterals = lhsOld.toSet;  //all non-unified LHS literals should be added to the LHS
+	  	rhsLiterals = rhsOld.toSet //all non-unified RHS literals should be added to the RHS 
+	  	
+  		//for each ground constant in the RHS
+  		rhsVars.filterNot(v => v(0).isUpper).foreach (v => {
+  		  
+  			val rhsLiteralsWithV = rhsOld.filter(l => l.argList.contains(v))
+  			val lhsLiteralsWithV = lhsOld.filter(l => l.argList.contains(v))
+  			
+  			val rhsContentLiteralsWithV = rhsLiteralsWithV.filter(isContent);
+
+  			val lhsContentLiteralsWithV = lhsLiteralsWithV.filter(isContent);
+  			
+  			if (rhsContentLiteralsWithV.size > 0 && lhsContentLiteralsWithV.size > 0)
+  			  None  //content words in both sides, so do nothing
+  			else if (rhsContentLiteralsWithV.size > 0 && lhsContentLiteralsWithV.size == 0)
+  			{
+  			  //content words in RHS but no content words in LHS. e.g.: ... => one(K)
+  			  //Add from unified literals the most representative content word to both sides
+  			  rhsLiterals = rhsLiterals ++ findMostImportantContentLiteral(rhsUnified.filter(_.argList.contains (v)))
+  			  
+  			  //do the same for LHS literals
+  			  lhsLiterals = lhsLiterals ++ findMostImportantContentLiteral(lhsUnified.filter(_.argList.contains (v)))  			  
+  			}
+  			else  //if no content words in both sides, or content words only on the LHS 
+  			{
+  				//if used the same way in both sides, then do nothing
+  				var areUsedThesameWay:Boolean= true;
+  				if (rhsLiteralsWithV.size == lhsLiteralsWithV.size) //variable V is used in the same number of literals
+  				{
+  				  val sortedRhsLiterals = rhsLiteralsWithV.sortBy(_.predSymbol)
+  				  val sortedLhsLiterals = lhsLiteralsWithV.sortBy(_.predSymbol)
+  				  for (i <- 0 until sortedLhsLiterals.size)
+  				  {
+  				    if (sortedRhsLiterals(i).predSymbol != sortedLhsLiterals(i).predSymbol //not the same literal name 
+  						  || sortedRhsLiterals(i).argList.size != sortedLhsLiterals(i).argList.size //not the same number of arguments
+  					      || sortedRhsLiterals(i).argList.indexOf(v) != sortedLhsLiterals(i).argList.indexOf(v)) 
+  						  												//not connected to the literal on the same position
+  					    areUsedThesameWay = false;
+  				  }
+  				}
+  				else areUsedThesameWay = false;
+  				  
+  				  
+  				if (areUsedThesameWay)
+  				{
+  				  None;
+  				}
+  				else //add the most important content word to both sided
+  				{
+  					rhsLiterals = rhsLiterals ++ findMostImportantContentLiteral(rhsUnified.filter(_.argList.contains (v)))
+  					lhsLiterals = lhsLiterals ++ findMostImportantContentLiteral(lhsUnified.filter(_.argList.contains (v)))
+  				}
+  			}
+  		})
+
+  		/*   //if one of the sides is empty, do nothing. Another extension level should get it right
+		val rhsContentLiterals = rhsLiterals.filter(isContent);
+		val lhsContentLiterals = lhsLiterals.filter(isContent);
+		if (rhsContentLiterals.size == 0 || lhsContentLiterals.size == 0)
+		{
+		  rhsVars.filterNot(v => v(0).isUpper).foreach (v => {
+		      	rhsLiterals = rhsLiterals ++ findMostImportantContentLiteral(rhsUnified.filter(_.argList.contains (v)))
+  				lhsLiterals = lhsLiterals ++ findMostImportantContentLiteral(lhsUnified.filter(_.argList.contains (v)))
+		  })
+		}*/
+  	}
+  	else if (Sts.opts.extendDiffRulesLvl.get == 2) //full extension
   	{
 	  	val rhsVars = rhsOld.flatMap(l => l.argList);
 	
@@ -888,6 +979,8 @@ class InferenceRule(lhsCNF:CNF, rhsCNF:CNF) {
 	  	//No, for now, let's add them all. 
 	  	lhsLiterals ++= lhsOld.toSet;
   	}
+  	else 
+  	  throw new RuntimeException ("Unsupported extension level: " + Sts.opts.extendDiffRulesLvl)
   	
   	(lhsLiterals, rhsLiterals);
   }

@@ -403,8 +403,15 @@ class AutoTypingPTP(
 		  														//this is important for the intersection
 		  try 
 		  {
-			  if(lhsEntry._1 == rhs._1) // do not add self-loops
-			    throw AllDone
+			  //This is wrong. Here is an example where: 
+			  //agent(x,y) => agent(x, C)
+			  //I want to propaget the "x"
+			  //I still do not know its effect on the runtime, but I am guessing it is the same 
+			  //because my recent code does not propagate individual variables, it propagates all variables 
+		      //of a certain relation together
+		      //if(lhsEntry._1 == rhs._1) // do not add self-loops
+			  //  throw AllDone
+		    
 			  if (( lhsEntry._2.toSet & rhs._2.toSet & skolemInVarsSeq.toSet/*Initialized to rhs._2*/ ).isEmpty) //there is no variables overlap
 			    throw AllDone
 			  if (lhsEntry._1.startsWith("skolem") && (skolemOutVarsSeq.toSet & rhs._2.toSet).isEmpty) 
