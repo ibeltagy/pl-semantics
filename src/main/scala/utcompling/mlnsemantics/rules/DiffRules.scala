@@ -26,7 +26,13 @@ import utcompling.mlnsemantics.inference.Phase
 object DiffRules {
   var isTextNegated:Boolean = false; //set them when GivenNotTextProbabilisticTheoremProver.phase == Phase.notHGivenT
   var isHypNegated:Boolean = false;  //then use them when GivenNotTextProbabilisticTheoremProver.phase == Phase.hGivenT
-  println ("[pattern]" + "\t" + "lhsText" + "\t" + "rhsText"+ "\t" + "w" + "\t"+ "gsw" +"\t" + "notSure" + "\t" + "isInWordnet" + "\t" + "extentionLevel" + "\t" + "textSentense" + "\t" + "hypothesisSentence" + "\t" + "lhsDrs" + "\t" + "rhsDrs")
+
+  def printDiffRules (s:String) = 
+  {
+    if (Sts.opts.printDiffRules)
+      println(s)
+  }
+  printDiffRules("[pattern]" + "\t" + "lhsText" + "\t" + "rhsText"+ "\t" + "w" + "\t"+ "gsw" +"\t" + "notSure" + "\t" + "isInWordnet" + "\t" + "extentionLevel" + "\t" + "textSentense" + "\t" + "hypothesisSentence" + "\t" + "lhsDrs" + "\t" + "rhsDrs")
 }
 
 class DiffRules {
@@ -237,8 +243,8 @@ class DiffRules {
 		val varsStatistics = "("+ lhsVars.size + "," + (lhsVars & rhsVars).size + "," + (lhsVars -- rhsVars).size + "," + (rhsVars -- lhsVars).size + ")"
 		if (lhsSet.size == 0 )
 		{
-			//no rectangular brackets printed because I do not want these rules in the output file
-			println ("UNMATCHED\t" +pattern+"\t" + varsStatistics + "\t"+ rhsSet.mkString(",") + "\t" + rhsSet.mkString(",")+ "\t" + gs + "\t" + Sts.pairIndex )
+	  		//no rectangular brackets printed because I do not want these rules in the output file
+			DiffRules.printDiffRules ("UNMATCHED\t" +pattern+"\t" + varsStatistics + "\t"+ rhsSet.mkString(",") + "\t" + rhsSet.mkString(",")+ "\t" + gs + "\t" + Sts.pairIndex )
 			return None;
 		}
 		else
@@ -261,13 +267,13 @@ class DiffRules {
 				pattern = "EMPTY: "+pattern;
 			else 
 				pattern = "["+pattern+"]";
-			
+		
 			if (Sts.opts.diffRulesSimpleText)
 				//println ("["+pattern+"]\t" + simpleLhsText + "\t" + simpleRhsText+ "\t" + gs + "\t"+ gsText  + "\t" + isInWordnet +"\t" +Sts.text + "\t" + Sts.hypothesis + "\t" + lhsDrs + "\t" + rhsDrs)
-				println (pattern + "\t" + varsStatistics + "\t"+ simpleLhsText + "\t" + simpleRhsText+ "\t" + gs +"\t" + notSure + "\t" + lhsSet.mkString(",") + "\t" + rhsSet.mkString(",")+ "\t" + Sts.opts.extendDiffRulesLvl.get + "\t" + Sts.pairIndex )
+				DiffRules.printDiffRules(pattern + "\t" + varsStatistics + "\t"+ simpleLhsText + "\t" + simpleRhsText+ "\t" + gs +"\t" + notSure + "\t" + lhsSet.mkString(",") + "\t" + rhsSet.mkString(",")+ "\t" + Sts.opts.extendDiffRulesLvl.get + "\t" + Sts.pairIndex )
 			else 
-				println (pattern + "\t" + lhs + "\t" + rhs+ "\t" + gs + "\t"+ gs +"\t" + notSure + "\t" + isInWordnet + "\t" + Sts.opts.extendDiffRulesLvl.get + "\t" +Sts.text + "\t" + Sts.hypothesis + "\t" + lhsDrs + "\t" + rhsDrs)
-			
+				DiffRules.printDiffRules(pattern + "\t" + lhs + "\t" + rhs+ "\t" + gs + "\t"+ gs +"\t" + notSure + "\t" + isInWordnet + "\t" + Sts.opts.extendDiffRulesLvl.get + "\t" +Sts.text + "\t" + Sts.hypothesis + "\t" + lhsDrs + "\t" + rhsDrs)
+				
 			if (simpleLhsText == simpleRhsText)
 				//return  Some((((lhsDrs, rhsDrs, /*rw.head._2.get*/ if(gs != 0) Double.PositiveInfinity else 0.6, ruleType))))
 				return  Some((((lhsDrs, rhsDrs,  Double.PositiveInfinity, RuleType.Implication))))
@@ -327,7 +333,7 @@ class DiffRules {
 		rhsNotMatchedVars.map (rhsV =>
 		{
 			applyMatch ("xir", rhsV)
-			println ("MATCH APPLIED(rule1): " + "XIR" + "=>" + rhsVarsEntities.getOrElse(rhsV, rhsV) + "\t" + Sts.goldStandard + "\t" +  Sts.pairIndex )
+			DiffRules.printDiffRules("MATCH APPLIED(rule1): " + "XIR" + "=>" + rhsVarsEntities.getOrElse(rhsV, rhsV) + "\t" + Sts.goldStandard + "\t" +  Sts.pairIndex )
 			rhsNotMatchedVars = rhsNotMatchedVars - rhsV;
 		})
 	//2)lhs unmatched vars = 1, rhs unmatched vars = 1
@@ -338,7 +344,7 @@ class DiffRules {
 		rhsNotMatchedVars.map (rhsV => 
 		{
 			applyMatch (lhsNotMatchedVars.head, rhsV)
-			println ("MATCH APPLIED(rule2): " + lhsVarsEntities.getOrElse(lhsNotMatchedVars.head, lhsNotMatchedVars.head) + "=>" + rhsVarsEntities.getOrElse(rhsV, rhsV) + "\t" + + Sts.goldStandard+ "\t" +  Sts.pairIndex )
+			DiffRules.printDiffRules("MATCH APPLIED(rule2): " + lhsVarsEntities.getOrElse(lhsNotMatchedVars.head, lhsNotMatchedVars.head) + "=>" + rhsVarsEntities.getOrElse(rhsV, rhsV) + "\t" + + Sts.goldStandard+ "\t" +  Sts.pairIndex )
 			rhsNotMatchedVars = rhsNotMatchedVars - rhsV;
 		})
 	///////***********************END hard coded matching rules.
@@ -360,7 +366,7 @@ class DiffRules {
 					//remove
 					rhsNotMatchedVars = rhsNotMatchedVars - rhsV;
 					applyMatch("xir", rhsV) //replace it with a Constant
-					println ("MATCH APPLIED(rule3): " + "XIR" + "=>" + rhsV + "\t" + Sts.goldStandard + "\t" +  Sts.pairIndex )
+					DiffRules.printDiffRules("MATCH APPLIED(rule3): " + "XIR" + "=>" + rhsV + "\t" + Sts.goldStandard + "\t" +  Sts.pairIndex )
 					throw AllDone;
 				}
 				val rhsWordPos = rhsWordPosOption.get
@@ -393,14 +399,14 @@ class DiffRules {
 						{
 							if (changed) //make sure it is only one possible match
 							{
-								println ("MORE THAN ONE MATCH: " + lhsWordPos +"=>"+rhsWordPos + "\t" + Sts.goldStandard + "\t" +  Sts.pairIndex )
+								DiffRules.printDiffRules("MORE THAN ONE MATCH: " + lhsWordPos +"=>"+rhsWordPos + "\t" + Sts.goldStandard + "\t" +  Sts.pairIndex )
 								unique = false;
 								lhsNotMatchedVars = lhsNotMatchedVars - lhsV;
 								throw HalfDone;
 							}
 							else 
 							{
-								println ("MATCH FOUND: " + lhsWordPos +"=>"+rhsWordPos + "\t" + Sts.goldStandard + "\t" +  Sts.pairIndex )
+								DiffRules.printDiffRules("MATCH FOUND: " + lhsWordPos +"=>"+rhsWordPos + "\t" + Sts.goldStandard + "\t" +  Sts.pairIndex )
 								changed = true;
 								lhsMatchedVar = lhsV;
 								rhsMatchedVar = rhsV;
@@ -417,7 +423,7 @@ class DiffRules {
 				if (unique) // and there is a unique match
 				{
 					applyMatch(lhsMatchedVar, rhsMatchedVar)
-					println ("MATCH APPLIED(rule0): " + lhsVarsEntities.get(lhsMatchedVar) + "=>" + rhsVarsEntities.get(rhsMatchedVar) + "\t" + + Sts.goldStandard + "\t" +  Sts.pairIndex )
+					DiffRules.printDiffRules("MATCH APPLIED(rule0): " + lhsVarsEntities.get(lhsMatchedVar) + "=>" + rhsVarsEntities.get(rhsMatchedVar) + "\t" + + Sts.goldStandard + "\t" +  Sts.pairIndex )
 				}
 			}
 		}catch {case AllDone =>}
@@ -455,21 +461,31 @@ class DiffRules {
   //1) a set of variables in the set
   //2) a set of literals in the set
   def getConnectedSets (literals: (Set[Literal], Set[Literal]) ): (Set[(Set[String], Set[Literal])], Set[(Set[String], Set[Literal])]) =  
-  {
-	// each group of connected sets is: 
+  {        	
+    // each group of connected sets is: 
   	//1) each literal is a separate group (just for now, they will be merged later on)
   	//2) variables from the other set. This is important for cases where for example the lhs is disconnected but its corresponding rhs is connected. 
   	var lhsConnectedSets:Set[(Set[String], Set[Literal])] = literals._1.map(l => (l.argList.toSet, Set(l))).toSet ++ literals._2.map(l => (l.argList.toSet, Set[Literal]())).toSet
   	var rhsConnectedSets:Set[(Set[String], Set[Literal])] = literals._2.map(l => (l.argList.toSet, Set(l))).toSet ++ literals._1.map(l => (l.argList.toSet, Set[Literal]())).toSet
+  	//val relations:Set[Set[String]] = (literals._1 ++ literals._2).flatMap(l => if (l.argList.size > 1) Some(l.argList.toSet) else None )
   	
   	lhsConnectedSets = groupEqvSets(lhsConnectedSets).filter(_._2.size > 0)
   	rhsConnectedSets = groupEqvSets(rhsConnectedSets).filter(_._2.size > 0)
   	
     return (lhsConnectedSets, rhsConnectedSets);
   }
-  def groupEqvSets (inputSets: Set[(Set[String], Set[Literal])] ): Set[(Set[String], Set[Literal])] =  
+  def groupEqvSets (inputSets: Set[(Set[String], Set[Literal])]): Set[(Set[String], Set[Literal])] =  
   {
-  	var connectedSets = inputSets; 
+    var connectedSets = inputSets
+    var relations: Map[Set[String],Set[Literal]] = Map();
+    if (Sts.opts.splitDiffRules)
+    {
+		//literals with single variable
+	    connectedSets = inputSets.filter(_._1.size == 1); 
+	  	//if two relations have the same set of variables, group them in one entry  
+	  	relations = inputSets.filter(_._1.size == 2).groupBy(_._1).map{case (k,v) => (k,v.flatMap(_._2))}
+    }
+  	
     var changed = true;
     while (changed) {
       changed = false
@@ -480,12 +496,14 @@ class DiffRules {
                 {
                   if (outerSet != innerSet) //not the same entry
                   {
-                    if ((outerSet._1 & innerSet._1).size != 0) 
+                    val connectingRelationsVariables = relations.keys.filter(k => ((outerSet._1 ++ innerSet._1) & k ).size == k.size);
+                    val connectingRelations = connectingRelationsVariables.map(relations)
+                    if ((outerSet._1 & innerSet._1).size != 0 || connectingRelations.size > 0) 
                     { //if there is an intersection 
-                      val newEqvSet = (  ((outerSet._1 ++ innerSet._1), (outerSet._2 ++ innerSet._2))  )  //group them in one set 
+                      val newEqvSet = (  ((outerSet._1 ++ innerSet._1), (outerSet._2 ++ innerSet._2 ++ connectingRelations.flatten ))  )  //group them in one set 
                       connectedSets = connectedSets.filter(e=> (e != outerSet && e != innerSet)); //remove the two small sets
                       connectedSets  = connectedSets  + newEqvSet; //and add this set to the connectedSets
-                      
+                      relations = relations -- connectingRelationsVariables
                       changed = true;
                       throw AllDone;  //simulating "break". This is important because changing groupedEq messes up the outer two loops. 
                     }
@@ -494,6 +512,23 @@ class DiffRules {
             })
         }catch {case AllDone =>}
     }
+    
+    //remaining relations should be added somewhere
+    relations.foreach(rel => {
+    	val sets = connectedSets.filter(set => (set._1 & rel._1).size > 0).toSet //.toSet to remove duplicates
+    	//any relation that is not connected to content words will be dropped
+    	//that will result into useless rules in some cases, but that is ok 
+    	//that is better than creating wrong rules
+    	//The hope is that with higher extension level, good rules will be constructed.
+    	if (sets.size > 0)
+    	{
+    		if (sets.size > 1)
+    		  LOG.error("After finding connected sets, error with connecting remaining relations: " + rel + "->" + sets)
+    		val newEqvSet = ((sets.head._1), (sets.head._2  ++ rel._2))  //add the relation to the literals, but do not add it to the variables  
+    		connectedSets = connectedSets - sets.head;  //remove the old set
+    		connectedSets  = connectedSets  + newEqvSet; //add the new set
+    	}
+    })
     return connectedSets;
   }
   

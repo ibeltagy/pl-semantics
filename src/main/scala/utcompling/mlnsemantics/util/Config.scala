@@ -53,6 +53,7 @@ class Config(opts: Map[String, String] = Map()) {
 		"-printDiffRules",
 		"-diffRulesSimpleText",
 		"-extendDiffRulesLvl",
+		"-splitDiffRules",
 		"-task",
 		"-varBind",
 		"-chopLvl",
@@ -264,7 +265,13 @@ class Config(opts: Map[String, String] = Map()) {
   var extendDiffRulesLvl = opts.get("-extendDiffRulesLvl") match {
     case Some(lvl) => Some(lvl.toInt);
     case _ => None;
-  }  
+  } 
+
+  //Enable or Disable printing Difference rules
+  val splitDiffRules = opts.get("-splitDiffRules") match {
+    case Some("true") => true;
+    case _ => false;
+  }
   
   //-------------------------------------------task
     

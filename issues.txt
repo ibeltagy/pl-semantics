@@ -1,3 +1,14 @@
+//
+Rules need to be handcoded: 
+group of
+made of
+bowl of
+pieces of
+piece of
+slice of
+body of 
+//////
+
 This is why small(x) ^ elephant(x): 
 T1: Kaline is a small elephant
 T2: All elephents are mammals
