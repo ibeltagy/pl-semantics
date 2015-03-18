@@ -132,7 +132,20 @@ class DiffRules {
   			assert(correspondingLhsSet.size <= 1);
   			if (correspondingLhsSet.size == 1)
   			{
-  				matchedSets = matchedSets + ((correspondingLhsSet.head._2, rhsSet._2))
+  				if (Sts.opts.splitDiffRules)
+  				{
+	  				val rhsSplits = verbBasedSplitting(rhsSet._2)
+	  				val lhsSplits = verbBasedSplitting(correspondingLhsSet.head._2)
+	  				rhsSplits.foreach( rhsSplit => {
+	  					lhsSplits.foreach( lhsSplit => {
+	  						if ((lhsSplit._1 & rhsSplit._1).size > 0) //variable intersection
+	  							matchedSets = matchedSets + ((lhsSplit._2, rhsSplit._2))
+	  					})
+	  				})
+  				}
+  				else
+  					matchedSets = matchedSets + ((correspondingLhsSet.head._2, rhsSet._2))
+
   				lhsConnectedSets = lhsConnectedSets -- correspondingLhsSet; 
   			}
   			else unmatchedRhsLiterals = unmatchedRhsLiterals ++ rhsSet._2 
@@ -532,6 +545,47 @@ class DiffRules {
     return connectedSets;
   }
   
+  
+  def verbBasedSplitting(literals: Set[Literal]): Set[(Set[String], Set[Literal])] = 
+  {
+	  val verbsSets = literals.filter(l => l.predSymbol.endsWith("-v") && l.argList.size == 1).groupBy(l => l.predSymbol).map{case (k,v) => {
+		  (v.map(_.argList.head), v) 
+	  }}.toSet
+
+	  //If there are no verbs in the literals, return the literals as they are with no change. 
+	  if (verbsSets.size == 0)
+	    return Set((literals.flatMap(_.argList), literals))
+
+	  var splitOnVerbs:Set[(Set[String], Set[Literal])] = verbsSets.map(verb => 	  
+	  {
+		  var collectedVars:Set[String] = verb._1
+		  var collectedLiterals:Set[Literal] = verb._2		  
+		  //so stuff
+		  var change = true;
+		  while (change)
+		  {
+			  change = false;
+			  val matchedLiterals = literals.filter( l => {
+				  (l.argList.toSet & collectedVars).size > 0 /*using variables in the selected set*/ && 
+				  (l.predSymbol != "agent-r"  /*it is not an agent relation */ 
+				   		|| (l.predSymbol == "agent-r"  && l.argList.size == 2 && verb._1.contains(l.argList(0)) )) && /*it is the agent connected the this particular verb*/
+				  !l.predSymbol.endsWith("-v") /*do not add any more verbs*/
+			  })
+			  if ((matchedLiterals -- collectedLiterals).size > 0)
+			  {
+				  change = true
+				  collectedLiterals = collectedLiterals ++ matchedLiterals;
+				  collectedVars = collectedVars ++ matchedLiterals.flatMap(_.argList) -- verbsSets.flatMap(_._1) ++ verb._1
+			  }
+		  }
+		  
+		  ((collectedVars, collectedLiterals))
+	  })
+	  val unusedLiterals = literals -- splitOnVerbs.flatMap(_._2)
+	  val unusedLiteralsAddedToHead = (splitOnVerbs.head._1 ++ unusedLiterals.flatMap(_.argList), splitOnVerbs.head._2 ++ unusedLiterals);
+	  splitOnVerbs = splitOnVerbs - splitOnVerbs.head + unusedLiteralsAddedToHead
+	  return splitOnVerbs;
+  }
   def hasNegation(e: BoxerExpression): Boolean = {
       e match {
       	case BoxerNot(discId, indices, drs) => {

@@ -47,7 +47,7 @@ class DistributionalRules extends Rules{
 					if (score.toDouble < 0)
 						Some(lhsDrs.get.asInstanceOf[BoxerDrs], rhsDrs.get.asInstanceOf[BoxerDrs], -score.toDouble, RuleType.Opposite)
 					else
-                  Some(lhsDrs.get.asInstanceOf[BoxerDrs], rhsDrs.get.asInstanceOf[BoxerDrs], score.toDouble, RuleType.Implication)
+						Some(lhsDrs.get.asInstanceOf[BoxerDrs], rhsDrs.get.asInstanceOf[BoxerDrs], score.toDouble, RuleType.Implication)
 
 				}
 			}.toList
