@@ -85,7 +85,10 @@ class FromEntToEqvProbabilisticTheoremProver(
   def goFlat(e: BoxerExpression): BoxerExpression = {
       e match {
          case BoxerImp(discId, indices, first, second) =>  //remove "->"
-   	  		  BoxerProp(discId, indices, BoxerVariable("v"), goFlat(BoxerDrs(first.refs ++ second.refs, first.conds ++ second.conds)))
+   	  		  //BoxerProp(discId, indices, BoxerVariable("v"), goFlat(BoxerDrs(first.refs ++ second.refs, first.conds ++ second.conds)))
+        	 val flatFirst = goFlat(first)
+        	 val flatSecond = goFlat(second)
+        	 BoxerProp(discId, indices, BoxerVariable("v"), goFlat(BoxerDrs(flatFirst.refs ++ flatSecond.refs, flatFirst.conds ++ flatSecond.conds)))
          case BoxerOr(discId, indices, first, second) =>  //remove "or"
    	  		  //BoxerProp(discId, indices, BoxerVariable("v"), goSTS(BoxerDrs(first.refs ++ second.refs, first.conds ++ second.conds)))
    	  		  goFlat(BoxerDrs(first.refs ++ second.refs, first.conds ++ second.conds))
@@ -95,7 +98,7 @@ class FromEntToEqvProbabilisticTheoremProver(
            		//This may result in a completely empty expression, which should be replaced with a single dummy predicate
            else
              //remove negation, or add a predicate of Negation. For now, just remove negation  
-   	  		   BoxerDrs(List(), List(goFlat(drs), BoxerPred(discId, indices, BoxerVariable("z0"), "negationPred", "n", 0)));
+   	  		   BoxerDrs(List(), List(goFlat(drs), BoxerPred(discId, indices, BoxerVariable("z0"), "negationPred", "r", 0)));
 	     case _ => e.visitConstruct(goFlat)
       }
     }
