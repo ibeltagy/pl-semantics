@@ -11,11 +11,33 @@
 [NP]	a dog	one dog	1
 [NP]	a herd	one herd	1
 [NP]	the man	one person	1
-[NP]	someone	nobody	-inf
-[NP]	nobody	someone	-inf
 [VP]	cutting	slicing	1
 [VP]	cutting	chopping down	1
 [VP]	jumping	bouncing	1
 [VP]	climbing	climbing up	1
 [NP]	man	person	1
 [NP]	meat	food	1
+[NP]	someone	nobody	-inf
+[NP]	nobody	someone	-inf
+[NP]	nobody	people	-inf
+[NP]	people	nobody	-inf
+[NP]	nobody	man	-inf
+[NP]	man	nobody	-inf
+[NP]	nobody	men	-inf
+[NP]	men	nobody	-inf
+[NP]	nobody	person	-inf
+[NP]	person	nobody	-inf
+[NP]	nobody	woman	-inf
+[NP]	woman	nobody	-inf
+[NP]	nobody	women	-inf
+[NP]	women	nobody	-inf
+[NP]	nobody	boy	-inf
+[NP]	boy	nobody	-inf
+[NP]	nobody	boys	-inf
+[NP]	boys	nobody	-inf
+[NP]	nobody	girl	-inf
+[NP]	girl	nobody	-inf
+[NP]	nobody	girls	-inf
+[NP]	girls	nobody	-inf
+[NP]	empty	full	-inf
+[NP]	full	empty	-inf
