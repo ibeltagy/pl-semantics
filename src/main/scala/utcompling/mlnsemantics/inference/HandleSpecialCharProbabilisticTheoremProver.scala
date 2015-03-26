@@ -26,21 +26,29 @@ class HandleSpecialCharProbabilisticTheoremProver(
     assumptions: List[WeightedExpression[BoxerExpression]],
     goal: BoxerExpression): Seq[Double] = {
 
-    def clearName(name: String): String = //remove surrounding quotes -if any-
+    def clearName(name: String, pos: String): String = 
     {
-        if(name.length() > 2 && name.charAt(0) == ''' && name.charAt(name.length() - 1) == ''')
-          name.substring(1, name.length()-1);
-        else name
+        var newName = name;
+
+        //remove surrounding quotes -if any-
+        if(newName.length() > 2 && newName.charAt(0) == ''' && newName.charAt(newName.length() - 1) == ''')
+          newName.substring(1, newName.length()-1);
+
+        //remove leading "-"
+    	if(newName.charAt(0) == '-')
+          newName = "pos" + newName
+
+    	newName
     }
     
     def go(e: BoxerExpression): BoxerExpression = {
       e match {
         case BoxerPred(discId, indices, variable, name, pos, sense) =>
-          BoxerPred(discId, indices, variable, clearName(name), pos, sense)
+          BoxerPred(discId, indices, variable, clearName(name, pos), pos, sense)
         case BoxerRel(discId, indices, event, variable, name, sense) =>
-          BoxerRel(discId, indices, event, variable, clearName(name), sense)          
+          BoxerRel(discId, indices, event, variable, clearName(name, "r"), sense)          
         case BoxerNamed(discId, indices, variable, name, typ, sense) =>
-          BoxerNamed(discId, indices, variable, clearName(name), typ, sense)
+          BoxerNamed(discId, indices, variable, clearName(name, "n"), typ, sense)
         case _ => e.visitConstruct(go)
       }
     }

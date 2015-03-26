@@ -292,8 +292,8 @@ class PSLTheoremProver(
       	pslFile.write("predicate,all_t,1\n")
       	pslFile.write("predicate,all,1\n")
       	pslFile.write("predicate,dummyPred,1\n")
-      	pslFile.write("predicate,negationPred_n_dh,1\n")
-      	pslFile.write("predicate,negationPred_n_dt,1\n")
+      	pslFile.write("predicate,negationPred_r_dh,1\n")
+      	pslFile.write("predicate,negationPred_r_dt,1\n")
       	declarationNames.foreach {
       	    case ("entailment_h", varTypes) => pslFile.write("predicate,%s,%s\n".format("entailment_h", 0))
       	    case ("entailment_t", varTypes) => pslFile.write("predicate,%s,%s\n".format("entailment_t", 0))

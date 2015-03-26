@@ -273,6 +273,7 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
         }
           
         case FolAtom(pred, args @ _*) => e 
+        case FolVariableExpression(v) => e
         case _ => throw new RuntimeException("not reachable" + e)
       }
   }
