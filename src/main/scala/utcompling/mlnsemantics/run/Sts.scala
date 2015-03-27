@@ -29,6 +29,7 @@ import utcompling.mlnsemantics.inference.NoExistProbabilisticTheoremProver
 import utcompling.Resources
 import utcompling.mlnsemantics.datagen.Lemmatize
 import dhg.depparse.DepParser
+import utcompling.mlnsemantics.rules.DiffRules
 
 /**
  *
@@ -86,7 +87,7 @@ object Sts {
     	 println(sentences);	     
     	 //val lemmatized = new CncLemmatizeCorpusMapper().parseToLemmas(Array(sen1, sen2))
     	 //val lemmas = lemmatized.map(_.map(_.map(_._2).mkString(" ")).getOrElse("______parse_failed______"))
-	     val lemmas = sentences.map(Lemmatize.lemmatizeWords)
+	     val lemmas:List[String] = sentences.map(Lemmatize.lemmatizeWords)
     	 println(lemmas);
 	     val di = new ModalDiscourseInterpreter
 	     val boxes = di.batchInterpret(sentences);
@@ -293,8 +294,11 @@ object Sts {
 			i -> (p.map(probOfEnt2simScore), goldSim)
 	    }
 			
-
       val (ps, golds) = results.map(_._2).unzip
+
+      //print filtered DiffRules
+      DiffRules.allGeneratedRules.unzip._2.foreach (r => println(r.replace("#", "")));
+      
       println("[" + ps.map( r=> { r.map("%1.4f".format(_)).mkString(",") }  ).mkString(" ") + "]")
       println(golds.mkString("["," ","]"))
       FileUtils.writeUsing(outputSimFile) { f =>

@@ -27,9 +27,8 @@ class DistributionalRules extends Rules{
 		val filterStart = System.nanoTime
 		val distRules = returnedRules
 			.flatMap { rule =>
-//[pattern]       lhsText rhsText w       gsw     notSure isInWordnet     extentionLevel  textSentense    hypothesisSentence      lhsDrs  rhsDrs
-
-				val Array(id, ruleLhs, ruleRhs, score, gs, notSure,  inWN, extensionLevel, sen1, sen2, expLhs, expRhs) = rule.split("\t")
+//  printDiffRules("[pattern]" + "\t" + "lhsText" + "\t" + "rhsText"+ "\t" + "w" + "\t"+ "gsw" +"\t" + "notSure" + "\t" + "isInWordnet" + "\t" + "extentionLevel" + "\t" + "pairIndex" + "\t" + "text" + "\t" + "hypothesis" + "\t" + "lhsDrs" + "\t" + "rhsDrs")
+				val Array(id, ruleLhs, ruleRhs, score, gs, /*phSim,*/ notSure,  inWN, extensionLevel, pairIndex, sen1, sen2, expLhs, expRhs/*, pContr, pNeutral, pEnt, pPred*/) = rule.split("\t")
 				if (Sts.text != sen1 || Sts.hypothesis != sen2)
 					None
 				else
@@ -44,10 +43,11 @@ class DistributionalRules extends Rules{
 					if (lhsDrs.isEmpty || rhsDrs.isEmpty)
 						throw new RuntimeException ("Unparsable rule");
 					//Some(id + "\t" + lhs + "\t" + rhs + "\t" + score + "\t" + RuleType.Implication)
-					if (score.toDouble < 0)
-						Some(lhsDrs.get.asInstanceOf[BoxerDrs], rhsDrs.get.asInstanceOf[BoxerDrs], -score.toDouble, RuleType.Opposite)
+					val usedScore:Double = score.toDouble  //* pPred.toDouble
+					if (usedScore  < 0)
+						Some(lhsDrs.get.asInstanceOf[BoxerDrs], rhsDrs.get.asInstanceOf[BoxerDrs], -usedScore, RuleType.Opposite)
 					else
-						Some(lhsDrs.get.asInstanceOf[BoxerDrs], rhsDrs.get.asInstanceOf[BoxerDrs], score.toDouble, RuleType.Implication)
+						Some(lhsDrs.get.asInstanceOf[BoxerDrs], rhsDrs.get.asInstanceOf[BoxerDrs],  usedScore, RuleType.Implication)
 
 				}
 			}.toList

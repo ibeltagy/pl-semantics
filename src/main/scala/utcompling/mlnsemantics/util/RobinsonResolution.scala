@@ -901,8 +901,11 @@ class InferenceRule(lhsCNF:CNF, rhsCNF:CNF) {
   				  {
   				    if (sortedRhsLiterals(i).predSymbol != sortedLhsLiterals(i).predSymbol //not the same literal name 
   						  || sortedRhsLiterals(i).argList.size != sortedLhsLiterals(i).argList.size //not the same number of arguments
-  					      || sortedRhsLiterals(i).argList.indexOf(v) != sortedLhsLiterals(i).argList.indexOf(v)) 
-  						  												//not connected to the literal on the same position
+  					     // || sortedRhsLiterals(i).argList.indexOf(v) != sortedLhsLiterals(i).argList.indexOf(v) //not connected to the literal on the same position
+  						  // The above condition is WRONG. It is not enough to check if it attached to the relation in the same position. 
+  						  // It is also important to have all other constants connected to the predicate to be equal, which is checked in the condition below 
+  						   || sortedRhsLiterals(i).argList != sortedLhsLiterals(i).argList
+  						  )
   					    areUsedThesameWay = false;
   				  }
   				}

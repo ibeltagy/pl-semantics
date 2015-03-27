@@ -45,7 +45,10 @@ class DependencyParsedBoxerDiscourseInterpreter[T](
         case (sentence, discourseId) =>
           val graph = depParser.apply(sentence.head).head
           println(graph.graphviz)
-          Option(predicatesToBoxerExpression(graph.logic, discourseId).asInstanceOf[T])
+          val boxerExp = predicatesToBoxerExpression(graph.logic, discourseId)
+          val listOfExpW = List((boxerExp, 1.0))
+          val exp:T = BoxerPrs(listOfExpW).asInstanceOf[T]
+          Option(  exp )
         case _ => None
       }
       .toList
@@ -60,7 +63,9 @@ class DependencyParsedBoxerDiscourseInterpreter[T](
       p.varName2 match {
         case Some(varName2) => conds += BoxerRel(discId, List(), BoxerVariable(p.varName), BoxerVariable(varName2), p.name, 0); 
         case _ => {
-         conds += BoxerPred(discId, List(), BoxerVariable(p.varName), p.name, p.tag.substring(0,1).toLowerCase, 0)
+         var pos = p.tag.substring(0,1).toLowerCase;
+         if(pos == "j") pos = "a"
+         conds += BoxerPred(discId, List(BoxerIndex(p.idx)), BoxerVariable(p.varName), p.name, pos, 0)
          refs += p.varName
         }
       } 

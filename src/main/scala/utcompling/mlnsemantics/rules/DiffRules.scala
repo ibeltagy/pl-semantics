@@ -26,13 +26,14 @@ import utcompling.mlnsemantics.inference.Phase
 object DiffRules {
   var isTextNegated:Boolean = false; //set them when GivenNotTextProbabilisticTheoremProver.phase == Phase.notHGivenT
   var isHypNegated:Boolean = false;  //then use them when GivenNotTextProbabilisticTheoremProver.phase == Phase.hGivenT
+  var allGeneratedRules:List[(String, String)] = List[(String, String)]();  //List("gs + notSure + lhs + rhs",   rule )
 
   def printDiffRules (s:String) = 
   {
     if (Sts.opts.printDiffRules)
       println(s)
   }
-  printDiffRules("[pattern]" + "\t" + "lhsText" + "\t" + "rhsText"+ "\t" + "w" + "\t"+ "gsw" +"\t" + "notSure" + "\t" + "isInWordnet" + "\t" + "extentionLevel" + "\t" + "textSentense" + "\t" + "hypothesisSentence" + "\t" + "lhsDrs" + "\t" + "rhsDrs")
+  printDiffRules("[pattern]" + "\t" + "lhsText" + "\t" + "rhsText"+ "\t" + "w" + "\t"+ "gsw" +"\t" + "notSure" + "\t" + "isInWordnet" + "\t" + "extentionLevel" + "\t" + "pairIndex" + "\t" + "text" + "\t" + "hypothesis" + "\t" + "lhsDrs" + "\t" + "rhsDrs")
 }
 
 class DiffRules {
@@ -104,22 +105,24 @@ class DiffRules {
 		ruleLhsRhs = (ruleLhsRhs._1, findApplyMatched(ruleLhsRhs._1, ruleLhsRhs._2, false));
   		ruleLhsRhs = (ruleLhsRhs._1, findApplyMatched(ruleLhsRhs._1, ruleLhsRhs._2, true));
 		
-/*		
+		/*
 		val updatedLhsVars = ruleLhsRhs._1.flatMap(_.argList);
 		val updatedRhsVars = ruleLhsRhs._2.flatMap(_.argList);
 		
-		val varsStatistics = "("+ lhsVars.size + "," + (lhsVars & rhsVars).size + "," + (lhsVars -- rhsVars).size + "," + (rhsVars -- lhsVars).size  + 
+		val varsStatistics = "("+ updatedLhsVars.size + "," + (updatedLhsVars & updatedRhsVars).size + "," + (updatedLhsVars -- updatedRhsVars).size + "," + (updatedRhsVars -- updatedLhsVars).size  + 
 									"," + (updatedLhsVars -- updatedRhsVars).size + "," + (updatedRhsVars -- updatedLhsVars).size + ")"
 		
 //		val varsStatistics = ""
 		val lhsExps:Set[BoxerExpression] = ruleLhsRhs._1.map(l => literalToBoxerExp(l, textAtomsMap)).toSet
 		val rhsExps:Set[BoxerExpression] = ruleLhsRhs._2.map(l => literalToBoxerExp(l, hypAtomsMap)).toSet
 		val pattern = Rules.sortVarsRenameVarsGetPattern(lhsExps)._2  + "--" + Rules.sortVarsRenameVarsGetPattern(rhsExps)._2 ;
-		 
-
-		println ("[X]\t" + pattern  + "\t" + varsStatistics +"\t" + DiffRules.isTextNegated+"-"+ DiffRules.isHypNegated +"\t"+ ruleLhsRhs._1.mkString(",") + "\t" + ruleLhsRhs._2.mkString(",")+ "\t" /*+ 0.0 + "\t" */ + Sts.goldStandard /*+ "\t" + isInWordnet + "\t" +Sts.text + "\t" + Sts.hypothesis*/)
+		val lhs = PhrasalRules.ruleSideToString(lhsExps.toList, lhsSentence, false);
+		val rhs = PhrasalRules.ruleSideToString(rhsExps.toList, rhsSentence, false);
 		
-  */		
+		println ("[X"+pattern+"]\t" + "\t" + varsStatistics + "\t"+ lhs +"\t"+rhs +"\t" + ruleLhsRhs._1.mkString(",") + "\t" + ruleLhsRhs._2.mkString(",")+ "\t" + Sts.goldStandard  + "\t" + Sts.pairIndex)
+		
+  		*/
+
   		var (lhsConnectedSets, rhsConnectedSets)  = getConnectedSets(ruleLhsRhs);
 		var rules :  List[(BoxerDrs, BoxerDrs, Double, RuleType.Value)] = List();
 		var matchedSets:Set[(Set[Literal], Set[Literal])] = Set();
@@ -244,11 +247,12 @@ class DiffRules {
 			if (Sts.goldStandard == 0) //contradiction
 			{
 				val splits = pattern.split("--");
-				if (splits.head.size == 1 && splits.last.size == 1)
-				{
-					gs = -1;
+				//if (splits.head.size == 1 && splits.last.size == 1)
+				//{
+				//Always set weight to -1 even if wordnet and distribution semantics can not get it
+					gs = -1
 					ruleType = RuleType.Opposite;
-				}
+				//}
 			}
 		}
 		val lhsVars = lhsSet.flatMap(_.argList);
@@ -269,7 +273,7 @@ class DiffRules {
 				if (splits.size == 2 && splits(0).length()<= 3 && splits(1).length()<= 3)
 				println ("["+pattern+"]\t" + lhs + "\t" + rhs+ "\t" + gs + "\t"+ gs + "\t" + isInWordnet +"\t" +Sts.text + "\t" + Sts.hypothesis + "\t" + lhsDrs + "\t" + rhsDrs)
 			}*/
-			var notSure:Int = if (gs == 0 && rulesCountPerPair != 1) rulesCountPerPair 
+			var notSure:Int = if (gs != 1 /*generate it for Neutral and Contra*/&& rulesCountPerPair != 1) 1//rulesCountPerPair 
 							  else
 							    0
 
@@ -280,21 +284,68 @@ class DiffRules {
 				pattern = "EMPTY: "+pattern;
 			else 
 				pattern = "["+pattern+"]";
-		
+
+			var ruleString = ""
+
 			if (Sts.opts.diffRulesSimpleText)
 				//println ("["+pattern+"]\t" + simpleLhsText + "\t" + simpleRhsText+ "\t" + gs + "\t"+ gsText  + "\t" + isInWordnet +"\t" +Sts.text + "\t" + Sts.hypothesis + "\t" + lhsDrs + "\t" + rhsDrs)
-				DiffRules.printDiffRules(pattern + "\t" + varsStatistics + "\t"+ simpleLhsText + "\t" + simpleRhsText+ "\t" + gs +"\t" + notSure + "\t" + lhsSet.mkString(",") + "\t" + rhsSet.mkString(",")+ "\t" + Sts.opts.extendDiffRulesLvl.get + "\t" + Sts.pairIndex )
+				ruleString = pattern + "\t" + varsStatistics + "\t" + Sts.pairIndex + "\t"+ simpleLhsText + "\t" + simpleRhsText+ "\t#" + gs +"#\t" + "0" /*notSure: not sure is always zero*/ + "\t" + lhsSet.mkString(",") + "\t" + rhsSet.mkString(",")+ "\t" + Sts.opts.extendDiffRulesLvl.get 
 			else 
-				DiffRules.printDiffRules(pattern + "\t" + lhs + "\t" + rhs+ "\t" + gs + "\t"+ gs +"\t" + notSure + "\t" + isInWordnet + "\t" + Sts.opts.extendDiffRulesLvl.get + "\t" +Sts.text + "\t" + Sts.hypothesis + "\t" + lhsDrs + "\t" + rhsDrs)
+				ruleString = pattern + "\t" + lhs + "\t" + rhs+ "\t#" + gs + "#\t#"+ gs +"#\t" + "0" /*notSure: not sure is always zero*/ + "\t" + isInWordnet + "\t" + Sts.opts.extendDiffRulesLvl.get + "\t" + Sts.pairIndex +"\t"+ lhsSentence + "\t" + rhsSentence + "\t" + lhsDrs + "\t" + rhsDrs
+			
+			DiffRules.printDiffRules(ruleString);
+	
+			var key = "#" + (if(gs == -1.0) 0.0 else gs)   + "#" + notSure + "#" + simpleLhsText + "#" + simpleRhsText;
+//			var acceptRule = false
+			if (gs != 1 && notSure > 0) //if rule is a notSure
+			{
+				//search for a true rule
+				val searchFor = "#" + "1.0" + "#" + "0" + "#" + simpleLhsText + "#" + simpleRhsText;
+				//if not found
+				if (!DiffRules.allGeneratedRules.unzip._1.toList.contains(searchFor))
+					None //do nothing
+				else
+				{
+					//replace the zero gold standard weight of the current rule to 1
+					ruleString = ruleString.replaceAll("#0.0#", "#1.0#")
+					key = key.replaceAll("#0.0#", "#1.0#")
+				}
+//				acceptRule = true  //add this notSure rule
+			}
+			else if (gs == 1)  //if a true rule
+			{
+				//search for notSure
+				val searchFor = "#0.0" + "#" + "1" + "#" + simpleLhsText + "#" + simpleRhsText;
+				//if found
+				if (DiffRules.allGeneratedRules.unzip._1.toList.contains(searchFor))
+					DiffRules.allGeneratedRules = DiffRules.allGeneratedRules.map( line => {
+						if (line._1 == searchFor)
+							(line._1.replaceAll("#0.0#", "#1.0#"), line._2.replaceAll("#0.0#", "#1.0#"))
+						else line
+					})
+					
+
+//				acceptRule =  true
+			}
+//			else 
+//				acceptRule = true
+
+//			if (acceptRule) //always add the rule 
+				DiffRules.allGeneratedRules  = DiffRules.allGeneratedRules :+ (key, ruleString)
 				
-			if (simpleLhsText == simpleRhsText)
-				//return  Some((((lhsDrs, rhsDrs, /*rw.head._2.get*/ if(gs != 0) Double.PositiveInfinity else 0.6, ruleType))))
+			//if (simpleLhsText == simpleRhsText) //I DO NOT NEED THIS CASE ANYMORE. I already get it from Stephen's rules
+				///*OLD*/return  Some((((lhsDrs, rhsDrs, /*rw.head._2.get*/ if(gs != 0) Double.PositiveInfinity else 0.6, ruleType))))
+			//	return  Some((((lhsDrs, rhsDrs,  Double.PositiveInfinity, RuleType.Implication))))
+			if	(groupOfs.contains( simpleLhsText.replaceFirst(simpleRhsText, "").trim ) 
+					|| groupOfs.contains( simpleRhsText.replaceFirst(simpleLhsText, "").trim ) )
 				return  Some((((lhsDrs, rhsDrs,  Double.PositiveInfinity, RuleType.Implication))))
 			else
 				None
 		}
 	}
 	
+	val groupOfs:List[String] = List("group of", "slice of", "piece of", "can of" )
+
   def findApplyMatched (inputRuleLhs:Set[Literal], inputRuleRhs:Set[Literal], matchAlreadyMatched: Boolean): Set[Literal] = 
   {
 	var ruleLhs = inputRuleLhs;
