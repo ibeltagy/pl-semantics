@@ -57,6 +57,7 @@ object Sts {
 
 
   var resultOnePair: Seq[Double] = Seq(); //passing result to the adept code
+  var depParser:DepParser = null;
   
   def callFromAdept(args: Array[String]): Array[Double] = {
 	  main(args);
@@ -270,7 +271,7 @@ object Sts {
 		// Index paraphrase rules into Lucene repository
 		luceneParaphrases = opts.rulesFile.split(":").map(new Lucene (_)).toList
 	
-		def depParser:DepParser = opts.logicFormSource match {
+		Sts.depParser = opts.logicFormSource match {
 			case "dep" => DepParser.load();
 			case "box" => null;
 		}	 
@@ -297,7 +298,8 @@ object Sts {
       val (ps, golds) = results.map(_._2).unzip
 
       //print filtered DiffRules
-      DiffRules.allGeneratedRules.unzip._2.foreach (r => println(r.replace("#", "")));
+      if (Sts.opts.printDiffRules)
+    	  DiffRules.allGeneratedRules.unzip._2.foreach (r => println(r.replace("#", "")));
       
       println("[" + ps.map( r=> { r.map("%1.4f".format(_)).mkString(",") }  ).mkString(" ") + "]")
       println(golds.mkString("["," ","]"))

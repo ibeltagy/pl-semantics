@@ -2,6 +2,8 @@ package utcompling.mlnsemantics.rules
 
 import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.FileUtils._
+import opennlp.scalabha.util.FileUtils
+
 import org.apache.commons.logging.LogFactory
 import utcompling.mlnsemantics.run.Sts
 import scala.Array.canBuildFrom
@@ -22,6 +24,8 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerNot
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerEq
 import utcompling.mlnsemantics.inference.GivenNotTextProbabilisticTheoremProver
 import utcompling.mlnsemantics.inference.Phase
+import dhg.depparse.DepParser
+import utcompling.mlnsemantics.datagen._
 
 object DiffRules {
   var isTextNegated:Boolean = false; //set them when GivenNotTextProbabilisticTheoremProver.phase == Phase.notHGivenT
@@ -34,6 +38,11 @@ object DiffRules {
       println(s)
   }
   printDiffRules("[pattern]" + "\t" + "lhsText" + "\t" + "rhsText"+ "\t" + "w" + "\t"+ "gsw" +"\t" + "notSure" + "\t" + "isInWordnet" + "\t" + "extentionLevel" + "\t" + "pairIndex" + "\t" + "text" + "\t" + "hypothesis" + "\t" + "lhsDrs" + "\t" + "rhsDrs")
+
+  if(Sts.depParser == null)
+  		Sts.depParser = DepParser.load();
+	val sureRulesFile = "resources/sure"
+	val sureRules:Set[String] = FileUtils.readLines(sureRulesFile).toSet
 }
 
 class DiffRules {
@@ -55,7 +64,7 @@ class DiffRules {
   {
   	if (!Sts.opts.diffRules && !Sts.opts.printDiffRules)
   		return List();
-  	
+  	DiffRules; //initilize the object in case it is not initilized yet.	
 	//List(List("deer(d1)"), List("agent(j1, d1)"), List("jump(j1)"), List("over(j1, f1)"), List("wall(f1)")), 
 	//List(List("-deer(d1)", "-agent(j1, d1)", "-jump(j1)", "-over(j1)", "-patient(j1, f1)", "-fence(f1)") ))
   	if (GivenNotTextProbabilisticTheoremProver.phase == Phase.hGivenT)
@@ -104,7 +113,7 @@ class DiffRules {
 		//Try to match existentially quantified variables on the RHS with variables on the LHS
 		ruleLhsRhs = (ruleLhsRhs._1, findApplyMatched(ruleLhsRhs._1, ruleLhsRhs._2, false));
   		ruleLhsRhs = (ruleLhsRhs._1, findApplyMatched(ruleLhsRhs._1, ruleLhsRhs._2, true));
-		
+		doDepParse (ruleLhsRhs._1, ruleLhsRhs._2, lhsSentence, rhsSentence, textAtomsMap:Map[String, (BoxerExpression, String)], textAtomsMap:Map[String, (BoxerExpression, String)])
 		/*
 		val updatedLhsVars = ruleLhsRhs._1.flatMap(_.argList);
 		val updatedRhsVars = ruleLhsRhs._2.flatMap(_.argList);
@@ -218,19 +227,22 @@ class DiffRules {
 			isInWordnet = "NotInWN";
 			val lhsPred = lhsExps.head.asInstanceOf[BoxerPred];
 			val rhsPred = rhsExps.head.asInstanceOf[BoxerPred];
-			val synonyms = WordNetRules.wordnet.getSynonyms(lhsPred.name, lhsPred.pos);
-			val hypernyms = WordNetRules.wordnet.getHypernyms(lhsPred.name, lhsPred.pos);
-			val hyponyms = WordNetRules.wordnet.getHyponyms(lhsPred.name, lhsPred.pos);
-			val antonyms = WordNetRules.wordnet.getAntonyms(lhsPred.name, lhsPred.pos);
-			if (rhsPred.pos == lhsPred.pos && rhsPred.name != lhsPred.name)
+			val lhsPredName = /*lhsPred.name*/Lemmatize.lemmatizeWords(lhsPred.name)
+			val rhsPredName = /*rhsPred.name*/Lemmatize.lemmatizeWords(rhsPred.name)
+			//println ("CheckWordnetWith: " + lhsPredName + ", " + rhsPredName)
+			val synonyms = WordNetRules.wordnet.getSynonyms(lhsPredName, lhsPred.pos);
+			val hypernyms = WordNetRules.wordnet.getHypernyms(lhsPredName, lhsPred.pos);
+			val hyponyms = WordNetRules.wordnet.getHyponyms(lhsPredName, lhsPred.pos);
+			val antonyms = WordNetRules.wordnet.getAntonyms(lhsPredName, lhsPred.pos);
+			if (rhsPred.pos == lhsPred.pos && rhsPredName != lhsPredName)
 			{
-				if (synonyms.contains(rhsPred.name))
+				if (synonyms.contains(rhsPredName))
 					isInWordnet = "Synonym"
-				else if (hypernyms.contains(rhsPred.name))
+				else if (hypernyms.contains(rhsPredName))
 					isInWordnet = "Hypernym"
-				else if(hyponyms.contains(rhsPred.name))   //backward implication 
+				else if(hyponyms.contains(rhsPredName))   //backward implication 
 					isInWordnet = "Hyponym" 
-				else if (antonyms.contains(rhsPred.name))
+				else if (antonyms.contains(rhsPredName))
 					isInWordnet = "Antonym"
 			}
 		}
@@ -273,25 +285,40 @@ class DiffRules {
 				if (splits.size == 2 && splits(0).length()<= 3 && splits(1).length()<= 3)
 				println ("["+pattern+"]\t" + lhs + "\t" + rhs+ "\t" + gs + "\t"+ gs + "\t" + isInWordnet +"\t" +Sts.text + "\t" + Sts.hypothesis + "\t" + lhsDrs + "\t" + rhsDrs)
 			}*/
+
+			var dropRule = false
+			val simpleLhsText = PhrasalRules.ruleSideToString(lhsExps.toList, lhsSentence, true);
+			val simpleRhsText = PhrasalRules.ruleSideToString(rhsExps.toList, rhsSentence, true);
+
 			var notSure:Int = if (gs != 1 /*generate it for Neutral and Contra*/&& rulesCountPerPair != 1) 1//rulesCountPerPair 
 							  else
 							    0
+			if (notSure > 0 && DiffRules.sureRules.contains(simpleLhsText + "\t" + simpleRhsText))
+			{
+				gs = 1;
+			}
 
-			val simpleLhsText = PhrasalRules.ruleSideToString(lhsExps.toList, lhsSentence, true);
-			val simpleRhsText = PhrasalRules.ruleSideToString(rhsExps.toList, rhsSentence, true);
-			
-			if (lhs == "" || rhs == "") //do not print rectangular brackets becaus I do not need empty rules to be printed
-				pattern = "EMPTY: "+pattern;
+			if (simpleLhsText.contains("nobody") || simpleRhsText.contains("nobody")) //ignore rules with "nobody". Wordnet and Distributional semantics have no hope of getting them right. I hardcoded them
+			{
+				pattern = "NOBODY: " + pattern;
+				dropRule = true
+			}
+			else if (lhs == "" || rhs == "") //do not print rectangular brackets becaus I do not need empty rules to be printed
+			{
+				pattern = "EMPTY: " + pattern;
+				dropRule = true
+			}
 			else 
 				pattern = "["+pattern+"]";
+
 
 			var ruleString = ""
 
 			if (Sts.opts.diffRulesSimpleText)
 				//println ("["+pattern+"]\t" + simpleLhsText + "\t" + simpleRhsText+ "\t" + gs + "\t"+ gsText  + "\t" + isInWordnet +"\t" +Sts.text + "\t" + Sts.hypothesis + "\t" + lhsDrs + "\t" + rhsDrs)
-				ruleString = pattern + "\t" + varsStatistics + "\t" + Sts.pairIndex + "\t"+ simpleLhsText + "\t" + simpleRhsText+ "\t#" + gs +"#\t" + "0" /*notSure: not sure is always zero*/ + "\t" + lhsSet.mkString(",") + "\t" + rhsSet.mkString(",")+ "\t" + Sts.opts.extendDiffRulesLvl.get 
+				ruleString = pattern + "\t" + varsStatistics + "\t" + Sts.pairIndex + "\t"+ simpleLhsText + "\t" + simpleRhsText+ "\t#" + gs +"#\t" +  notSure /*: not sure is always zero, no, I need it back*/ + "\t" + isInWordnet + "\t" +  lhsSet.mkString(",") + "\t" + rhsSet.mkString(",")+ "\t" + Sts.opts.extendDiffRulesLvl.get 
 			else 
-				ruleString = pattern + "\t" + lhs + "\t" + rhs+ "\t#" + gs + "#\t#"+ gs +"#\t" + "0" /*notSure: not sure is always zero*/ + "\t" + isInWordnet + "\t" + Sts.opts.extendDiffRulesLvl.get + "\t" + Sts.pairIndex +"\t"+ lhsSentence + "\t" + rhsSentence + "\t" + lhsDrs + "\t" + rhsDrs
+				ruleString = pattern + "\t" + lhs + "\t" + rhs+ "\t#" + gs + "#\t#"+ gs +"#\t" +  notSure /*: not sure is always zero, no, I need it back*/ + "\t" + isInWordnet + "\t" + Sts.opts.extendDiffRulesLvl.get + "\t" + Sts.pairIndex +"\t"+ lhsSentence + "\t" + rhsSentence + "\t" + lhsDrs + "\t" + rhsDrs
 			
 			DiffRules.printDiffRules(ruleString);
 	
@@ -325,19 +352,23 @@ class DiffRules {
 					})
 					
 
-//				acceptRule =  true
 			}
-//			else 
-//				acceptRule = true
 
-//			if (acceptRule) //always add the rule 
+			if (!dropRule)  
 				DiffRules.allGeneratedRules  = DiffRules.allGeneratedRules :+ (key, ruleString)
 				
 			//if (simpleLhsText == simpleRhsText) //I DO NOT NEED THIS CASE ANYMORE. I already get it from Stephen's rules
 				///*OLD*/return  Some((((lhsDrs, rhsDrs, /*rw.head._2.get*/ if(gs != 0) Double.PositiveInfinity else 0.6, ruleType))))
 			//	return  Some((((lhsDrs, rhsDrs,  Double.PositiveInfinity, RuleType.Implication))))
-			if	(groupOfs.contains( simpleLhsText.replaceFirst(simpleRhsText, "").trim ) 
-					|| groupOfs.contains( simpleRhsText.replaceFirst(simpleLhsText, "").trim ) )
+			if	(!dropRule && 
+					(
+						  (simpleLhsText.contains(simpleRhsText) && groupOfs.contains( simpleLhsText.replaceFirst(simpleRhsText, "").trim ))
+						||(simpleRhsText.contains(simpleLhsText) && groupOfs.contains( simpleRhsText.replaceFirst(simpleLhsText, "").trim ))
+						|| isInWordnet == "Hypernym"
+						//|| isInWordnet == "Synonym"
+						|| simpleLhsText == simpleRhsText
+					)
+				)
 				return  Some((((lhsDrs, rhsDrs,  Double.PositiveInfinity, RuleType.Implication))))
 			else
 				None
@@ -650,6 +681,27 @@ class DiffRules {
       	}
         case _ => e.visit(hasNegation, (x: List[Boolean]) => x.reduce(_ | _) , false)
       }
+  }
+  
+  def doDepParse (lhsLiterals : Set[Literal], rhsLiterals: Set[Literal], text:String, hyp: String, textAtomsMap:Map[String, (BoxerExpression, String)], hypAtomsMap:Map[String, (BoxerExpression, String)]) = 
+  {
+  	val textDepGraph = Sts.depParser.apply(text.split(" "));
+/*
+  	if(textDepGraph.isDefined)
+  	{
+  		println(textDepGraph.get.graphviz)
+  		println(lhsLiterals)
+  		println(text)
+  	}
+  	val hypDepGraph = Sts.depParser.apply(hyp.split(" "));
+  	if(hypDepGraph.isDefined)
+  	{
+  		println(hypDepGraph.get.graphviz)
+  		println(rhsLiterals)
+  		println(hyp)
+  	}
+*/  	
+  	
   }
 }
 

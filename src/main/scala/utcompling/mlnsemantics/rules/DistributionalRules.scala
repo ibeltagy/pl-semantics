@@ -2,6 +2,7 @@ package utcompling.mlnsemantics.rules
 
 import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.FileUtils._
+import opennlp.scalabha.util.FileUtils
 import org.apache.commons.logging.LogFactory
 import utcompling.mlnsemantics.run.Sts
 import scala.Array.canBuildFrom
@@ -12,6 +13,26 @@ import utcompling.scalalogic.discourse.DiscourseInterpreter
 import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl._
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerDrs
 
+object DistributionalRules extends Rules
+{
+	val columnsMap:Map[String, Int] = {
+		if (Sts.opts.phrasesFile == "")
+			Map()
+		else 
+		{
+			val fileReader = FileUtils.readLines(Sts.opts.phrasesFile)
+			var header = if (fileReader.hasNext)
+								fileReader.next
+							else ""
+			val columns = header.split("\t")
+			val nameToIndexMap:Map[String, Int] = columns.indices.map (i => ( (columns(i) -> i) )).toMap
+			nameToIndexMap
+		}
+			
+	}
+
+}
+
 class DistributionalRules extends Rules{
   
   private val LOG = LogFactory.getLog(classOf[DistributionalRules])
@@ -19,7 +40,9 @@ class DistributionalRules extends Rules{
   
   	def getRules() : List[(BoxerDrs, BoxerDrs, Double, RuleType.Value)] = 
 	{
-		val returnedRules = Sts.luceneDistPhrases.exactMatchingQuery("\t"+Sts.text + "\t" + Sts.hypothesis + "\n")
+		DistributionalRules; //initilize the object in case it is not initilized
+		val returnedRules = Sts.luceneDistPhrases.exactMatchingQuery( "\t"+Sts.text + "\t" + Sts.hypothesis + "\t") ++ 
+								Sts.luceneDistPhrases.exactMatchingQuery( "\t"+Sts.hypothesis + "\t" + Sts.text + "\t") 
 		LOG.trace("Distributioanl rules: ");
 		returnedRules.foreach(rule => LOG.trace(rule))
 
@@ -28,26 +51,34 @@ class DistributionalRules extends Rules{
 		val distRules = returnedRules
 			.flatMap { rule =>
 //  printDiffRules("[pattern]" + "\t" + "lhsText" + "\t" + "rhsText"+ "\t" + "w" + "\t"+ "gsw" +"\t" + "notSure" + "\t" + "isInWordnet" + "\t" + "extentionLevel" + "\t" + "pairIndex" + "\t" + "text" + "\t" + "hypothesis" + "\t" + "lhsDrs" + "\t" + "rhsDrs")
-				val Array(id, ruleLhs, ruleRhs, score, gs, /*phSim,*/ notSure,  inWN, extensionLevel, pairIndex, sen1, sen2, expLhs, expRhs/*, pContr, pNeutral, pEnt, pPred*/) = rule.split("\t")
-				if (Sts.text != sen1 || Sts.hypothesis != sen2)
+				//val Array(id, ruleLhs, ruleRhs, score, gs, /*phSim,*/ notSure,  inWN, extensionLevel, pairIndex, sen1, sen2, expLhs, expRhs, pContr, pNeutral, pEnt, pPred) = rule.split("\t")
+				val splits = rule.split("\t")
+				val pairIndex = splits(DistributionalRules.columnsMap("pairIndex"))
+            val lhsText =  splits(DistributionalRules.columnsMap("lhsText"))
+            val rhsText =  splits(DistributionalRules.columnsMap("rhsText"))
+            val w =  splits(DistributionalRules.columnsMap("w"))
+				val lhsDrs =  splits(DistributionalRules.columnsMap("lhsDrs"))
+            val rhsDrs =  splits(DistributionalRules.columnsMap("rhsDrs"))
+
+				if (Sts.pairIndex != pairIndex.toInt)
 					None
 				else
 				{
-					val lhs = ruleLhs //.split(" ").map(_.split("-")(0)).mkString(" ")   //keep the index and the POS. It will be used in reconstructing the logical represetnation of the phrase
-					val rhs = ruleRhs //.split(" ").map(_.split("-")(0)).mkString(" ")
-					val pair = List(Some(expLhs), Some(expRhs));
+					//val lhs = lhsDrs //.split(" ").map(_.split("-")(0)).mkString(" ")   //keep the index and the POS. It will be used in reconstructing the logical represetnation of the phrase
+					//val rhs = rhsDrs //.split(" ").map(_.split("-")(0)).mkString(" ")
+					val pair = List(Some(lhsDrs), Some(rhsDrs));
 					val discourseIterpreter	= new PreparsedBoxerDiscourseInterpreter(pair, new PassthroughBoxerExpressionInterpreter());
-					val List(lhsDrs, rhsDrs) = discourseIterpreter.batchInterpretMultisentence(List(List((expLhs)), List((expRhs))), Some(List("t", "h")), false, false)
+					val List(lhsExp, rhsExp) = discourseIterpreter.batchInterpretMultisentence(List(List((lhsDrs)), List((rhsDrs))), Some(List("t", "h")), false, false)
 					//println (lhsDrs)
 					//println (rhsDrs)
-					if (lhsDrs.isEmpty || rhsDrs.isEmpty)
+					if (lhsExp.isEmpty || rhsExp.isEmpty)
 						throw new RuntimeException ("Unparsable rule");
 					//Some(id + "\t" + lhs + "\t" + rhs + "\t" + score + "\t" + RuleType.Implication)
-					val usedScore:Double = score.toDouble  //* pPred.toDouble
+					val usedScore:Double = w.toDouble  //* pPred.toDouble
 					if (usedScore  < 0)
-						Some(lhsDrs.get.asInstanceOf[BoxerDrs], rhsDrs.get.asInstanceOf[BoxerDrs], -usedScore, RuleType.Opposite)
+						Some(lhsExp.get.asInstanceOf[BoxerDrs], rhsExp.get.asInstanceOf[BoxerDrs], -usedScore, RuleType.Opposite)
 					else
-						Some(lhsDrs.get.asInstanceOf[BoxerDrs], rhsDrs.get.asInstanceOf[BoxerDrs],  usedScore, RuleType.Implication)
+						Some(lhsExp.get.asInstanceOf[BoxerDrs], rhsExp.get.asInstanceOf[BoxerDrs],  usedScore, RuleType.Implication)
 
 				}
 			}.toList
@@ -177,6 +208,3 @@ class DistributionalRules extends Rules{
   }
 }
 
-object DistributionalRules{
-  
-}
