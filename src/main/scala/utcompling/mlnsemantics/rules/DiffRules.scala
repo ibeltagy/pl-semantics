@@ -217,8 +217,8 @@ class DiffRules {
 //		val rhsExpsPattern:Set[BoxerExpression] = rhsSet.filter(_.predSymbol != "group_head-n").map(l => literalToBoxerExp(l, hypAtomsMap)).toSet
 //		var pattern = Rules.sortVarsRenameVarsGetPattern(lhsExpsPattern)._2  + "--" + Rules.sortVarsRenameVarsGetPattern(rhsExpsPattern)._2 ;
 		var pattern = Rules.sortVarsRenameVarsGetPattern(lhsExps)._2  + "--" + Rules.sortVarsRenameVarsGetPattern(rhsExps)._2 ;
-		val lhs = PhrasalRules.ruleSideToString(lhsExps.toList, lhsSentence, false);
-		val rhs = PhrasalRules.ruleSideToString(rhsExps.toList, rhsSentence, false);
+		var lhs = PhrasalRules.ruleSideToString(lhsExps.toList, lhsSentence, false);
+		var rhs = PhrasalRules.ruleSideToString(rhsExps.toList, rhsSentence, false);
 
 		/// --check if they are already in wordnet if lexical, and phrasal if not lexical
 		var isInWordnet = "Phrasal";
@@ -287,8 +287,13 @@ class DiffRules {
 			}*/
 
 			var dropRule = false
-			val simpleLhsText = PhrasalRules.ruleSideToString(lhsExps.toList, lhsSentence, true);
-			val simpleRhsText = PhrasalRules.ruleSideToString(rhsExps.toList, rhsSentence, true);
+			var simpleLhsText = PhrasalRules.ruleSideToString(lhsExps.toList, lhsSentence, true);
+			var simpleRhsText = PhrasalRules.ruleSideToString(rhsExps.toList, rhsSentence, true);
+			
+			simpleLhsText = handleTransparentNouns(simpleLhsText)
+			simpleRhsText = handleTransparentNouns(simpleRhsText)
+			lhs = handleTransparentNouns(lhs)
+			rhs = handleTransparentNouns(rhs)
 
 			var notSure:Int = if (gs != 1 /*generate it for Neutral and Contra*/&& rulesCountPerPair != 1) 1//rulesCountPerPair 
 							  else
@@ -362,9 +367,9 @@ class DiffRules {
 			//	return  Some((((lhsDrs, rhsDrs,  Double.PositiveInfinity, RuleType.Implication))))
 			if	(!dropRule && 
 					(
-						  (simpleLhsText.contains(simpleRhsText) && groupOfs.contains( simpleLhsText.replaceFirst(simpleRhsText, "").trim ))
-						||(simpleRhsText.contains(simpleLhsText) && groupOfs.contains( simpleRhsText.replaceFirst(simpleLhsText, "").trim ))
-						|| isInWordnet == "Hypernym"
+						/*(simpleLhsText.contains(simpleRhsText) && transparentNouns.contains( simpleLhsText.replaceFirst(simpleRhsText, "").trim ))
+						||(simpleRhsText.contains(simpleLhsText) && transparentNouns.contains( simpleRhsText.replaceFirst(simpleLhsText, "").trim ))
+						||*/ isInWordnet == "Hypernym"
 						//|| isInWordnet == "Synonym"
 						|| simpleLhsText == simpleRhsText
 					)
@@ -375,7 +380,17 @@ class DiffRules {
 		}
 	}
 	
-	val groupOfs:List[String] = List("group of", "slice of", "piece of", "can of" )
+  val transparentNouns:List[String] = List("group of", "slice of", "piece of", "can of" )
+  val transparentNounsRegx1 = transparentNouns.map(_+" ").mkString("|").r
+  val transparentNounsRegx2 = transparentNouns.map( tn => tn.split(" ").map(w => w + "-[n,a,v,r]-[0-9]+ ").mkString("") ).mkString("|").r
+  
+  def handleTransparentNouns (ruleSide : String) : String = 
+  {
+    var txt = ruleSide;
+    txt = transparentNounsRegx1.replaceAllIn(txt, "")
+    txt = transparentNounsRegx2.replaceAllIn(txt, "")
+    txt
+  }
 
   def findApplyMatched (inputRuleLhs:Set[Literal], inputRuleRhs:Set[Literal], matchAlreadyMatched: Boolean): Set[Literal] = 
   {
