@@ -35,7 +35,7 @@ class GivenNotTextProbabilisticTheoremProver(
 			assumptions: List[WeightedExpression[BoxerExpression]],
 			goal: BoxerExpression): Seq[Double] = 
 	{
-		if (Sts.opts.task == "rte" && Sts.opts.withNegT && Sts.opts.softLogicTool != "psl")
+		if (Sts.opts.task == "rte" && Sts.opts.softLogicTool != "psl")
 		{
 			/*if (Sts.opts.ratio)
 			{
@@ -50,10 +50,10 @@ class GivenNotTextProbabilisticTheoremProver(
 
 			GivenNotTextProbabilisticTheoremProver.negativeEvd = true;
 			GivenNotTextProbabilisticTheoremProver.phase = Phase.notHGivenT
-			var notHGivenT = //if (Sts.opts.ratio)
+			var notHGivenT = if (Sts.opts.withNegT )
 					delegate.prove(constants, declarations, evidence, assumptions, negateWithoutPresupposed(goal));
-			//else
-			//	Seq(0.0)
+				else
+					Seq(0.0)
 			assert(notHGivenT.length == 1)
 			
 			

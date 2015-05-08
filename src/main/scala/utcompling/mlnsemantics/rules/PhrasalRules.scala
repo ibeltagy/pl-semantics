@@ -133,35 +133,16 @@ object PhrasalRules {
 	  else None
 	})
   }
-  
-  def ruleSideToString (exps:List[BoxerExpression], sentence: String, simple: Boolean): String = 
+
+  def ruleSideToString (exps:List[BoxerExpression], sentence: String, simple: Boolean, varToIndexMap: Map[String, String]): String = 
   {
   	  val sentenceTokens = sentence.split(" ");
-  	  def indicesToOneIndex ( l:List[BoxerIndex]) : List[BoxerIndex] = 
-  	  {
-  	  	if (l.size <= 1)
-  	  		return l;
-  	  	return List(l.head);
-  	  }
 	  val namesList = exps.flatMap(exp => {
 	  		exp match
 	  		{
 	  			case BoxerPred(discId, indices, variable, name, pos, sense) => 
 	  			{
-	  				val index = Rules.indicesToIndex(indicesToOneIndex(indices));
-	  				if (index == 0)
-	  					None
-	  				else
-	  				{
-	  					if (simple)
-	  						Some((index, sentenceTokens(index-1)))
-	  					else 
-	  						Some((index, sentenceTokens(index-1) + "-" + pos + "-" + index))
-	  				}
-	  			}
-	  			case BoxerRel(discId, indices, event, variable, name, sense) => 
-	  			{
-	  				val index = Rules.indicesToIndex(indicesToOneIndex(indices));
+	  				val index = Rules.indicesToIndex(Rules.indicesToOneIndex(indices));
 	  				if (index == 0)
 	  					None
 	  				else
@@ -169,7 +150,40 @@ object PhrasalRules {
 	  					if (simple)
 	  						Some((index, sentenceTokens(index-1)))
 	  					else
-	  						Some((index, sentenceTokens(index-1) + "-r-" + index))
+	  					{
+	  						var s = sentenceTokens(index-1) + "-" + pos + "-" + index
+	  						if (varToIndexMap != null)
+	  						{
+	  							val alignedIndex = varToIndexMap.getOrElse(variable.name, 0)
+	  							s = s + "_" + alignedIndex
+	  							  
+	  						}
+	  						Some((index, s))
+	  					}
+	  				}
+	  			}
+	  			case BoxerRel(discId, indices, event, variable, name, sense) => 
+	  			{
+	  				val index = Rules.indicesToIndex(Rules.indicesToOneIndex(indices));
+	  				if (index == 0)
+	  					None
+	  				else
+	  				{
+	  					if (simple)
+	  						Some((index, sentenceTokens(index-1)))
+	  					else
+	  					{
+	  						var s = sentenceTokens(index-1) + "-r-" + index;
+	  						if (varToIndexMap != null)
+	  						{
+	  							val alignedIndex = List( varToIndexMap.get(variable.name), varToIndexMap.get(event.name) ).flatten.toSet
+	  							if (alignedIndex.size == 1)
+	  							  s = s + "_" + alignedIndex.head
+	  							else
+	  							  s = s + "_" + "0"
+	  						}
+	  						Some((index, s))
+	  					}
 	  				}
 	  			}
 	  		}
@@ -177,7 +191,7 @@ object PhrasalRules {
 	  val filteredSorted = namesList.toSet.toList.filter(_._1 != 0).sortBy(_._1);
 	  filteredSorted.map(_._2).mkString(" ")
   }
-    
+
   def isCompatible(lhs:Phrase, rhs:Phrase):Boolean = 
   {
 	if (lhs.isInstanceOf[NounPhrase] &&  rhs.isInstanceOf[NounPhrase])

@@ -111,8 +111,12 @@ class BoxerDiscourseInterpreter[T](
           val ccg = ccgs(i+1 /* +1 is because the first is just the header*/); 
           i = i+1;
           println(parsed)
-          parsed  = this.applyNegation (parsed , ccg)
-          println(parsed)
+          if (BoxerDiscourseInterpreter.applyNegation)
+          {
+        	  parsed  = this.applyNegation (parsed , ccg)
+        	  println(parsed)
+          }
+
           /*if (!scoresItr.hasNext)
             throw new RuntimeException("number of parsing scores is less than number of parses"); 
           val scoreLine = scoresItr.next;
@@ -264,8 +268,9 @@ class BoxerDiscourseInterpreter[T](
 
 object BoxerDiscourseInterpreter {
 
+  var applyNegation:Boolean = false; //replace NOT(A,B) with IMP(, NOT(B))
+  
   def main(args: Array[String]) {
-    
    
     val bdi = new BoxerDiscourseInterpreter (  );
     

@@ -773,7 +773,7 @@ val matchAssumeRels = assumeRelsList.filter(rel =>
       }
     }
 
-  def renameVariablesAddTypes(drs: BoxerDrs, declarations: Map[String, Seq[String]]) : Option[BoxerDrs] = 
+  def renameVariablesAddTypes(drs: BoxerDrs, declarations: Map[(String, Int), Seq[String]]) : Option[BoxerDrs] = 
   {
   	var drsNewRefs : Set[BoxerVariable] = Set(); 
   	val drsNewConds = drs.conds.map { cond => 
@@ -781,18 +781,18 @@ val matchAssumeRels = assumeRelsList.filter(rel =>
 		{
 			case BoxerPred(discId, indices, variable, name, pos, sense) => 
 			{
-				if (declarations.get(name).isEmpty)
+				if (declarations.get((name, 1)).isEmpty)
 					return None;
-				var newVarName = BoxerVariable(declarations(name).head + "_" + variable.name);
+				var newVarName = BoxerVariable(declarations((name, 1)).head + "_" + variable.name);
 				drsNewRefs = drsNewRefs + newVarName; 
 				BoxerPred(discId, indices, newVarName, name, pos, sense)	
 			} 
 			case BoxerRel(discId, indices, event, variable, name, sense) =>
 			{
-				if (declarations.get(name).isEmpty || declarations.get(name).get.size!=2)
+				if (declarations.get((name, 2)).isEmpty || declarations.get((name, 2)).get.size!=2)
 					return None;
-				var newVar1Name = BoxerVariable(declarations(name).head + "_" + event.name);
-				var newVar2Name = BoxerVariable(declarations(name).last + "_" + variable.name);
+				var newVar1Name = BoxerVariable(declarations((name, 2)).head + "_" + event.name);
+				var newVar2Name = BoxerVariable(declarations((name, 2)).last + "_" + variable.name);
 				drsNewRefs = drsNewRefs ++ Set(newVar1Name, newVar2Name); 
 				BoxerRel(discId, indices, newVar1Name, newVar2Name, name, sense)	
 			}
@@ -806,7 +806,7 @@ val matchAssumeRels = assumeRelsList.filter(rel =>
 
 	Some(BoxerDrs(drsNewRefs.map((List[BoxerIndex]() -> _)).toList, drsNewConds.toList))
   }
-  def createWeightedExpression(leftFOL: BoxerDrs, rightFOL: BoxerDrs, score: Double, ruleType: RuleType.Value, declarations: Map[String, Seq[String]]): (List[WeightedExpression[BoxerExpression]], Set[String]) =
+  def createWeightedExpression(leftFOL: BoxerDrs, rightFOL: BoxerDrs, score: Double, ruleType: RuleType.Value, declarations: Map[(String, Int), Seq[String]]): (List[WeightedExpression[BoxerExpression]], Set[String]) =
   {
     if(score < Sts.opts.weightThreshold )
       return (List(), Set());
@@ -894,5 +894,12 @@ val matchAssumeRels = assumeRelsList.filter(rel =>
       0 // index is not unique or does not exist 
     else
       l.head.wordIndex + 1//1 based indexing 
+   }
+
+   def indicesToOneIndex ( l:List[BoxerIndex]) : List[BoxerIndex] = 
+   {
+     if (l.size <= 1)
+  		return l;
+     return List(l.head);
    }
 }

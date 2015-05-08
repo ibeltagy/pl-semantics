@@ -3,7 +3,6 @@ package utcompling.mlnsemantics.rules
 import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.FileUtils._
 import opennlp.scalabha.util.FileUtils
-
 import org.apache.commons.logging.LogFactory
 import utcompling.mlnsemantics.run.Sts
 import scala.Array.canBuildFrom
@@ -26,23 +25,29 @@ import utcompling.mlnsemantics.inference.GivenNotTextProbabilisticTheoremProver
 import utcompling.mlnsemantics.inference.Phase
 import dhg.depparse.DepParser
 import utcompling.mlnsemantics.datagen._
+import utcompling.Resources
 
 object DiffRules {
   var isTextNegated:Boolean = false; //set them when GivenNotTextProbabilisticTheoremProver.phase == Phase.notHGivenT
   var isHypNegated:Boolean = false;  //then use them when GivenNotTextProbabilisticTheoremProver.phase == Phase.hGivenT
   var allGeneratedRules:List[(String, String)] = List[(String, String)]();  //List("gs + notSure + lhs + rhs",   rule )
+  var ruleID:Int = 1;
 
   def printDiffRules (s:String) = 
   {
     if (Sts.opts.printDiffRules)
       println(s)
   }
-  printDiffRules("[pattern]" + "\t" + "lhsText" + "\t" + "rhsText"+ "\t" + "w" + "\t"+ "gsw" +"\t" + "notSure" + "\t" + "isInWordnet" + "\t" + "extentionLevel" + "\t" + "pairIndex" + "\t" + "text" + "\t" + "hypothesis" + "\t" + "lhsDrs" + "\t" + "rhsDrs")
+  printDiffRules("[pattern]" + "\t" + "ruleID" + "\t" + "lhsText" + "\t" + "rhsText"+ "\t" + "w" + "\t"+ "gsw" +"\t" + "notSure" + "\t" + "isInWordnet" + "\t" + "ruleEval" + "\t" + "extentionLevel" + "\t" + "pairIndex" + "\t" + "text" + "\t" + "hypothesis" + "\t" + "lhsDrs" + "\t" + "rhsDrs")
 
-  if(Sts.depParser == null)
-  		Sts.depParser = DepParser.load();
-	val sureRulesFile = "resources/sure"
+	//if(Sts.depParser == null)
+	//	Sts.depParser = DepParser.load();
+
+	val sureRulesFile = Resources.sureRules
 	val sureRules:Set[String] = FileUtils.readLines(sureRulesFile).toSet
+	val trueRulesFile = Resources.trueRules
+	val trueRules:Set[String] = FileUtils.readLines(trueRulesFile).toSet
+
 }
 
 class DiffRules {
@@ -67,6 +72,8 @@ class DiffRules {
   	DiffRules; //initilize the object in case it is not initilized yet.	
 	//List(List("deer(d1)"), List("agent(j1, d1)"), List("jump(j1)"), List("over(j1, f1)"), List("wall(f1)")), 
 	//List(List("-deer(d1)", "-agent(j1, d1)", "-jump(j1)", "-over(j1)", "-patient(j1, f1)", "-fence(f1)") ))
+  	
+  	
   	if (GivenNotTextProbabilisticTheoremProver.phase == Phase.hGivenT)
   	{
   		DiffRules.isTextNegated = hasNegation(text)
@@ -113,7 +120,8 @@ class DiffRules {
 		//Try to match existentially quantified variables on the RHS with variables on the LHS
 		ruleLhsRhs = (ruleLhsRhs._1, findApplyMatched(ruleLhsRhs._1, ruleLhsRhs._2, false));
   		ruleLhsRhs = (ruleLhsRhs._1, findApplyMatched(ruleLhsRhs._1, ruleLhsRhs._2, true));
-		doDepParse (ruleLhsRhs._1, ruleLhsRhs._2, lhsSentence, rhsSentence, textAtomsMap:Map[String, (BoxerExpression, String)], textAtomsMap:Map[String, (BoxerExpression, String)])
+
+		//doDepParse (ruleLhsRhs._1, ruleLhsRhs._2, lhsSentence, rhsSentence, textAtomsMap:Map[String, (BoxerExpression, String)], textAtomsMap:Map[String, (BoxerExpression, String)])
 		/*
 		val updatedLhsVars = ruleLhsRhs._1.flatMap(_.argList);
 		val updatedRhsVars = ruleLhsRhs._2.flatMap(_.argList);
@@ -208,6 +216,9 @@ class DiffRules {
 
 	def addRule (lhsSet:Set[Literal], rhsSet:Set[Literal], rulesCountPerPair:Int) : Option[(BoxerDrs, BoxerDrs, Double, RuleType.Value)]= 
 	{
+		val ruleEvaluation = evaluateRule(lhsSet, rhsSet);
+		val ruleEvalStr = ruleEvaluation._1 + "," + ruleEvaluation._2 + "," + ruleEvaluation._3;
+		
 		val lhsExps:Set[BoxerExpression] = lhsSet.map(l => literalToBoxerExp(l, textAtomsMap)).toSet
 		val rhsExps:Set[BoxerExpression] = rhsSet.map(l => literalToBoxerExp(l, hypAtomsMap)).toSet
 		var lhsDrs = Rules.boxerAtomsToBoxerDrs(lhsExps);
@@ -217,8 +228,26 @@ class DiffRules {
 //		val rhsExpsPattern:Set[BoxerExpression] = rhsSet.filter(_.predSymbol != "group_head-n").map(l => literalToBoxerExp(l, hypAtomsMap)).toSet
 //		var pattern = Rules.sortVarsRenameVarsGetPattern(lhsExpsPattern)._2  + "--" + Rules.sortVarsRenameVarsGetPattern(rhsExpsPattern)._2 ;
 		var pattern = Rules.sortVarsRenameVarsGetPattern(lhsExps)._2  + "--" + Rules.sortVarsRenameVarsGetPattern(rhsExps)._2 ;
-		var lhs = PhrasalRules.ruleSideToString(lhsExps.toList, lhsSentence, false);
-		var rhs = PhrasalRules.ruleSideToString(rhsExps.toList, rhsSentence, false);
+
+		val lhsVarsToIndexMap:Map[String, String] = lhsSet.flatMap(l => {  // a map from variable to word index.
+			if (l.argList.size == 1 /*&& (l.predSymbol.endsWith("n") ||l.predSymbol.endsWith("v"))*/)
+			{
+				val e = literalToBoxerExp(l, textAtomsMap)
+				val idx = e match
+				{
+					case BoxerPred(discId, indices, variable, name, pos, sense) => 
+						Rules.indicesToIndex(Rules.indicesToOneIndex(indices));
+					case BoxerRel(discId, indices, event, variable, name, sense) => 
+						Rules.indicesToIndex(Rules.indicesToOneIndex(indices));
+				}
+				Some((l.argList.head -> idx))
+			}
+			else 
+				None
+		}).groupBy(_._1).map { case (k, v) => (k -> v.unzip._2.toList.sortWith((x, y) => x<y).mkString(","))}
+
+		var lhs = PhrasalRules.ruleSideToString(lhsExps.toList, lhsSentence, false, null);
+		var rhs = PhrasalRules.ruleSideToString(rhsExps.toList, rhsSentence, false, lhsVarsToIndexMap);
 
 		/// --check if they are already in wordnet if lexical, and phrasal if not lexical
 		var isInWordnet = "Phrasal";
@@ -252,6 +281,7 @@ class DiffRules {
 			  case 0.5 => 0;
 			  case 1 => 1;
 			  case 0.0 => 1;
+			  case _ => 0
 		}
 		var ruleType = RuleType.Implication;
 		if (!DiffRules.isTextNegated && !DiffRules.isHypNegated  ) //(not negated, not negated) in Phase.hGivenT
@@ -287,8 +317,8 @@ class DiffRules {
 			}*/
 
 			var dropRule = false
-			var simpleLhsText = PhrasalRules.ruleSideToString(lhsExps.toList, lhsSentence, true);
-			var simpleRhsText = PhrasalRules.ruleSideToString(rhsExps.toList, rhsSentence, true);
+			var simpleLhsText = PhrasalRules.ruleSideToString(lhsExps.toList, lhsSentence, true, null);
+			var simpleRhsText = PhrasalRules.ruleSideToString(rhsExps.toList, rhsSentence, true, null);
 			
 			simpleLhsText = handleTransparentNouns(simpleLhsText)
 			simpleRhsText = handleTransparentNouns(simpleRhsText)
@@ -298,10 +328,12 @@ class DiffRules {
 			var notSure:Int = if (gs != 1 /*generate it for Neutral and Contra*/&& rulesCountPerPair != 1) 1//rulesCountPerPair 
 							  else
 							    0
+
+
 			if (notSure > 0 && DiffRules.sureRules.contains(simpleLhsText + "\t" + simpleRhsText))
 			{
 				gs = 1;
-			}
+			} 
 
 			if (simpleLhsText.contains("nobody") || simpleRhsText.contains("nobody")) //ignore rules with "nobody". Wordnet and Distributional semantics have no hope of getting them right. I hardcoded them
 			{
@@ -320,15 +352,16 @@ class DiffRules {
 			var ruleString = ""
 
 			if (Sts.opts.diffRulesSimpleText)
-				//println ("["+pattern+"]\t" + simpleLhsText + "\t" + simpleRhsText+ "\t" + gs + "\t"+ gsText  + "\t" + isInWordnet +"\t" +Sts.text + "\t" + Sts.hypothesis + "\t" + lhsDrs + "\t" + rhsDrs)
-				ruleString = pattern + "\t" + varsStatistics + "\t" + Sts.pairIndex + "\t"+ simpleLhsText + "\t" + simpleRhsText+ "\t#" + gs +"#\t" +  notSure /*: not sure is always zero, no, I need it back*/ + "\t" + isInWordnet + "\t" +  lhsSet.mkString(",") + "\t" + rhsSet.mkString(",")+ "\t" + Sts.opts.extendDiffRulesLvl.get 
+				ruleString = pattern + "\t" + varsStatistics + "\t" + Sts.pairIndex + "\t"+ simpleLhsText + "\t" + simpleRhsText+ "\t#" + gs +"#\t" +  notSure /*: not sure is always zero, no, I need it back*/  + "\t" + isInWordnet + "\t" +  ruleEvalStr + "\t" + lhsSet.mkString(",") + "\t" + rhsSet.mkString(",")+ "\t" + Sts.opts.extendDiffRulesLvl.get 
 			else 
-				ruleString = pattern + "\t" + lhs + "\t" + rhs+ "\t#" + gs + "#\t#"+ gs +"#\t" +  notSure /*: not sure is always zero, no, I need it back*/ + "\t" + isInWordnet + "\t" + Sts.opts.extendDiffRulesLvl.get + "\t" + Sts.pairIndex +"\t"+ lhsSentence + "\t" + rhsSentence + "\t" + lhsDrs + "\t" + rhsDrs
+				ruleString = pattern + "\t" + DiffRules.ruleID + "\t"+lhs + "\t" + rhs+ "\t#" + gs + "#\t#"+ gs +"#\t" +  notSure /*: not sure is always zero, no, I need it back*/ + "\t" + isInWordnet + "\t" + ruleEvalStr + "\t" + Sts.opts.extendDiffRulesLvl.get + "\t" + Sts.pairIndex +"\t"+ lhsSentence + "\t" + rhsSentence + "\t" + lhsDrs + "\t" + rhsDrs
+			DiffRules.ruleID = DiffRules.ruleID  + 1
 			
 			DiffRules.printDiffRules(ruleString);
 	
 			var key = "#" + (if(gs == -1.0) 0.0 else gs)   + "#" + notSure + "#" + simpleLhsText + "#" + simpleRhsText;
-//			var acceptRule = false
+
+/*
 			if (gs != 1 && notSure > 0) //if rule is a notSure
 			{
 				//search for a true rule
@@ -338,11 +371,11 @@ class DiffRules {
 					None //do nothing
 				else
 				{
+					println ("SURE: " + ruleString)
 					//replace the zero gold standard weight of the current rule to 1
 					ruleString = ruleString.replaceAll("#0.0#", "#1.0#")
 					key = key.replaceAll("#0.0#", "#1.0#")
 				}
-//				acceptRule = true  //add this notSure rule
 			}
 			else if (gs == 1)  //if a true rule
 			{
@@ -352,12 +385,16 @@ class DiffRules {
 				if (DiffRules.allGeneratedRules.unzip._1.toList.contains(searchFor))
 					DiffRules.allGeneratedRules = DiffRules.allGeneratedRules.map( line => {
 						if (line._1 == searchFor)
+						{
+							println ("SURE: " + line._2)
 							(line._1.replaceAll("#0.0#", "#1.0#"), line._2.replaceAll("#0.0#", "#1.0#"))
+						}
 						else line
 					})
 					
 
 			}
+*/
 
 			if (!dropRule)  
 				DiffRules.allGeneratedRules  = DiffRules.allGeneratedRules :+ (key, ruleString)
@@ -369,9 +406,13 @@ class DiffRules {
 					(
 						/*(simpleLhsText.contains(simpleRhsText) && transparentNouns.contains( simpleLhsText.replaceFirst(simpleRhsText, "").trim ))
 						||(simpleRhsText.contains(simpleLhsText) && transparentNouns.contains( simpleRhsText.replaceFirst(simpleLhsText, "").trim ))
-						||*/ isInWordnet == "Hypernym"
+						||*/
+						//	isInWordnet == "Hypernym"
+							(ruleEvaluation._1 == 0 && ruleEvaluation._2  == 0) //all words are matched
 						//|| isInWordnet == "Synonym"
+						//|| isInWordnet == "Antonym"
 						|| simpleLhsText == simpleRhsText
+						|| (DiffRules.trueRules.contains(simpleLhsText + "\t" + simpleRhsText) /*&& isInWordnet ==  "Phrasal"*/ )
 					)
 				)
 				return  Some((((lhsDrs, rhsDrs,  Double.PositiveInfinity, RuleType.Implication))))
@@ -392,6 +433,56 @@ class DiffRules {
     txt
   }
 
+def evaluateRule (inputRuleLhs:Set[Literal], inputRuleRhs:Set[Literal]): (Int, Int, Int) = 
+  {
+	var ruleLhs = inputRuleLhs;
+	var ruleRhs = inputRuleRhs;
+	val lhsVarsEntities = ruleLhs.flatMap(l => {  // a map from variable to its most representative content word
+		if (l.argList.size == 1)
+			Some((l.argList.head -> l.predSymbol))
+		else 
+			None
+	}).groupBy(_._1).map {case (k, v) => (k, v.unzip._2)}
+	
+	
+	var unAligned: Int = 0;
+	var unMatched: Int = 0;
+	var matched: Int = 0;
+	ruleRhs.foreach(l => 
+	{
+		if (l.argList.size == 1)
+		{
+			val rhsWordPos = l.predSymbol
+			val rhsW = rhsWordPos.substring(0, rhsWordPos.length() - 2);
+			val rhsPos = rhsWordPos.charAt(rhsWordPos.length()-1)+"";
+			
+			val aligned = lhsVarsEntities.get(l.argList.head);
+			if (aligned.isEmpty)
+				unAligned = unAligned + 1;
+			else
+			{
+				var matchFound:Boolean = false;
+				aligned.get.foreach( lhsWordPos => {
+					val lhsW = lhsWordPos.substring(0, lhsWordPos.length() - 2);
+					val lhsPos = lhsWordPos.charAt(lhsWordPos.length()-1)+"";
+					
+					val synonyms = WordNetRules.wordnet.getSynonyms(lhsW, lhsPos) ++ WordNetRules.wordnet.getSynonyms(Lemmatize.lemmatizeWord(lhsW), lhsPos) 
+					val hypernyms = WordNetRules.wordnet.getHypernyms(lhsW, lhsPos) ++ WordNetRules.wordnet.getHypernyms(Lemmatize.lemmatizeWord(lhsW), lhsPos);
+					
+					if (lhsW == rhsW || Lemmatize.lemmatizeWord(lhsW) == Lemmatize.lemmatizeWord(rhsW) || (synonyms ++ hypernyms).contains(rhsW))
+						matchFound = true;
+				})
+				if (matchFound)
+					matched = matched + 1;
+				else 
+					unMatched = unMatched + 1;
+			}
+		}
+	})
+	
+	return (unAligned, unMatched, matched);
+  }
+  
   def findApplyMatched (inputRuleLhs:Set[Literal], inputRuleRhs:Set[Literal], matchAlreadyMatched: Boolean): Set[Literal] = 
   {
 	var ruleLhs = inputRuleLhs;
@@ -548,8 +639,14 @@ class DiffRules {
   	assert (entry.isDefined);
   	entry.get._1 match 
   	{
-  		case BoxerPred(discId, indices, variable, name, pos, sense) => assert(l.argList.length == 1);  return BoxerPred(discId, indices, BoxerVariable(l.argList(0)/*.toLowerCase*/), name, pos, sense)
-		case BoxerRel(discId, indices, event, variable, name, sense) => assert(l.argList.length == 2); return BoxerRel(discId, indices, BoxerVariable(l.argList(0)/*.toLowerCase*/), BoxerVariable(l.argList(1)/*.toLowerCase*/), name, sense)
+  		case BoxerPred(discId, indices, variable, name, pos, sense) => if(l.argList.length != 1) println ("ERROR: a relation should not be replaced with a predicate"); return BoxerPred(discId, indices, BoxerVariable(l.argList(0)/*.toLowerCase*/), name, pos, sense)
+		case BoxerRel(discId, indices, event, variable, name, sense) => if(l.argList.length != 2) {
+			println ("ERROR: a predicate should not be replaced with a relation"); 
+			//ugly hack
+			return BoxerRel(discId, indices, BoxerVariable(l.argList(0)/*.toLowerCase*/), BoxerVariable(l.argList(0)/*.toLowerCase*/), name, sense)
+		}
+		else
+			return BoxerRel(discId, indices, BoxerVariable(l.argList(0)/*.toLowerCase*/), BoxerVariable(l.argList(1)/*.toLowerCase*/), name, sense)
 		case _ => throw new RuntimeException("Unexpected BoxerExpression: " + l);
 	}
   	throw new RuntimeException("Unreachable");
@@ -684,6 +781,7 @@ class DiffRules {
 	  return splitOnVerbs;
   }
   def hasNegation(e: BoxerExpression): Boolean = {
+  	//TODO: if has a predicate "nobody"
       e match {
       	case BoxerNot(discId, indices, drs) => {
       		drs match {
@@ -700,8 +798,9 @@ class DiffRules {
   
   def doDepParse (lhsLiterals : Set[Literal], rhsLiterals: Set[Literal], text:String, hyp: String, textAtomsMap:Map[String, (BoxerExpression, String)], hypAtomsMap:Map[String, (BoxerExpression, String)]) = 
   {
-  	val textDepGraph = Sts.depParser.apply(text.split(" "));
 /*
+  	val textDepGraph = Sts.depParser.apply(text.split(" "));
+
   	if(textDepGraph.isDefined)
   	{
   		println(textDepGraph.get.graphviz)

@@ -2,6 +2,7 @@ package utcompling.mlnsemantics.util
 
 import org.apache.log4j.Level
 import utcompling.Resources
+import utcompling.scalalogic.discourse.impl.BoxerDiscourseInterpreter
 
 /**
  * Input parameters
@@ -33,6 +34,7 @@ class Config(opts: Map[String, String] = Map()) {
 		"-ssTimeout",
 		"-vectorSpace",
 		"-distWeight",
+		"-distRulesMode",
 		"-phrases",
 		"-genPhrases",
 		"-phraseVecs",
@@ -59,6 +61,7 @@ class Config(opts: Map[String, String] = Map()) {
 		"-chopLvl",
 		"-maxProb",
 		"-scaleW",
+		"-logOddsW",
 		"-logic",
 		"-fixDCA",
 		"-noHMinus",
@@ -79,6 +82,7 @@ class Config(opts: Map[String, String] = Map()) {
 		"-withExistence",
 		"-withFixUnivInQ",
 		"-withFixCWA",
+		"-applyNegation",
 		"-evdIntroSingleVar",
 		"-prior",
 		"-wFixCWA",
@@ -120,6 +124,16 @@ class Config(opts: Map[String, String] = Map()) {
   val distWeight = opts.get("-distWeight") match {
     case Some(weight) => weight.toDouble
     case _ => 1.0
+  }
+
+  // Scaling weights of distributional inference rules  
+  val distRulesMode = opts.get("-distRulesMode") match {
+    case Some("gs") => "gs"  //use hard rules using the gold standard annotation  
+    case Some("hard") => "hard"  //use best rule as hard rule
+    case Some("weight") => "weight"  //use best rule as weighted rule
+    case Some("noNeu") => "noNeu"  //use best rule as weighted rule excluding neutrals
+    case None => "hard"
+    case Some(x) => throw new RuntimeException("Invalid value " + x + " for argument -distRulesMode");
   }
 
   //file contains list of phrases (resources/phrases.lst)
@@ -215,7 +229,7 @@ class Config(opts: Map[String, String] = Map()) {
   //weight threshold
   val weightThreshold = opts.get("-wThr") match {
     case Some(thr) => thr.toDouble;
-    case _ => 0.20;
+    case _ => 0.10;
   }
 
   val lexicalInferenceModelFile: String = opts.get("-lexInferModelFile") match {
@@ -234,14 +248,14 @@ class Config(opts: Map[String, String] = Map()) {
 
   //Enable or Disable WordNet rules
   val wordnet = opts.get("-wordnet") match {
-    case Some("false") => false;
-    case _ => true;
+    case Some("true") => true;
+    case _ => false;
   }
   
   //Enable or Disable Difference rules
   val diffRules = opts.get("-diffRules") match {
-    case Some("true") => true;
-    case _ => false;
+    case Some("false") => false;
+    case _ => true;
   }
   
   //Enable or Disable printing Difference rules
@@ -252,8 +266,8 @@ class Config(opts: Map[String, String] = Map()) {
   
  //if printing Difference rules is enabled, use simple text or full text 
   val diffRulesSimpleText = opts.get("-diffRulesSimpleText") match {
-    case Some("true") => true;
-    case _ => false;
+    case Some("false") => false;
+    case _ => true;
   }
   
   //Enable or Disable extending Difference rules
@@ -263,14 +277,15 @@ class Config(opts: Map[String, String] = Map()) {
   // 1) enhanced extension
   // 2) full extension
   var extendDiffRulesLvl = opts.get("-extendDiffRulesLvl") match {
+  	case Some ("All") => None;
     case Some(lvl) => Some(lvl.toInt);
-    case _ => None;
+    case _ => Some(1);
   } 
 
   //Enable or Disable printing Difference rules
   val splitDiffRules = opts.get("-splitDiffRules") match {
-    case Some("true") => true;
-    case _ => false;
+    case Some("false") => false;
+    case _ => true;
   }
   
   //-------------------------------------------task
@@ -306,6 +321,12 @@ class Config(opts: Map[String, String] = Map()) {
 
   //MLN splits weights on formulas. If scaleW is true, reverse this default MLN behaviour (only on mln)
   val scaleW = opts.get("-scaleW") match {
+    case Some(s) => s.toBoolean
+    case _ => true;
+  }
+
+  //Use the LogOdds function to map weights to MLN weights or use the weights as is
+  val logOddsW = opts.get("-logOddsW") match {
     case Some(s) => s.toBoolean
     case _ => true;
   }
@@ -398,6 +419,16 @@ class Config(opts: Map[String, String] = Map()) {
     case _ => true;
   }
 
+ //replace NOT(A,B) with IMP(, NOT(B))  
+ //This is in the parsing phase
+ var applyNegation = opts.get("-applyNegation") match {
+    case Some("true") => {
+    	BoxerDiscourseInterpreter.applyNegation = true;
+    	true;
+    }
+    case _ => false;
+  }
+
  //with or without introduction of hard evidence for all universally 
  //quantified predicates with single variables. 
  //This is actually a hack because our code of detection of 
@@ -488,8 +519,8 @@ class Config(opts: Map[String, String] = Map()) {
   }
   //doing coreference resolution between T and H 
   val corefOnIR = opts.get("-corefOnIR") match {
-     case Some("true") => true;
-     case _ => false;
+     case Some("false") => false;
+     case _ => true;
   }
   
   

@@ -4,13 +4,14 @@ export CANDCHOME=candc/bin
 #export ALCHEMYHOME=alchemy/bin
 export WORDNETHOME=resources/wordnet
 
+hostname
+
 SBT="java -Dfile.encoding=UTF8 -Xdebug -Xmx4096M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=256m -jar bin/sbt-launch-*.jar"
 START="target/start"
 RES="resources"
 
 CMD=$1  #install, compile, boxer, run, box, lem, vs, gen, all, vecadd, vecmull, run-condor
 shift
-
 case $CMD in
   install)
    ln -s /u/beltagy/workspace/deft/mln-semantics/lib/ws4j-1.0.1.jar lib/ws4j-1.0.1.jar

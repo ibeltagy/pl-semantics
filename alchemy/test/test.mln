@@ -15,50 +15,12 @@ bin/infer -i test/test.mln -e test/test.db  -r test/test.res -q cut_v_dh,man_n_d
 //k  : 23.5589, 24.1293, 42.3707
 //
 
-hx = {"hx1","hx2", "hx3", "hx4", "hx5", "hx6", "hx7"}
-he = {"he0", "he8", "he9"}
-//he = {"he0"}
-hp = {"hp_default"}
-ent_h = {"entConst_h"}
+hx = {A, B, Q}
+pred(hx)
 
-cut_v_dh(he)
-man_n_dh(hx)
-onion_n_dh(hx)
-slice_v_dh(he)
-entailment_h(ent_h)
-woman_n_dh(hx)
-tomato_n_dh(hx)
-r_patient_dh(he,hx)
-r_agent_dh(he,hx)
+//-5.00 pred (x)
+15 pred(A)
+100.001 pred(A) => pred(Q)
+100.001 pred(A) => pred(B) 
+000000.001 pred(B) => pred(Q)  
 
-
-r_patient_dh("he0","hx1").
-r_agent_dh("he0","hx2").
-cut_v_dh("he0").
-onion_n_dh("hx1").
-man_n_dh("hx2").
-
-//begin assumptions
-1.00000 !(slice_v_dh(x))
-1.00000 !(r_patient_dh(x0,x1))
-1.00000 !(entailment_h(entconst_h))
-1.00000 !(r_agent_dh(x0,x1))
-1.00000 !(man_n_dh(x))
-1.00000 !(cut_v_dh(x))
-1.00000 !(onion_n_dh(x))
-1.00000 !(woman_n_dh(x))
-1.00000 !(tomato_n_dh(x))
-3.02007 (onion_n_dh(x0) => tomato_n_dh(x0))
-2.19748 (man_n_dh(x0) => woman_n_dh(x0))
-0.82492 (((cut_v_dh(x0) ^ man_n_dh(x1)) ^ r_agent_dh(x0,x1)) => woman_n_dh(x1))
-8.86605 (((cut_v_dh(x0) ^ onion_n_dh(x1)) ^ r_patient_dh(x0,x1)) => ((slice_v_dh(x0) ^ tomato_n_dh(x1)) ^ r_patient_dh(x0,x1)))
-8.97535 (onion_n_dh(x1) => ((slice_v_dh(x0) ^ tomato_n_dh(x1)) ^ r_patient_dh(x0,x1)))
-6.26916 (onion_n_dh(x1) => ((slice_v_dh(x0) ^ woman_n_dh(x1)) ^ r_agent_dh(x0,x1)))
-2.95556 (((cut_v_dh(x0) ^ onion_n_dh(x1)) ^ r_patient_dh(x0,x1)) => tomato_n_dh(x1))
-6.39870 (((cut_v_dh(x0) ^ onion_n_dh(x1)) ^ r_patient_dh(x0,x1)) => ((slice_v_dh(x0) ^ woman_n_dh(x1)) ^ r_agent_dh(x0,x1)))
-
-//2.50000 (cut_v_dh(x0) => slice_v_dh(x0))
-//0.94956 (man_n_dh(x1) => ((slice_v_dh(x0) ^ woman_n_dh(x1)) ^ r_agent_dh(x0,x1)))
-//2.40192 (((cut_v_dh(x0) ^ onion_n_dh(x1)) ^ r_patient_dh(x0,x1)) => slice_v_dh(x0))
-
-//!((exist he0, hx1, hx2((((r_patient_dh(he0,hx1) ^ r_agent_dh(he0,hx2)) ^ slice_v_dh(he0)) ^ tomato_n_dh(hx1)) ^ woman_n_dh(hx2)))).

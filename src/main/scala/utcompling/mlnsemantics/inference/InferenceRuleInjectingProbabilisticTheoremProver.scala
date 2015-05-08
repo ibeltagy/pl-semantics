@@ -31,6 +31,7 @@ import utcompling.mlnsemantics.rules.PhrasalRules
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerCard
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerTimex
 import utcompling.mlnsemantics.rules.DiffRules
+import utcompling.mlnsemantics.rules.RuleType
 
 class InferenceRuleInjectingProbabilisticTheoremProver(
 
@@ -42,9 +43,6 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 
   private val LOG = LogFactory.getLog(classOf[InferenceRuleInjectingProbabilisticTheoremProver])
   
-  private val distWeight = Sts.opts.distWeight;
-  private val resourceWeight = Sts.opts.rulesWeight;
-
   private def d(drs: BoxerExpression) =
     new Boxer2DrtExpressionInterpreter().interpret(
       new OccurrenceMarkingBoxerExpressionInterpreterDecorator().interpret(drs))
@@ -126,8 +124,8 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 					{
 						 for( j <- 0 until hPhrase.size)
 						 {
-							 val lhs = PhrasalRules.ruleSideToString(tPhrase.getBoxerExpressionList(i), Sts.text, false)
-							 val rhs = PhrasalRules.ruleSideToString(hPhrase.getBoxerExpressionList(i), Sts.hypothesis, false)
+							 val lhs = PhrasalRules.ruleSideToString(tPhrase.getBoxerExpressionList(i), Sts.text, false, null)
+							 val rhs = PhrasalRules.ruleSideToString(hPhrase.getBoxerExpressionList(i), Sts.hypothesis, false, null)
 							 if (lhs == "" || rhs == "")
 								 println("No DIST rule for: " + tPhrase.getBoxerExpressionList(i) + "=>" +  hPhrase.getBoxerExpressionList(i))
 							 else
@@ -150,22 +148,24 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 			case BoxerCard(discId, indices, variable, num, typ) => "card_" + num
 			case BoxerTimex(discId, indices, variable, timeExp) => "time"
 		}
-		name -> d._2
+		(name,d._2.length)  -> d._2
 	} )
     //query lucene for pre-compiled distributional rules
-	val distributionalRules = new DistributionalRules().getRules();
+	val distributionalRules = new DistributionalRules().getRules().map( r=> (r._1, r._2, r._3 * Sts.opts.distWeight, r._4 ) );
 
 	//query lucene for pre-compiled paraphrase rules
 	val paraphraseRules = new ParaphraseRules().getRules();
 		
-	val precompiledRules = Rules.convertRulesToFOL( /*distributionalRules ++ */ paraphraseRules, assumptions.head.expression, goal)
+	val precompiledRules = Rules.convertRulesToFOL( paraphraseRules, assumptions.head.expression, goal)
 								.map(r=> (r._1, r._2, r._3 * Sts.opts.rulesWeight, r._4)) //scale weights of all precompiles rules
 	
-	    //generate distributional inference rules on the fly
-	val onthefulyRules = new OnTheFlyRules().getRules(assumptions.head.expression, goal, ruleWeighter, vecspaceFactory)
-										.map(r=> (r._1, r._2, r._3 * Sts.opts.distWeight, r._4)) //scale weights of all onthefly rules
-										
-          //Hard rules from WordNet
+	//generate distributional inference rules on the fly
+	val onthefulyRules = List[(BoxerDrs, BoxerDrs, Double, RuleType.Value)](); 
+		//new OnTheFlyRules().getRules(assumptions.head.expression, goal, ruleWeighter, vecspaceFactory)
+		//	.map(r=> (r._1, r._2, r._3 * Sts.opts.distWeight, r._4)) //scale weights of all onthefly rules
+
+
+	//Hard rules from WordNet
 	val wordNetRules = new WordNetRules().getRules(assumptions.head.expression, goal, simplifiedDeclarations);
 	
 	val diffRule = if (Sts.opts.extendDiffRulesLvl.isDefined)

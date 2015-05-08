@@ -1,3 +1,32 @@
+//Text has a negation if it has a predicate "nobody"
+//Sure rules for SICK-train-contradictions. 
+motorcycle-n-5  black-a-5 white-a-7 motorcycle-n-8      578
+steak-n-5       large-a-6 steak-n-7     1104
+lady-n-2        woman-n-2       1555
+squirrel-n-2    squirrel-n-2 around-a-5 2066
+beating-v-3     stirring-v-4 in-r-6 bowl-n-8    1995
+food-n-6        chicken-n-5     2918
+ingredients-n-4 vegetables-n-5  3182
+black-a-2 dog-n-3 keeping-v-10 mouth-n-12       tongue-n-11 hanging-v-13 out-r-14       3339
+grass-n-8       tall-a-8 grass-n-9      3735
+looks-v-14      looking-v-15 on-r-16    4353
+
+//Errors in SICK-Train
+21: "boy => young boy" is not generated because of the simplified assumption of generating diffRules in case of negation
+34,136 : -6
+100: complex coref and contradiction
+133,259,292,642,984: wrong gs
+170: equality in H
+245,276,348,451,551,610,727: Phrasal Antonymy rule
+343,754,755,797: timeout because of a very very long query 
+390: wrong handling of notEqual in H in inference
+402: probably wrong handling of notEqual in inference
+502,509,517,858,905: looks like a problem with the coreference resollution
+703: disjunction
+796,830,937: long rule
+1240: "nobody" translated to "person"
+////////////////////////
+Important: for rules with long LHS, generating the inference problem timesout. This should be fixed
 //
 Rules need to be handcoded: 
 group of

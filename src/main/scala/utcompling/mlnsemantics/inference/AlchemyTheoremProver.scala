@@ -122,6 +122,8 @@ class AlchemyTheoremProver{
 	            var usedWeight = min(weight, 0.999999);
 	            usedWeight = max(usedWeight, 0.000001);
 	            usedWeight = SetPriorPTP.predPrior + log(usedWeight) - log(1-usedWeight);
+	            if (Sts.opts.logOddsW == false)
+	            	usedWeight = weight
 
 	            //include all rules even the ones with negative weights 
 	            //if (usedWeight  > 0)
@@ -131,7 +133,7 @@ class AlchemyTheoremProver{
 	              count = folExpString.split("=>").last.count(_ == '^') + 1;
 	              //println(folExpString.split("=>") +  " -----" + folExpString.split("=>").last + "----" + count)
 	              if (!Sts.opts.scaleW) 
-				count = 1;
+	              	count = 1;
 	              usedWeight = usedWeight * count;
 	              f.write("%.5f %s\n".format(usedWeight, folExpString))
 	            //}

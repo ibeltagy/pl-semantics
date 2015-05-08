@@ -77,6 +77,12 @@ case $CMD in
 				gs="resources/sick/sick-test-sts.gs"
 				DS=sick-test
 				;;
+          rte1)
+            dsSize=1367
+            task=rte
+            gs="resources/rte1/RTE1.gs"
+            DS="rte 1"
+            ;;
 			 *)
 				echo "$DS dataset is not supported"
 				exit 1

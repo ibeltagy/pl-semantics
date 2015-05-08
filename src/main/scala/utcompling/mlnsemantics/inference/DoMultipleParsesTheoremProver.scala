@@ -41,7 +41,7 @@ class DoMultipleParsesTheoremProver(
 		return { 
 			if(Sts.opts.task == "sts")
 				List(-2.0, -2.0)
-			else  if (Sts.opts.task == "rte" && Sts.opts.withNegT && Sts.opts.softLogicTool != "psl")
+			else  if (Sts.opts.task == "rte" /*&& Sts.opts.withNegT*/ && Sts.opts.softLogicTool != "psl")
 				List(-2.0, -2.0, -2.0, -2.0)
 			else List(-2.0)
 		}
@@ -77,8 +77,8 @@ class DoMultipleParsesTheoremProver(
 							}
 							if(Sts.opts.task == "sts")
 								assert(result.length == 2);
-							else  if (Sts.opts.task == "rte" && Sts.opts.withNegT && Sts.opts.softLogicTool != "psl")
-								assert(result.length == 4); //check GivenNotTextProbabilisticTheoremProver for details
+							else  if (Sts.opts.task == "rte" && /*Sts.opts.withNegT &&*/ Sts.opts.softLogicTool != "psl")
+								assert(result.length == 4, "length should be 4 but got " + result.length + " with values: " + result); //check GivenNotTextProbabilisticTheoremProver for details
 							else assert(result.length == 1);
 							/*
 							val oneScore = result match { case Seq(s) => s; case Seq() => -1 /* unknown error*/};

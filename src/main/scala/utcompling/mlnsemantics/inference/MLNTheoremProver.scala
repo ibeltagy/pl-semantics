@@ -58,7 +58,7 @@ with ProbabilisticTheoremProver[FolExpression]{
     })
 
      
-	callAlchemy(mlnFile, evidenceFile, resultFile, args) match {
+	val result = callAlchemy(mlnFile, evidenceFile, resultFile, args) match {
       case 0  =>
       {
 		    val out = new StringBuilder
@@ -114,7 +114,15 @@ with ProbabilisticTheoremProver[FolExpression]{
 		      			case "sts" => Seq(-1.0, -1.0);
 		      			case "rte" => Seq(-1.0);
       				} 
-	}    
+	} 
+
+    if (!LOG.isTraceEnabled())
+    {
+    	FileUtils.remove(mlnFile)
+    	FileUtils.remove(evidenceFile)
+    	FileUtils.remove(resultFile)
+    }
+    return result
   }
 }
 

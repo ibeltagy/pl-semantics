@@ -15,6 +15,7 @@ extern const char* ZZ_TMP_FILE_POSTFIX; //defined in fol.y
 char* aInputClusterFile = NULL;
 char* aOutputClusterFile = NULL;
 
+extern char* aresultsFile;
 
 bool aisUseDumpFiles = false;
 
@@ -184,7 +185,7 @@ int processInput(Domain* domain, MLN* mln, GroundPredicateHashArray& queries)
 	  sprintf(buf, "%s%d%s", tmp.c_str(), getpid(), ZZ_TMP_FILE_POSTFIX);
 	  wkMLNFile = buf;
 	  copyFileAndAppendDbFile(inMLNFile, wkMLNFile,
-							  evidenceFilesArr, constFilesArr);
+							  evidenceFilesArr, constFilesArr, "", false);
 
 		// Parse wkMLNFile, and create the domain, MLN, database
 	  bool addUnitClauses = false;

@@ -7,6 +7,8 @@ import java.io.FileReader
 import java.io.File
 import scala.io.BufferedSource
 import scala.io.Source
+import scala.util.Random
+import java.io.IOException
 
 object FileUtils {
   var FILE_SEPARATOR = System.getProperty("file.separator")
@@ -41,6 +43,26 @@ object FileUtils {
     new File(filename).delete()
 
   def mktemp(prefix: String = "temp-", suffix: String = ""): String = {
+/*
+  	var n = Random.nextLong();
+    if (n == Long.MinValue) {
+        n = 0;      // corner case
+    } else {
+        n = Math.abs(n);
+    }
+    // Use only the file name from the supplied prefix
+    val prefixName = (new File(prefix)).getName();
+
+    val name = prefixName + n + suffix;
+    val f:java.io.File = new File("tmp/runtmps", name);
+    val isValid = f.createNewFile();
+    if (!name.equals(f.getName()) || !isValid) {
+        if (System.getSecurityManager() != null)
+            throw new IOException("Unable to create temporary file");
+        else
+            throw new IOException("Unable to create temporary file, " + f);
+    }
+*/
     val f = File.createTempFile(prefix, suffix)
     f.delete()
     f.getAbsolutePath

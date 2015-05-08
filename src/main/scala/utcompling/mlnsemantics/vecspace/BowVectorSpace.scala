@@ -39,7 +39,7 @@ class SparseBowVector(vals: TraversableOnce[Double], indx: TraversableOnce[Int],
 
 
 class BowVectorSpace(vectorMap: Map[String, BowVector]) {
-  val numDims: Int = vectorMap.head._2.length
+  val numDims: Int = if (vectorMap.size == 0) 0; else vectorMap.head._2.length
   val zero: BowVector = new DenseBowVector(new Array[Double](numDims))
   private val LOG = LogFactory.getLog(classOf[BowVectorSpace])
 
@@ -99,19 +99,27 @@ object BowVectorSpace {
   // auto-detects between the dhg format, a dense space and a sparse space
   // using the first line
   def detectFormat(filename: String): (String => Map[String, BowVector]) = {
-    val firstLine = readLines(filename).next
-    val Array(word, fields @ _*) = firstLine.split("\t", -1)
-    if (isDouble(fields(0))) {
-      // first field is a vector value. Definitely a dense space
-      readDenseSpace _
-    } else {
-      // not a dense space. either a dhg space or a sparse space
-      if (fields.length == 2) {
-        // only context and weight, definitely a sparse space
-        readSparseSpace _
-      } else {
-        readDhgSpace _
-      }
+    val lines = readLines(filename)
+    if (!lines.hasNext)
+    {
+    	readDhgSpace _
+    }
+    else
+    {
+	  	val firstLine = lines.next
+	    val Array(word, fields @ _*) = firstLine.split("\t", -1)
+	    if (isDouble(fields(0))) {
+	      // first field is a vector value. Definitely a dense space
+	      readDenseSpace _
+	    } else {
+	      // not a dense space. either a dhg space or a sparse space
+	      if (fields.length == 2) {
+	        // only context and weight, definitely a sparse space
+	        readSparseSpace _
+	      } else {
+	        readDhgSpace _
+	      }
+	    }
     }
   }
 

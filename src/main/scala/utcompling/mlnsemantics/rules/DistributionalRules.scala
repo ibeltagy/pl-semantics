@@ -53,14 +53,20 @@ class DistributionalRules extends Rules{
 //  printDiffRules("[pattern]" + "\t" + "lhsText" + "\t" + "rhsText"+ "\t" + "w" + "\t"+ "gsw" +"\t" + "notSure" + "\t" + "isInWordnet" + "\t" + "extentionLevel" + "\t" + "pairIndex" + "\t" + "text" + "\t" + "hypothesis" + "\t" + "lhsDrs" + "\t" + "rhsDrs")
 				//val Array(id, ruleLhs, ruleRhs, score, gs, /*phSim,*/ notSure,  inWN, extensionLevel, pairIndex, sen1, sen2, expLhs, expRhs, pContr, pNeutral, pEnt, pPred) = rule.split("\t")
 				val splits = rule.split("\t")
-				val pairIndex = splits(DistributionalRules.columnsMap("pairIndex"))
-            val lhsText =  splits(DistributionalRules.columnsMap("lhsText"))
-            val rhsText =  splits(DistributionalRules.columnsMap("rhsText"))
-            val w =  splits(DistributionalRules.columnsMap("w"))
+				val pairIndex = splits(DistributionalRules.columnsMap("pairIndex")).toInt
+				val lhsText =  splits(DistributionalRules.columnsMap("lhsText"))
+				val rhsText =  splits(DistributionalRules.columnsMap("rhsText"))
+				val w 		=  splits(DistributionalRules.columnsMap("w")).toDouble
+				val gsw 		=  splits(DistributionalRules.columnsMap("gsw")).toDouble
 				val lhsDrs =  splits(DistributionalRules.columnsMap("lhsDrs"))
-            val rhsDrs =  splits(DistributionalRules.columnsMap("rhsDrs"))
+				val rhsDrs =  splits(DistributionalRules.columnsMap("rhsDrs"))
+				
+				
+				//best hard
+				//best * weight 
+				//best (excluding neutral) * weight
 
-				if (Sts.pairIndex != pairIndex.toInt)
+				if (Sts.pairIndex != pairIndex)
 					None
 				else
 				{
@@ -74,7 +80,34 @@ class DistributionalRules extends Rules{
 					if (lhsExp.isEmpty || rhsExp.isEmpty)
 						throw new RuntimeException ("Unparsable rule");
 					//Some(id + "\t" + lhs + "\t" + rhs + "\t" + score + "\t" + RuleType.Implication)
-					val usedScore:Double = w.toDouble  //* pPred.toDouble
+					
+					var usedScore:Double = w //
+					if (Sts.opts.distRulesMode == "gs")
+						usedScore = gsw
+					else if (Sts.opts.distRulesMode != "hard")
+					{
+						val prob_con =  splits(DistributionalRules.columnsMap("prob_con")).toDouble
+						val prob_neu =  splits(DistributionalRules.columnsMap("prob_neu")).toDouble
+						val prob_ent =  splits(DistributionalRules.columnsMap("prob_ent")).toDouble
+						val prob_pred =  splits(DistributionalRules.columnsMap("prob_pred")).toDouble
+
+						if (Sts.opts.distRulesMode == "weight")
+							usedScore = usedScore * prob_pred
+						else if (Sts.opts.distRulesMode == "noNeu")
+						{
+							if (usedScore == 0) //neutral, find the next best
+							{
+								if (prob_ent > prob_con )
+									usedScore = 1 * prob_ent
+								else
+									usedScore = -1 * prob_con
+							}
+						}
+						else 
+							throw new RuntimeException("Invalid value" + Sts.opts.distRulesMode + " for parameter -distRulesMode"  )
+					}
+
+					
 					if (usedScore  < 0)
 						Some(lhsExp.get.asInstanceOf[BoxerDrs], rhsExp.get.asInstanceOf[BoxerDrs], -usedScore, RuleType.Opposite)
 					else

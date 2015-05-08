@@ -149,7 +149,7 @@ class SetGoalPTP(
       }
       
       goalExist._2 match {
-        case Some(g) => extraExpressions = HardWeightedExpression(g, Sts.opts.wFixCWA) :: extraExpressions;   //<<--- this is correct 
+        case Some(g) => extraExpressions = HardWeightedExpression(g, Sts.opts.wFixCWA /* * (if (Sts.opts.logOddsW) 1; else 6)*/ ) :: extraExpressions;   //<<--- this is correct 
         case _ =>
       }
 
@@ -172,7 +172,7 @@ class SetGoalPTP(
 		        case _ => false;
 		      }
 				textExist._2 match {
-					 case Some(g) => extraExpressions = HardWeightedExpression(g, Sts.opts.wFixCWA) :: extraExpressions;   //<<--- this is correct 
+					 case Some(g) => throw new RuntimeException("No weighted evidence from T") //extraExpressions = HardWeightedExpression(g, Sts.opts.wFixCWA) :: extraExpressions;   //<<--- this is correct 
 					 case _ =>
 				}
 

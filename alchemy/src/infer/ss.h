@@ -134,7 +134,7 @@ class SampleSearchProxy: public Inference
 
     char ** argv  = new char*[5];
     for(int i = 0;i<5;i++)
-	argv[i] = new char[50];
+	argv[i] = new char[200];
 
     strcpy (argv[0],"./ijgp-samplesearch");
     strcpy (argv[1],resFile.str().c_str());

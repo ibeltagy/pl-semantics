@@ -69,7 +69,8 @@ class SampleSearchTheoremProver
     if (LOG.isDebugEnabled) {
       LOG.debug("Query file:\n" + readLines(queryFile).mkString("\n").trim)
     }
-  	callAlchemy(mlnFile, evidenceFile, resultFile, args) match {
+  	
+    val result:Seq[Double] = callAlchemy(mlnFile, evidenceFile, resultFile, args) match {
   		case 0  =>
   		{
   			val results = readLines(resultFile).toList;
@@ -97,7 +98,17 @@ class SampleSearchTheoremProver
 	      case -3 => Seq(-3.0); 
 			case 7 => Seq(-7.0); //inconsistant MLN
 	      case x  => Seq(-1.0); 
-		}    
+		}
+    if (!LOG.isTraceEnabled())
+    {
+    	FileUtils.remove(mlnFile)
+    	FileUtils.remove(evidenceFile)
+    	FileUtils.remove(resultFile+".dnum.PR")
+    	FileUtils.remove(resultFile+".num.PR")
+    	FileUtils.remove(resultFile)
+    	FileUtils.remove(queryFile)
+    }
+    result
   }
 
   private def makeQueryFile(goals: List[WeightedFolEx]) = {

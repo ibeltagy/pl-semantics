@@ -30,6 +30,7 @@ import utcompling.Resources
 import utcompling.mlnsemantics.datagen.Lemmatize
 import dhg.depparse.DepParser
 import utcompling.mlnsemantics.rules.DiffRules
+import java.net.InetAddress
 
 /**
  *
@@ -65,6 +66,9 @@ object Sts {
   }
 
   def main(args: Array[String]) {
+  	val computername = InetAddress.getLocalHost().getHostName();
+  	System.out.println("host: " + computername);
+  	System.err.println("host: " + computername);
     val (newArgs, optPairs) =
       ("" +: args.toSeq).sliding2.foldLeft((Vector[String](), Vector[(String, String)]())) {
         case ((newArgs, opts), (a, b)) => a match {

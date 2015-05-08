@@ -16,12 +16,19 @@ import utcompling.mlnsemantics.inference.support.GoalExpression
 import org.joda.time.DateTimeUtils
 import org.joda.time.Duration
 import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
+import org.apache.commons.logging.LogFactory
+import java.util.concurrent.Executors
+import java.util.Arrays
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.Callable
+import java.lang.InterruptedException
 
 
 class NoExistProbabilisticTheoremProver(
   delegate: ProbabilisticTheoremProver[FolExpression])
   extends ProbabilisticTheoremProver[FolExpression] {
   	  
+  private val LOG = LogFactory.getLog(classOf[NoExistProbabilisticTheoremProver])
   object PermutTimesout extends Exception { }
   private var allConstants: Map[String, Set[String]] = null;
   private var allEvidence: List[FolExpression] = null;
@@ -44,6 +51,7 @@ class NoExistProbabilisticTheoremProver(
     allConstants = constants;
     allEvidence = evidence;
     val startTime = DateTimeUtils.currentTimeMillis()
+    LOG.trace("In NoExistProbabilisticTheoremProver")
     val res = try 
     {
 		  var constCount :Integer = 0;
@@ -108,7 +116,8 @@ class NoExistProbabilisticTheoremProver(
 	    
 	    if(Sts.opts.timeout.get > 0)
 	    {
-		    println("#Run infer for# " + Sts.opts.timeout.get)
+	    	LOG.trace("Out NoExistProbabilisticTheoremProver")
+	    	println("#Run infer for# " + Sts.opts.timeout.get)
 	        infRes = delegate.prove(
 		      constants,
 		      declarations,
@@ -142,6 +151,27 @@ class NoExistProbabilisticTheoremProver(
 
   def runWithTimeout[T](timeoutMs: Long, default: T)(f: => T) : T = {
     runWithTimeout(timeoutMs)(f).getOrElse(default)
+  }
+  
+  def runWithTimeoutJava(timeoutMs: Long)(f: => Any) : Int = 
+  {
+		val thread = new Thread 
+		{
+			override def run () = 
+			{
+				f
+			}
+		}
+
+		thread.start()
+		thread.join(timeoutMs)
+		if (thread.isAlive)
+		{
+			//println ("getIr timeoutd <<<<<<<<<<<")
+			thread.stop();
+			return -1;
+		}
+		else return 0
   }
     
   var varToReplace: List[String] = null;
@@ -411,7 +441,6 @@ class NoExistProbabilisticTheoremProver(
   			univConst = univConst ++ List(constList.toList)
   			maxUnivConstListLen = scala.math.max(maxUnivConstListLen, constList.size);
   		})
-  		//var newExp: FolExpression = null;
   		def genPermutes = {
   				permut(List.range (0, maxUnivConstListLen), univVars.size).foreach(c => { c.permutations.foreach(p=>{
   					object AllDone extends Exception { }
@@ -460,9 +489,13 @@ class NoExistProbabilisticTheoremProver(
   					}
   				})/*END P*/ }) /*END C*/ 
   		}
-  		val finish = runWithTimeout(5000, false) { genPermutes;  true }
-  		if(!finish)
-  			throw PermutTimesout
+  		//val finish = runWithTimeout(50000, false) { genPermutes;  true }
+  		//if(!finish)
+  		//	throw PermutTimesout
+  		//genPermutes
+  		val finish = runWithTimeoutJava(5000) { genPermutes; }
+  		if (finish < 0)
+ 			throw PermutTimesout  		
 
   		replaceWith = List();
   		varToReplace = List();

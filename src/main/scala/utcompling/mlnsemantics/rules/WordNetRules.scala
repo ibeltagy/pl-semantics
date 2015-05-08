@@ -23,7 +23,7 @@ class WordNetRules extends Rules {
   private val LOG = LogFactory.getLog(classOf[WordNetRules])
 
 
-  def getRules(text: BoxerExpression, hypothesis: BoxerExpression, declarations: Map[String, Seq[String]]): List[(BoxerDrs, BoxerDrs, Double, RuleType.Value)] =
+  def getRules(text: BoxerExpression, hypothesis: BoxerExpression, declarations: Map[(String, Int), Seq[String]]): List[(BoxerDrs, BoxerDrs, Double, RuleType.Value)] =
     {
 	  if(!Sts.opts.wordnet)
 	    return List();

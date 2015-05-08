@@ -7,7 +7,7 @@ CMD=$1
 gs=$2
 columns=$3
 #size=$4
-size=5000
+size=0
 #ens=$5
 count=0
 
@@ -15,6 +15,9 @@ if [ -z "$columns" ] || [ "$columns" -le "0" ]; then
 	columns=2 #sts has two columns, rte also two columns
 fi
 
+
+size=$(wc -l <  $gs)
+echo $size
 #case $CMD in
 #	classify)
 #   	let kbestSqr=kbest*kbest
@@ -85,10 +88,20 @@ case $size in
    paste -d , $files | tail -n 750  >> tmp-test.arff
 	testCV=" -t tmp-train.arff -T tmp-test.arff "
 	;;
+  "1367")
+   paste -d , $files | head -n 567  >> tmp-train.arff
+   paste -d , $files | tail -n 800  >> tmp-test.arff
+   testCV=" -t tmp-train.arff -T tmp-test.arff "
+   ;;
   "5000")
    paste -d , $files | head -n 5000  >> tmp-train.arff
    testCV=" -t tmp-train.arff "
 	;;
+  "4927")
+   paste -d , $files | head -n 4927  >> tmp-train.arff
+   testCV=" -t tmp-train.arff "
+   ;;
+
   *)
 	echo "wrong dataset size"
 	;;
@@ -111,7 +124,7 @@ esac
 #        result=$(java -Xmx1024m -cp $wekaJarPath weka.classifiers.meta.AdaBoostM1 -i $testCV  )
 			echo "java -Xmx1024m -cp $wekaJarPath:$libsvmPath weka.Run -no-scan -no-load  weka.classifiers.functions.LibSVM -i $testCV"        
 			java -Xmx1024m -cp $wekaJarPath:$libsvmPath weka.Run -no-scan -no-load  weka.classifiers.functions.LibSVM -i $testCV 
-			java -Xmx1024m -cp $wekaJarPath:$libsvmPath weka.Run -no-scan -no-load  weka.classifiers.functions.LibSVM -i -t tmp-train.arff -p 0 -no-cv
+			java -Xmx1024m -cp $wekaJarPath:$libsvmPath weka.Run -no-scan -no-load  weka.classifiers.functions.LibSVM -i $testCV -p 0 -no-cv
          ;;
       regress)  
 			java -Xmx1024m -cp $wekaJarPath weka.classifiers.meta.AdditiveRegression -i $testCV  -S 0.95 -I 10 -W weka.classifiers.rules.M5Rules
