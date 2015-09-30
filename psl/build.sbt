@@ -13,7 +13,8 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-	"edu.emory.mathcs" % "parallelcolt" % "0.9.4",
+	//"edu.emory.mathcs" % "parallelcolt" % "0.9.4",
+	//"colt" % "colt" % "1.2.0",
 	"edu.emory.mathcs" % "csparsej" % "1.0",
 	"edu.emory.mathcs" % "jplasma" % "1.2",
 	"org.ujmp" % "ujmp-complete" % "0.2.4",
