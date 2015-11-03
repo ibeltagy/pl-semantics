@@ -883,7 +883,10 @@ val matchAssumeRels = assumeRelsList.filter(rel =>
         case RuleType.BackwardImplication => BoxerImp(discId, List(), rhs, lhs) 
         case RuleType.Implication => BoxerImp(discId, List(), lhs, rhs)
         case RuleType.DoubleImplication => BoxerEqv(discId, List(), lhs, rhs)
-        case RuleType.Opposite => BoxerEqv(discId, List(), lhs, BoxerNot(discId, List(), rhs))
+        case RuleType.Opposite => if (Sts.opts.softLogicTool == "psl")
+												return (None, Set())
+											else
+												 BoxerEqv(discId, List(), lhs, BoxerNot(discId, List(), rhs))
       }
       return (Some(SoftWeightedExpression(unweightedRule, score)), extraConst)
     }

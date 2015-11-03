@@ -12,8 +12,8 @@ object Resources {
   var alchemy = "alchemy/bin";
   var polarityLexicon = "resources/polarity-lexicon/polarity_lexicon_expanded.txt";
   var wordnet = "resources/wordnet";
-  var sureRules = "resources/sure" //manually annotated rules from the SICK-RTE dataset
-  var trueRules = "resources/true" //all Entailing rules in the traning set of the SICK-RTE dataset. 
+  var sureRules = "resources/sureRules" //manually annotated rules from the SICK-RTE dataset
+  var trueRules = "resources/trueRules" //all Entailing rules in the traning set of the SICK-RTE dataset. 
 
   
   def setVar(varName: String, varValue: String) = 
