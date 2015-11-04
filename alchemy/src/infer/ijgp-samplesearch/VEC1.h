@@ -1,5 +1,5 @@
 /*
- * VEC.h
+ * VEC1.h
  *
  *  Created on: Jun 29, 2010
  *      Author: Vibhav Gogate

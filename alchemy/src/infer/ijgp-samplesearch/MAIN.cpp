@@ -10,7 +10,7 @@
 #include "SampleSearch.h"
 #include "Solver.h"
 #include "Parameters.h"
-#include "VEC.h"
+#include "VEC1.h"
 
 
 namespace ss{

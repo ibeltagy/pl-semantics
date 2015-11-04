@@ -2139,7 +2139,7 @@ depend:
  ../src/infer/ijgp-samplesearch/SampleSearch.h \
  ../src/infer/ijgp-samplesearch/Solver.h \
  ../src/infer/ijgp-samplesearch/Parameters.h \
- ../src/infer/ijgp-samplesearch/VEC.h
+ ../src/infer/ijgp-samplesearch/VEC1.h
 
 ../bin/obj/ORStore.o: ../src/infer/ijgp-samplesearch/ORStore.cpp \
  ../src/infer/ijgp-samplesearch/ORStore.h \
