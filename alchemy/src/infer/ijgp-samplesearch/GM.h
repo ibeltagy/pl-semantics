@@ -10,7 +10,7 @@
 
 using namespace std;
 #include "Variable.h"
-#include "Function.h"
+#include "FunctionSS.h"
 #include "Heap.h"
 #include "Alg.h"
 #include "SolverTypes.h"

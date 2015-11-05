@@ -1,6 +1,7 @@
+#SHELL=/bin/bash #for MAC, uncomment this line
 INLINE_LIMIT=-finline-limit=100000
 #INLINE_WARN=-Winline
-STATIC=-static
+STATIC=-static   #for MAC, replace "static" with "dynamic"
 
 ######### Profile
 #CLFLAGS=-pg -g $(STATIC) -DNDEBUG $(INLINE_WARN) $(INLINE_LIMIT) 
@@ -15,11 +16,11 @@ STATIC=-static
 CLFLAGS=-O3 -DNDEBUG $(STATIC) $(INLINE_WARN) $(INLINE_LIMIT)
 
 ########## Debug
-CLFLAGS=-g -rdynamic
+CLFLAGS=-g #-rdynamic
 
 BASEDIR=..
 
-GPP=g++
+GPP=g++          #for MAC, install gcc49, then replace g++ with g++-4.9
 FLEX=flex
 BISON=bison
 
@@ -119,11 +120,11 @@ OBJS=$(OBJDIR)/arguments.o $(OBJDIR)/powerset.o \
 	$(OBJDIR)/lvrptptreesampling.o \
 	$(OBJDIR)/lvrptpsearchtree.o \
 	$(OBJDIR)/BE.o \
-	$(OBJDIR)/Clause.o \
+	$(OBJDIR)/ClauseSS.o \
 	$(OBJDIR)/ClauseList.o \
 	$(OBJDIR)/DRC.o \
 	$(OBJDIR)/Debug.o \
-	$(OBJDIR)/Function.o \
+	$(OBJDIR)/FunctionSS.o \
 	$(OBJDIR)/GM.o \
 	$(OBJDIR)/Graph.o \
 	$(OBJDIR)/IJGPSamplingHelper.o \
@@ -133,7 +134,7 @@ OBJS=$(OBJDIR)/arguments.o $(OBJDIR)/powerset.o \
 	$(OBJDIR)/LogFunction.o \
 	$(OBJDIR)/MAIN.o \
 	$(OBJDIR)/ORStore.o \
-	$(OBJDIR)/Random.o \
+	$(OBJDIR)/RandomSS.o \
 	$(OBJDIR)/SATInstance.o \
 	$(OBJDIR)/SATPreprocessor.o \
 	$(OBJDIR)/SATSolver.o \
@@ -200,11 +201,11 @@ CPPFILES=$(UTIL)/arguments.cpp $(UTIL)/powerset.cpp $(UTIL)/random.cpp\
 	$(LIFTEDINFERTEST)/testmodelcount.cpp \
 	$(LIFTEDINFERTEST)/testformulainfer.cpp \
 	$(SAMPLESEARCH)/BE.cpp \
-	$(SAMPLESEARCH)/Clause.cpp \
+	$(SAMPLESEARCH)/ClauseSS.cpp \
 	$(SAMPLESEARCH)/ClauseList.cpp \
 	$(SAMPLESEARCH)/DRC.cpp \
 	$(SAMPLESEARCH)/Debug.cpp \
-	$(SAMPLESEARCH)/Function.cpp \
+	$(SAMPLESEARCH)/FunctionSS.cpp \
 	$(SAMPLESEARCH)/GM.cpp \
 	$(SAMPLESEARCH)/Graph.cpp \
 	$(SAMPLESEARCH)/IJGPSamplingHelper.cpp \
@@ -214,7 +215,7 @@ CPPFILES=$(UTIL)/arguments.cpp $(UTIL)/powerset.cpp $(UTIL)/random.cpp\
 	$(SAMPLESEARCH)/LogFunction.cpp \
 	$(SAMPLESEARCH)/MAIN.cpp \
 	$(SAMPLESEARCH)/ORStore.cpp \
-	$(SAMPLESEARCH)/Random.cpp \
+	$(SAMPLESEARCH)/RandomSS.cpp \
 	$(SAMPLESEARCH)/SATInstance.cpp \
 	$(SAMPLESEARCH)/SATPreprocessor.cpp \
 	$(SAMPLESEARCH)/SATSolver.cpp \
@@ -438,16 +439,16 @@ $(OBJDIR)/testformulainfer.o:
 
 $(OBJDIR)/BE.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/BE.o -c $(SAMPLESEARCH)/BE.cpp
-$(OBJDIR)/Clause.o:
-	$(GPP) $(CFLAGS) -o $(OBJDIR)/Clause.o -c $(SAMPLESEARCH)/Clause.cpp
+$(OBJDIR)/ClauseSS.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/ClauseSS.o -c $(SAMPLESEARCH)/ClauseSS.cpp
 $(OBJDIR)/ClauseList.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/ClauseList.o -c $(SAMPLESEARCH)/ClauseList.cpp
 $(OBJDIR)/DRC.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/DRC.o -c $(SAMPLESEARCH)/DRC.cpp
 $(OBJDIR)/Debug.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/Debug.o -c $(SAMPLESEARCH)/Debug.cpp
-$(OBJDIR)/Function.o:
-	$(GPP) $(CFLAGS) -o $(OBJDIR)/Function.o -c $(SAMPLESEARCH)/Function.cpp
+$(OBJDIR)/FunctionSS.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/FunctionSS.o -c $(SAMPLESEARCH)/FunctionSS.cpp
 $(OBJDIR)/GM.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/GM.o -c $(SAMPLESEARCH)/GM.cpp
 $(OBJDIR)/Graph.o:
@@ -466,8 +467,8 @@ $(OBJDIR)/MAIN.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/MAIN.o -c $(SAMPLESEARCH)/MAIN.cpp
 $(OBJDIR)/ORStore.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/ORStore.o -c $(SAMPLESEARCH)/ORStore.cpp
-$(OBJDIR)/Random.o:
-	$(GPP) $(CFLAGS) -o $(OBJDIR)/Random.o -c $(SAMPLESEARCH)/Random.cpp
+$(OBJDIR)/RandomSS.o:
+	$(GPP) $(CFLAGS) -o $(OBJDIR)/RandomSS.o -c $(SAMPLESEARCH)/RandomSS.cpp
 $(OBJDIR)/SATInstance.o:
 	$(GPP) $(CFLAGS) -o $(OBJDIR)/SATInstance.o -c $(SAMPLESEARCH)/SATInstance.cpp
 $(OBJDIR)/SATPreprocessor.o:
@@ -516,7 +517,7 @@ depend:
 
 ############ Everything below here is subject to SUDDEN DEATH #####
 #
-# dependencies generated on:  Thu Jan 30 00:57:34 CST 2014
+# dependencies generated on:  Thu Nov 5 11:38:59 CST 2015
 #
 ../bin/obj/arguments.o: ../src/util/arguments.cpp ../src/util/arguments.h
 
@@ -1767,7 +1768,7 @@ depend:
  ../src/infer/ijgp-samplesearch/Double.h \
  ../src/infer/ijgp-samplesearch/Variable.h \
  ../src/infer/ijgp-samplesearch/Util.h \
- ../src/infer/ijgp-samplesearch/Function.h \
+ ../src/infer/ijgp-samplesearch/FunctionSS.h \
  ../src/infer/ijgp-samplesearch/Heap.h \
  ../src/infer/ijgp-samplesearch/Vec.h \
  ../src/infer/ijgp-samplesearch/Alg.h \
@@ -1796,8 +1797,8 @@ depend:
  ../src/infer/ijgp-samplesearch/myRandom.h \
  ../src/infer/ijgp-samplesearch/randomc.h
 
-../bin/obj/Clause.o: ../src/infer/ijgp-samplesearch/Clause.cpp \
- ../src/infer/ijgp-samplesearch/Clause.h \
+../bin/obj/ClauseSS.o: ../src/infer/ijgp-samplesearch/ClauseSS.cpp \
+ ../src/infer/ijgp-samplesearch/ClauseSS.h \
  ../src/infer/ijgp-samplesearch/LightweightTypes.h \
  ../src/infer/ijgp-samplesearch/Debug.h \
  ../src/infer/ijgp-samplesearch/VariableSet.h \
@@ -1807,7 +1808,7 @@ depend:
  ../src/infer/ijgp-samplesearch/ClauseList.h \
  ../src/infer/ijgp-samplesearch/LightweightTypes.h \
  ../src/infer/ijgp-samplesearch/Debug.h \
- ../src/infer/ijgp-samplesearch/Clause.h \
+ ../src/infer/ijgp-samplesearch/ClauseSS.h \
  ../src/infer/ijgp-samplesearch/VariableSet.h \
  ../src/infer/ijgp-samplesearch/VariableList.h
 
@@ -1816,7 +1817,7 @@ depend:
  ../src/infer/ijgp-samplesearch/Double.h \
  ../src/infer/ijgp-samplesearch/Variable.h \
  ../src/infer/ijgp-samplesearch/Util.h \
- ../src/infer/ijgp-samplesearch/Function.h \
+ ../src/infer/ijgp-samplesearch/FunctionSS.h \
  ../src/infer/ijgp-samplesearch/Heap.h \
  ../src/infer/ijgp-samplesearch/Vec.h \
  ../src/infer/ijgp-samplesearch/Alg.h \
@@ -1845,8 +1846,8 @@ depend:
 ../bin/obj/Debug.o: ../src/infer/ijgp-samplesearch/Debug.cpp \
  ../src/infer/ijgp-samplesearch/Debug.h
 
-../bin/obj/Function.o: ../src/infer/ijgp-samplesearch/Function.cpp \
- ../src/infer/ijgp-samplesearch/Function.h \
+../bin/obj/FunctionSS.o: ../src/infer/ijgp-samplesearch/FunctionSS.cpp \
+ ../src/infer/ijgp-samplesearch/FunctionSS.h \
  ../src/infer/ijgp-samplesearch/Variable.h \
  ../src/infer/ijgp-samplesearch/Util.h \
  ../src/infer/ijgp-samplesearch/Double.h \
@@ -1862,7 +1863,7 @@ depend:
  ../src/infer/ijgp-samplesearch/Double.h \
  ../src/infer/ijgp-samplesearch/Variable.h \
  ../src/infer/ijgp-samplesearch/Util.h \
- ../src/infer/ijgp-samplesearch/Function.h \
+ ../src/infer/ijgp-samplesearch/FunctionSS.h \
  ../src/infer/ijgp-samplesearch/Heap.h \
  ../src/infer/ijgp-samplesearch/Vec.h \
  ../src/infer/ijgp-samplesearch/Alg.h \
@@ -1898,10 +1899,10 @@ depend:
  ../src/infer/ijgp-samplesearch/myRandom.h \
  ../src/infer/ijgp-samplesearch/randomc.h \
  ../src/infer/ijgp-samplesearch/Timer.h \
- ../src/infer/ijgp-samplesearch/Clause.h \
+ ../src/infer/ijgp-samplesearch/ClauseSS.h \
  ../src/infer/ijgp-samplesearch/VariableSet.h \
  ../src/infer/ijgp-samplesearch/VariableList.h \
- ../src/infer/ijgp-samplesearch/Random.h
+ ../src/infer/ijgp-samplesearch/RandomSS.h
 
 ../bin/obj/Graph.o: ../src/infer/ijgp-samplesearch/Graph.cpp \
  ../src/infer/ijgp-samplesearch/Graph.h \
@@ -1909,7 +1910,7 @@ depend:
  ../src/infer/ijgp-samplesearch/Double.h \
  ../src/infer/ijgp-samplesearch/Variable.h \
  ../src/infer/ijgp-samplesearch/Util.h \
- ../src/infer/ijgp-samplesearch/Function.h \
+ ../src/infer/ijgp-samplesearch/FunctionSS.h \
  ../src/infer/ijgp-samplesearch/Heap.h \
  ../src/infer/ijgp-samplesearch/Vec.h \
  ../src/infer/ijgp-samplesearch/Alg.h \
@@ -1943,7 +1944,7 @@ depend:
  ../src/infer/ijgp-samplesearch/Double.h \
  ../src/infer/ijgp-samplesearch/Variable.h \
  ../src/infer/ijgp-samplesearch/Util.h \
- ../src/infer/ijgp-samplesearch/Function.h \
+ ../src/infer/ijgp-samplesearch/FunctionSS.h \
  ../src/infer/ijgp-samplesearch/Heap.h \
  ../src/infer/ijgp-samplesearch/Vec.h \
  ../src/infer/ijgp-samplesearch/Alg.h \
@@ -1982,7 +1983,7 @@ depend:
  ../src/infer/ijgp-samplesearch/Double.h \
  ../src/infer/ijgp-samplesearch/Variable.h \
  ../src/infer/ijgp-samplesearch/Util.h \
- ../src/infer/ijgp-samplesearch/Function.h \
+ ../src/infer/ijgp-samplesearch/FunctionSS.h \
  ../src/infer/ijgp-samplesearch/Heap.h \
  ../src/infer/ijgp-samplesearch/Vec.h \
  ../src/infer/ijgp-samplesearch/Alg.h \
@@ -2018,7 +2019,7 @@ depend:
  ../src/infer/ijgp-samplesearch/Double.h \
  ../src/infer/ijgp-samplesearch/Variable.h \
  ../src/infer/ijgp-samplesearch/Util.h \
- ../src/infer/ijgp-samplesearch/Function.h \
+ ../src/infer/ijgp-samplesearch/FunctionSS.h \
  ../src/infer/ijgp-samplesearch/Heap.h \
  ../src/infer/ijgp-samplesearch/Vec.h \
  ../src/infer/ijgp-samplesearch/Alg.h \
@@ -2054,7 +2055,7 @@ depend:
  ../src/infer/ijgp-samplesearch/Double.h \
  ../src/infer/ijgp-samplesearch/Variable.h \
  ../src/infer/ijgp-samplesearch/Util.h \
- ../src/infer/ijgp-samplesearch/Function.h \
+ ../src/infer/ijgp-samplesearch/FunctionSS.h \
  ../src/infer/ijgp-samplesearch/Heap.h \
  ../src/infer/ijgp-samplesearch/Vec.h \
  ../src/infer/ijgp-samplesearch/Alg.h \
@@ -2089,7 +2090,7 @@ depend:
  ../src/infer/ijgp-samplesearch/Variable.h \
  ../src/infer/ijgp-samplesearch/Util.h \
  ../src/infer/ijgp-samplesearch/Double.h \
- ../src/infer/ijgp-samplesearch/Function.h \
+ ../src/infer/ijgp-samplesearch/FunctionSS.h \
  ../src/infer/ijgp-samplesearch/Heap.h \
  ../src/infer/ijgp-samplesearch/Vec.h \
  ../src/infer/ijgp-samplesearch/Alg.h \
@@ -2117,7 +2118,7 @@ depend:
  ../src/infer/ijgp-samplesearch/Double.h \
  ../src/infer/ijgp-samplesearch/Variable.h \
  ../src/infer/ijgp-samplesearch/Util.h \
- ../src/infer/ijgp-samplesearch/Function.h \
+ ../src/infer/ijgp-samplesearch/FunctionSS.h \
  ../src/infer/ijgp-samplesearch/Heap.h \
  ../src/infer/ijgp-samplesearch/Vec.h \
  ../src/infer/ijgp-samplesearch/Alg.h \
@@ -2147,7 +2148,7 @@ depend:
  ../src/infer/ijgp-samplesearch/Double.h \
  ../src/infer/ijgp-samplesearch/Variable.h \
  ../src/infer/ijgp-samplesearch/Util.h \
- ../src/infer/ijgp-samplesearch/Function.h \
+ ../src/infer/ijgp-samplesearch/FunctionSS.h \
  ../src/infer/ijgp-samplesearch/Heap.h \
  ../src/infer/ijgp-samplesearch/Vec.h \
  ../src/infer/ijgp-samplesearch/Alg.h \
@@ -2173,25 +2174,25 @@ depend:
  ../src/util/random.h ../src/logic/clausehelper.h \
  ../src/logic/mlnhelper.h ../src/infer/groundpredicate.h
 
-../bin/obj/Random.o: ../src/infer/ijgp-samplesearch/Random.cpp \
- ../src/infer/ijgp-samplesearch/Random.h \
+../bin/obj/RandomSS.o: ../src/infer/ijgp-samplesearch/RandomSS.cpp \
+ ../src/infer/ijgp-samplesearch/RandomSS.h \
  ../src/infer/ijgp-samplesearch/LightweightTypes.h \
  ../src/infer/ijgp-samplesearch/Debug.h
 
 ../bin/obj/SATInstance.o: ../src/infer/ijgp-samplesearch/SATInstance.cpp \
- ../src/infer/ijgp-samplesearch/Clause.h \
+ ../src/infer/ijgp-samplesearch/ClauseSS.h \
  ../src/infer/ijgp-samplesearch/LightweightTypes.h \
  ../src/infer/ijgp-samplesearch/Debug.h \
  ../src/infer/ijgp-samplesearch/VariableSet.h \
  ../src/infer/ijgp-samplesearch/VariableList.h \
- ../src/infer/ijgp-samplesearch/Random.h \
+ ../src/infer/ijgp-samplesearch/RandomSS.h \
  ../src/infer/ijgp-samplesearch/SATInstance.h \
  ../src/infer/ijgp-samplesearch/ClauseList.h \
  ../src/infer/ijgp-samplesearch/SATSolver.h \
  ../src/infer/ijgp-samplesearch/BigNum.h
 
 ../bin/obj/SATPreprocessor.o: ../src/infer/ijgp-samplesearch/SATPreprocessor.cpp \
- ../src/infer/ijgp-samplesearch/Clause.h \
+ ../src/infer/ijgp-samplesearch/ClauseSS.h \
  ../src/infer/ijgp-samplesearch/LightweightTypes.h \
  ../src/infer/ijgp-samplesearch/Debug.h \
  ../src/infer/ijgp-samplesearch/VariableSet.h \
@@ -2202,12 +2203,12 @@ depend:
  ../src/infer/ijgp-samplesearch/SATInstance.h
 
 ../bin/obj/SATSolver.o: ../src/infer/ijgp-samplesearch/SATSolver.cpp \
- ../src/infer/ijgp-samplesearch/Clause.h \
+ ../src/infer/ijgp-samplesearch/ClauseSS.h \
  ../src/infer/ijgp-samplesearch/LightweightTypes.h \
  ../src/infer/ijgp-samplesearch/Debug.h \
  ../src/infer/ijgp-samplesearch/VariableSet.h \
  ../src/infer/ijgp-samplesearch/VariableList.h \
- ../src/infer/ijgp-samplesearch/Random.h \
+ ../src/infer/ijgp-samplesearch/RandomSS.h \
  ../src/infer/ijgp-samplesearch/SATInstance.h \
  ../src/infer/ijgp-samplesearch/ClauseList.h \
  ../src/infer/ijgp-samplesearch/SATSolver.h \
@@ -2215,7 +2216,7 @@ depend:
 
 ../bin/obj/SF.o: ../src/infer/ijgp-samplesearch/SF.cpp \
  ../src/infer/ijgp-samplesearch/SF.h ../src/infer/ijgp-samplesearch/CPT.h \
- ../src/infer/ijgp-samplesearch/Function.h \
+ ../src/infer/ijgp-samplesearch/FunctionSS.h \
  ../src/infer/ijgp-samplesearch/Variable.h \
  ../src/infer/ijgp-samplesearch/Util.h \
  ../src/infer/ijgp-samplesearch/Double.h \
@@ -2230,7 +2231,7 @@ depend:
  ../src/infer/ijgp-samplesearch/ClauseList.h \
  ../src/infer/ijgp-samplesearch/LightweightTypes.h \
  ../src/infer/ijgp-samplesearch/Debug.h \
- ../src/infer/ijgp-samplesearch/Clause.h \
+ ../src/infer/ijgp-samplesearch/ClauseSS.h \
  ../src/infer/ijgp-samplesearch/VariableSet.h \
  ../src/infer/ijgp-samplesearch/VariableList.h \
  ../src/infer/ijgp-samplesearch/SATInstance.h \
@@ -2241,7 +2242,7 @@ depend:
  ../src/infer/ijgp-samplesearch/Double.h \
  ../src/infer/ijgp-samplesearch/Variable.h \
  ../src/infer/ijgp-samplesearch/Util.h \
- ../src/infer/ijgp-samplesearch/Function.h \
+ ../src/infer/ijgp-samplesearch/FunctionSS.h \
  ../src/infer/ijgp-samplesearch/Heap.h \
  ../src/infer/ijgp-samplesearch/Vec.h \
  ../src/infer/ijgp-samplesearch/Alg.h \
@@ -2287,7 +2288,7 @@ depend:
  ../src/infer/ijgp-samplesearch/Double.h \
  ../src/infer/ijgp-samplesearch/Variable.h \
  ../src/infer/ijgp-samplesearch/Util.h \
- ../src/infer/ijgp-samplesearch/Function.h \
+ ../src/infer/ijgp-samplesearch/FunctionSS.h \
  ../src/infer/ijgp-samplesearch/SolverTypes.h \
  ../src/infer/ijgp-samplesearch/SATInstance.h \
  ../src/infer/ijgp-samplesearch/ClauseList.h \

@@ -1,4 +1,4 @@
-#include "Function.h"
+#include "FunctionSS.h"
 #include "myRandom.h"
 
 #include <cassert>
@@ -288,6 +288,7 @@ cout << "in dummy_product 2" << endl;
 #else
 	assertStacktrace(false && "Function::dummy_product is not implemented yet");
 #endif
+
 }
 
 

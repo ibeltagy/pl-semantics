@@ -5,7 +5,7 @@
 
 //////////////
 // Includes
-#include "Clause.h"
+#include "ClauseSS.h"
 #include "Debug.h"
 #include "SATSolver.h"
 #include "SATInstance.h"

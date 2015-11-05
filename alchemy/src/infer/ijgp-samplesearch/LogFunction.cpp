@@ -1,5 +1,5 @@
 #include "LogFunction.h"
-#include "Function.h"
+
 namespace ss{
 void LogFunction::print(ostream& out)
 {

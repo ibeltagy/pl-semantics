@@ -2,7 +2,7 @@
 #define SS_CPT_H_
 
 #include <vector>
-#include "Function.h"
+#include "FunctionSS.h"
 #include <cassert>
 
 using namespace std;

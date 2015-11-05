@@ -1,9 +1,9 @@
-/////////////////
+//////////////////
 // OS Includes
 
 //////////////
 // Includes
-#include "Clause.h"
+#include "ClauseSS.h"
 #include "Debug.h"
 
 #include <iostream>
@@ -74,6 +74,7 @@ boolean RClause::bIsEqual(const RClause& xWithMe_) const
 
 void RClause::vSortVariableList()
 {
+
   // Simple bubble sort to sort the (non-perma) variables in lexical order.
   //return; // temp
   for (int i=0; i<_iPermaCount-1; i++) {
@@ -86,4 +87,5 @@ void RClause::vSortVariableList()
     }
   }
 }
+
 }

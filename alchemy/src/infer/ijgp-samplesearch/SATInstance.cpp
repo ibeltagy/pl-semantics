@@ -5,8 +5,8 @@ using namespace std;
 
 //////////////
 // Includes
-#include "Clause.h"
-#include "Random.h"
+#include "ClauseSS.h"
+#include "RandomSS.h"
 #include "SATInstance.h"
 #include "SATSolver.h"
 

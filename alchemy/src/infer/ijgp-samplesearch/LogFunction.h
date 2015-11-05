@@ -5,7 +5,7 @@
 #include <cmath>
 #include "Variable.h"
 #include "Double.h"
-#include "Function.h"
+#include "FunctionSS.h"
 
 using namespace std;
 

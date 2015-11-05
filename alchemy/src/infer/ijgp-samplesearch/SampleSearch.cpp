@@ -1,5 +1,5 @@
 #include "ClauseList.h"
-#include "Clause.h"
+#include "ClauseSS.h"
 #include "SATInstance.h"
 #include "BigNum.h"
 #include "SATSolver.h"

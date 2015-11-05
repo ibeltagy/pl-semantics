@@ -5,8 +5,8 @@
 #include <set>
 #include <queue>
 #include "SampleSearch.h"
-#include "Clause.h"
-#include "Random.h"
+#include "ClauseSS.h"
+#include "RandomSS.h"
 #include "SATInstance.h"
 
 namespace ss{
