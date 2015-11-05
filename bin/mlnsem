@@ -13,14 +13,19 @@ RES="resources"
 CMD=$1  #install, compile, boxer, run, box, lem, vs, gen, all, vecadd, vecmull, run-condor
 shift
 case $CMD in
+  download)
+	wget -O lib/ws4j-1.0.1.jar https://ws4j.googlecode.com/files/ws4j-1.0.1.jar	
+	mkdir candc/models
+	echo "Please download C&C model manually from http://svn.ask.it.usyd.edu.au/trac/candc/wiki/Download and save it to candc/models."
+	;;
   install)
-   ln -s /u/beltagy/workspace/deft/mln-semantics/lib/ws4j-1.0.1.jar lib/ws4j-1.0.1.jar
-   ln -s /u/beltagy/workspace/deft/mln-semantics/candc/models candc/models
-   ln -s /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt resources/full.vs
-   ln -s /u/dhg/Corpora/wordnet-3.0/ resources/wordnet
-   ln -s /u/beltagy/workspace/deft/mln-semantics/resources/englishPCFG.ser.gz resources/englishPCFG.ser.gz
-   ln -s /u/beltagy/workspace/deft/mln-semantics/resources/rules resources/rules
-   ln -s /u/beltagy/workspace/deft/mln-semantics/resources/phrase-vectors resources/phrase-vectors
+   #ln -s /u/beltagy/workspace/deft/mln-semantics/lib/ws4j-1.0.1.jar lib/ws4j-1.0.1.jar
+   #ln -s /u/beltagy/workspace/deft/mln-semantics/candc/models candc/models
+   #ln -s /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt resources/full.vs
+   #ln -s /u/dhg/Corpora/wordnet-3.0/ resources/wordnet
+   #ln -s /u/beltagy/workspace/deft/mln-semantics/resources/englishPCFG.ser.gz resources/englishPCFG.ser.gz
+   #ln -s /u/beltagy/workspace/deft/mln-semantics/resources/rules resources/rules
+   #ln -s /u/beltagy/workspace/deft/mln-semantics/resources/phrase-vectors resources/phrase-vectors
 	make -C candc/
 	make -C candc/ bin/boxer
 	git checkout candc/src/lib/version.cc

@@ -32,3 +32,4 @@ easyccg/lib/
 resources/*.idx/
 resources/ppdb/*.idx
 results
+.DS_Store

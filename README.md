@@ -7,6 +7,8 @@ Set up workspace
     ~$ git clone git@github.com:islambeltagy/pl-semantics.git
     ~$ cd pl-semantics
 
+    ~/pl-semantics$ bin/mlnsem download
+
     ~/pl-semantics$ bin/mlnsem install
 
     ~/pl-semantics$ bin/mlnsem compile
@@ -15,6 +17,24 @@ Set up workspace
     ~/pl-semantics$ bin/mlnsem run prb		#Run the toy examples of prb
 
 NOTE: You will need to downgrade "bison" to version 2.7 for Alchmey to compile
+
+
+Running on MAC
+----------------
+
+- Install wget
+
+- Use Makefile.macosx for candc (create a symbolic link)
+
+- Install prolog brew install homebrew/x11/swi-prolog
+
+- To compile alchemy, you need gcc4.9. Install it using brew install homebrew/x11/gcc49
+
+- Alchemy also needs Bison 2.3 (install it), Flex 2.5.4 (already installed) and Perl 5.8.8 (already installed)
+
+- Last step to compile alchemy is to edit alchemy/src/makefile. You will find few comments in the file showing how to edit it. 
+
+- Use Java 7. If you want to use an earlier version of Java, you need to update the version of scala used. 
 
 Running our system on different datasets
 ----------------------

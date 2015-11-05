@@ -15,6 +15,7 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
+  "xalan" % "xalan" % "2.7.2",
   "edu.stanford.nlp" % "stanford-corenlp" % "1.3.4",
   "commons-logging" % "commons-logging" % "1.1.1",
 	"com.googlecode.aima-java" % "aima-core" % "0.10.5",
