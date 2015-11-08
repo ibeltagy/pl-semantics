@@ -7,11 +7,12 @@ for d in 0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
 #for d in 6  7  8  9  a  b  c  d  e
 do
 	#find  $base/splits/$d |  tail -n +2  > tmp/$d
-	echo "getQ from  $base/parsed/$d to $base/q/$d "
+	#echo "getQ from  $base/parsed/$d to $base/q/$d "
 	#stanford-corenlp-full-2015-04-20/corenlp.sh -annotators tokenize,ssplit,pos,lemma,ner,parse,dcoref  -outputDirectory $base/parsed/$d  -filelist tmp/$d
 	#/usr/lib/jvm/java-8-oracle/jre/bin/java   -mx3g -cp "/scratch/cluster/beltagy/qa/stanford-corenlp-full-2015-04-20/*" edu.stanford.nlp.pipeline.StanfordCoreNLP
 	#~/workspace/deft/mln-semantics/bin/condorizer.py stanford-corenlp-full-2015-04-20/corenlp.sh -annotators tokenize,ssplit,pos,lemma,ner,parse,dcoref  -outputDirectory $base/parsed/$d  -filelist tmp/$d   tmp/condor.$d
-	~/workspace/deft/mln-semantics/bin/condorizer.py  /usr/local/bin/python qa/3-getQ.py $base/parsed/$d $base/q/$d
+	#~/workspace/deft/mln-semantics/bin/condorizer.py  /usr/local/bin/python qa/3-getQ.py $base/parsed/$d $base/q/$d
+	python qa/4-filterQA.py  $base/pages-simple/q/$d.out  $base/pagesEn/splits/$d/
 done
 
 #while read p; do

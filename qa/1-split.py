@@ -11,6 +11,9 @@ import os
 #pdb.set_trace()
 parser = argparse.ArgumentParser()
 
+#cat /scratch/cluster/beltagy/qa/pagesEn/filtered  | python qa/1-split.py /scratch/cluster/beltagy/qa/pagesEn/splits
+
+
 #parser.add_argument("mode", choices=[TRAIN, TEST, DEV], default=TEST, help="mode: train or test on the test set or test on the dev set")
 #parser.add_argument("docsFile", help="text file of a list of all docs")
 parser.add_argument("outDir", help="output directory (will be overwritten)")

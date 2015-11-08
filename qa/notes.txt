@@ -1,0 +1,107 @@
+Note about coref: 
+The entity could be named differently in the Q and the Context. A coref is needed in the Context document, then accept the answer if the expected entity name is one of the possible names of the selected entity. 
+Expected problem: it is easy to cheat here by setting all entities in the context document to be corefering and all of them get the same name. This is a valid critisizm to the method mentioned above. 
+
+Datasets: 
+
+Mike Lewis: Relations, single distributional rule between lexical items
+
+My constructs: Like Mike Lewis unless I make the sentences more complex
+
+MC-Test: answers are not named entities. In many cases it is a sentence. Some questions are Why ? When ? How long ? How ? non-NPs as answers of what, e.g. 
+1: multiple: What kind of exercises did Sophie do?
+ A) Jumping jacks and running.
+ B) Stretching when she got out of bed.
+ C) Sophie didn't exercise because she didn't have time.
+ D) Sitting in front of her television and playing games.
+"What" questions are 1416/2640, 538 named entities and the rest are long sentences.  
+
+Facebook: The 20 tasks are not about linguistic reasoning. 
+SimpleQuestions: Questions querying freebase entries, where a query is a rephrasing of relation(entity, X), where the type of X sometimes is given in the question.  
+
+DeepMind: Looks good for us. We are going to need weird 
+
+
+---
+selected examples: 
+Gifford, played for, New York Giants -> Gifford spent his entire NFL career with the New York Giants,
+McNally, lives #in, United States -> McNally now resides in the United States with her husband Cory Gibbs.
+Ural Mountains, traditional dividing-line #between, Europe -> Younger mobile belts (such as the Ural Mountains and Himalayas) mark the boundaries between these regions and the rest of Eurasia.
+==================
+Weird questions generated: 
+No === SubjFoundObjFoundONESEN, Albin Planinc (also spelled Planinec) (18 April 1944 – 20 December 2008) was a Slovenia, Q: Albin Planinc, chess Grandmaster #from, Slovenia , C: Albin Planinc.
+
+
+==================
+SubjFoundObjFound: 
+
+No === SubjFoundObjFound, Q: Lebanon, wanted #including, Egypt , C: Bahrain International Circuit.
+No === SubjFoundObjFound, Q: English Army, active #under, Oliver Cromwell , C: British Army.
+2 sent + Coref + paraphrase === SubjFoundObjFound, Q: Barbados, island country #in, Caribbean Sea , C: Barbados.
+Trivial === SubjFoundObjFound, Q: Queen, opera #by, Tchaikovsky , C: The Queen of Spades (opera).
+Coref === SubjFoundObjFound, Q: Barthelmess, married, Mary Hay , C: Richard Barthelmess.
+America = USA === SubjFoundObjFound, Q: Bluff City, city #of, America , C: Bluff City, Arkansas.
+Coref + European Championship = Europe === SubjFoundObjFound, Q: Alonso, won #at, Europe , C: Fernando Alonso.
+No === SubjFoundObjFound, Q: Empress Matilda, second child #of, Scotland , C: Empress Matilda.
+Coref + paraphrase === SubjFoundObjFound, Q: Highton, played #for, Providence Reds , C: Hec Highton.
+Coref + paraphrase === SubjFoundObjFound, Q: Horacio Cartes, owner #of, Grupo Cartes , C: Horacio Cartes.
+SentenceStruct + Coref + paraphrase === SubjFoundObjFound, Q: King John, lost, mainland Normandy , C: Duke of Normandy.
+Coref + infernece rule (Upon the formation of the European Union (EU) in 1993, the EEC was incorporated and renamed as the European Community (EC)) === SubjFoundObjFound, Q: European Economic Community, predecessor #of, European Union , C: European Economic Community.
+malformedQ === SubjFoundObjFound, Q: King Henry VI, took #from, Henry V , C: Wars of the Roses.
+Coref + paraphrase === SubjFoundObjFound, Q: William A. Shine Great Neck South High School, high school #in, New York , C: William A. Shine Great Neck South High School.
+Coref === SubjFoundObjFound, Q: Leal, granddaughter #of, cultural producer Américo Leal , C: Leandra Leal.
+Ignore Case === SubjFoundObjFound, Q: Amritsar, capital #of, Amritsar District , C: Amritsar.
+Very difficult Coref (The tale follows a poor boot black's rise to middle class respectability in 19th-century New York City) === SubjFoundObjFound, Q: Ragged Dick, poor bootblack #in, New York City , C: Ragged Dick.
+2 sent +  Coref + infer "damaging" === SubjFoundObjFound, Q: Hurricane Gordon, damaging tropical storm #for, Caribbean , C: Hurricane Gordon (1994).
+malformedQ === SubjFoundObjFound, Q: Jackson, confirmed #according_to, CBS , C: Justin Timberlake.
+No === SubjFoundObjFound, Q: Flynn, went #in, Hollywood , C: Australia.
+2 sent + difficult inference === SubjFoundObjFound, Q: Huntingdon Life Sciences, largest animal testing company #in, Europe , C: Huntingdon Life Sciences.
+malformedQ === SubjFoundObjFound, Q: Pope Gregory VIII, started, Philip II , C: Crusades.
+Coref + paraphrase === SubjFoundObjFound, Q: Fagan, moved #to, Baltimore , C: Billie Holiday.
+Coref === SubjFoundObjFound, Q: Luke, goes #to, Cloud City , C: Luke Skywalker.
+No === SubjFoundObjFound, Q: Saka, ruled, India , C: History of India.
+malformedQ === SubjFoundObjFound, Q: Canada, largest countries #in, Americas , C: Argentina.
+Coref === SubjFoundObjFound, Q: MacKay, served, United States Air Force , C: Buddy MacKay.
+Coref === SubjFoundObjFound, Q: Mottola, converted #to, Judaism , C: Tommy Mottola.
+may be non-ascii === SubjFoundObjFound, Q: Pretty Soldier Sailor Moon, shojo manga #by, Naoko Takeuchi , C: Sailor Moon.
+No === SubjFoundObjFound, Q: Alain Vigneault, current coach #of, Vancouver Canucks , C: Alain Vigneault.
+Coref === SubjFoundObjFound, Q: Stefanie, returned #from, Cairo , C: Stefanie Sun.
+Coref === SubjFoundObjFound, Q: Shifai, died #in, Lahore , C: Qateel Shifai.
+
+============
+
+SubjFoundObjFoundONESEN:
+
+
+SubjFoundObjFoundONESEN, >>>Inouye became President pro tempore of the Senate $$$ Inouye was also involved in the Iran-Contra investigations of the 1980s, chairing a special committee (Senate $$$ Inouye assumed leadership of the powerful Senate $$$ Inouye ran for Senate $$$ Inouye began using a wheelchair in the Senate $$$ Inouye's death on the floor of the Senate, referring to Inouye as "certainly one of the giants of the Senate, Q: Inouye, President Pro Tempore #of, Senate , C: Daniel Inouye.
+SubjFoundObjFoundONESEN, >>>Jennifer Lopez as Selena, Q: Jennifer Lopez, played, Selena , C: Selena.
+2 sent === SubjFoundObjFoundONESEN, Schlafly contacted Lenski $$$ Schlafly had not bothered to read [Lenski, Q: Schlafly, mailed, Lenski , C: Conservapedia.
+weirdQ === SubjFoundObjFoundONESEN, Albin Planinc (also spelled Planinec) (18 April 1944 – 20 December 2008) was a Slovenia, Q: Albin Planinc, chess Grandmaster #from, Slovenia , C: Albin Planinc.
+SubjFoundObjFoundONESEN, >>>St Albans was the first major town on the old Roman road of Watling Street for travellers heading north and became the Roman city of Verulamium $$$ St Albans Museum service runs two museums: Verulamium, Q: St Albans, former Roman town #of, Verulamium , C: St Albans.
+SubjFoundObjFoundONESEN, >>>William went up to the Royal Military Academy Sandhurst, Q: William, graduated #from, Royal Military Academy Sandhurst , C: Prince William, Duke of Cambridge.
+No === SubjFoundObjFoundONESEN, Easter Island (, ) is a Chilean island in the southeastern Pacific Ocean, Q: Easter Island, Polynesian island #in, southeastern Pacific Ocean , C: Easter Island.
+IGNORE === SubjFoundObjFoundONESEN, Muslim Brotherhood adherents, asking them to decree that the group is a terrorist organization,” and the local Kuwait, Q: Muslim Brotherhood, says #in, Kuwait , C: Muslim Brotherhood.
+No === SubjFoundObjFoundONESEN, Joseph Stalin's collectivisation program in the Soviet Union, Q: Joseph Stalin, leader #of, Soviet Union , C: Holodomor.
+SubjFoundObjFoundONESEN, >>>Bagdad is an unincorporated community in northeastern Shelby County, Kentucky $$$ Bagdad is the hometown of former governor of Kentucky Martha Layne Collins, Kentucky, Q: Bagdad, city #of, Kentucky , C: Bagdad, Kentucky.
+SubjFoundObjFoundONESEN, >>>USA Network originally launched on September 22, 1977 as the Madison Square Garden Network $$$ USA Network has a longstanding history with sports, dating back to its existence as the Madison Square Garden Network, Q: USA Network, began #as, Madison Square Garden Network , C: USA Network.
+SubjFoundObjFoundONESEN, >>>Santorum left his private law practice in 1990 after his election to the House $$$ Santorum was one of 17 House $$$ Santorum was involved in exposing of members of Congress involved in the House $$$ Santorum stated that he spent "maybe a month a year" at his Pennsylvania home, raising allegations of hypocrisy as he had denounced his former opponent Doug Walgren for living away from his House, Q: Santorum, served #in, House , C: Rick Santorum.
+No === SubjFoundObjFoundONESEN, Sussman helped found the AIGA chapter of Los Angeles $$$ Sussman and her designers, along with the Los Angeles Olympic Organizing Committee decided a new logo should specifically express the Los Angeles, Q: Sussman, died #in, Los Angeles , C: Deborah Sussman.
+SubjFoundObjFoundONESEN, >>>Pacific Grove is a coastal city in Monterey County $$$ Pacific Grove owned by his father, Ernest, who was Monterey County $$$ Pacific Grove is represented on the Monterey County, Q: Pacific Grove, coastal town #in, Monterey County , C: Pacific Grove, California.
+SubjFoundObjFoundONESEN, Cullman is a city in Cullman County $$$ >>>Cullman is the seat of Cullman County, Q: Cullman, county seat #of, Cullman County , C: Cullman, Alabama.
+SubjFoundObjFoundONESEN, >>>Girolamo Savonarola (; 21 September 1452 – 23 May 1498) was an Italian Dominican friar and preacher active in Renaissance Florence, Q: Girolamo Savonarola, Italian Dominican priest #of, Florence , C: Girolamo Savonarola.
+No === SubjFoundObjFoundONESEN, Matsukata also established the Bank of Japan $$$ Matsukata also sought to protect Japan $$$ Matsukata successively held offices as president of the Japanese Red Cross Society, privy councillor, "gijokan", member of the House of Peers, and Lord Keeper of the Privy Seal of Japan $$$ Matsukata Reischauer, married the American scholar of Japanese history, academic, statesman and United States Ambassador to Japan, Q: Matsukata, 4th Prime Minister #of, Japan , C: Matsukata Masayoshi.
+SubjFoundObjFoundONESEN, >>>Ben Halim is the last surviving of the Kingdom, Q: Ben Halim, surviving last #of, Kingdom , C: Mustafa Ben Halim.
+malformedQ === SubjFoundObjFoundONESEN, Dexter Duck is an anthropomorphic duck who, like Gladstone Gander, Q: Dexter Duck, conpetes #like, Gladstone Gander , C: Duck family (Disney).
+No === SubjFoundObjFoundONESEN, Kew Gardens station, a London Underground and National Rail station opened in 1869 and served by both the District line and the London Overground services on the North London, Q: Kew Gardens, UNESCO World Heritage Site #in, London , C: Kew Gardens.
+No === SubjFoundObjFoundONESEN, Aomori immediately after the merger and the prefecture was renamed Aomori Prefecture $$$ Aomori is located in central Aomori Prefecture $$$ Aomori serves as the regional commercial center for central Aomori Prefecture, Q: Aomori, capital city #of, Aomori Prefecture , C: Aomori, Aomori.
+SubjFoundObjFoundONESEN, >>>Giza (; sometimes spelt "Gizah "or "Jizah"; '; '), is the third largest city in Egypt $$$ Giza is most famous as the location of the Giza Plateau: the site of some of the most impressive ancient monuments in the world, including a complex of ancient Egypt $$$ Giza has always been a focal point in Egypt $$$ Giza's most famous archaeological site, the Giza Plateau, holds some major monuments of Egypt $$$ Giza Plateau, the pyramids of Giza were built overlooking the ancient Egypt $$$ Giza Plateau is also home to Egypt $$$ Giza is a thriving centre of Egypt $$$ Giza saw much attention in particular to its vast amount of ancient Egypt $$$ Giza's infrastructure saw much attention from both the British government prior to the 1952 coup d'état, as well as the current Egypt $$$ Giza, called the Imbaba Airport, but recently the Egypt, Q: Giza, town #in, Egypt , C: Giza.
+No === SubjFoundObjFoundONESEN, Egbert of Wessex and Beornwulf, Q: Egbert, defeated, Beornwulf , C: Battle of Ellandun.
+SubjFoundObjFoundONESEN, >>>Grabner grew up playing for the local team in Villach, EC VSV, Q: Grabner, played #for, EC VSV , C: Michael Grabner.
+malformedQ === SubjFoundObjFoundONESEN, Winnipeg () is the capital and largest city of the province of Manitoba, Canada $$$ Winnipeg is the seventh most populated municipality in Canada $$$ Winnipeg was the site of the Red River Rebellion, a conflict between the local provisional government of Métis, led by Louis Riel, and newcomers from eastern Canada $$$ Winnipeg was Canada $$$ Winnipeg experienced a severe economic downturn in advance of the early 1980s recession, during which the city incurred closures of prominent businesses, including the "Winnipeg Tribune", as well as the Swift's and Canada $$$ Winnipeg was one of the first cities in Canada $$$ Winnipeg is the second sunniest city in Canada $$$ Winnipeg's most densely populated neighbourhood, as well as one of the most densely populated neighbourhoods in Western Canada $$$ Winnipeg is Manitoba's largest city and Canada $$$ Winnipeg was ranked by KPMG as the least expensive location to do business in western Canada $$$ Winnipeg was named the Cultural Capital of Canada $$$ Winnipeg Jewish Theatre is the only professional theatre in Canada $$$ Winnipeg Ballet (RWB) is Canada $$$ Winnipeg Art Gallery is Western Canada $$$ Winnipeg's James Richardson International Airport, features military jets, commercial aircraft, Canada $$$ Winnipeg Railway Museum is located at Via Rail Station and contains various locomotives, notably the "Countess of Dufferin", the first steam locomotive in Western Canada $$$ Winnipeg include the Winnipeg Maroons, Winnipeg Warriors, three time Stanley Cup Champion Winnipeg Victorias and the Winnipeg Falcons, who were the first ever Gold Medal Olympians, representing Canada $$$ Winnipeg was the "murder capital" of Canada $$$ Winnipeg Bus Terminal, located at Winnipeg International Airport, offers domestic and international service by Greyhound Canada, Q: Winnipeg, seventh city #in, Canada , C: Winnipeg.
+malformedQ === SubjFoundObjFoundONESEN, Thebes was a major force in Greek history, and was the most dominant city-state at the time of the Macedonia, Q: Thebes, rise #of, Macedonia , C: Thebes, Greece.
+SubjFoundObjFoundONESEN, >>>Sir Henry Parkes is recognised in Australia as having played an instrumental role in Australia, Q: Sir Henry Parkes, famous #in, Australia , C: Parkes, New South Wales.
+SubjFoundObjFoundONESEN, >>>Clinton is a village in British Columbia, Q: Clinton, Canadian village #in, British Columbia , C: Clinton, British Columbia.
+Coref === SubjFoundObjFoundONESEN, Jenkins" which references Jenkins' Carnegie Hall, Q: Jenkins, performed #at, Carnegie Hall , C: Florence Foster Jenkins.
+No === SubjFoundObjFoundONESEN, Sawtooth Mountains are a range of mountains on the North Shore, Q: Sawtooth Mountains, low ridges #on, North Shore , C: Sawtooth Mountains (Minnesota).
+SubjFoundObjFoundONESEN, >>>Bush moved to a canalside residence in Sulhamstead, Berkshire and subsequently moved to Devon, Q: Bush, lives #in, Devon , C: Kate Bush.
+================

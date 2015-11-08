@@ -62,15 +62,21 @@ for f in os.listdir(args.parsed):
                 tokensDict[token.get("id")] = token
     
             root = None
+            rootComp = []
             nsubj = None
+            nsubjComp = []
             
             objList = [None, None, None]
             objNames = ["dobj", "iobj", "nmod:"]
             hasObjs = [False, False, False]
-            #dobj = None
-            #iobj = None
-            #pobj = None
-            #hasDobj = False 
+            objComp = [[], [], []]
+            
+            #TODO:
+            #1) read the full NE
+            #2) exclude light verbs 
+            #3) exclude trivial questions
+            #4) exclude un-answerable questions
+            #5) generate more complex questions 
             
             def isNE (tokenID):
                 return tokensDict[tokenID].find("NER").text in acceptedNE 
@@ -79,8 +85,8 @@ for f in os.listdir(args.parsed):
                 #    break;
                 if d.get("type") == "root" and root == None:
                     rootId = d.getchildren()[1].get("idx");
-                    if not tokensDict[rootId].find("POS").text.startswith("V"): #root is a verb
-                        break; 
+                    #if not tokensDict[rootId].find("POS").text.startswith("V"): #root is a verb
+                    #    break; 
                     root = d;
 
                 if d.get("type") == "nsubj" and nsubj == None and root != None:
@@ -97,56 +103,64 @@ for f in os.listdir(args.parsed):
                             hasObjs[objIdx] = True
                             if (isNE (xId)) : #the object is a NE
                                 objList[objIdx] = d
-                '''
-                if d.get("type") == "iobj" and iobj == None and root != None:
-                    xId = d.getchildren()[1].get("idx")
-                    if (d.getchildren()[0].get("idx") == root.getchildren()[1].get("idx") #same root verb
-                       and tokensDict[xId].find("NER").text in acceptedNE) : #the subject is a NE
-                        iobj = d
+           
+            #search for compounds
+            for d in dep:
+                if d.get("type") in  ["compound", "amod"]:
+                    parentID = d.getchildren()[0].get("idx");
+                    compID = d.getchildren()[1].get("idx");
+                    if root != None and parentID == root.getchildren()[1].get("idx"):
+                        rootComp.append(d)
+                    elif nsubj != None and parentID == nsubj.getchildren()[1].get("idx"):
+                        nsubjComp.append(d)
+                    else:
+                        for objIdx in range (0, len(objList)):
+                            if objList[objIdx] != None and parentID == objList[objIdx].getchildren()[1].get("idx"):
+                                objComp[objIdx].append(d)
 
-                if d.get("type").startswith("nmod:")  and pobj == None and root != None:
-                    xId = d.getchildren()[1].get("idx")
-                    if (d.getchildren()[0].get("idx") == root.getchildren()[1].get("idx") #same root verb
-                       and tokensDict[xId].find("NER").text in acceptedNE) : #the subject is a NE
-                        pobj = d
-                '''
 
             #if root != None and nsubj != None and dobj != None:
             #    print u" ".join (("##: ", nsubj.find("dependent").text, root.find("dependent").text, dobj.find("dependent").text)).encode('utf-8')
             
-            pdb.set_trace()
+            #pdb.set_trace()
             buff = ""
 
             if nsubj != None:
-                buff = buff + ", nsubj: " + nsubj.find("dependent").text
+                buff = (" ".join( [x.find("dependent").text for x in nsubjComp] + [( nsubj.find("dependent").text)] ) ).replace(",", ".")
 
             if root != None:
-                buff = buff + ", root: " + root.find("dependent").text
+                buff = buff + ", " + (" ".join([x.find("dependent").text for x in rootComp] + [(root.find("dependent").text)] )).replace(",", ".")
 
-            ##TODO: printing             
+            ##TODO: printing 
+            objCnt = 0
+            oneObj = None
+            oneObjComp = None
             for objIdx in range (0, len (objNames)):
-                if obj != None:
-                    buff = buff + ", dobj: " + dobj.find("dependent").text
-            '''
-            if iobj != None:
-                buff = buff + ", iobj: " + iobj.find("dependent").text
+                if objList[objIdx] != None:
+                    typeName = objList[objIdx].get("type")
+                    if typeName.startswith("nmod:"):
+                        prep = typeName.split(":")[1];
+                        buff = buff + " #" + prep
 
-            if pobj != None:
-                buff = buff + ", pobj: " + pobj.find("dependent").text
-            '''
+                    buff = buff + ", " +  (" ".join([x.find("dependent").text for x in objComp[objIdx]] + [(objList[objIdx].find("dependent").text)] )).replace(",", ".")
+                    objCnt = objCnt + 1
+                    oneObj = objList[objIdx].find("dependent").text
+                    oneObj = objComp[objIdx]
 
+                elif hasObjs[objIdx]:
+                    objCnt = objCnt + 1
 
             fullSen = " ".join ([x.find("word").text for x in tokens.getchildren()])
-            if "nsubj" in buff and "root" in buff: 
-                if "dobj" in buff or "iobj" in buff or "pobj" in buff:
-                    print (buff + " -- " + fullSen).encode('utf-8')
+            if nsubj != None and root != None and objCnt == 1 and oneObj != None: 
+                #if "dobj" in buff or "iobj" in buff or "pobj" in buff:
+                print ("### " + buff + " ### " + fullSen).encode('utf-8')
             #else:
             #    print str(nsubj)  + " " + str(root) + " " + str(dobj)
 
             #pdb.set_trace()
 
 #parser.add_argument("outDir", help="output directory (will be overwritten)")
-pdb.set_trace()
+#pdb.set_trace()
 
 #parsedFile = open (args.parsed)
 #docs = dict ()
