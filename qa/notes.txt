@@ -1,3 +1,12 @@
+Run: python qa/run.py cnn validation mln -limit 1 -mlnArgs "-soap localhost:9000 -log TRACE -keepUniv false -withNegT false -irLvl 0 -diffRules false -wordnet false -timeout 10000 -softLogic ss"
+MLN: 
+-variable names: replacing x, s, p with 100, 200, 300 means it will break for large docs
+-pass NE, POS, Coref to Candc
+-use softLogic mln not ss
+
+---
+-find the entity whose surrounding context is similar to the query 
+
 Note about coref: 
 The entity could be named differently in the Q and the Context. A coref is needed in the Context document, then accept the answer if the expected entity name is one of the possible names of the selected entity. 
 Expected problem: it is easy to cheat here by setting all entities in the context document to be corefering and all of them get the same name. This is a valid critisizm to the method mentioned above. 

@@ -19,7 +19,7 @@ import edu.stanford.nlp.process.WordTokenFactory
  */
 class Tokenize {
   def tokenize(s: String): Iterator[String] = tokenize(new StringReader(s))
-  def tokenize(reader: Reader): Iterator[String] = new PTBTokenizer(new BufferedReader(reader), new WordTokenFactory, "").map(_.word)
+  def tokenize(reader: Reader): Iterator[String] = new PTBTokenizer(new BufferedReader(reader), new WordTokenFactory, "ptb3Escaping=false").map(_.word)
 }
 
 //Mainly used when parsing 

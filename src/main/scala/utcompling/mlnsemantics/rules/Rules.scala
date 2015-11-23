@@ -228,6 +228,8 @@ object Rules {
   
   def convertRulesToFOL(rules: List[String], text: BoxerExpression, hypothesis: BoxerExpression): List[(BoxerDrs, BoxerDrs, Double, RuleType.Value)] =
   {
+	if (rules.length == 0)
+		return List()
 	val assumePredsList = text.getPredicates
 	val goalPredsList = hypothesis.getPredicates
 	val assumeRelsList = text.getRelations

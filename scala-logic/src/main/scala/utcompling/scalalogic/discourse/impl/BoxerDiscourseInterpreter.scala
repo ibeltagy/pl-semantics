@@ -37,8 +37,24 @@ class BoxerDiscourseInterpreter[T](
   private val verbose: Boolean = false)
   extends DiscourseInterpreter[T] {
 
-  override def batchInterpretMultisentence(inputs: List[List[String]], discourseIds: Option[List[String]] = None, question: Boolean = false, verbose: Boolean = false): List[Option[T]] = {
-    val newDiscourseIds = discourseIds.getOrElse((0 until inputs.length).map(_.toString).toList)
+  override def batchInterpretMultisentence(preInput: List[List[String]], discourseIds: Option[List[String]] = None, question: Boolean = false, verbose: Boolean = false): List[Option[T]] = {
+    var inputs = preInput
+    var newDiscourseIds = discourseIds.getOrElse((0 until inputs.length).map(_.toString).toList)
+
+    var extraBoxerArgs = Map[String, String]()
+    if (inputs.length ==  1) //only one sentence, so deal with it as a paragraph
+    {
+      println  ("Splitting sentences ... ");
+      require( inputs(0).length == 1 )
+      val doc = inputs(0)(0);
+      val docSplits = doc.split(" \\? | \\. | ! ")
+      //println (docSplits)
+      inputs =  List.fromArray(docSplits.map (x => List(x)))
+      //println (">>>>>>>>>>" + inputs )
+      newDiscourseIds = (0 until inputs.length).map(_.toString).toList
+      extraBoxerArgs = Map[String, String]("--integrate" -> "true")
+    }
+
     require(inputs.length == newDiscourseIds.length)
 /*
     val candcDependencyParseArgs = Map[String, String](
@@ -54,6 +70,11 @@ class BoxerDiscourseInterpreter[T](
       "--candc-int-betas" -> "0.075 0.03 0.01 0.005 0.001")
     var candcOut = this.candc.batchParseMultisentence(inputs, candcArgs.toMap, Some(newDiscourseIds), Some(if (question) "questions" else "boxer"), verbose = verbose)
     
+    if (extraBoxerArgs.getOrElse("--integrate", "false").toBoolean) //only one sentence, so deal with it as a paragraph
+    {
+      newDiscourseIds = List("0")
+    }
+    
     val boxerArgs = Map[String, String](
       "--box" -> "false",
       "--semantics" -> "drs",
@@ -62,11 +83,13 @@ class BoxerDiscourseInterpreter[T](
       "--format" -> "prolog",
       "--instantiate" -> "true")
     //val (boxerOut, scores) = this.boxer.callBoxer(candcOut, boxerArgs.toMap, verbose = verbose)
-    val boxerOut = this.boxer.callBoxer(candcOut, boxerArgs.toMap, verbose = verbose)
-
-    val drsDict = this.parseBoxerOutput(boxerOut, candcOut)//(boxerOut, scores)
-
-    return newDiscourseIds.map(s=> {
+    val boxerOut = this.boxer.callBoxer(candcOut, boxerArgs.toMap ++ extraBoxerArgs, verbose = verbose)
+    
+    val drsDict = this.parseBoxerOutput(boxerOut, candcOut, extraBoxerArgs.getOrElse("--integrate", "false").toBoolean)//(boxerOut, scores)
+    //println ("Inputs: >>>>>>>> " + newDiscourseIds)
+    //println ("drsDict >>>>>>>" + drsDict )
+    //println ("newDiscourseIds >>>>>>>" + newDiscourseIds )
+    val res = newDiscourseIds.map(s=> {
       drsDict.find(x => x._1 == s) match {
         case Some((id, exps)) =>  {
           val e = BoxerPrs(exps.toList.asInstanceOf[List[(BoxerExpression, Double)]])
@@ -76,11 +99,14 @@ class BoxerDiscourseInterpreter[T](
       }
        
     }).toList
+    //println ("res >>>>>>>" + res.toString )
+    return res
   }
 
-  private def parseBoxerOutput(boxerOut: String, candcOut: String): Map[String, ListBuffer[(T, Double)]] = {
+  private def parseBoxerOutput(boxerOut: String, candcOut: String, integrate: Boolean): Map[String, ListBuffer[(T, Double)]] = {
     //val drsDict = new MapBuilder[String, List[T], Map[String, List[T]]](Map[String, List[T]]())
-
+    //println(candcOut)
+    //println("boxerOut  >> " + boxerOut)
     val ccgs = candcOut.split("ccg\\(");
     val drsDict:Map[String, ListBuffer[(T, Double)]] = Map();
     val singleQuotedRe = """^'(.*)'$""".r
@@ -89,7 +115,7 @@ class BoxerDiscourseInterpreter[T](
     val linesItr = lines.iterator
     //println (lines);
     //println (ccgs.mkString("\n"));
-    assert ((ccgs.size - 1) * 4 == lines.size - 6, "ccgs count: " + ccgs.size +", boxerLinesCounts: " + lines.size );
+    assert (((ccgs.size - 1) * 4 == lines.size - 6) || integrate, "ccgs count: " + ccgs.size +", boxerLinesCounts: " + lines.size );
     var i:Int = 0;
     val IdLineRe = """^id\((\S+),\s*(\d+)\)\.$""".r
     val SemLineRe = """^sem\((\d+),$""".r
@@ -105,12 +131,17 @@ class BoxerDiscourseInterpreter[T](
           val drsInput = linesItr.next.trim.stripSuffix(").")
           val idWithScoreSplits = discourseIdWithScore.split("-", 2);
           val discourseId = idWithScoreSplits.apply(0)
-          val score = idWithScoreSplits.apply(1).replace("'", "").toDouble;
-          val cleanDiscourseId = singleQuotedRe.findFirstMatchIn(discourseId).map(_.group(1)).getOrElse(discourseId)
+          val score = if (idWithScoreSplits.length == 2)idWithScoreSplits.apply(1).replace("'", "").toDouble
+                      else 1.0
+          //val cleanDiscourseId = singleQuotedRe.findFirstMatchIn(discourseId).map(_.group(1)).getOrElse(discourseId)
+          val discourseIdNum = discourseId.replace("[", "").replace("]", "").toInt
+          var cleanDiscourseId = "" + ((discourseIdNum/100) - 1)  
+          if (integrate)
+            cleanDiscourseId = "" + (discourseIdNum - 1)  
           var parsed = this.parseOutputDrs(drsInput, cleanDiscourseId)
           val ccg = ccgs(i+1 /* +1 is because the first is just the header*/); 
           i = i+1;
-          println(parsed)
+          //println(parsed)
           if (BoxerDiscourseInterpreter.applyNegation)
           {
         	  parsed  = this.applyNegation (parsed , ccg)
@@ -304,7 +335,7 @@ sem(1,
     bdi.parseBoxerOutput ( """id(1,1).
 sem(1,[1001:[tok:'A', pos:'DT', lemma:a, namex:'O'], 1002:[tok:person, pos:'NN', lemma:person, namex:'O'], 1003:[tok: (is), pos:'VBZ', lemma:be, namex:'O'], 1004:[tok:throwing, pos:'VBG', lemma:throw, namex:'O'], 1005:[tok:a, pos:'DT', lemma:a, namex:'O'], 1006:[tok:cat, pos:'NN', lemma:cat, namex:'O'], 1007:[tok:on, pos:'IN', lemma:on, namex:'O'], 1008:[tok:to, pos:'TO', lemma:to, namex:'O'], 1009:[tok:the, pos:'DT', lemma:the, namex:'O'], 1010:[tok:ceiling, pos:'NN', lemma:ceiling, namex:'O'], 1011:[tok:'.', pos:'.', lemma:'.', namex:'O']],
 alfa(top, drs([[1009]:x0], [[1010]:pred(x0, ceiling, n, 0)]), drs([[]:x1, []:x2, [1005]:x3, [1001]:x4, []:x5], [[]:rel(x1, x4, patient, 0), []:rel(x1, x5, agent, 0), _G4379:pred(x1, event, v, 0), []:rel(x2, x3, patient, 0), []:rel(x2, x4, agent, 0), [1004]:pred(x2, throw, v, 0), [1006]:pred(x3, cat, n, 0), [1002]:pred(x4, person, n, 0), []:pred(x5, thing, n, 12), [1008]:rel(x1, x0, to, 0), [1007]:pred(x1, on, a, 0)]))).
-""", "");
+""", "", false);
 
   }
 }

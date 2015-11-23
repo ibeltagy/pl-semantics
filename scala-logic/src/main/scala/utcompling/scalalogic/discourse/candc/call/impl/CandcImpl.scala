@@ -10,9 +10,9 @@ import utcompling.Resources
 
 class CandcImpl	extends Candc {
     
-    private val binary:String = FileUtils.findBinary("candc", Some(Resources.candc) , Some("CANDCHOME"))
+    private val binary:String = FileUtils.findBinary(CandcImpl.binaryName, Some(Resources.candc) , Some("CANDCHOME"))
     private val modelsPath: String = pathjoin(binary.dropRight(5), "../models")
-    private val defaultArgs: Map[String, String] = Map();
+    private val defaultArgs: Map[String, String] = CandcImpl.extraArgs;
 
     //def this( defaultArgs: Map[String, String] = Map()) =
     //    this( , defaultArgs)
@@ -21,8 +21,11 @@ class CandcImpl	extends Candc {
         val newDiscourseIds = discourseIds.getOrElse((0 until inputs.length).map(_.toString))
         val defaultArgs = Map[String, String](
             "--models" -> pathjoin(this.modelsPath, model.getOrElse("")))
+        var allArgs = this.defaultArgs ++ defaultArgs ++ args
+		if (CandcImpl.binaryName == "soap_client")
+			allArgs = CandcImpl.extraArgs
         var caller = new SubprocessCallable(binary);
-        return caller.call(Some(this.makeInput(inputs, newDiscourseIds)), (this.defaultArgs ++ defaultArgs ++ args).flatMap { case (k, v) => List(k, v) }.toList, verbose)
+        return caller.call(Some(this.makeInput(inputs, newDiscourseIds)), (allArgs).flatMap { case (k, v) => List(k, v) }.toList, verbose)
     }
 
     private def makeInput(inputs: Seq[Seq[String]], discourseIds: Seq[String]): String = {
@@ -34,6 +37,9 @@ class CandcImpl	extends Candc {
 }
 
 object CandcImpl {
+    var binaryName: String = "candc"  //can be changed in util.Config to soap_client 
+    var extraArgs: Map[String, String] = Map(); //can be changed in util.Config to --url localhost:9000
+	
 /*
     def findBinary(binDir: Option[String] = None, envar: Option[String] = Some("CANDCHOME"), defaultArgs: Map[String, String] = Map(), verbose: Boolean = false) = {
         new CandcImpl(FileUtils.findBinary("candc", binDir, envar, verbose), defaultArgs = defaultArgs)

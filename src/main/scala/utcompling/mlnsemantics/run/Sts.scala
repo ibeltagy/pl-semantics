@@ -88,15 +88,19 @@ object Sts {
       {
 //    	 println(sen1);
 //    	 println(sen2);
-	     val sentences = Array(sen1.toLowerCase(), sen2.toLowerCase()).map(Tokenize.separateTokens).toList
+	     //val sentences = Array(sen1.toLowerCase(), sen2.toLowerCase()).map(Tokenize.separateTokens).toList
+		 val sentences = Array(sen1, sen2).map(Tokenize.separateTokens).toList
     	 println(sentences);	     
     	 //val lemmatized = new CncLemmatizeCorpusMapper().parseToLemmas(Array(sen1, sen2))
     	 //val lemmas = lemmatized.map(_.map(_.map(_._2).mkString(" ")).getOrElse("______parse_failed______"))
 	     val lemmas:List[String] = sentences.map(Lemmatize.lemmatizeWords)
-    	 println(lemmas);
+    	 //println(lemmas);
 	     val di = new ModalDiscourseInterpreter
-	     val boxes = di.batchInterpret(sentences);
-	     println(boxes);
+	     val sen1Box = di.batchInterpret(List(sentences(0)));
+	     val sen2Box = di.batchInterpret(List(sentences(1)));
+		 val boxes = sen1Box ++ sen2Box
+		 //val boxes = di.batchInterpret(sentences);
+	     println("boxes: >>>> " + boxes);
 	     val allLemmas = lemmas.flatMap(_.split("\\s+")).toSet
 	     val fullVsFile = opts.vectorSpace
          val tempVSFile = FileUtils.mktemp();
@@ -167,7 +171,7 @@ object Sts {
       case Seq("box", stsFile, boxFile) =>
         val di = new ModalDiscourseInterpreter
         val sentences = readLines(stsFile).flatMap(_.split("\t")).map(Tokenize.separateTokens).toList
-        val step = 400; //file is large. It should be partitioned before passed to the parser
+        val step = 120; //file is large. It should be partitioned before passed to the parser
         val totalSen = sentences.length;
         val itrCount = (ceil (totalSen*1.0 / step)).intValue();   
         writeUsing(boxFile) { f =>

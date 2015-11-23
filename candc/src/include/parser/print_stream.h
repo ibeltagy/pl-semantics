@@ -65,7 +65,15 @@ namespace NLP {
             lexical(sent);
 	    std::ostringstream sstr;
             sstr << metaLabel << "-'" << ret[i].score<<"'";
-	    meta(sstr.str(), nsentences*100 + i);
+	    /*
+	    if	(nparses == 1)   //if only one parse, then no need to output the weight. This is important because outputing the 
+				//weight confuses Boxer when running with --integrate
+		out.stream << "id([" << nsentences << "]).\n\n";
+	    else
+	    	meta(sstr.str(), nsentences*100 + i);
+	    */
+	    out.stream << "id([" << nsentences*100 + i << "]).\n\n";
+		
           }
         }else{
           sent.cats.clear();
@@ -74,6 +82,7 @@ namespace NLP {
             unary(sent);
             lexical(sent);
 	    meta(metaLabel, nsentences*100);
+	    //out.stream << "id([" << nsentences*100 << "]).\n\n";
           }else{
             log.stream << nsentences << " ignored unary " << std::endl;
           }

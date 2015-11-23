@@ -63,6 +63,7 @@ class Config(opts: Map[String, String] = Map()) {
 		"-scaleW",
 		"-logOddsW",
 		"-logic",
+		"-soap",
 		"-fixDCA",
 		"-noHMinus",
 		"-keepUniv",
@@ -338,6 +339,13 @@ class Config(opts: Map[String, String] = Map()) {
     case Some("box") => "box";
     case None => "box";
     case Some(x) => throw new RuntimeException("Invalid value " + x + " for argument -logic");    
+  }
+
+  val soapServer = opts.get("-soap") match {
+    case Some(serverUrl) => 
+		utcompling.scalalogic.discourse.candc.call.impl	.CandcImpl.binaryName = "soap_client";
+		utcompling.scalalogic.discourse.candc.call.impl	.CandcImpl.extraArgs = Map (("--url" -> serverUrl))
+    case None => None
   }
 
   //do all the changes required to fix the problems resulting from the Domain Closure Assumption
