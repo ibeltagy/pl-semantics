@@ -78,21 +78,24 @@ class SetPriorPTP(
 
     }
 */
-     else  //Prior on all predicates
+    else  //Prior on all predicates
     {
-      //for all declarations, generate prior expressions
-      priorExpressions = declarations.flatMap {
-      	case (expr, varTypes) => {
+			if (SetPriorPTP.predPrior != 0)
+			{
+				//for all declarations, generate prior expressions
+				priorExpressions = declarations.flatMap {
+					case (expr, varTypes) => {
       	  
-      	  val priorExp = predicateToPrior(expr);
+						val priorExp = predicateToPrior(expr);
       	  
-      	  //No prior on the entailment predicate
-      	  if (expr == SetVarBindPTP.entPred_h || expr == SetVarBindPTP.entPred_t) //if it is one of the entailment predicates
-      		  None
-      	  else
-      		  Some(PriorExpression(priorExp.asInstanceOf[FolExpression], SetPriorPTP.predPrior));
-      	 }
-      	}.toList
+						//No prior on the entailment predicate
+						if (expr == SetVarBindPTP.entPred_h || expr == SetVarBindPTP.entPred_t) //if it is one of the entailment predicates
+						None
+						else
+						Some(PriorExpression(priorExp.asInstanceOf[FolExpression], SetPriorPTP.predPrior));
+					}
+				}.toList
+			}
     }//end if/else.
     
     SetPriorPTP.withText = true;

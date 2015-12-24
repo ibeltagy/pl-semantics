@@ -1,3 +1,5 @@
+Documentation: 
+-download, install and run the soap server
 Run: python qa/run.py cnn validation mln -limit 1 -mlnArgs "-soap localhost:9000 -log TRACE -keepUniv false -withNegT false -irLvl 0 -diffRules false -wordnet false -timeout 10000 -softLogic ss"
 MLN: 
 -variable names: replacing x, s, p with 100, 200, 300 means it will break for large docs

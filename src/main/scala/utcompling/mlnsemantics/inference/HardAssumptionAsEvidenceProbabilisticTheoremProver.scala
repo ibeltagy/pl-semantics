@@ -193,8 +193,34 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 	      	 }
         } 
         case FolNegatedExpression(term) => FolNegatedExpression(goUniv(term, univVars, existVars, !isNegated))
-        case FolAndExpression(first, second) => FolAndExpression(goUniv(first, univVars, existVars, isNegated), 
-        														goUniv(second, univVars, existVars, isNegated))
+        case FolAndExpression(first, second) => 
+				{
+					//this is actually useless, but I will keep it
+					def isGroundAtom (e_ : FolExpression, univVars_ : List[String], existVars_ : List[String], isNegated_ : Boolean): Boolean = 
+					{
+						if (isNegated_)
+							return false;
+						if (univVars_.length > 0) 
+							return false;
+						e_ match 
+						{
+							case FolAtom(pred, args @ _*) => 
+								//all variables of the atom are existentially quantified 
+								assert ((existVars_.toSet & args.map(_.name).toSet ).size  == args.toSet.size) 
+								extraEvid = e_ :: extraEvid;
+								return false
+							case _ => return false
+						}
+					}
+					
+					if ( isGroundAtom (first, univVars, existVars, isNegated) )
+						goUniv(second, univVars, existVars, isNegated)
+					else if ( isGroundAtom (second, univVars, existVars, isNegated) )
+						goUniv(first, univVars, existVars, isNegated)
+					else
+						FolAndExpression(goUniv(first, univVars, existVars, isNegated), 
+							goUniv(second, univVars, existVars, isNegated))
+				}
       	case FolOrExpression(first, second) => FolOrExpression(goUniv(first, univVars, existVars, isNegated),
       														goUniv(second, univVars, existVars, isNegated))
       	case FolIfExpression(first, second) => FolIfExpression(goUniv(first, univVars, existVars, !isNegated),
@@ -206,7 +232,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 		        FolAtom(pred, args.map(arg=>{
 		          goUniv(arg, univVars, existVars, isNegated)
 		        }):_*)
-		case FolVariableExpression(v) => //FolVariableExpression(v) 
+		    case FolVariableExpression(v) => //FolVariableExpression(v) 
 				FolVariableExpression(goUniv(v, univVars, existVars, isNegated));
         case _ => throw new RuntimeException("not reachable")
       }
