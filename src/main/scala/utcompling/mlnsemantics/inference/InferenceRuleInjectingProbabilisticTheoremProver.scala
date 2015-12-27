@@ -54,8 +54,8 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
     assumptions: List[WeightedExpression[BoxerExpression]],
     goal: BoxerExpression): Seq[Double] = {
     
-    assumptions.foreach(x => LOG.info("\n" + d(x.expression).pretty))
-    LOG.info("\n" + d(goal).pretty)
+    assumptions.foreach(x => LOG.debug("\n" + d(x.expression).pretty))
+    LOG.debug("\n" + d(goal).pretty)
 
     if (Sts.opts.genPhrases)
     {

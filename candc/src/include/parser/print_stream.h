@@ -75,7 +75,8 @@ namespace NLP {
 	    out.stream << "id([" << nsentences*100 + i << "]).\n\n";
 		
           }
-        }else{
+        }
+		  /*else{
           sent.cats.clear();
           if(FORMAT & FMT_PRINT_UNARY){
             log.stream << nsentences << " parsed unary " << std::endl;
@@ -86,7 +87,7 @@ namespace NLP {
           }else{
             log.stream << nsentences << " ignored unary " << std::endl;
           }
-        }
+        }*/
 
         out.stream << '\n';
       }

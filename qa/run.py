@@ -54,6 +54,7 @@ parser.add_argument("-range", type=str, default="", help="set of indecies of que
 parser.add_argument("-anonymous", action='store_true', default=False, help="anonymise the entities or keep them ?")
 parser.add_argument("-limitFeat", help="a limited set of features that is more appropriate for the NN [false]")
 parser.add_argument("-mlnArgs", default="", help="string containing MLN args")
+parser.add_argument("-condor", type=str, default="", help="condor output folder. If empty, run serially")
 
 
 args = parser.parse_args()
@@ -84,35 +85,19 @@ def bow (context, question):
 	
 def mln (context, question):
 	mlnArgs = args.mlnArgs.split( );
-	subprocess.call( ["bin/mlnsem", "sen", context, question] + mlnArgs) 
+	allArgs = ["bin/mlnsem", "sen", context, question] + mlnArgs
+	if not args.condor == "":
+		allArgs = ["bin/condorize.py"] + allArgs + [args.condor]
+	subprocess.call( allArgs) 
 		#"-log", "TRACE", "-soap", "localhost:9000", "-diffRules", "false", "-irLvl", "0", "-negativeEvd", "true", "-withNegT", "false"])
-	sentences = context.split(".");
-	qBow = Set (question.split(" "))
-	bestEntity = ""
-	bestSen = ""
-	maxOverlab = -1
-	for sentence in sentences:
-		senBow = Set(sentence.split(" "));
-		intersection = senBow & qBow;
-		senEntity = None
-		for w in senBow:
-			if w.startswith("@entity"):
-				senEntity = w;
-				break;
-		if not senEntity == None and len(intersection) > maxOverlab:
-			maxOverlab = len(intersection)
-			bestEntity = senEntity;
-			bestSen = sentence
-			
-	#print bestSen
-	return bestEntity
-
+	return ""
 
 
 qIdx = 0
 rightAnswersCount = 0
 totalAnswersCount = 0
-for qFileName in os.listdir(directory):
+fileList = os.listdir(directory)
+for qFileName in sorted (fileList):
 	#print qFileName
 	qIdx = qIdx + 1;
 	
@@ -135,6 +120,10 @@ for qFileName in os.listdir(directory):
 		
 
 	answer = ""
+	print "#################################"
+	print "##Processing Q: " + str(qIdx)
+	print "#################################"
+	sys.stdout.flush() 
 	if args.algo == "bow":
 		answer = bow (context, question);
 	elif args.algo == "mln":

@@ -90,17 +90,17 @@ object Sts {
 //    	 println(sen2);
 	     //val sentences = Array(sen1.toLowerCase(), sen2.toLowerCase()).map(Tokenize.separateTokens).toList
 		 val sentences = Array(sen1, sen2).map(Tokenize.separateTokens).toList
-    	 println(sentences);	     
+		 LOG.trace(sentences);     
     	 //val lemmatized = new CncLemmatizeCorpusMapper().parseToLemmas(Array(sen1, sen2))
     	 //val lemmas = lemmatized.map(_.map(_.map(_._2).mkString(" ")).getOrElse("______parse_failed______"))
 	     val lemmas:List[String] = sentences.map(Lemmatize.lemmatizeWords)
     	 //println(lemmas);
 	     val di = new ModalDiscourseInterpreter
-	     val sen1Box = di.batchInterpret(List(sentences(0)));
-	     val sen2Box = di.batchInterpret(List(sentences(1)));
+	     val sen1Box = di.batchInterpret(List(sentences(0)), verbose = LOG.isTraceEnabled());
+	     val sen2Box = di.batchInterpret(List(sentences(1)), verbose = LOG.isTraceEnabled());
 		 val boxes = sen1Box ++ sen2Box
 		 //val boxes = di.batchInterpret(sentences);
-	     println("boxes: >>>> " + boxes);
+	     LOG.trace("boxes: >>>> " + boxes);
 	     val allLemmas = lemmas.flatMap(_.split("\\s+")).toSet
 	     val fullVsFile = opts.vectorSpace
          val tempVSFile = FileUtils.mktemp();
@@ -125,10 +125,10 @@ object Sts {
 	      Sts.hypothesisLemma = lemmas(1);
 	      println(Sts.text)
 	      println(Sts.hypothesis)
-	      val boxPair = boxes.map(x => Option(x.get.toString()));      
-    	   val result = runOnePair(boxPair, vectorSpace, null);
-    	   println(result)
-			resultOnePair = result;
+	      val boxPair = boxes.map(x => Option(x.get.toString()));
+          val result = runOnePair(boxPair, vectorSpace, null);
+          println(result)
+         resultOnePair = result;
       }
       
       case Seq("lem", stsFile, lemFile) =>

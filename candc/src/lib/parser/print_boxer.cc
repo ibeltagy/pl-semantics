@@ -74,7 +74,7 @@ BoxerPrinter::header(const std::string &PREFACE){
   out.stream << ":- op(601, xfx, (\\)).\n";
 
   out.stream << ":- multifile ccg/2, id/2.\n";
-  out.stream << ":- discontiguous ccg/2, id/2.\n";
+  out.stream << ":- discontiguous ccg/2, id/1.\n";
   out.stream << '\n';
 }
 

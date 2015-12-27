@@ -64,7 +64,7 @@ class ModalDiscourseInterpreter(
    * Hook to which all interpret calls delegate.  Calls `process`.
    */
   override def batchInterpretMultisentence(inputs: List[List[String]], discourseIds: Option[List[String]] = None, question: Boolean = false, verbose: Boolean = false): List[Option[BoxerExpression]] = {
-    process(inputs, discourseIds, question).map(_.map(_._1))
+    process(inputs, discourseIds, question, verbose).map(_.map(_._1))
   }
 
   
