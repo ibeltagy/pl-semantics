@@ -11,6 +11,7 @@ import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 import utcompling.mlnsemantics.run.Sts
 import org.apache.commons.logging.LogFactory
 import utcompling.mlnsemantics.inference.support.GoalExpression
+import scala.collection.mutable.MutableList
 
 class PositiveEqEliminatingProbabilisticTheoremProver(
   delegate: ProbabilisticTheoremProver[FolExpression])
@@ -52,13 +53,12 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
   	equalities = List();
 	var newExpr = findRemoveEq(exp, Set(), false);
 	equalities = groupEqvClasses(equalities);
-	LOG.trace(equalities + " in " + exp)
 	q = List();
 	newExpr = applyEq(newExpr);
 	newConstants = newConstants.map(constant=>{
 		(constant._1, constant._2.map(applyEq(_)).toSet )
 	}).toMap
-	//println(newExpr);
+	LOG.trace(equalities + " removed in " + newExpr)
 	return newExpr
   }
   private var equalities:List[Set[String]] = List();
@@ -229,6 +229,47 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
       		  case 'o' => FolNegatedExpression(mTerm); 
       		}            
         case FolAndExpression(first, second) =>
+          	// for large structures, the recursive code breaks with StackOverFlow. 
+          	//The code here is changed to iterative to sovle this problem 
+            val conjuncts:scala.collection.mutable.Stack[FolExpression] = scala.collection.mutable.Stack();
+          	var current = e
+          	while (current.isInstanceOf[FolAndExpression])
+          	{
+          	  current match 
+          	  {
+          	    case FolAndExpression(left, right) =>
+          	      assert (! right.isInstanceOf[FolAndExpression])
+          	      val mRight = findRemoveEq (right, quantifiers, isNegated)
+          	      //println (mRight)
+		      	  getBoolean2(mRight)  match
+		      	  {
+		      	  	case 'r' => 
+		      	  	case 'o' => conjuncts.push(mRight)
+		      	  }
+          	      current = left
+          	  }
+          	}
+          	val mCurrent = findRemoveEq (current, quantifiers, isNegated)
+          	//println(mCurrent)
+          	getBoolean2(mCurrent)  match
+          	{
+      	  		case 'r' => 
+      	  		case 'o' => conjuncts.push(mCurrent)
+          	}
+          	//println("conjuncts.length = " +  conjuncts.length)
+          	if (conjuncts.length == 0)
+          	  removeFolExp;
+          	else if (conjuncts.length == 1)
+          	  conjuncts.pop();
+          	else 
+          	{
+          		var mE = conjuncts.pop()
+          		while (!conjuncts.isEmpty)
+          		  mE = FolAndExpression(mE, conjuncts.pop());
+          		mE
+          	}
+
+          	/*
             val mFirst = findRemoveEq(first, quantifiers, isNegated) 
       		val mSecond = findRemoveEq(second, quantifiers, isNegated)
       		(getBoolean2(mFirst),getBoolean2(mSecond)) match 
@@ -236,8 +277,8 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
       		  case ('r', 'r') => removeFolExp
       		  case ('r', 'o') => mSecond
       		  case ('o', 'r') => mFirst
-      		  case ('o', 'o') => FolAndExpression(mFirst, mSecond);      		    
-      		}
+      		  case ('o', 'o') => FolAndExpression(mFirst, mSecond);
+      		}*/
       	case FolOrExpression(first, second) =>
       	    val mFirst = findRemoveEq(first, quantifiers, isNegated) 
       		val mSecond = findRemoveEq(second, quantifiers, isNegated)
@@ -246,7 +287,7 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
       		  case ('r', 'r') => removeFolExp
       		  case ('r', 'o') => mSecond
       		  case ('o', 'r') => mFirst
-      		  case ('o', 'o') => FolOrExpression(mFirst, mSecond);      		    
+      		  case ('o', 'o') => FolOrExpression(mFirst, mSecond);
       		}
       	case FolIfExpression(first, second) =>
       	    val mFirst = findRemoveEq(first, quantifiers, !isNegated) 
@@ -445,6 +486,36 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
          }
     	case FolAtom(pred, args @ _*) => FolAtom(pred, args.map(applyEq(_)) :_ * )	
     	case FolVariableExpression(v) => FolVariableExpression(applyEq(v)) 
+        case FolAndExpression(first, second) =>
+        {
+          	// for large structures, the recursive code breaks with StackOverFlow. 
+          	//The code here is changed to iterative to sovle this problem 
+            val conjuncts:scala.collection.mutable.Stack[FolExpression] = scala.collection.mutable.Stack();
+          	var current = e
+          	while (current.isInstanceOf[FolAndExpression])
+          	{
+          	  current match 
+          	  {
+          	    case FolAndExpression(left, right) =>
+          	      assert (! right.isInstanceOf[FolAndExpression])
+          	      conjuncts.push( applyEq (right) )
+          	      current = left
+          	  }
+          	}
+          	conjuncts.push(applyEq(current))
+          	LOG.trace("conjuncts.length = " +  conjuncts.length)
+          	if (conjuncts.length == 0)
+          	  removeFolExp;
+          	else if (conjuncts.length == 1)
+          	  conjuncts.pop();
+          	else 
+          	{
+          		var mE = conjuncts.pop()
+          		while (!conjuncts.isEmpty)
+          		  mE = FolAndExpression(mE, conjuncts.pop());
+          		mE
+          	}
+    	}
     	case _=>e.visitStructured(applyEq, e.construct)
     }
   }

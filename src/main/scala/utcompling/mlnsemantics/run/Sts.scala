@@ -246,10 +246,10 @@ object Sts {
 		                    new CorefProbabilisticTheoremProver( // Coreference resolution between T and H for predicates in LHS of Merge
 		                     new SetGoalPTP( //
 		                      new HardAssumptionAsEvidenceProbabilisticTheoremProver( // 15<== Generate evidence from premise.
-		                       new PositiveEqEliminatingProbabilisticTheoremProver( //Apply skolemized positive equalities and remove skolmeized negated equalities.		                          
+		                       //new PositiveEqEliminatingProbabilisticTheoremProver( //Apply skolemized positive equalities and remove skolmeized negated equalities.		                          
 		                        new AutoTypingPTP( //generate negative evidence
 		                         new NoExistProbabilisticTheoremProver( //
-		                        softLogicTool)))))))))))))))))) // 16<== run Alchemy or PSL
+		                        softLogicTool))))))))))))))))) // 16<== run Alchemy or PSL
 
           val p = ttp.prove(Sts.text, Sts.hypothesis) //Sts.text and Sts.hypothesis are already tokenized 
           return p;

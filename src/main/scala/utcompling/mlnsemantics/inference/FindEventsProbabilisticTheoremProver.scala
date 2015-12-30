@@ -25,12 +25,13 @@ class FindEventsProbabilisticTheoremProver(
         case BoxerVariable(name) => {
           var add : Int = name.charAt(0) match 
           {
-            case 'x' => 100;
-            case 'e' => 200;
-            case 'p' => 300;
-            case 's' => 400;
+            case 'x' => 1000;
+            case 'e' => 2000;
+            case 'p' => 3000;
+            case 's' => 4000;
             case _ => throw new RuntimeException("Unsupported variable type (" + name.charAt(0) + ")" );
           }
+          assert (name.length() <= 4, "Variable "+name+" has index greater than 999")
           BoxerVariable("x" + (add + name.substring(1).toInt))
         }
         case _ => e.visitConstruct(removeVarTypes)

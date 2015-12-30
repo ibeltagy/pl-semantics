@@ -25,6 +25,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
   private var skolemFunctionsCounter:Int = 0;
   //private var skolemConstCounter:Int = 0; 
   private var extraUnivVars: Set[String] = null;
+  private var outerMost:Boolean = true;
   
   object PermutTimesout extends Exception { }
 
@@ -45,7 +46,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
     extraEvid = List();
   	skolemFunctionsCounter = 0;
   	extraUnivVars = null;
-
+  	outerMost = true;
     try 
     {
 	    val newAssumptions:List[WeightedExpression[FolExpression]] =  //if(Sts.opts.fixDCA == false) assumptions //if no-fixDCA, then do nothing
@@ -54,6 +55,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 	        .flatMap {
 	          case HardWeightedExpression(e, w) => {
 	        	  extraUnivVars = Set();
+	        	  outerMost = true
 	        	  var exp = goUniv(e, List(), List(), false);
 	        	  if(Sts.opts.softLogicTool == "psl")
 	        	  {
@@ -115,6 +117,7 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
           }
           else
           {
+        	  outerMost = false;
 	          skolemFunctionsCounter = skolemFunctionsCounter + 1;
 	          val skolemPredName = "skolem_"+skolemFunctionsCounter + "_" + univVars.size;
 	          var skolemPred : FolExpression = FolVariableExpression(Variable(skolemPredName));
@@ -192,7 +195,8 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 	      	   case false => FolAllExpression(v, goUniv(term, univVars:+v.name, existVars, isNegated))
 	      	 }
         } 
-        case FolNegatedExpression(term) => FolNegatedExpression(goUniv(term, univVars, existVars, !isNegated))
+        case FolNegatedExpression(term) =>  outerMost = false;
+        			FolNegatedExpression(goUniv(term, univVars, existVars, !isNegated))
         case FolAndExpression(first, second) => 
 				{
 					//this is actually useless, but I will keep it
@@ -202,11 +206,15 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 							return false;
 						if (univVars_.length > 0) 
 							return false;
+						if (!outerMost)
+							return false;
 						e_ match 
 						{
 							case FolAtom(pred, args @ _*) => 
 								//all variables of the atom are existentially quantified 
-								assert ((existVars_.toSet & args.map(_.name).toSet ).size  == args.toSet.size) 
+								assert( (existVars_.toSet & args.map(_.name).toSet ).size  == args.toSet.size,
+									"args: " + args + ", atom: " + e_ + " not in existVars: " + existVars_ + " and not in univVars: " + univVars_)
+
 								extraEvid = e_ :: extraEvid;
 								return false
 							case _ => return false
@@ -221,10 +229,12 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 						FolAndExpression(goUniv(first, univVars, existVars, isNegated), 
 							goUniv(second, univVars, existVars, isNegated))
 				}
-      	case FolOrExpression(first, second) => FolOrExpression(goUniv(first, univVars, existVars, isNegated),
-      														goUniv(second, univVars, existVars, isNegated))
-      	case FolIfExpression(first, second) => FolIfExpression(goUniv(first, univVars, existVars, !isNegated),
-      														goUniv(second, univVars, existVars, isNegated))
+      	case FolOrExpression(first, second) => outerMost = false;
+      				FolOrExpression(goUniv(first, univVars, existVars, isNegated),
+      					goUniv(second, univVars, existVars, isNegated))
+      	case FolIfExpression(first, second) => outerMost = false;
+      				FolIfExpression(goUniv(first, univVars, existVars, !isNegated),
+      					goUniv(second, univVars, existVars, isNegated))
       	case FolIffExpression(first, second) => throw new RuntimeException("not reachable")
         case FolEqualityExpression(first, second) => FolEqualityExpression(goUniv(first,univVars, existVars, isNegated)
         															, goUniv(second,univVars, existVars, isNegated))

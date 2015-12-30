@@ -132,7 +132,7 @@ class AutoTypingPTP(
 		}
 	
 		//findApply
-		val finish = runWithTimeout(3000, false) { findApply ;  true }
+		val finish = runWithTimeout(10000, false) { findApply ;  true }
 		if(!finish)
 			return Seq(-5.0)
     }
