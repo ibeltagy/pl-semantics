@@ -441,8 +441,10 @@ class EditDRSTheoremProver(
   
   def removeDanglingEqualities(e:BoxerExpression) : BoxerExpression = 
   {
+	 if (!Sts.opts.removeEq)
+		return e;
     var exp = e;
-	val eqs = e.getEqualities.flatMap(eq =>{
+	 val eqs = e.getEqualities.flatMap(eq =>{
 	    eq match
 	    {
 	      case BoxerEq(discId, indices, first, second) => Some((eq, first.name, second.name))

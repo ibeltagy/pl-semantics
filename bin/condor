@@ -83,7 +83,16 @@ case $CMD in
             gs="resources/rte1/RTE1.gs"
             DS="rte 1"
             ;;
-			 *)
+          qa)
+            qDir=$5
+				shift
+            task=rte
+            DS="qa "$qDir
+				dsSize=$(ls -all $qDir | grep question | wc -l)
+				echo "Dataset: "$DS
+				echo "Dataset size: "$dsSize	
+				;;
+          *)
 				echo "$DS dataset is not supported"
 				exit 1
 			 ;;
@@ -166,7 +175,7 @@ do
 	fix)
 		if [ "$b" == "ERROR" ]; then
 			echo "RESUBMIT bin/mlnsem run-condor $step $i $args $outputFile"
-         bin/mlnsem run-condor $step $i $args $outputFile
+         #bin/mlnsem run-condor $step $i $args $outputFile
 		else
 		  	echo "$i is ok"
 		fi

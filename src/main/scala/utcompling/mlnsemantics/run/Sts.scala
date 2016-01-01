@@ -84,52 +84,12 @@ object Sts {
     Logger.getRootLogger.setLevel(opts.loglevel)
 
     newArgs.toSeq match {
-      case Seq("sen", sen1, sen2) =>
-      {
-//    	 println(sen1);
-//    	 println(sen2);
-	     //val sentences = Array(sen1.toLowerCase(), sen2.toLowerCase()).map(Tokenize.separateTokens).toList
-		 val sentences = Array(sen1, sen2).map(Tokenize.separateTokens).toList
-		 LOG.trace(sentences);     
-    	 //val lemmatized = new CncLemmatizeCorpusMapper().parseToLemmas(Array(sen1, sen2))
-    	 //val lemmas = lemmatized.map(_.map(_.map(_._2).mkString(" ")).getOrElse("______parse_failed______"))
-	     val lemmas:List[String] = sentences.map(Lemmatize.lemmatizeWords)
-    	 //println(lemmas);
-	     val di = new ModalDiscourseInterpreter
-	     val sen1Box = di.batchInterpret(List(sentences(0)), verbose = LOG.isTraceEnabled());
-	     val sen2Box = di.batchInterpret(List(sentences(1)), verbose = LOG.isTraceEnabled());
-		 val boxes = sen1Box ++ sen2Box
-		 //val boxes = di.batchInterpret(sentences);
-	     LOG.trace("boxes: >>>> " + boxes);
-	     val allLemmas = lemmas.flatMap(_.split("\\s+")).toSet
-	     val fullVsFile = opts.vectorSpace
-         val tempVSFile = FileUtils.mktemp();
-	      FileUtils.writeUsing(tempVSFile) { f =>
-          	for (line <- readLines(fullVsFile)) {
-          		val word = line.split("-.\t|\t")(0)
-          		if (allLemmas(word) || allLemmas(word.toLowerCase))
-          			f.write(line + "\n")
-          	}
-	      }
-	      val vectorSpace = BowVectorSpace(tempVSFile /* "resources/prob/prob.vs"*/)
-	      // Index distributional phrases into Lucene repository
-	      luceneDistPhrases = new Lucene(opts.phrasesFile )
-	      // Index paraphrase rules into Lucene repository
-	      luceneParaphrases = opts.rulesFile.split(":").map(new Lucene (_)).toList
-	      //luceneParaphrases = new Lucene (opts.rulesFile)
-	      //def depParser = DepParser.load();
-	      Sts.pairIndex = 1;
-	      Sts.text = sen1;
-	      Sts.hypothesis = sen2;
-	      Sts.textLemma = lemmas(0);
-	      Sts.hypothesisLemma = lemmas(1);
-	      println(Sts.text)
-	      println(Sts.hypothesis)
-	      val boxPair = boxes.map(x => Option(x.get.toString()));
-          val result = runOnePair(boxPair, vectorSpace, null);
-          println(result)
-         resultOnePair = result;
-      }
+     
+		case Seq("qa", qDir, Range(range)) => runQA (qDir, range)
+
+      case Seq("qa", qDir) => runQA (qDir, defaultRange)
+
+      case Seq("sen", sen1, sen2) => parseRunOnePair(sen1, sen2)
       
       case Seq("lem", stsFile, lemFile) =>
       	println ("No need to generate LEM file anymore");
@@ -193,7 +153,85 @@ object Sts {
         run(stsFile, boxFile, lemFile, stsVsFile, goldSimFile, outputSimFile, UniversalSet(), range.toSet)
 
     }
-    
+  
+	 def runQA (qaDir: String, range: Seq[Int])
+	 {
+		val qFiles = new java.io.File(qaDir).listFiles.filter(_.getName.endsWith(".question")).sorted
+		for (qFileIndex <- range)
+		{
+			val qFile = qFiles(qFileIndex - 1)
+         println("=============\n  Question %s\n  %s/%s\n=============".format(qFileIndex, qaDir, qFile))
+			val linesReader = readLines(qFile)
+         val title = linesReader.next()
+         linesReader.next()
+         var context = linesReader.next()
+         linesReader.next()
+         var question = linesReader.next()
+         linesReader.next()
+         val rightAnswer = linesReader.next()
+         assert (linesReader.next() == "");
+         while(linesReader.hasNext)
+         {
+            val splits = linesReader.next().split(":");
+            context = context.replace (splits(0), splits(1))
+            question = question.replace (splits(0), splits(1))
+         }
+         
+			try
+         {
+	         parseRunOnePair(context, question)
+         }
+			catch 
+			{
+         	case e: Throwable =>
+					LOG.error("Unknowen error");
+					println ("List()")
+         }
+		}
+	 } 
+    def parseRunOnePair(sen1: String, sen2: String )  = {
+ 	     //val sentences = Array(sen1.toLowerCase(), sen2.toLowerCase()).map(Tokenize.separateTokens).toList
+		 val sentences = Array(sen1, sen2).map(Tokenize.separateTokens).toList
+		 LOG.trace(sentences);     
+    	 //val lemmatized = new CncLemmatizeCorpusMapper().parseToLemmas(Array(sen1, sen2))
+    	 //val lemmas = lemmatized.map(_.map(_.map(_._2).mkString(" ")).getOrElse("______parse_failed______"))
+	     val lemmas:List[String] = sentences.map(Lemmatize.lemmatizeWords)
+    	 //println(lemmas);
+	     val di = new ModalDiscourseInterpreter
+	     val sen1Box = di.batchInterpret(List(sentences(0)), verbose = LOG.isTraceEnabled());
+	     val sen2Box = di.batchInterpret(List(sentences(1)), verbose = LOG.isTraceEnabled());
+		 val boxes = sen1Box ++ sen2Box
+		 //val boxes = di.batchInterpret(sentences);
+	     LOG.trace("boxes: >>>> " + boxes);
+	     val allLemmas = lemmas.flatMap(_.split("\\s+")).toSet
+	     val fullVsFile = opts.vectorSpace
+         val tempVSFile = FileUtils.mktemp();
+	      FileUtils.writeUsing(tempVSFile) { f =>
+          	for (line <- readLines(fullVsFile)) {
+          		val word = line.split("-.\t|\t")(0)
+          		if (allLemmas(word) || allLemmas(word.toLowerCase))
+          			f.write(line + "\n")
+          	}
+	      }
+	      val vectorSpace = BowVectorSpace(tempVSFile /* "resources/prob/prob.vs"*/)
+	      // Index distributional phrases into Lucene repository
+	      luceneDistPhrases = new Lucene(opts.phrasesFile )
+	      // Index paraphrase rules into Lucene repository
+	      luceneParaphrases = opts.rulesFile.split(":").map(new Lucene (_)).toList
+	      //luceneParaphrases = new Lucene (opts.rulesFile)
+	      //def depParser = DepParser.load();
+	      Sts.pairIndex = 1;
+	      Sts.text = sen1;
+	      Sts.hypothesis = sen2;
+	      Sts.textLemma = lemmas(0);
+	      Sts.hypothesisLemma = lemmas(1);
+	      println(Sts.text)
+	      println(Sts.hypothesis)
+	      val boxPair = boxes.map(x => Option(x.get.toString()));
+         val result = runOnePair(boxPair, vectorSpace, null);
+         println(result)
+         resultOnePair = result;
+ 	}
     
     def runOnePair(boxPair:List[Option[String]], vectorSpace:BowVectorSpace, depParser:DepParser):Seq[Double] = {
 

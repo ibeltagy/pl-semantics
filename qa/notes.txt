@@ -1,3 +1,9 @@
+-DONE Run condor QA jobs in groups
+-Fix broken condor QA runs
+-Boxer takese forever sometimes
+-Stackoverflow in HardAssumption.
+
+
 Documentation: 
 -download, install and run the soap server
 Run: python qa/run.py cnn validation mln -limit 1 -mlnArgs "-soap localhost:9000 -log TRACE -keepUniv false -withNegT false -irLvl 0 -diffRules false -wordnet false -timeout 10000 -softLogic ss"

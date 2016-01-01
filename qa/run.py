@@ -13,6 +13,8 @@ from nltk.tokenize import sent_tokenize
 from sets import Set
 import subprocess
 import numpy as np
+import imp
+condorizer = imp.load_source("condorizer","./bin/condorizer.py")
 
 #Util
 #------------------------
@@ -47,8 +49,9 @@ def parseIntSet(nputstr=""):
 #-------------------------
 parser = argparse.ArgumentParser()
 
-parser.add_argument("ds", choices=["wikipedia", "cnn", "dailymail", "samples"], help="QA datasets: wikipedia, cnn, dailymail")
-parser.add_argument("mode", choices=["test", "validation", "training"], help="training, validation, or test")
+#parser.add_argument("ds", choices=["wikipedia", "cnn", "dailymail", "samples"], help="QA datasets: wikipedia, cnn, dailymail")
+#parser.add_argument("mode", choices=["test", "validation", "training"], help="training, validation, or test")
+parser.add_argument("-ds", type=str, help="Directory of questions")
 parser.add_argument("algo", choices=["bow", "mln"], help="QA algorithms: bow")
 parser.add_argument("-range", type=str, default="", help="set of indecies of questions to run")
 parser.add_argument("-anonymous", action='store_true', default=False, help="anonymise the entities or keep them ?")
@@ -58,7 +61,8 @@ parser.add_argument("-condor", type=str, default="", help="condor output folder.
 
 
 args = parser.parse_args()
-directory = "qa/resources/" + args.ds + "/" + args.mode
+#directory = "qa/resources/" + args.ds + "/" + args.mode
+directory = args.ds
 args.range = parseIntSet(args.range)
 
 def bow (context, question):
@@ -83,12 +87,14 @@ def bow (context, question):
 	#print bestSen
 	return bestEntity
 	
-def mln (context, question):
+def mln (qFilePath):
 	mlnArgs = args.mlnArgs.split( );
-	allArgs = ["bin/mlnsem", "sen", context, question] + mlnArgs
-	if not args.condor == "":
-		allArgs = ["bin/condorize.py"] + allArgs + [args.condor]
-	subprocess.call( allArgs) 
+	allArgs = ["bin/mlnsem", "qa", qFilePath] + mlnArgs
+	if args.condor == "":
+	    subprocess.call( allArgs) 
+        else:
+            condorizer.condorize( ["ARG0"] + allArgs + [args.condor + "/" + str(qIdx)])     
+        
 		#"-log", "TRACE", "-soap", "localhost:9000", "-diffRules", "false", "-irLvl", "0", "-negativeEvd", "true", "-withNegT", "false"])
 	return ""
 
@@ -98,36 +104,36 @@ rightAnswersCount = 0
 totalAnswersCount = 0
 fileList = os.listdir(directory)
 for qFileName in sorted (fileList):
-	#print qFileName
-	qIdx = qIdx + 1;
+	qFilePath = directory + "/" +qFileName
+        qIdx = qIdx + 1;
 	
 	if (len(args.range) > 0 and not (qIdx in args.range) ):
 		continue;
-	qFile = open(directory + "/" +qFileName);
-	title = qFile.readline().strip();
-	qFile.readline();
-	context = qFile.readline().strip();
-	qFile.readline();
-	question = qFile.readline().strip();
-	qFile.readline();
-	rightAnswer = qFile.readline().strip();
-	assert qFile.readline().strip() == "";
-	if not args.anonymous: #deanonymize the data
-		for l in qFile:
-			splits = l.strip().split(":");
-			context = context.replace (splits[0], splits[1])
-		#print context
-		
 
 	answer = ""
+        rightAnswer = ""
 	print "#################################"
 	print "##Processing Q: " + str(qIdx)
 	print "#################################"
 	sys.stdout.flush() 
 	if args.algo == "bow":
-		answer = bow (context, question);
+            qFile = open(qFilePath);
+            title = qFile.readline().strip();
+            qFile.readline();
+            context = qFile.readline().strip();
+            qFile.readline();
+            question = qFile.readline().strip();
+            qFile.readline();
+            rightAnswer = qFile.readline().strip();
+            assert qFile.readline().strip() == "";
+            if not args.anonymous: #deanonymize the data
+                for l in qFile:
+                    splits = l.strip().split(":");
+                    context = context.replace (splits[0], splits[1])
+                    #print context
+	    answer = bow (context, question);
 	elif args.algo == "mln":
-		answer = mln (context, question);
+		answer = mln (qFilePath);
 	else:
 		raise ("not implemented yet")
 

@@ -51,6 +51,10 @@ case $CMD in
     $START utcompling.mlnsemantics.run.Sts sen "$@"
     exit 0
    ;;
+  qa)
+    $START utcompling.mlnsemantics.run.Sts qa "$@"
+    exit 0
+   ;;
   run-condor)
    step=$1
    shift
@@ -83,6 +87,10 @@ case $DS in
 #	shift
 
 	dsPath="$RES/rte$rte_ver/RTE$rte_ver" #.$rte_mode"
+  ;;
+  qa)
+  dsPath=$1
+  shift
   ;;
   *) 
     echo "$DS is a wrong dataset"
@@ -132,11 +140,16 @@ if [ "$CMD" == "run-condor" ]; then
 	rngTo=$(( $step * index ))
 	rngFrom=$(( $index - 1 ))
 	rngFrom=$(( $rngFrom * $step + 1))
-	if [ "$rngFrom" -gt "$rowsCnt" ]; then
-   	echo "range $rngFrom-$rngTo beyond dataset size"
-	   exit 1
+   if [ "$DS" == "qa" ]; then
+		echo QA
+		./bin/condorizer.py $START utcompling.mlnsemantics.run.Sts qa $dsPath $rngFrom-$rngTo "$@"
+	else
+		if [ "$rngFrom" -gt "$rowsCnt" ]; then
+			echo "range $rngFrom-$rngTo beyond dataset size"
+			exit 1
+		fi
+   	./bin/condorizer.py $START utcompling.mlnsemantics.run.Sts run $txt $box $lem $vs $gs $out $rngFrom-$rngTo "$@"
 	fi
-   ./bin/condorizer.py $START utcompling.mlnsemantics.run.Sts run $txt $box $lem $vs $gs $out $rngFrom-$rngTo "$@"
 fi
 
 exit 0

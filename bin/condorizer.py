@@ -7,44 +7,49 @@ and submitting it.
 
 import os, sys
 
-CondorScript = """
-universe = vanilla
+def condorize (args):
+    CondorScript = """
+    universe = vanilla
 
-Executable = %s
-Requirements = (machine =!= "nasil-8.cs.utexas.edu")
-%s
+    Executable = %s
+    Requirements = (machine =!= "nasil-8.cs.utexas.edu")
+    %s
 
-+Group   = "GRAD"
-+Project = "AI_ROBOTICS"
-+ProjectDescription = "Semantic Textual Similarity using Markov Logic Network"
+    +Group   = "GRAD"
+    +Project = "AI_ROBOTICS"
+    +ProjectDescription = "Semantic Textual Similarity using Markov Logic Network"
 
-Arguments = %s
-Queue 
-"""
+    Arguments = %s
+    Queue 
+    """
 
-OutputLine = """
-Error = %s.err
-Output = %s.out
-"""
+    OutputLine = """
+    Error = %s.err
+    Output = %s.out
+    """
+    RawExecutable = args[1]
+    Arguments = ' '.join(args[2:-1])
+    OutputFile = args[-1]
 
-RawExecutable = sys.argv[1]
-Arguments = ' '.join(sys.argv[2:-1])
-OutputFile = sys.argv[-1]
+    Executable = os.popen('/bin/which %s' % RawExecutable).read()
+    CurrentDir = os.popen('/bin/pwd').read()
 
-Executable = os.popen('/bin/which %s' % RawExecutable).read()
-CurrentDir = os.popen('/bin/pwd').read()
+    # remove path information
+    SafeOutputFile = '-'.join(OutputFile.split('/'))
 
-# remove path information
-SafeOutputFile = '-'.join(OutputFile.split('/'))
+    if OutputFile == "/dev/null":
+      outputlines = ""
+    else:
+      outputlines = OutputLine % (OutputFile, OutputFile)
 
-if OutputFile == "/dev/null":
-  outputlines = ""
-else:
-  outputlines = OutputLine % (OutputFile, OutputFile)
+    condor_file = '/tmp/%s.condor' % (SafeOutputFile)
+    f = open(condor_file, 'w')
+    f.write(CondorScript % ( RawExecutable, outputlines, Arguments))
+    f.close()   
 
-condor_file = '/tmp/%s.condor' % (SafeOutputFile)
-f = open(condor_file, 'w')
-f.write(CondorScript % ( RawExecutable, outputlines, Arguments))
-f.close()   
+    #print args
+    print condor_file
+    os.popen('/lusr/opt/condor/bin/condor_submit %s' % condor_file)
 
-os.popen('/lusr/opt/condor/bin/condor_submit %s' % condor_file)
+if __name__ == '__main__':
+    condorize(sys.argv)

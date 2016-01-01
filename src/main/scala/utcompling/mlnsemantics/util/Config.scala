@@ -90,7 +90,8 @@ class Config(opts: Map[String, String] = Map()) {
 		"-ratio",
 		"-coref",
 		"-corefOnIR",
-		"-errorCode"
+		"-errorCode", 
+		"-removeEq"
 	);
   
   val diff = opts.keys.toSet.diff(validArgs.toSet)
@@ -434,6 +435,12 @@ class Config(opts: Map[String, String] = Map()) {
     	BoxerDiscourseInterpreter.applyNegation = true;
     	true;
     }
+    case _ => false;
+  }
+
+ //remove one weird equalities
+ var removeEq = opts.get("-removeEq") match {
+    case Some("true") => true;
     case _ => false;
   }
 

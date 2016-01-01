@@ -212,8 +212,8 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 						{
 							case FolAtom(pred, args @ _*) => 
 								//all variables of the atom are existentially quantified 
-								assert( (existVars_.toSet & args.map(_.name).toSet ).size  == args.toSet.size,
-									"args: " + args + ", atom: " + e_ + " not in existVars: " + existVars_ + " and not in univVars: " + univVars_)
+								if( (existVars_.toSet & args.map(_.name).toSet ).size  != args.toSet.size )
+									throw new RuntimeException ("args: " + args + ", atom: " + e_ + " not in existVars: " + existVars_ + " and not in univVars: " + univVars_)
 
 								extraEvid = e_ :: extraEvid;
 								return false

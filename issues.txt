@@ -1,3 +1,13 @@
+//Non-handled case: 
+T: An ogre is not attacking 
+defend => not attack
+H: An ogre is defending
+T should entail H (given the KB), but nothing create an event constant for attacking/defending. 
+This will not work with the CWA because without an entity for attacking/defending, all their 
+ground atoms are false. 
+
+//Make the system works with STS + DiffRules
+
 //Text has a negation if it has a predicate "nobody"
 //Sure rules for SICK-train-contradictions. 
 motorcycle-n-5  black-a-5 white-a-7 motorcycle-n-8      578

@@ -16,6 +16,8 @@ class BoxerExpressionParser(discourseId: String = "0") extends LogicParser[Boxer
 
     override protected def getAllSymbols() = List("(", ")", ",", "[", "]", ":")
 
+	 val weirdTokens = List("A", "B", "C", "D", "E", "F", "G")
+
     override protected def doParseExpression(context: Option[String] = None): BoxerExpression = {
         val tok0 = this.getToken(0)
         if (tok0 == "prs")
@@ -32,7 +34,7 @@ class BoxerExpressionParser(discourseId: String = "0") extends LogicParser[Boxer
             this.parseApp()
         else if (tok0 == "date")
         	this.parseDate()
-        else if (tok0 == "[" || tok0.startsWith("_") || tok0 == "B" /*very ugly hack for the broken output that Boxer produces*/)  {
+        else if (tok0 == "[" || tok0.startsWith("_") || weirdTokens.contains(tok0) /*very ugly hack for the broken output that Boxer produces*/)  {
         	var predIdx = 0;
         	if (tok0 == "[" )
         		predIdx = this.findToken("]") + 2;
@@ -42,7 +44,7 @@ class BoxerExpressionParser(discourseId: String = "0") extends LogicParser[Boxer
         										//--instantiate true.
         										//Sometimes, it outoputs "_G???" instead of 
         										// "[idx]:"	
-        										// Sometimes, it also outputs B: instead of [idx]: 
+        										// Sometimes, it also outputs one of the weirdTokens: instead of [idx]: 
             val pred = this.getToken(predIdx)
             if (pred == "not")
                 this.parseNot()
@@ -282,7 +284,7 @@ class BoxerExpressionParser(discourseId: String = "0") extends LogicParser[Boxer
 
     protected def parseIndexList(): List[BoxerIndex] = {
     	val nextTok =  this.nextToken();
-    	if (nextTok.startsWith("_") || nextTok == "B" )  //this is to handle the --instantiate bug
+    	if (nextTok.startsWith("_") || weirdTokens.contains(nextTok))  //this is to handle the --instantiate bug
     	  return List ();
     	else if (!nextTok.equals("["))
     	  throw new UnexpectedTokenException (this.getCurrentIndex, Some(nextTok), List("["));

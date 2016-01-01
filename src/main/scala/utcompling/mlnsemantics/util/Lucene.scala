@@ -13,6 +13,8 @@ import org.apache.commons.logging.LogFactory
 import scala.io.Source
 import math.{ceil, min}
 import utcompling.mlnsemantics.datagen.Tokenize
+import org.apache.lucene.queryparser.classic.QueryParserBase
+
 
 /**
  * A companion object handles reading and writing to Lucene.
@@ -115,6 +117,15 @@ class Lucene(rulesFileName: String) {
   }
    
   val ignoredTokens = List("a", "an", "the", "be", "is", "are", "to", "in", "on", "at", "of", "for")
+  
+  def luceneEscapeString (s:String): String =  
+  {
+    val specialChars = List("+", "-", "&&", "||", "!", "(", ")", "{", "}", "[", "]", "^",  "\"", "~", "*", "?", ":", "\\")
+    var escapedS = s;
+    for (specialChar <- specialChars)
+    	escapedS = escapedS.replace(specialChar, "\\" + specialChar)
+    escapedS
+  }
   //This function is like "read(query)" but it cleanups the query string before querying Lucene  
   def query(q: String): Seq[String] = 
   {
@@ -138,12 +149,12 @@ class Lucene(rulesFileName: String) {
 	.toSeq
 	.distinct
 	.mkString(" ")
-	return this.queryWithTimeLog("(" + query1 + ") AND (" + query2 +")" )
+	return this.queryWithTimeLog("(" + QueryParserBase.escape(query1) + ") AND (" + QueryParserBase.escape(query2) +")" )
   }
   
   def exactMatchingQuery(q: String): Seq[String] = 
   {
-	return this.queryWithTimeLog("\" " + q + " \"");
+	return this.queryWithTimeLog("\" " + QueryParserBase.escape(q) + " \"");
   }
   
   def queryWithTimeLog(q: String): Seq[String] = 
