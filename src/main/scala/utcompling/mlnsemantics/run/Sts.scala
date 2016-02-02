@@ -160,24 +160,27 @@ object Sts {
 		for (qFileIndex <- range)
 		{
 			val qFile = qFiles(qFileIndex - 1)
-         println("=============\n  Question %s\n  %s/%s\n=============".format(qFileIndex, qaDir, qFile))
+         println("=============\nQuestion %s\n%s\n=============".format(qFileIndex, qFile))
 			val linesReader = readLines(qFile)
          val title = linesReader.next()
          linesReader.next()
-         var context = linesReader.next()
+         var context = linesReader.next() + " "; //add a space to the end of text to make sure 
+									//that each token ends with a space. This makes replacing
+									//@entityXX with the entity name easier
          linesReader.next()
-         var question = linesReader.next()
+         var question = linesReader.next()  + " "  //same, add a space to the end of text. 
          linesReader.next()
          val rightAnswer = linesReader.next()
          assert (linesReader.next() == "");
          while(linesReader.hasNext)
          {
             val splits = linesReader.next().split(":");
-            context = context.replace (splits(0), splits(1))
-            question = question.replace (splits(0), splits(1))
+            //include a space after entity index to make sure I am replacing a whole token
+            context = context.replace (splits(0) + " ", splits(1) + " ")
+            question = question.replace (splits(0)+ " ", splits(1) + " ")
          }
-         
-			try
+         assert(!context.contains("@entity") && !question.contains("@entity"), "Context or Question have anonymous entities")
+		 try
          {
 	         parseRunOnePair(context, question)
          }

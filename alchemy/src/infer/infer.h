@@ -1384,11 +1384,19 @@ int buildInference(Inference*& inference, Domain*& domain,
     {
         // Lazy version: queries and allPredGndingsAreQueries are empty,
         // markHardGndClause and trackParentClauseWts are not used
+
       state = new VariableState(&queries, NULL, NULL,
                                 &allPredGndingsAreQueries,
                                 markHardGndClauses,
                                 trackParentClauseWts,
                                 mln, domain, aLazy);
+
+      //with afocusedGrounding enabled, some query ground atoms are found to be false in MRF. 
+      //delete these ground atoms from th query because they have zero probability
+      
+      for (int i = queries.size() - 1; i >= 0  ; i--) //count down because items are deleted in the loop
+        if ( domain->getDB()->getValue(queries[i]) != UNKNOWN)
+          queries.removeItem(i);
     }
 
     if (aStartPt && aHybrid)

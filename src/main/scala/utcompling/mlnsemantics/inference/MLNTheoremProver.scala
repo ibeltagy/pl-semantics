@@ -52,7 +52,9 @@ with ProbabilisticTheoremProver[FolExpression]{
         case FolVariableExpression(Variable(pred)) => pred
     }.mkString(",")
     
-    val args = List("-ow", openWorldPreds) ++ (Sts.opts.task match {
+    				//I do not need the openWorld predicates. The evd file is empty, so everything is open world, 
+    				//and alchemy will find the inferrable ground atoms
+    val args = /*List("-ow", openWorldPreds) ++ */ (Sts.opts.task match {
       case "sts" => List("-q", "entailment_h,entailment_t")
       case "rte" => List("-q", "entailment_h")
     })
@@ -75,7 +77,7 @@ with ProbabilisticTheoremProver[FolExpression]{
 		    var score1 = 0.0;
 		    try {
 		      score1 = out.mkString("").trim().toDouble;
-		    }catch {case _ => score1 = - 1;}
+		    }catch {case _ => score1 = 0 /*empty file means entailment_h is not inferrable and it has a zero probability*/;}
 		    out.clear();
 		    
 			 var score2 = 0.0;
@@ -91,7 +93,7 @@ with ProbabilisticTheoremProver[FolExpression]{
 						
 					    try {
 					      score2 = out.mkString("").trim().toDouble;
-					    }catch {case _ => score2 = - 1;}
+					    }catch {case _ => score2 = 0 /*empty file means entailment_t is not inferrable and it has a zero probability*/;}
 						out.clear();
 			 }
 		    

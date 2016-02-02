@@ -73,6 +73,8 @@ ClauseSampler* Clause::clauseSampler_ = NULL;
 double Clause::fixedSizeB_ = -1;
 double AuxClauseData::fixedSizeB_ = -1;
 
+extern char * asamplesearchQueryFile;
+
 
   //check if addition of a constant with the given implicit index still keeps
   //the tuple a representative one. A tuple is a representative tuple if the
@@ -171,23 +173,31 @@ bool Clause::createAndAddUnknownClause(
   }
 
   //If all predicates in the clause are known + the claus's value is False
-  if (clause == NULL && clauseKnownPredsTruthValue == false ) // isHardClause_ 
+  //Update: For now, just drop any inconsistent ground clause
+  
+
+  if (asamplesearchQueryFile)
   {
-      //Add a rule and its negation to the inference problem 
-      //so that we do not miss this negation. 
-      clause = new Clause();
-      Predicate* pred = new Predicate(*firstFalsePred, clause);
-      clause->appendPredicate(pred);
+      //this is only relevant in case of query formula where the output probabilty 
+      //should be zero if there is a "false" "hard" ground clause 
+      //but if not query formula, it is enogh to drop ground clauses that are trivially false
+    if (clause == NULL && clauseKnownPredsTruthValue == false ) // isHardClause_ 
+    {
+        //Add a rule and its negation to the inference problem 
+        //so that we do not miss this negation. 
+        clause = new Clause();
+        Predicate* pred = new Predicate(*firstFalsePred, clause);
+        clause->appendPredicate(pred);
 
-      negationClause = new Clause();
-      firstFalsePred->setSense(!firstFalsePred->getSense());
-      Predicate* pred2 = new Predicate(*firstFalsePred, clause);
-      negationClause->appendPredicate(pred2);
+        negationClause = new Clause();
+        firstFalsePred->setSense(!firstFalsePred->getSense());
+        Predicate* pred2 = new Predicate(*firstFalsePred, clause);
+        negationClause->appendPredicate(pred2);
 
-      cout << "Predicate "<< pred->getName() << " and its negation added in place of its clause" ;
-      this->print(cout, db->getDomain());
-      cout << endl;
-
+        cout << "Predicate "<< pred->getName() << " and its negation added in place of its clause" ;
+        this->print(cout, db->getDomain());
+        cout << endl;
+    }
   }
 
   if (clause)  //if clause contains unknown predicates ?

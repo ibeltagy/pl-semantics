@@ -1040,6 +1040,24 @@ class Database
   }
 
   /**
+   * Gets false groundings of a predicate.
+   * 
+   * @param predId Id of predicate whose false groundings are being retrieved.
+   * @param indexedGndings False groundings are put here
+   */ 
+  void getFalseGndings(int predId, Array<Predicate*>* const & indexedGndings)
+  {
+      // True gndings from falsePredIdxSet_
+    LongLongHashSet::const_iterator it = (*falsePredIdxSet_)[predId].begin();
+    for (; it != (*falsePredIdxSet_)[predId].end(); it++)
+    {
+      Predicate* p =
+        getPredFromIdx((*it), domain_->getPredicateTemplate(predId));
+      indexedGndings->append(p);
+    }
+  }
+
+  /**
    * Retrieves indexed groundings of a predicate. The indexed groundings are
    * the true (and false and active) groundings of the (possibly partially
    * grounded) predicate. Caller should delete indexedGndings and elements of

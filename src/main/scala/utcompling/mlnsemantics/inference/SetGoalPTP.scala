@@ -139,7 +139,10 @@ class SetGoalPTP(
       }
       else
       {
-    	  expr = goal <-> SetVarBindPTP.entPred_h;  
+    	if (Sts.opts.noHMinus)
+    		expr = goal -> SetVarBindPTP.entPred_h;
+    	else
+    		expr = goal <-> SetVarBindPTP.entPred_h;
       }      
       extraExpressions = List(GoalExpression(expr.asInstanceOf[FolExpression], Double.PositiveInfinity));
       

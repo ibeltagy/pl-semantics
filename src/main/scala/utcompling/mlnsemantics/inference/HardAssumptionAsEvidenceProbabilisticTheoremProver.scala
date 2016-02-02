@@ -213,20 +213,23 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 							case FolAtom(pred, args @ _*) => 
 								//all variables of the atom are existentially quantified 
 								if( (existVars_.toSet & args.map(_.name).toSet ).size  != args.toSet.size )
-									throw new RuntimeException ("args: " + args + ", atom: " + e_ + " not in existVars: " + existVars_ + " and not in univVars: " + univVars_)
+								{
+									println ("args: " + args + ", atom: " + e_ + " not in existVars: " + existVars_ + " and not in univVars: " + univVars_)
+									return false;
+								}
 
 								extraEvid = e_ :: extraEvid;
 								return false
 							case _ => return false
 						}
 					}
-					
+					/*
 					if ( isGroundAtom (first, univVars, existVars, isNegated) )
 						goUniv(second, univVars, existVars, isNegated)
 					else if ( isGroundAtom (second, univVars, existVars, isNegated) )
 						goUniv(first, univVars, existVars, isNegated)
 					else
-						FolAndExpression(goUniv(first, univVars, existVars, isNegated), 
+						*/FolAndExpression(goUniv(first, univVars, existVars, isNegated), 
 							goUniv(second, univVars, existVars, isNegated))
 				}
       	case FolOrExpression(first, second) => outerMost = false;

@@ -15,12 +15,77 @@ bin/infer -i test/test.mln -e test/test.db  -r test/test.res -q cut_v_dh,man_n_d
 //k  : 23.5589, 24.1293, 42.3707
 //
 
-hx = {A, B, Q}
-pred(hx)
+//hx = {A, B, C, D, E, F, G, H, I, J}
+ hx = {John, Mary}
+//pred(hx)
 
+/*human (hx)
+boy(hx)
+//rel(hx, hx)
+//ter(hx, hx, hx)
+boy(John).
+boy(John) v human(John).
+boy(Mary) v human(Mary).
+*/
+
+
+man(hx)
+drive(hx)
+
+man(John) v drive(John).
+
+//man(x) v drive(x).
+
+//q(hx)
+
+//boy(x) ^ boy(y) ^ boy(z) => human(x).
+//1 boy(x) => human(x)
+
+//1 rel(x,y) ^ !human(z) => !ter(x,y,z)
+
+
+//1 rel(John, Mary)
+
+
+//1 boy(x) => human(x)
+
+//boy(John).
+//!boy(John).
+
+
+//!boy(Mary).
+
+//boy1 <=> !human1
+
+//human(Mark).
+
+
+//man(John).
+
+/*
+res(hx)
+t(hx)
+z(hx)
+d(hx)
+rell(hx, hx)
+*/
 //-5.00 pred (x)
-15 pred(A)
+	/*-1 rell(c, d)
+15 pred(x)
+1 exist x pred(x)
 100.001 pred(A) => pred(Q)
 100.001 pred(A) => pred(B) 
 000000.001 pred(B) => pred(Q)  
+	*/
+//1 /*pred(x) ^*/ rell( y) ^ t(q) ^ z(f)=> res(y)
 
+//1 t(a) ^t(b) ^t(c) ^t(d) ^t(e) ^z(f) ^z(g) ^z(h) ^z(i) ^z(j)  => res(y)
+
+/*
+1 t(a) ^ t(B) => rell(a, B)
+//1 rell(a, b) => z(b)
+1 z(b)  => res(b)
+
+1 d(b)  => res(b)
+	
+*/

@@ -1,8 +1,16 @@
--DONE Run condor QA jobs in groups
+-Update scala code to keep track of entities
+-So far, universal and negations are ignored
+-What is going to happen to universally quntified variables in the query ? expect a problem (try: bin/mlnsem  run  sick-rte 1  -log TRACE -negativeEvd false  -softLogic mln  -withNegT true)
+-Ideally, I should run the theorem prover before parsing (alchemy parsing changes Exist with disjunction)
+-I am not using it for RTE. To use it with Query Formula, the FOL program should be parsed first without the query. That is a lot of coding
+-Given MLN: c = {Const1}, R = {forall x man(x)} does not work. Parsing of E's output is wrong in case output is universally quantifid
+-Given MLN: c = {Const1}, R = {forall x man(x) v drive(x)}. Marginal prob != prior probability, but nothing is inferrable
+-Try to infer just the query, then find the ground atom from the proof tree
+-if I have two contradictory rules (even if they are weighted), things do not work nicely because the weighted rules are treated as hard rules when passed to the theorem prover
+-Run condor QA jobs in groups (DONE)
 -Fix broken condor QA runs
 -Boxer takese forever sometimes
 -Stackoverflow in HardAssumption.
-
 
 Documentation: 
 -download, install and run the soap server

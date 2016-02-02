@@ -185,6 +185,8 @@ class ARGS
   enum ArgsRetCode { ARG_MISSING, ARG_OK, ARG_ERR };
   static ARGS Args[];
   static ARGS END;
+  static char* progName;
+
 
  private:
 
@@ -194,7 +196,6 @@ class ARGS
   static bool usage_called;
   static int numArgs;
   static bool* found;
-  static char* progName;
   static bool ignoreUnknownSwitch;
 
     // instance data members.

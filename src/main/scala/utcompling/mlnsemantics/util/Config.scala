@@ -358,6 +358,7 @@ class Config(opts: Map[String, String] = Map()) {
   }
 
   //if fixDCA is true, noHMinus ignores H- and set negative prior on all predicates
+  //if softLogic = "mln", noHMinus generates a query rule: H => entail instead of H <=> entail 
   val noHMinus = opts.get("-noHMinus") match {
     case Some("false") => false;
     case _ => true;
@@ -460,11 +461,12 @@ class Config(opts: Map[String, String] = Map()) {
     case _ => true;
   }
  
- //Enable focus grounding. It does full grounding taking 
- //wrong types into account  
+ //Enable focus grounding; a theorem prover that finds non-inferrable ground atoms
+ //The default is false which works with the RTE task (+ negativeEvd)
+ //Change it to true for QA task 
  val focusGround= opts.get("-focusGround") match {
-    case Some("false") => false;
-    case _ => true;
+    case Some("true") => true;
+    case _ => false;
   }
 
   //------------------------------------------PSL
