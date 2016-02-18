@@ -14,37 +14,43 @@ from sets import Set
 import subprocess
 import numpy as np
 import imp
+from nltk.stem import WordNetLemmatizer
+import os.path
+import math 
+import numpy as np
+
+
 condorizer = imp.load_source("condorizer","./bin/condorizer.py")
 
 #Util
 #------------------------
 def parseIntSet(nputstr=""):
-  selection = set()
-  invalid = set()
-  # tokens are comma seperated values
-  tokens = [x.strip() for x in nputstr.split(',')]
-  for i in tokens:
-     try:
-        # typically tokens are plain old integers
-        selection.add(int(i))
-     except:
-        # if not, then it might be a range
-        try:
-           token = [int(k.strip()) for k in i.split('-')]
-           if len(token) > 1:
-              token.sort()
-              # we have items seperated by a dash
-              # try to build a valid range
-              first = token[0]
-              last = token[len(token)-1]
-              for x in range(first, last+1):
-                 selection.add(x)
-        except:
-           # not an int and not a range...
-           invalid.add(i)
-  # Report invalid tokens before returning valid selection
-  print "Invalid set: " + str(invalid)
-  return selection
+	selection = set()
+	invalid = set()
+	# tokens are comma seperated values
+	tokens = [x.strip() for x in nputstr.split(',')]
+	for i in tokens:
+		try:
+			# typically tokens are plain old integers
+			selection.add(int(i))
+		except:
+			# if not, then it might be a range
+			try:
+				token = [int(k.strip()) for k in i.split('-')]
+				if len(token) > 1:
+					token.sort()
+					# we have items seperated by a dash
+					# try to build a valid range
+					first = token[0]
+					last = token[len(token)-1]
+					for x in range(first, last+1):
+						selection.add(x)
+			except:
+				# not an int and not a range...
+				invalid.add(i)
+	# Report invalid tokens before returning valid selection
+	print "Invalid set: " + str(invalid)
+	return selection
 # end parseIntSet
 #-------------------------
 parser = argparse.ArgumentParser()
@@ -52,49 +58,105 @@ parser = argparse.ArgumentParser()
 #parser.add_argument("ds", choices=["wikipedia", "cnn", "dailymail", "samples"], help="QA datasets: wikipedia, cnn, dailymail")
 #parser.add_argument("mode", choices=["test", "validation", "training"], help="training, validation, or test")
 parser.add_argument("-ds", type=str, help="Directory of questions")
-parser.add_argument("algo", choices=["bow", "mln"], help="QA algorithms: bow")
+parser.add_argument("algo", choices=["bow", "mln", "word"], help="QA algorithms: bow")
 parser.add_argument("-range", type=str, default="", help="set of indecies of questions to run")
-parser.add_argument("-anonymous", action='store_true', default=False, help="anonymise the entities or keep them ?")
+parser.add_argument("-anonymous", action='store_true', default=True, help="anonymise the entities or keep them ?")
 parser.add_argument("-limitFeat", help="a limited set of features that is more appropriate for the NN [false]")
 parser.add_argument("-mlnArgs", default="", help="string containing MLN args")
 parser.add_argument("-condor", type=str, default="", help="condor output folder. If empty, run serially")
-
+parser.add_argument("-vocab", type=str, default="", help="vocabulary and statistics")
 
 args = parser.parse_args()
 #directory = "qa/resources/" + args.ds + "/" + args.mode
 directory = args.ds
 args.range = parseIntSet(args.range)
 
+vocabDict = {}
+wordCnt = 1
+if os.path.isfile(args.vocab) : 
+	vocabFile = open(args.vocab);
+	for l in vocabFile:
+		splits = l.strip().split(" ");
+		assert len(splits) == 2, "no two tokens: " + str(splits)
+		vocabDict[splits[1]] = splits[0];	
+		wordCnt += int ( splits[0])
+
+wnl = WordNetLemmatizer()
+stopWords = Set() 
+
+def word (context, question, entityList):
+	#pdb.set_trace()
+	words = np.array(context.split(" "));
+	qWords = np.array(question.split(" "));
+	minCost = sys.maxint
+	minCostEntity = "";
+	for e in entityList:
+		entityLoc = np.where (words == e);
+		entityCost = 0;
+		placeholderLoc = np.where (qWords == "@placeholder")[0][0]
+		for i in range (0, len (qWords)):
+			qWord = qWords[i]
+			#if qWord == "@placeholder"
+			wordLoc = np.where (words == qWord);
+			minDist = 50
+			for idx1 in entityLoc[0]:
+				for idx2 in wordLoc[0]:
+					#pdb.set_trace()
+					#minDist = min(minDist, max(0, abs(idx1 - idx2) - abs (placeholderLoc - i)))
+					minDist = min(minDist, abs(idx1 - idx2 - placeholderLoc + i))
+			#print " >> " + qWord + " " + str(minDist)
+			entityCost += minDist
+		#print "## " + e + " " + str(entityCost)
+		if entityCost < minCost:
+			minCost = entityCost
+			minCostEntity = e
+
+	#print "## " + str(minCost)
+	#print "## " + minCostEntity
+	return minCostEntity
+
+
 def bow (context, question):
+	#pdb.set_trace()
 	sentences = context.split(".");
-	qBow = Set (question.split(" "))
+	#qBow =  Set([wnl.lemmatize(x) for x in Set (question.split(" "))])
+	qBow =  Set (question.split(" "))
 	bestEntity = ""
 	bestSen = ""
-	maxOverlab = -1
+	maxOverlab = -sys.maxint - 1
+	maxOverlabWords = None;
 	for sentence in sentences:
-		senBow = Set(sentence.split(" "));
-		intersection = senBow & qBow;
+		#senBow = Set([wnl.lemmatize(x) for x in Set (sentence.split(" "))])
+		senBow = Set (sentence.split(" "))
+		intersection = (senBow & qBow) - stopWords;
 		senEntity = None
 		for w in senBow:
 			if w.startswith("@entity"):
 				senEntity = w;
 				break;
-		if not senEntity == None and len(intersection) > maxOverlab:
-			maxOverlab = len(intersection)
+		#pdb.set_trace()
+		#overlabScore = sum ( [ math.log(wordCnt)-math.log(float(vocabDict.get(x.lower(), "1"))) for x in intersection] )
+		overlabScore = sum ( [ wordCnt*1.0/float(vocabDict.get(x.lower(), "1"))  for x in intersection] )
+		#if not senEntity == None and len(intersection) > maxOverlab:
+		if not senEntity == None and len(intersection) >  0 and overlabScore > maxOverlab:
+			maxOverlab = overlabScore
+			maxOverlabWords = intersection
 			bestEntity = senEntity;
 			bestSen = sentence
 			
-	#print bestSen
+	print "## " + bestSen
+	print "## " + question
+	print "## " + str(maxOverlabWords)
+	print "## " + str(maxOverlab)
 	return bestEntity
 	
 def mln (qFilePath):
 	mlnArgs = args.mlnArgs.split( );
 	allArgs = ["bin/mlnsem", "qa", qFilePath] + mlnArgs
 	if args.condor == "":
-	    subprocess.call( allArgs) 
-        else:
-            condorizer.condorize( ["ARG0"] + allArgs + [args.condor + "/" + str(qIdx)])     
-        
+		subprocess.call( allArgs) 
+	else:
+		condorizer.condorize( ["ARG0"] + allArgs + [args.condor + "/" + str(qIdx)])     
 		#"-log", "TRACE", "-soap", "localhost:9000", "-diffRules", "false", "-irLvl", "0", "-negativeEvd", "true", "-withNegT", "false"])
 	return ""
 
@@ -105,33 +167,42 @@ totalAnswersCount = 0
 fileList = os.listdir(directory)
 for qFileName in sorted (fileList):
 	qFilePath = directory + "/" +qFileName
-        qIdx = qIdx + 1;
+	qIdx = qIdx + 1;
 	
 	if (len(args.range) > 0 and not (qIdx in args.range) ):
 		continue;
 
 	answer = ""
-        rightAnswer = ""
+	rightAnswer = ""
 	print "#################################"
 	print "##Processing Q: " + str(qIdx)
 	print "#################################"
 	sys.stdout.flush() 
+
+	qFile = open(qFilePath);
+	title = qFile.readline().strip();
+	print title;
+	qFile.readline();
+	context = qFile.readline().strip();
+	qFile.readline();
+	question = qFile.readline().strip();
+	qFile.readline();
+	rightAnswer = qFile.readline().strip();
+	assert qFile.readline().strip() == "";
+
+	entityList = [];
+	for l in qFile:
+		splits = l.strip().split(":");
+		entityList.append(splits[0]);
+		if not args.anonymous: #deanonymize the data
+			#include a space after entity index to make sure I am replacing a whole token
+			context = context.replace (splits[0]+" ", splits[1] + " " )
+	#print str(entityList)
+
 	if args.algo == "bow":
-            qFile = open(qFilePath);
-            title = qFile.readline().strip();
-            qFile.readline();
-            context = qFile.readline().strip();
-            qFile.readline();
-            question = qFile.readline().strip();
-            qFile.readline();
-            rightAnswer = qFile.readline().strip();
-            assert qFile.readline().strip() == "";
-            if not args.anonymous: #deanonymize the data
-                for l in qFile:
-                    splits = l.strip().split(":");
-                    context = context.replace (splits[0], splits[1])
-                    #print context
-	    answer = bow (context, question);
+		answer = bow (context, question);
+	elif args.algo == "word":
+		answer = word (context, question, entityList);
 	elif args.algo == "mln":
 		answer = mln (qFilePath);
 	else:
