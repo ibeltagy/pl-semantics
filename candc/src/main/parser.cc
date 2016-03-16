@@ -51,6 +51,23 @@ using namespace NLP::IO;
 using namespace NLP::Taggers;
 using namespace NLP::CCG;
 
+const static ulong MAX_MORPHA_LEN = 32;
+
+bool
+use_morpha(const std::string &word, const std::string &pos){
+  if(word.size() >= MAX_MORPHA_LEN)
+    return false;
+
+  if(pos == "NNP" || pos == "NNPS")
+    return false;
+
+  for(std::string::const_iterator i = word.begin(); i != word.end(); ++i)
+    if(!(isalpha(*i) || *i == '-'))
+      return false;
+
+  return true;
+}
+
 int
 run(int argc, char** argv){
   std::ostringstream PREFACE;
@@ -121,7 +138,9 @@ run(int argc, char** argv){
   Integration integration(int_cfg, pos_cfg, super_cfg, parser_cfg, sent);
 
   StreamPrinter::Format FMT = StreamPrinter::FMT_DEV |
-    StreamPrinter::FMT_PRINT_UNARY;
+   // StreamPrinter::FMT_PRINT_UNARY;
+    StreamPrinter::FMT_PRINT_UNARY | StreamPrinter::FMT_CHUNK | StreamPrinter::FMT_NER |  StreamPrinter::FMT_LEMMA ;
+
 
   if(force_words())
     FMT |= StreamPrinter::FMT_FORCE_WORDS;
@@ -148,6 +167,26 @@ run(int argc, char** argv){
       log.stream << "end of input" << endl;
       break;
     }
+
+	///Load Lemmas
+	int len = sent.words.size();
+	sent.lemmas.resize(0);
+	sent.lemmas.reserve(len);
+	for(int i = 0; i < len; ++i){
+
+	if(use_morpha(sent.words[i], sent.pos[i])){
+	std::string in = sent.words[i];
+	in += '_';
+	in += sent.pos[i];
+
+	char out[MAX_MORPHA_LEN];
+
+	morph_analyse(out, in.c_str(), true);
+	sent.lemmas.push_back(out);
+	}else
+	sent.lemmas.push_back(sent.words[i]);
+	}
+	///End Load Lemmas
 
     integration.parse(sent, decoder, printer, ret, "", USE_SUPER, ALT_POS, SUPER_AUTO_POS, PARSER_AUTO_POS);
   }

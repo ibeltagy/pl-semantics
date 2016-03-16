@@ -423,7 +423,7 @@ bin/gendeps: $(CCG_OBJS) src/main/gendeps.o
 
 bin/parser: $(BASE_OBJS) $(IO_OBJS) $(CONFIG_OBJS) $(TAG_OBJS) \
   $(MODEL_OBJS) $(CCG_OBJS) src/lib/tagger/super.o src/lib/tagger/pos.o \
-  src/main/parser.o src/lib/cluster_no_mpi.o
+  src/main/parser.o src/lib/cluster_no_mpi.o src/lib/relations/morpha.o
 	$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 bin/candc: src/lib/candc.o src/main/candc.o $(TAGGER_OBJS) $(CCG_OBJS) \
