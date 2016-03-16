@@ -34,7 +34,7 @@ Running on MAC
 
 - Last step to compile alchemy is to edit alchemy/src/makefile. You will find few comments in the file showing how to edit it. 
 
-- Use Java 7. If you want to use an earlier version of Java, you need to update the version of scala used. 
+- Use Java 7. If you want to use a later version of Java, you need to update the version of scala used. 
 
 Running our system on different datasets
 ----------------------

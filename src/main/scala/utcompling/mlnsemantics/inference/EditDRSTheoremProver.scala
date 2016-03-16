@@ -48,12 +48,13 @@ class EditDRSTheoremProver(
   {
   	this.sentence = sentence;
 	addGroupHeadPred(
+	  setNamedEntities(
   		replaceCardName(
 			removeTopic(
 				removeDanglingEqualities(
 						removeTheres(
 							corref(
-								applySMerge(e)))))));
+								applySMerge(e))))))));
   }
 
   /////////////////////////////////////////////
@@ -75,6 +76,46 @@ class EditDRSTheoremProver(
       case _ => e.visitConstruct(addGroupHeadPred)
    }
   }
+  var entityVarMap: collection.mutable.Map[String, collection.mutable.ListBuffer[String]] =  collection.mutable.Map()
+  def setNamedEntities(e:BoxerExpression):BoxerExpression = {
+    entityVarMap.clear();
+    findCorefEntities(e)
+    renamePair.clear()
+    //println("++++" + entityVarMap)
+    entityVarMap.foreach(x => 
+      {
+        val entityName = x._1
+        val varList = x._2
+        varList.foreach(y => renamePair = renamePair + (y -> varList.head))
+        assert(Sts.qaEntities.contains(entityName))
+        Sts.qaEntities = Sts.qaEntities + (entityName -> ("h" + FindEventsProbabilisticTheoremProver.newName(varList.head)))
+      })
+    //println("++++" + renamePair)
+    LOG.trace("Entities and variables: " +  Sts.qaEntities)
+
+    renameVariables(e)
+  }
+  def findCorefEntities(e:BoxerExpression):BoxerExpression = {
+	e match {
+    	case BoxerPred(discId, indices, variable, name, pos, sense) => {
+    	  var predName = name
+    	  if (predName.startsWith("'") && predName.endsWith("'"))
+    		  predName = predName.substring(1, predName.length()-1);
+    	  
+    	  if (Sts.qaEntities.contains(predName))
+    	  {
+    	    //it is an entity
+    	    if (!entityVarMap.contains(predName))
+    	      entityVarMap.put(predName, collection.mutable.ListBuffer())
+    	    val varList = entityVarMap.get(predName).get
+    	    varList.append(variable.name);
+    	  }
+    	}
+		case _ => e.visitConstruct(findCorefEntities)
+	}
+	e
+  }
+    
   /////////////////////////////////////////////
   val numbers:List[String] = List("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve");
   def replaceCardName(e:BoxerExpression):BoxerExpression = {
@@ -117,7 +158,7 @@ class EditDRSTheoremProver(
   	entities = Map();
   	toMerge = null
   	mergeTo = null
-   val result = e //correfRecursive(e);
+  	val result = e //correfRecursive(e);
   	assert (mergeTo == null)
   	assert (toMerge == null)
   	result;

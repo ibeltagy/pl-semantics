@@ -30,7 +30,9 @@ class CandcImpl	extends Candc {
 
     private def makeInput(inputs: Seq[Seq[String]], discourseIds: Seq[String]): String = {
         require(inputs.length == discourseIds.length, "Must have the same number of inputs and discourseIds")
-        val discourses = for ((d, id) <- (inputs zipSafe discourseIds)) yield "<META>'%s'".format(id) +: d
+        //val discourses = for ((d, id) <- (inputs zipSafe discourseIds)) yield "<META>'%s'".format(id) +: d
+        val discourses = for ((d, id) <- (inputs zipSafe discourseIds)) yield  d
+        //println (discourses)
         return discourses.flatten.mkString("\n")
     }
 

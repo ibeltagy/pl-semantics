@@ -91,7 +91,8 @@ class Config(opts: Map[String, String] = Map()) {
 		"-coref",
 		"-corefOnIR",
 		"-errorCode", 
-		"-removeEq"
+		"-removeEq", 
+		"-ner"
 	);
   
   val diff = opts.keys.toSet.diff(validArgs.toSet)
@@ -149,6 +150,20 @@ class Config(opts: Map[String, String] = Map()) {
     case Some(genPhrases) => genPhrases.toBoolean;
     case _ => false;
   }
+  
+  // Named Entity Recognizer  
+  val ner = opts.get("-ner") match {
+    case Some("gs") => "gs"  //works only for the deepMind QA dataset  
+    case Some("corenlp") => "corenlp"  //stanford coreNLP
+    case Some("candc") => "candc"  //default
+    case None => "candc"
+    case Some(x) => throw new RuntimeException("Invalid value " + x + " for argument -ner");
+  }
+  if (ner != "candc")
+    //do not use the default candc binary because it only accepts raw text, while here I need 
+    //to pass POS and NER information with the text
+    utcompling.scalalogic.discourse.candc.call.impl	.CandcImpl.binaryName = "candc.sh";
+
   
 
   //files contains vectors of these phrases (resources/phrase-vectors/word_phrase_sentence_*)
@@ -339,11 +354,13 @@ class Config(opts: Map[String, String] = Map()) {
     case Some("dep") => "dep";
     case Some("box") => "box";
     case None => "box";
-    case Some(x) => throw new RuntimeException("Invalid value " + x + " for argument -logic");    
+    case Some(x) => throw new RuntimeException("Invalid value " + x + " for argument -logic");
   }
 
   val soapServer = opts.get("-soap") match {
-    case Some(serverUrl) => 
+    case Some(serverUrl) =>
+      	if (ner != "candc")
+      	  throw new RuntimeException("Using the soap server is only supported for the candc named entity recognizer");
 		utcompling.scalalogic.discourse.candc.call.impl	.CandcImpl.binaryName = "soap_client";
 		utcompling.scalalogic.discourse.candc.call.impl	.CandcImpl.extraArgs = Map (("--url" -> serverUrl))
     case None => None

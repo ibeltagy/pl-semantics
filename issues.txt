@@ -1,3 +1,6 @@
+bin/mlnsem  qa qa/resources/cnn/validation/ 2 -log TRACE  -withNegT false  -soap localhost:9000 -negativeEvd false   -softLogic mln -diffRules false  -keepUniv false -focusGround true  
+bin/mlnsem  qa qa/resources/cnn/validation/ 1 -log TRACE  -withNegT false   -negativeEvd false   -softLogic psl -diffRules false  -keepUniv false  -ner gs  -groundLimit 10000 
+
 //Non-handled case: 
 T: An ogre is not attacking 
 defend => not attack

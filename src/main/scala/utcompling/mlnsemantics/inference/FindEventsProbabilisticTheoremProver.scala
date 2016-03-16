@@ -23,16 +23,7 @@ class FindEventsProbabilisticTheoremProver(
   private def removeVarTypes(e: BoxerExpression): BoxerExpression = {
       e match {
         case BoxerVariable(name) => {
-          var add : Int = name.charAt(0) match 
-          {
-            case 'x' => 1000;
-            case 'e' => 2000;
-            case 'p' => 3000;
-            case 's' => 4000;
-            case _ => throw new RuntimeException("Unsupported variable type (" + name.charAt(0) + ")" );
-          }
-          assert (name.length() <= 4, "Variable "+name+" has index greater than 999")
-          BoxerVariable("x" + (add + name.substring(1).toInt))
+          BoxerVariable(FindEventsProbabilisticTheoremProver.newName(name))
         }
         case _ => e.visitConstruct(removeVarTypes)
       }
@@ -287,4 +278,21 @@ class FindEventsProbabilisticTheoremProver(
     }
   }
 
+}
+
+object FindEventsProbabilisticTheoremProver
+{
+  def newName (name:String): String = 
+  {
+    var add : Int = name.charAt(0) match 
+    {
+        case 'x' => 1000;
+        case 'e' => 2000;
+        case 'p' => 3000;
+        case 's' => 4000;
+        case _ => throw new RuntimeException("Unsupported variable type (" + name.charAt(0) + ")" );
+    }
+    assert (name.length() <= 4, "Variable "+name+" has index greater than 999")
+    "x" + (add + name.substring(1).toInt)
+  }
 }

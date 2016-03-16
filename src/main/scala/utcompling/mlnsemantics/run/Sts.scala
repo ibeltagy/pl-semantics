@@ -53,6 +53,8 @@ object Sts {
   var hypothesisLemma = "";	//Hypothesis lemmatized
   var goldStandard:Double = 0;	// Gold standard annotation
   var pairIndex = 0;		//Pair index
+  var qaRightAnswer = "";		//Correct answer for QA
+  var qaEntities = Map[String, String]();		//all entities in the QA pair
   var luceneDistPhrases:Lucene = null;	// Lucene repository of precompiled distributional phrases 
   var luceneParaphrases:List[Lucene] = null;	// Lucene repository of precompiled paraphrases
 
@@ -156,6 +158,8 @@ object Sts {
   
 	 def runQA (qaDir: String, range: Seq[Int])
 	 {
+		var totalCount = 0;
+		var correctCount = 0;
 		val qFiles = new java.io.File(qaDir).listFiles.filter(_.getName.endsWith(".question")).sorted
 		for (qFileIndex <- range)
 		{
@@ -172,30 +176,61 @@ object Sts {
          linesReader.next()
          val rightAnswer = linesReader.next()
          assert (linesReader.next() == "");
+         if (opts.ner == "gs")
+         {
+        	context = context.replace(" ", "|O ");
+        	question = question.replace(" ", "|O ");
+        	question = question.replace ("@placeholder|O", "@placeholder|I-PER")
+         }
+         Sts.qaEntities = Sts.qaEntities + ( "@placeholder" -> "");
          while(linesReader.hasNext)
          {
             val splits = linesReader.next().split(":");
+            var entityId = splits(0)
+            var entityName = splits(1)
+            entityName = entityName.replace(" ", "-").toLowerCase();
+            if (entityId == rightAnswer)
+            	Sts.qaRightAnswer = entityName
+            Sts.qaEntities = Sts.qaEntities + (entityName -> "" )
+            if (opts.ner == "gs")
+            {
+            	entityId = entityId + "|O";
+            	//entityName = (entityName+" ").replace(" ", "|I-PER ").trim();
+            	entityName = entityName + "|I-PER"
+            }
             //include a space after entity index to make sure I am replacing a whole token
-            context = context.replace (splits(0) + " ", splits(1) + " ")
-            question = question.replace (splits(0)+ " ", splits(1) + " ")
+            context = context.replace (entityId + " ", entityName + " ")
+            question = question.replace (entityId + " ", entityName + " ")
          }
+         context = context.trim() //a space at the end of the line upsets C&C
+         question = question.trim() //a space at the end of the line upsets C&C
+         
+         assert(Sts.qaRightAnswer != "", "name of the answer entity is not found")
          assert(!context.contains("@entity") && !question.contains("@entity"), "Context or Question have anonymous entities")
+
 		 try
          {
+			 totalCount = totalCount + 1;
 	         parseRunOnePair(context, question)
+	         if (resultOnePair.head == 1.0)
+	           correctCount = correctCount + 1;
          }
-			catch 
-			{
+		 catch 
+		 {
          	case e: Throwable =>
-					LOG.error("Unknowen error");
+					LOG.error("Unknowen error" + e.printStackTrace());
 					println ("List()")
-         }
+		 }
 		}
+		println ("Accuracy: " + correctCount*1.0/totalCount  + ", correct: " + correctCount + ", total: " + totalCount)
 	 } 
     def parseRunOnePair(sen1: String, sen2: String )  = {
- 	     //val sentences = Array(sen1.toLowerCase(), sen2.toLowerCase()).map(Tokenize.separateTokens).toList
-		 val sentences = Array(sen1, sen2).map(Tokenize.separateTokens).toList
-		 LOG.trace(sentences);     
+		 //val sentences = Array(sen1.toLowerCase(), sen2.toLowerCase()).map(Tokenize.separateTokens).toList
+		 val sentences = if (opts.ner != "candc") 
+			 				Array(sen1, sen2).toList  //it is already tokenized
+			 			else
+			 			  	Array(sen1, sen2).map(Tokenize.separateTokens).toList
+		 LOG.trace(sentences);
     	 //val lemmatized = new CncLemmatizeCorpusMapper().parseToLemmas(Array(sen1, sen2))
     	 //val lemmas = lemmatized.map(_.map(_.map(_._2).mkString(" ")).getOrElse("______parse_failed______"))
 	     val lemmas:List[String] = sentences.map(Lemmatize.lemmatizeWords)

@@ -142,12 +142,39 @@ class PSLTheoremProver(
     val values = l.getValues(); //(entailment_h, entailment_t, entailment)
     LOG.trace(values);
     
-    val entHscore:Double = if(values.containsKey("entailment_h()"))
+    var entHscore:Double = if(values.containsKey("entailment_h()"))
     	  				values.get("entailment_h()")
     	  			  else 0.0;
     val entTscore:Double = if(values.containsKey("entailment_t()"))
     	  				values.get("entailment_t()")
     	  			  else 0.0;
+    
+    if (Sts.qaRightAnswer != "") //QA Task 
+    {
+    	val valItr = values.entrySet().iterator()
+    	var maxProb = 0.0;
+    	var maxEntId = "";
+    	var maxEntName = "";
+    	LOG.trace(Sts.qaEntities)
+    	while (valItr.hasNext())
+    	{
+    	  val entry = valItr.next();
+    	  val matchingEnt = Sts.qaEntities.filter(x => x._2 == "hx" + entry.getKey().replace("entailment_h(", "").replace(")", "")).toList
+    	  LOG.trace (entry + ":" + matchingEnt)
+    	  if (matchingEnt.size > 0)
+    	  {
+	    	  if (entry.getValue() > maxProb)
+	    	  {
+	    	    maxProb = entry.getValue();
+	    	    maxEntId = entry.getKey();
+	    	    maxEntName = matchingEnt.head._1  //use the first. UGLY C&C AND BOXER :@
+	    	  }
+    	  }
+    	}
+    	println ("GS: " + Sts.qaRightAnswer + " -- " + "Actual: " + maxEntName)
+    	if ( Sts.qaRightAnswer  == maxEntName)
+    	  entHscore = 1.0
+    }
     
     if(Sts.opts.task == "rte")
 	{
@@ -295,7 +322,8 @@ class PSLTheoremProver(
       	pslFile.write("predicate,negationPred_r_dh,1\n")
       	pslFile.write("predicate,negationPred_r_dt,1\n")
       	declarationNames.foreach {
-      	    case ("entailment_h", varTypes) => pslFile.write("predicate,%s,%s\n".format("entailment_h", 0))
+      	    																						//1 arg if QA, 0 arg if STS or RTE
+      		case ("entailment_h", varTypes) => pslFile.write("predicate,%s,%s\n".format("entailment_h", (if (Sts.qaRightAnswer != "") 1 else 0) ))
       	    case ("entailment_t", varTypes) => pslFile.write("predicate,%s,%s\n".format("entailment_t", 0))
 			case (pred, varTypes) => {
 				//pslFile.write("m.add predicate: \"%s\", %s open: true;\n".format(pred, varTypes.indices.map("arg" + _+": Entity, ").mkString(""))) 
@@ -468,11 +496,11 @@ class PSLTheoremProver(
 	          		pslFile.write(
 	          		    //"data.getInserter(%s).insert(%s);".format(pred.name, args.map(a => {
 	          		    "data,%s,%s\n".format(pred.name, args.map(a => {
-	          					val const = a.name.substring(2).toInt+1000*min(a.name.charAt(0).toLower - 103, 2);
+	          					val const = a.name.substring(2).toInt // +1000*min(a.name.charAt(0).toLower - 103, 2);
 	          					if (a.name.charAt(0) == 'h')
 	          						allConst_t += const; //yes, add it to allConst_t not allConst_h. This is not a typo 
 	          					else if (a.name.charAt(0) == 't' )
-	          						allConst_h += const;
+	          						allConst_h += const + 4000;
 	          					else throw new RuntimeException("Unknown constant type %s".format(a.name));
 	          					const;
 	          			}).mkString(","))

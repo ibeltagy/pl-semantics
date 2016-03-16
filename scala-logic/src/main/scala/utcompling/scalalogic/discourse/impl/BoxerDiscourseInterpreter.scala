@@ -47,7 +47,7 @@ class BoxerDiscourseInterpreter[T](
       println  ("Splitting sentences ... ");
       require( inputs(0).length == 1 )
       val doc = inputs(0)(0);
-      val docSplits = doc.split(" \\? | \\. | ! ")
+      val docSplits = doc.split(" \\? | \\. | ! | !\\|O | \\?\\|O | \\.\\|O ")
       //println (docSplits)
       inputs =  List.fromArray(docSplits.map (x => List(x)))
       //println (">>>>>>>>>>" + inputs )

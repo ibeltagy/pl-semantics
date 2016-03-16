@@ -79,8 +79,12 @@ class SetGoalPTP(
     //=====================Start RTE=============================
     else if (Sts.opts.task == "rte" && Sts.opts.softLogicTool == "psl")
     {
-      //throw new RuntimeException("RTE is not supported on PSL"); NOT anymore
-        val ent_h = FolApplicationExpression(FolVariableExpression(Variable("entailment_h")), FolVariableExpression(Variable("")));
+    	var entVarName = ""
+    	if (Sts.qaRightAnswer != "") //this is QA not RTE
+    	{
+    		entVarName = Sts.qaEntities.get("@placeholder").get + "_q"
+    	}
+        val ent_h = FolApplicationExpression(FolVariableExpression(Variable("entailment_h")), FolVariableExpression(Variable(entVarName)));
         val modifiedGoal = 
         		if(goal.isInstanceOf[FolVariableExpression])
     	  		  	//handling a very special case of parsing error where the expression is just an empty box
