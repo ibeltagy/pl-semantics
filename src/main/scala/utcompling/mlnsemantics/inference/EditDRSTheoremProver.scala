@@ -21,7 +21,7 @@ class EditDRSTheoremProver(
   extends ProbabilisticTheoremProver[BoxerExpression] {  
   
   private val LOG = LogFactory.getLog(classOf[EditDRSTheoremProver])
-
+  var isProcessingGoal = true;
   override def prove(
     constants: Map[String, Set[String]],
     declarations: Map[BoxerExpression, Seq[String]],
@@ -29,8 +29,9 @@ class EditDRSTheoremProver(
     assumptions: List[WeightedExpression[BoxerExpression]],
     goal: BoxerExpression): Seq[Double] = {
 
-	  
+    isProcessingGoal = true;
     val newGoal = BoxerPrs(goal.asInstanceOf[BoxerPrs].exps.map( e=> (process(e._1, Sts.hypothesis), e._2 )))
+    isProcessingGoal = false;
     val newAssumptions:List[WeightedExpression[BoxerExpression]] = assumptions.map({
       case HardWeightedExpression(BoxerPrs(exps), w) => HardWeightedExpression(BoxerPrs(exps.map( e=> 
         												(process(e._1, Sts.text), e._2 ))), w)
@@ -88,7 +89,9 @@ class EditDRSTheoremProver(
         val varList = x._2
         varList.foreach(y => renamePair = renamePair + (y -> varList.head))
         assert(Sts.qaEntities.contains(entityName))
-        Sts.qaEntities = Sts.qaEntities + (entityName -> ("h" + FindEventsProbabilisticTheoremProver.newName(varList.head)))
+        if (!isProcessingGoal || entityName == "@placeholder") //do not add variables from goal, only the variable of @placeholder because it is neede later 
+        												//to form the PSL query
+        	Sts.qaEntities = Sts.qaEntities + (entityName -> ("h" + FindEventsProbabilisticTheoremProver.newName(varList.head)))
       })
     //println("++++" + renamePair)
     LOG.trace("Entities and variables: " +  Sts.qaEntities)

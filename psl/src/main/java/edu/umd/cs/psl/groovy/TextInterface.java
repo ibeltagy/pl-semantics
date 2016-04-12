@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.junit.Assert;
 
 import edu.umd.cs.psl.groovy.syntax.FormulaContainer;
@@ -73,6 +75,9 @@ public class TextInterface {
 					Formula2SQL.queryJoinMode = QueryJoinMode.OuterJoin;
 				else if(args[1].equals("OuterJoinWithDummy"))
 					Formula2SQL.queryJoinMode = QueryJoinMode.OuterJoinWithDummy;
+				else if(args[1].equals("Anchor"))
+					Formula2SQL.queryJoinMode = QueryJoinMode.Anchor;
+				else throw new RuntimeException("Unknown join mode: " + args[1]);
 
 			}
 			if (args.length >= 3) {
@@ -122,9 +127,11 @@ public class TextInterface {
 		System.out.println("### Pair "
 				+ pslFilePath.substring(pslFilePath.lastIndexOf('/') + 1,
 						pslFilePath.lastIndexOf('.')));
+		System.out.println("Filepath: " + pslFilePath);
 		System.out.println("Time: " + new Date());
 		System.out.println("Mode: " + Formula2SQL.queryJoinMode);
 		System.out.println("Timeout: " + PSLConfiguration.timeout);
+		System.out.println("GroundLimit: " + PSLConfiguration.groundLimit);
 		System.out.println("Arglist: " + args.length);
 		System.out.println("Arglist: " + args.toString());
 
@@ -212,17 +219,39 @@ public class TextInterface {
 					}
 					String[] splits = l.split(",");
 					Predicate pred = predicates.get(splits[1]);
-					if (splits.length == 3) // one arg
-						// data.getInserter(pred).insertValue(0.4,
-						// Integer.parseInt(splits[2]));
-						data.getInserter(pred).insert(
-								Integer.parseInt(splits[2]));
-					else if (splits.length == 4)// two args
-						data.getInserter(pred).insert(
-								Integer.parseInt(splits[2]),
-								Integer.parseInt(splits[3]));
+					//assert pred.getArity() == splits.length || pred.getArity() == splits.length - 1 :  "Can not pass " + splits.length + " to pred " + pred.getName() + " of arity " + pred.getArity();
+					//System.out.println( splits.length +" " +  pred.getArity() + " " + pred.getName());
+					
+					if (splits.length == (pred.getArity() + 2))  //data,predname,term1,term2
+					{
+						if (pred.getArity() == 1) // one arg
+							// data.getInserter(pred).insertValue(0.4,
+							// Integer.parseInt(splits[2]));
+							data.getInserter(pred).insert(
+									Integer.parseInt(splits[2]));
+						else if (pred.getArity() == 2)// two args
+							data.getInserter(pred).insert(
+									Integer.parseInt(splits[2]),
+									Integer.parseInt(splits[3]));
+						else
+							throw new Exception("Unsuported number of arguments (1)");
+					}
+					else if (splits.length == (pred.getArity() + 2) + 1)  //data,predname,term1,term2,predVal
+					{
+						if (pred.getArity() == 1) // one arg
+							// data.getInserter(pred).insertValue(0.4,
+							// Integer.parseInt(splits[2]));
+							data.getInserter(pred).insertValue(Double.parseDouble(splits[3]),
+									Integer.parseInt(splits[2]));
+						else if (pred.getArity() == 2)// two args
+							data.getInserter(pred).insertValue(Double.parseDouble(splits[4]),
+									Integer.parseInt(splits[2]),
+									Integer.parseInt(splits[3]));
+						else
+							throw new Exception("Unsuported number of arguments (2)");
+					}
 					else
-						throw new Exception("Unsuported number of arguments");
+						throw new Exception("Unsuported number of arguments (3)");
 				} else if (l.startsWith("query.")) {
 					// println m
 					// splits = l.split(",");

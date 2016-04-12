@@ -328,7 +328,7 @@ class PSLTheoremProver(
 			case (pred, varTypes) => {
 				//pslFile.write("m.add predicate: \"%s\", %s open: true;\n".format(pred, varTypes.indices.map("arg" + _+": Entity, ").mkString(""))) 
 			  pslFile.write("predicate,%s,%s\n".format(pred, varTypes.length))
-			  if((pred.contains("agent")||pred.contains("patient"))&& Sts.opts.funcConst)
+			  if((pred.contains("agent")||pred.contains("patient"))&& Sts.opts.funcConst && varTypes.length == 2)
 				  pslFile.write("constraint,%s\n".format(pred))
 			}
     	}

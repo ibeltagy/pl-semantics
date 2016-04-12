@@ -64,7 +64,7 @@ public class Formula2SQL extends FormulaTraverser {
 	
 	public enum QueryJoinMode
 	{
-		InnerJoin, OuterJoin, OuterJoinWithDummy;
+		InnerJoin, OuterJoin, OuterJoinWithDummy, Anchor;
 	}
 	
 	public static QueryJoinMode queryJoinMode = QueryJoinMode.OuterJoin;
@@ -207,9 +207,17 @@ public class Formula2SQL extends FormulaTraverser {
 		
 		if (queryJoinMode == QueryJoinMode.InnerJoin)
 			return;
-		
+
+		log.trace("Grounding formula with projections: " + projection + ", and partial groundings: " + partialGrounding);
+
+		if (queryJoinMode == QueryJoinMode.Anchor)
+		{
+			System.out.println(">>> anchor" + anchorVar);
+			//TODO -- implement the new grounding here, function of anchorVar
+			return;
+		}
+			
 		predCount = noFormulas;
-		
 		if (allowedNulls < 0)
 			return;
 		
@@ -293,7 +301,7 @@ public class Formula2SQL extends FormulaTraverser {
 									}
 									tmpQuery.addCustomGroupings(new CustomSql(prevVariable.getName()));
 									//execute tmpQuery as an insertSelect
-									log.trace(tmpQuery.toString());
+									log.trace("1)" + tmpQuery.toString());
 									stmt.execute("INSERT INTO tbl" + prevVariable.getName() + " (" + prevVariable.getName() + ")" 
 											+ tmpQuery + " limit " + rowsCountLimit);
 									
@@ -380,6 +388,13 @@ public class Formula2SQL extends FormulaTraverser {
 							//Select column
 							//query.addAliasedColumn(new CustomSql("COALESCE("+nonNullColumn+"-2147483648)"), var.getName());
 							//query.addCustomColumns(new CustomSql(var.getName()));//....
+						}
+						else //Two years old bug
+						{
+							//If the variable is not in the projection list, it should be in the partial grounding list
+							//In this case, this column has one value which is the partial grounding value for the variable
+							assert(partialGrounding.containsKey(var));
+							leftJoins.add(new Tuple2<String, Condition>("(SELECT "+partialGrounding.get(var)+" AS "+var+" FROM dual)", new CustomCondition("true")));
 						}
 //-----------------------------End Build union
 					}
@@ -507,7 +522,7 @@ public class Formula2SQL extends FormulaTraverser {
 		
 		tmpQuery.addCustomGroupings(new CustomSql(prevVariable.getName()));
 		//execute tmpQuery as an insertSelect
-		log.trace(tmpQuery.toString());
+		log.trace("2)" + tmpQuery.toString());
 		try {
 			Statement stmt = database.getConnection().createStatement();
 			try {

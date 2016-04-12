@@ -36,6 +36,13 @@ public abstract class AbstractBranchFormula implements Formula {
 	}
 	public int headPos = -1;
 	
+	//An anchor variable is a variable used in the RHS of an Averaging rule
+	//We assume it is a single variable
+	//e.g.  pred1(x) ^ pred2(y) ^ rel(x, y) => result(y)
+	//"y" is the anchor variable in the formula above
+	//We are assuming no negations
+	public String anchorVar = null;
+	
 	public ConjunctionTypes conjType = ConjunctionTypes.notSet;
 	
 	public AbstractBranchFormula(Formula... f) {

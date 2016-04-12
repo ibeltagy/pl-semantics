@@ -27,6 +27,8 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
 import edu.umd.cs.psl.database.DatabaseAtomStoreQuery;
+import edu.umd.cs.psl.database.RDBMS.Formula2SQL;
+import edu.umd.cs.psl.database.RDBMS.Formula2SQL.QueryJoinMode;
 import edu.umd.cs.psl.model.argument.GroundTerm;
 import edu.umd.cs.psl.model.argument.Term;
 import edu.umd.cs.psl.model.argument.Variable;
@@ -58,6 +60,9 @@ public class FormulaEventAnalysis {
 		Vector<Formula> necessary = new Vector<Formula>(c.getNoFormulas());
 		Vector<Formula> oneOf = new Vector<Formula>(c.getNoFormulas());
 		Atom a;
+		
+		int negatedPredCount = 0;
+		String anchorVar= null;
 		for (int i = 0; i < c.getNoFormulas(); i++) {
 			if (c.get(i) instanceof Atom) {
 				a = (Atom) c.get(i);
@@ -76,6 +81,10 @@ public class FormulaEventAnalysis {
 			}
 			else if (c.get(i) instanceof Negation) {
 				a = (Atom) ((Negation) c.get(i)).getFormula();
+				negatedPredCount ++;
+				if (a.getArity() == 1 && negatedPredCount == 1 && Formula2SQL.queryJoinMode == QueryJoinMode.Anchor)
+					anchorVar = a.getArguments()[0].toString();
+					
 				if (a.getPredicate().getNumberOfValues() == 1) {
 					if (a.getPredicate().getDefaultValues()[0] != 0.0) {
 						oneOf.add(a);
@@ -92,6 +101,8 @@ public class FormulaEventAnalysis {
 			{
 				Conjunction conj = new Conjunction((Formula[]) necessary.toArray(new Formula[necessary.size()]));
 				conj.conjType = c.conjType;
+				if (Formula2SQL.queryJoinMode == QueryJoinMode.Anchor && anchorVar != null)
+					conj.anchorVar = anchorVar;
 				queries.add(conj);
 			}
 			//}

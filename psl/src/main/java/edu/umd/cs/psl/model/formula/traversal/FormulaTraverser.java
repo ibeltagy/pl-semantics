@@ -16,6 +16,8 @@
  */
 package edu.umd.cs.psl.model.formula.traversal;
 
+import edu.umd.cs.psl.database.RDBMS.Formula2SQL;
+import edu.umd.cs.psl.database.RDBMS.Formula2SQL.QueryJoinMode;
 import edu.umd.cs.psl.model.atom.Atom;
 import edu.umd.cs.psl.model.formula.*;
 import edu.umd.cs.psl.model.formula.AbstractBranchFormula.ConjunctionTypes;
@@ -27,6 +29,7 @@ import edu.umd.cs.psl.model.formula.AbstractBranchFormula.ConjunctionTypes;
 public abstract class FormulaTraverser implements FormulaTraversal {
 
 	protected static ConjunctionTypes conjType = ConjunctionTypes.notSet;
+	protected static String anchorVar = null;
 	
 	public static<V extends FormulaTraversal> V traverse(Formula f, V traverser) {
 		recursiveTraverse(f,traverser);		
@@ -38,10 +41,12 @@ public abstract class FormulaTraverser implements FormulaTraversal {
 			if (!traverser.beforeConjunction()) return;
 			Conjunction c = (Conjunction)f;
 			conjType = c.conjType;
+			anchorVar = c.anchorVar; 
 			for (int i=0;i<c.getNoFormulas();i++) {
 				recursiveTraverse(c.get(i),traverser);
 			}
 			traverser.afterConjunction(c.getNoFormulas());
+			anchorVar = null;
 			conjType = ConjunctionTypes.notSet;
 		} else if (f instanceof Disjunction) {
 			if (!traverser.beforeDisjunction()) return;
