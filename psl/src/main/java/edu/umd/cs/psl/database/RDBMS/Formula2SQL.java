@@ -211,11 +211,7 @@ public class Formula2SQL extends FormulaTraverser {
 		log.trace("Grounding formula with projections: " + projection + ", and partial groundings: " + partialGrounding);
 
 		if (queryJoinMode == QueryJoinMode.Anchor)
-		{
-			System.out.println(">>> anchor" + anchorVar);
-			//TODO -- implement the new grounding here, function of anchorVar
 			return;
-		}
 			
 		predCount = noFormulas;
 		if (allowedNulls < 0)
@@ -638,7 +634,12 @@ public class Formula2SQL extends FormulaTraverser {
 			
 			String tableName = tablePrefix+tableCounter;
 			String tableDot = tableName+".";
-			query.addCustomFromTable(ph.tableName()+" "+tableName);
+			
+			String joinTableName = "";
+			ComboCondition joinCondition = new ComboCondition(Op.AND);
+			//1) query.addCustomFromTable(ph.tableName()+" "+tableName);
+			joinTableName = ph.tableName()+" "+tableName;
+
 			tableAliasToPredicate.put(tableName, ph);
 			Term[] arguments = atom.getArguments();
 			//boolean tableAdded = false;
@@ -648,50 +649,75 @@ public class Formula2SQL extends FormulaTraverser {
 				queryColumnsByPred.put(tableName, new Tuple2<Term, String>
 								(arg, ph.argumentColumns()[i]));
 				//tableAdded = true;
-
-			
-				if (arg instanceof Variable) {
-					Variable var = (Variable)arg;
-					queryColumnsByVar.put(var, new Tuple3<String, String, String>
-											(ph.tableName(), tableName, ph.argumentColumns()[i]));
-
-					
-					if (partialGrounding.hasVariable(var)) {
-						//assert !projection.contains(var);
-						arg = partialGrounding.getVariable(var);
-					} else {
-						if (joins.containsKey(var)) {
-							String to = joins.get(var);
-							String [] toSplits = to.split("\\.");
-							if (toSplits.length != 2)
-								throw new RuntimeException("Unexpected tableName.columName " + joins.get(var));
-							query.addCondition(BinaryCondition.equalTo(new CustomSql(tableDot+ph.argumentColumns()[i]),  new CustomSql(joins.get(var)) ));
-						} else {
-							if (projection.contains(var)) {
-								query.addAliasedColumn(new CustomSql(tableDot+ph.argumentColumns()[i]), var.getName());
-							}
-							joins.put(var, tableDot+ph.argumentColumns()[i]);
-						}
-						
-					}
-				}
-				
 				if (arg instanceof Attribute) {
 					query.addCondition(BinaryCondition.equalTo(new CustomSql(tableDot+ph.argumentColumns()[i]),  ((Attribute)arg).getAttribute() ));
 				} else if (arg instanceof Entity) { //Entity
 					Entity e = (Entity)arg;
 					query.addCondition(BinaryCondition.equalTo(new CustomSql(tableDot+ph.argumentColumns()[i]),  e.getID().getDBID() ));
-				} else assert arg instanceof Variable;
+				} else if (arg instanceof Variable) {
+					Variable var = (Variable)arg;
+					queryColumnsByVar.put(var, new Tuple3<String, String, String>
+											(ph.tableName(), tableName, ph.argumentColumns()[i]));
+
+					if (joins.containsKey(var)) {
+						String to = joins.get(var);
+						String [] toSplits = to.split("\\.");
+						if (toSplits.length != 2)
+							throw new RuntimeException("Unexpected tableName.columName " + joins.get(var));
+						//2) query.addCondition(BinaryCondition.equalTo(new CustomSql(tableDot+ph.argumentColumns()[i]),  new CustomSql(joins.get(var)) ));
+						joinCondition.addCondition(BinaryCondition.equalTo(new CustomSql(tableDot+ph.argumentColumns()[i]),  new CustomSql(joins.get(var)) ));
+					} else {
+						if (projection.contains(var)) {
+							query.addAliasedColumn(new CustomSql(tableDot+ph.argumentColumns()[i]), var.getName());
+						}
+						if (partialGrounding.hasVariable(var)) {
+							arg = partialGrounding.getVariable(var);
+							/////
+							if (arg instanceof Attribute) {
+								query.addCondition(BinaryCondition.equalTo(new CustomSql(tableDot+ph.argumentColumns()[i]),  ((Attribute)arg).getAttribute() ));
+							} else if (arg instanceof Entity) { //Entity
+								Entity e = (Entity)arg;
+								if (e.getID().getDBID().equals(0)) // Entity named "0" actually means null
+									query.addCondition( new CustomCondition(new CustomSql(tableDot+ph.argumentColumns()[i]+ " is null" )));
+								else
+									query.addCondition(BinaryCondition.equalTo(new CustomSql(tableDot+ph.argumentColumns()[i]),  e.getID().getDBID() ));
+							} else assert arg instanceof Variable;
+							////
+						}
+						
+						joins.put(var, tableDot+ph.argumentColumns()[i]);
+					}
+				}
 			}
+			
+			
 			/*if(!tableAdded)
 				queryColumnsByPred.put(tableName, new Tuple2<Term, String>
 					(null, null));				
 			*/
 			
-			query.addCondition(new InCondition(new CustomSql(tableDot+ph.partitionColumn()),database.getReadIDs()));
+			//5) query.addCondition(new InCondition(new CustomSql(tableDot+ph.partitionColumn()),database.getReadIDs()));
+			joinCondition.addCondition(new InCondition(new CustomSql(tableDot+ph.partitionColumn()),database.getReadIDs()));
 			if (!ph.isClosed()) {
-				query.addCondition(BinaryCondition.lessThan(new CustomSql(tableDot+ph.pslColumn()), 
-										PSLValue.getNonDefaultUpperBound(), false) );
+				//6) query.addCondition(BinaryCondition.lessThan(new CustomSql(tableDot+ph.pslColumn()), 
+				//						PSLValue.getNonDefaultUpperBound(), false) );
+				joinCondition.addCondition(BinaryCondition.lessThan(new CustomSql(tableDot+ph.pslColumn()), 
+						PSLValue.getNonDefaultUpperBound(), false) );
+			}
+			
+			if (tableCounter <= 1)
+			{
+				query.addCustomFromTable(joinTableName);
+				query.addCondition(joinCondition);
+			}
+			else
+			{
+				
+				JoinType j;
+				if (Formula2SQL.anchorVar != null)
+					j = JoinType.LEFT_OUTER;
+				else j = JoinType.INNER;
+				query.addCustomJoin(j, "", joinTableName, joinCondition);
 			}
 			tableCounter++;
 		}

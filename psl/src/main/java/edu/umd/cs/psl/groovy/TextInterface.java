@@ -124,6 +124,8 @@ public class TextInterface {
 
 		}
 
+		Logger.getRootLogger().setLevel(Level.TRACE);
+		
 		System.out.println("### Pair "
 				+ pslFilePath.substring(pslFilePath.lastIndexOf('/') + 1,
 						pslFilePath.lastIndexOf('.')));

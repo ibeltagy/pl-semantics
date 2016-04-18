@@ -204,6 +204,13 @@ public class RDBMSDatabase implements Database {
 	public void persist(Atom atom) {
 		assert atom.isGround();
 		assert atom.isConsidered() || atom.isActive() : atom;
+		for (Term t: atom.getArguments())
+		{
+			if (t.toString().equals("0"))
+				//Do not insert the null entities in the database.
+				//This is resulting from the left outer join
+				return;
+		}
 		RDBMSPredicateHandle ph = getHandle(atom.getPredicate());
 		Preconditions.checkArgument(!ph.isClosed(),"Cannot write atom for closed predicate");
 		Preconditions.checkArgument(ph.hasSoftValues(),"Cannot set truth value since respective column does not exist!");

@@ -101,7 +101,10 @@ class PSLTheoremProver(
     	//498,517,664,960,1431   (memroy)
     	//InnerJoin, OuterJoin, OuterJoinWithDummy;
     	//var resultScore = callPSL(mlnFile, "InnerJoin", timeout);
-    	var resultScore = callPSL(mlnFile, "OuterJoin");
+    	var joinType = "OuterJoin";
+    	if (Sts.qaRightAnswer != "") //QA Task
+    		joinType = "Anchor";
+    	var resultScore = callPSL(mlnFile, joinType);
     	
     	//if (resultScore == 0 )
     	//	resultScore = callPSL(mlnFile, "OuterJoin", timeout);
@@ -367,8 +370,10 @@ class PSLTheoremProver(
 	          case GoalExpression(folExp, weight) =>
 	          {	        	  	            
 	        	  if(weight == Double.PositiveInfinity)
+	        	  {
 	        	    //pslFile.write("rule,avg,%s\n".format(convert(universalifyGoalFormula(breakVariableBinding(first) -> entailmentConsequent_h)))) //normal anding
-	        		  pslFile.write("rule,avg,%s,inf\n".format(convert(folExp))) //normal anding
+	        	    pslFile.write("rule,avg,%s,inf\n".format(convert(folExp))) //normal anding
+	        	  }
 	        	  else
 	        		  pslFile.write("rule,and,entailment_h()&entailment_t()>>entailment(),inf\n");
 	        	     
@@ -782,11 +787,7 @@ class PSLTheoremProver(
       case FolAtom(pred, args @ _*) => pred.name.replace("'", "") + "(" + args.map(v => v.name.toUpperCase()).mkString(",") + ")"
       case FolVariableExpression(v) => v.name.toUpperCase()//if (bound(v)) v.name.toLowerCase() else quote(v.name)
     }
-  
-
-
-
-  private def quote(s: String) = '"' + s + '"'
+	private def quote(s: String) = '"' + s + '"'
 
 }
 

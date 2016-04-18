@@ -79,18 +79,18 @@ class SetGoalPTP(
     //=====================Start RTE=============================
     else if (Sts.opts.task == "rte" && Sts.opts.softLogicTool == "psl")
     {
+    	var modifiedGoal = goal;
     	var entVarName = ""
     	if (Sts.qaRightAnswer != "") //this is QA not RTE
     	{
     		entVarName = Sts.qaEntities.get("@placeholder").get + "_q"
+    		modifiedGoal = sortPreds(modifiedGoal, entVarName);
     	}
         val ent_h = FolApplicationExpression(FolVariableExpression(Variable("entailment_h")), FolVariableExpression(Variable(entVarName)));
-        val modifiedGoal = 
-        		if(goal.isInstanceOf[FolVariableExpression])
-    	  		  	//handling a very special case of parsing error where the expression is just an empty box
-        			FolApplicationExpression(FolVariableExpression(Variable("dummyPred")), FolVariableExpression(Variable( "x" )));
-				else 
-					goal;
+		if(modifiedGoal.isInstanceOf[FolVariableExpression])
+  		  	//handling a very special case of parsing error where the expression is just an empty box
+			modifiedGoal = FolApplicationExpression(FolVariableExpression(Variable("dummyPred")), FolVariableExpression(Variable( "x" )));
+		
         val expr_h = GoalExpression((universalifyGoalFormula(modifiedGoal -> ent_h )).asInstanceOf[FolExpression], Double.PositiveInfinity);
         extraExpressions = List(expr_h);
     }
@@ -722,6 +722,88 @@ class SetGoalPTP(
 
     universalify(goal)
   }
+  
+  //sort predicates so they form a connected graph
+  private def sortPreds(input: FolExpression, answerVar:String): FolExpression =
+  {
+	//..
+	val atoms = getAnds(input).map(x =>
+	{
+		x match
+		{
+			case FolAtom(pred, args @ _*) => (x, args.map(v => v.name))
+			case _ => throw new RuntimeException("expression is not atom: " + x );
+		}
+	});
+	
+	val varQueue = new scala.collection.mutable.Queue[String];
+	val visitedVars = new scala.collection.mutable.HashSet[String];
+	varQueue.enqueue(answerVar);
+	val equation = new scala.collection.mutable.ArrayBuffer[FolExpression];
+	while (!varQueue.isEmpty)
+	{
+		val currentVar = varQueue.dequeue();
+		
+		// find all relations with one variable = currentVar and the other variable in visited
+		var tmpAtoms = atoms.filter( a => a._2.length == 2  && a._2.contains(currentVar)  && !a._2.toSet.intersect(visitedVars).isEmpty );
+		
+		// Add these relations  to the equation
+		equation ++= tmpAtoms.map(a => a._1);
+		
+		// find all predicate with one variable = currenrVat
+		tmpAtoms = atoms.filter( a => a._2.length == 1  && a._2.contains(currentVar) );
+		
+		// add predicates sorted by pos to the equation
+		//TODO
+
+		// Add these predicates  to the equation
+		equation ++= tmpAtoms.map(a => a._1);
+				
+		// find all relations with two variables, one of them = currentVar and the other is NOT in visited
+		tmpAtoms = atoms.filter( a => a._2.length == 2  && a._2.contains(currentVar)  && a._2.toSet.intersect(visitedVars).isEmpty );
+		
+		// add currentVar to visited
+		visitedVars += currentVar;
+
+		
+		// add all of the other variables to the queue
+		tmpAtoms.flatMap(a => a._2).foreach(v =>
+		{
+			if (v != currentVar && !varQueue.contains(v))
+			{
+				//if (visitedVars.contains(v))
+				//	null;
+				//else
+					varQueue.enqueue(v);
+			}
+		})
+	}
+
+	var break = false;
+	var newGoal:FolExpression = null;
+	for (atom <- equation)
+	{
+		if (newGoal == null)
+			newGoal = atom;
+		else
+			newGoal = FolAndExpression(newGoal, atom);
+	}
+	
+	var tmp = input;
+	while (!break)
+	{
+		tmp match {
+			case FolExistsExpression(variable, term) => {
+			  newGoal = FolExistsExpression(variable, newGoal);
+			  tmp = term;
+			}
+			case _ => break = true;
+		}
+	}
+	
+	newGoal
+  }
+
 
   //****************************** Mini-clauses functions ************************** 
   private def getMiniClausesWeightedExpressions(expr: FolExpression, entPred:FolExpression): List[WeightedExpression[FolExpression]] = {
