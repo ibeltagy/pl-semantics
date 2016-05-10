@@ -750,11 +750,54 @@ class SetGoalPTP(
 		// Add these relations  to the equation
 		equation ++= tmpAtoms.map(a => a._1);
 		
-		// find all predicate with one variable = currenrVat
-		tmpAtoms = atoms.filter( a => a._2.length == 1  && a._2.contains(currentVar) );
+		// find all predicate with one variable = currentVar
+
+		tmpAtoms = atoms.filter( a => a._2.length == 1  && a._2.contains(currentVar) 
+		    /* /*Do not include placeholder pred*/ && !a._1.toString.contains("placeholder")*/);
 		
 		// add predicates sorted by pos to the equation
-		//TODO
+		tmpAtoms = tmpAtoms.sortWith((x, y) => 
+		{
+			val mataPred = Set("male_n_dh", "female_n_dh", "topic_n_dh", "male_a_dh", "female_a_dh", "topic_a_dh")
+			val xPos = x._1 match
+			{
+				case FolAtom(pred, args @ _*) => 
+					//val splits = pred.name.split("_");
+					//require(splits.length == 3, pred);
+					//splits(1);
+				if (mataPred.contains(pred.name))
+				  "m"
+				else
+				  pred.name.charAt(pred.name.length()-4) + ""
+			}
+			val yPos = y._1 match
+			{
+				case FolAtom(pred, args @ _*) => 
+					//val splits = pred.name.split("_");
+					//require(splits.length == 3, pred);
+					//splits(1);
+				if (mataPred.contains(pred.name))
+				  "m"
+				else
+				  pred.name.charAt(pred.name.length()-4) + ""
+			}
+			println (">>>> " + xPos + " -- " + yPos)
+			def posToRank (pos: String) = {
+				pos match 
+				{
+					case "v" => 1;
+					case "n" => 2;
+					case "a" => 3;
+					case "r" => 4;
+					case "m" => 5;
+					case _ => throw new RuntimeException("Unexpected POS: " + pos);
+				}
+			}
+			val xRank = posToRank(xPos);
+			val yRank = posToRank(yPos);
+			xRank < yRank
+		})
+
 
 		// Add these predicates  to the equation
 		equation ++= tmpAtoms.map(a => a._1);
@@ -777,6 +820,7 @@ class SetGoalPTP(
 					varQueue.enqueue(v);
 			}
 		})
+		
 	}
 
 	var break = false;

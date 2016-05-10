@@ -32,6 +32,7 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerCard
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerTimex
 import utcompling.mlnsemantics.rules.DiffRules
 import utcompling.mlnsemantics.rules.RuleType
+import utcompling.mlnsemantics.rules.GraphRules
 
 class InferenceRuleInjectingProbabilisticTheoremProver(
 
@@ -173,7 +174,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 	  //Generate rules for whatever current level
 	  new DiffRules().getRule(assumptions.head.expression, goal, ruleWeighter, vecspaceFactory);
 	}
-	else 
+	else
 	{
 	  //generate rules for the three levels
 	  Sts.opts.extendDiffRulesLvl = Some(0)
@@ -187,6 +188,11 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 
 	  (rulesLvl0 ++ rulesLvl1 ++ rulesLvl2)
 	}
+	
+	//Generate rules from graph matching
+	val graphRules = if (Sts.opts.graphRules)
+	  new GraphRules().getRule(assumptions.head.expression, goal, ruleWeighter, vecspaceFactory);
+	else List()
     
 	var newConstants: Map[String, Set[String]] = constants;
 	def addConst(varName: String) =
@@ -194,7 +200,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 		
     val rules:List[WeightedExpression[BoxerExpression]] = Sts.opts.inferenceRulesLevel match {
 		case -1 => List();
-		case _ => (precompiledRules ++  onthefulyRules ++ wordNetRules ++ diffRule ++ distributionalRules).flatMap(r=>{
+		case _ => (precompiledRules ++  onthefulyRules ++ wordNetRules ++ diffRule ++ distributionalRules ++ graphRules).flatMap(r=>{
 			val result = Rules.createWeightedExpression(r._1, r._2, r._3, r._4, simplifiedDeclarations)
 			result._2.map( c => addConst(c));
 			result._1

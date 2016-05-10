@@ -30,12 +30,27 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
     newConstants = constants;//extra constants are added by skolemConstAsEvd
     equalities = List();
     val newGoal = apply(goal)
+    //Rename variable of @placeholder based on equalities found on the goal
+    Sts.qaEntities = Sts.qaEntities + ("@placeholder" -> applyEq(Sts.qaEntities("@placeholder"))) 
     //Remove it only from the Text because that help generating the evidence.
     //No need to do it for the hypothesis 
     val newAssumptions:List[WeightedExpression[FolExpression]] = assumptions.map
     {
-		case HardWeightedExpression(e, w) =>	HardWeightedExpression(apply(e), w)
-		case GoalExpression(e, w) =>	GoalExpression(apply(e), w)
+		case HardWeightedExpression(e, w) => 
+		{
+			val newE = HardWeightedExpression(apply(e), w)
+			//Rename variable of all entities except @placeholder based on equalities found on the goal
+			val prevQaEntities = Sts.qaEntities
+			Sts.qaEntities = Sts.qaEntities.empty
+			prevQaEntities.foreach(p => {
+				if (p._1 == "@placeholder")
+					Sts.qaEntities = Sts.qaEntities + (p._1 -> p._2)
+				else
+					Sts.qaEntities = Sts.qaEntities + (p._1 -> applyEq(p._2))
+			})
+			newE //This is text
+		}
+		case GoalExpression(e, w) => throw new RuntimeException("Not reachable") //GoalExpression(apply(e), w) 
 		case a @ _ => a
     }
     

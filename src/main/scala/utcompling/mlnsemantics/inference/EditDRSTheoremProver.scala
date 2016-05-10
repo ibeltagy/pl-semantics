@@ -15,6 +15,7 @@ import support.HardWeightedExpression
 import utcompling.mlnsemantics.run.Sts
 import opennlp.scalabha.util.FileUtils
 import scala.math
+import scala.collection.mutable.ListBuffer
 
 class EditDRSTheoremProver(
   delegate: ProbabilisticTheoremProver[BoxerExpression])
@@ -50,12 +51,13 @@ class EditDRSTheoremProver(
   	this.sentence = sentence;
 	addGroupHeadPred(
 	  setNamedEntities(
+	   extendPlaceholder(
   		replaceCardName(
 			removeTopic(
 				removeDanglingEqualities(
 						removeTheres(
 							corref(
-								applySMerge(e))))))));
+								applySMerge(e)))))))));
   }
 
   /////////////////////////////////////////////
@@ -77,12 +79,93 @@ class EditDRSTheoremProver(
       case _ => e.visitConstruct(addGroupHeadPred)
    }
   }
+
+  def extendPlaceholder(e:BoxerExpression):BoxerExpression = 
+  {
+    if (isProcessingGoal)
+    {
+    	//if the predicate @placeholder is sharing the same variable with other noun or verb 
+    	//move it to a new variable with a relation
+    	
+    	val placeholderPred = e.getPredicates.filter( _.name.contains("@placeholder"))
+    	require (placeholderPred.length <= 1, "More than one predicate is named @placeholder in " + e )
+    	if (placeholderPred.length == 1)
+    	{
+    		val varName = placeholderPred.head.variable.name;
+    		val otherPreds = e.getPredicates.filter( p => p.variable.name == varName && !p.name.contains("@placeholder"))
+    		if (!otherPreds.isEmpty)
+    		{
+    			return extendPlaceholderRecursive(e)
+    		}
+    	}
+    }
+    return e
+  }
+  def extendPlaceholderRecursive(e:BoxerExpression):BoxerExpression =
+  {
+	e match {
+      case BoxerPred(discId, indices, variable, name, pos, sense) => {
+        if (name.contains("@placeholder"))
+        {
+          val newVar = BoxerVariable("x900");
+          val rel = BoxerRel(discId, indices, variable, newVar, "rel", 0);
+          val pred = BoxerPred(discId, indices, newVar, name, pos, sense)
+          val refs = List((List[BoxerIndex](), newVar)) ;
+          val drs = BoxerDrs(refs, List(rel, pred));
+          drs
+        }else e
+      }
+      case _ => e.visitConstruct(extendPlaceholderRecursive)
+	}
+  }
   var entityVarMap: collection.mutable.Map[String, collection.mutable.ListBuffer[String]] =  collection.mutable.Map()
-  def setNamedEntities(e:BoxerExpression):BoxerExpression = {
+  def setNamedEntities(e:BoxerExpression):BoxerExpression = 
+  {
     entityVarMap.clear();
     findCorefEntities(e)
     renamePair.clear()
     //println("++++" + entityVarMap)
+    
+    /*   //TODO: parsing and entity detection is sooo messed up, but fixing this will take a lot of work 
+    val entityVarList = ListBuffer.empty ++ entityVarMap.toList
+    
+    var extraEntityCounter = 900; 
+    for( i <- 0 until entityVarList.length)
+    {
+    	var iVarList = entityVarList(i)._2
+	    for( j <- 0 until entityVarList.length)
+	    {
+	    	val jVarList = entityVarList(j)._2
+	    	if (i != j)
+	    	{
+	    		if (!(iVarList intersect jVarList).isEmpty)
+	    		{
+	    			if (iVarList.length >= jVarList.length)
+	    			{
+	    				iVarList = iVarList -- jVarList;
+	    				if (iVarList.isEmpty)
+	    				{
+	    					iVarList += ("x" + extraEntityCounter)
+	    					extraEntityCounter = extraEntityCounter + 1
+	    				}
+	    			}
+	    		}
+	    	}
+	    	
+	    }
+    	entityVarList(i) = (entityVarList(i)._1, iVarList);
+    }
+    
+    println(entityVarList)
+    
+    entityVarMap.foreach(first => {
+    	var listOfVars = first._2
+    	entityVarMap.foreach(second => {
+    		if (first != second)
+    			require ((first._2 intersect second._2).isEmpty, "The intersection of two entity variables is not empty: " + first.toString + " ---" + second.toString)
+    	})
+    })
+    */
     entityVarMap.foreach(x => 
       {
         val entityName = x._1
@@ -94,6 +177,7 @@ class EditDRSTheoremProver(
         	Sts.qaEntities = Sts.qaEntities + (entityName -> ("h" + FindEventsProbabilisticTheoremProver.newName(varList.head)))
       })
     //println("++++" + renamePair)
+
     LOG.trace("Entities and variables: " +  Sts.qaEntities)
 
     renameVariables(e)

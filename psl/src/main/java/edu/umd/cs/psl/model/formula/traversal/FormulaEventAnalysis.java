@@ -36,6 +36,7 @@ import edu.umd.cs.psl.model.atom.Atom;
 import edu.umd.cs.psl.model.atom.AtomEventFramework;
 import edu.umd.cs.psl.model.atom.AtomEventSets;
 import edu.umd.cs.psl.model.atom.VariableAssignment;
+import edu.umd.cs.psl.model.formula.AbstractBranchFormula.ConjunctionTypes;
 import edu.umd.cs.psl.model.formula.Conjunction;
 import edu.umd.cs.psl.model.formula.Formula;
 import edu.umd.cs.psl.model.formula.Negation;
@@ -101,7 +102,7 @@ public class FormulaEventAnalysis {
 			{
 				Conjunction conj = new Conjunction((Formula[]) necessary.toArray(new Formula[necessary.size()]));
 				conj.conjType = c.conjType;
-				if (Formula2SQL.queryJoinMode == QueryJoinMode.Anchor && anchorVar != null)
+				if (Formula2SQL.queryJoinMode == QueryJoinMode.Anchor && anchorVar != null && conj.conjType == ConjunctionTypes.avg)
 					conj.anchorVar = anchorVar;
 				queries.add(conj);
 			}

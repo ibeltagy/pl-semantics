@@ -51,6 +51,7 @@ class Config(opts: Map[String, String] = Map()) {
 		"-lexInferModelFile",
 		"-lexInferMethod",
 		"-wordnet",
+		"-graphRules",
 		"-diffRules",
 		"-printDiffRules",
 		"-diffRulesSimpleText",
@@ -269,6 +270,13 @@ class Config(opts: Map[String, String] = Map()) {
     case _ => false;
   }
   
+
+  //Enable or Disable Graph-matching rules
+  val graphRules = opts.get("-graphRules") match {
+    case Some("true") => true;
+    case _ => false;
+  }
+
   //Enable or Disable Difference rules
   val diffRules = opts.get("-diffRules") match {
     case Some("false") => false;
@@ -503,7 +511,7 @@ class Config(opts: Map[String, String] = Map()) {
   //"-1" means they should be treated as any other unary predicate.  
   val metaW = opts.get("-metaW") match {
      case Some(w) => w.toDouble;
-     case _ => 0.30;  //-1
+     case _ => -1 //  0.30 gave the best result on the SICK-STS task
   }
   
   //weight of relation predicates like agent, patient, of ....  
