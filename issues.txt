@@ -1,3 +1,6 @@
+Equalities should be processed before generating inference rules not after. This is important to find connected entities. Question 8 breaks because of it
+Check EditDRSTheoremProver for the parsing and entity detection problem. Different entities are using the same discorse variable, and similar entities are using different discorse variables. 
+
 bin/mlnsem  qa qa/resources/cnn/validation/ 2 -log TRACE  -withNegT false  -soap localhost:9000 -negativeEvd false   -softLogic mln -diffRules false  -keepUniv false -focusGround true  
 bin/mlnsem  qa qa/resources/cnn/validation/ 1 -log TRACE  -withNegT false   -negativeEvd false   -softLogic psl -diffRules false  -keepUniv false  -ner gs  -groundLimit 10000 
 
