@@ -52,6 +52,7 @@ class Config(opts: Map[String, String] = Map()) {
 		"-lexInferMethod",
 		"-wordnet",
 		"-graphRules",
+		"-graphRuleLengthLimit",
 		"-diffRules",
 		"-printDiffRules",
 		"-diffRulesSimpleText",
@@ -275,6 +276,12 @@ class Config(opts: Map[String, String] = Map()) {
   val graphRules = opts.get("-graphRules") match {
     case Some("true") => true;
     case _ => false;
+  }
+  
+  //Limit of length of graph rules
+  val graphRuleLengthLimit = opts.get("-graphRuleLengthLimit") match {
+    case Some(len) => len.toInt;
+    case _ => 5;
   }
 
   //Enable or Disable Difference rules

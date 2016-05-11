@@ -124,7 +124,7 @@ public class TextInterface {
 
 		}
 
-		Logger.getRootLogger().setLevel(Level.TRACE);
+		//Logger.getRootLogger().setLevel(Level.TRACE);
 		
 		System.out.println("### Pair "
 				+ pslFilePath.substring(pslFilePath.lastIndexOf('/') + 1,
@@ -277,7 +277,7 @@ public class TextInterface {
 					db.close();
 					data.close();
 					}
-					catch (Exception e)
+					catch (Exception|AssertionError e)
 					{
 						db.close();
 						data.close();

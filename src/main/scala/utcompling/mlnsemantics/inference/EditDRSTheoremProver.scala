@@ -50,8 +50,8 @@ class EditDRSTheoremProver(
   {
   	this.sentence = sentence;
 	addGroupHeadPred(
-	  setNamedEntities(
-	   extendPlaceholder(
+	  extendPlaceholder(
+	   setNamedEntities(
   		replaceCardName(
 			removeTopic(
 				removeDanglingEqualities(
@@ -88,10 +88,13 @@ class EditDRSTheoremProver(
     	//move it to a new variable with a relation
     	
     	val placeholderPred = e.getPredicates.filter( _.name.contains("@placeholder"))
-    	require (placeholderPred.length <= 1, "More than one predicate is named @placeholder in " + e )
-    	if (placeholderPred.length == 1)
+    	//It is possible to have hyp with multiple placeholder predicates. 
+    	//require (placeholderPred.length <= 1, "More than one predicate is named @placeholder in " + e )
+    	if (placeholderPred.length > 0)
     	{
+    		//all of them should have the same variable because "setNamedEntities" is called before it
     		val varName = placeholderPred.head.variable.name;
+    		
     		val otherPreds = e.getPredicates.filter( p => p.variable.name == varName && !p.name.contains("@placeholder"))
     		if (!otherPreds.isEmpty)
     		{
@@ -112,6 +115,7 @@ class EditDRSTheoremProver(
           val pred = BoxerPred(discId, indices, newVar, name, pos, sense)
           val refs = List((List[BoxerIndex](), newVar)) ;
           val drs = BoxerDrs(refs, List(rel, pred));
+          Sts.qaEntities = Sts.qaEntities + ("@placeholder" -> ("h" + FindEventsProbabilisticTheoremProver.newName(newVar.name)))
           drs
         }else e
       }

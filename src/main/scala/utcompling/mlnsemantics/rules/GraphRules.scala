@@ -190,17 +190,18 @@ class GraphRules {
   	  //TODO: add potential matches using WordNet, DistSim and LexicalEnt
   	} ))).toMap
   	
-  	println(entityPotentialMatchs)
+  	//println(entityPotentialMatchs)
 
   	
   	val hypGraph = scalax.collection.mutable.Graph[String, LUnDiEdge]();
   	hypEntities.foreach( e => hypGraph += e)
   	hypRels.foreach( r => {
   	  val edge = (r.event.name~+r.variable.name)(r);
-  	  require( !hypGraph.contains(edge), "Edge " + edge + " already exists in graph " + hypGraph)
+  	  //ignore this check, but still need to ckeck that the code below will still work without it
+  	  //require( !hypGraph.contains(edge), "Edge " + edge + " already exists in graph " + hypGraph)
   	  hypGraph += edge
   	});
-  	println (hypGraph)
+  	//println (hypGraph)
   	
   	val textGraph = scalax.collection.mutable.Graph[String, LUnDiEdge]();
   	textEntities.foreach( e => textGraph += e)
@@ -210,11 +211,11 @@ class GraphRules {
   	  //require( !textGraph.contains(edge), "Edge " + edge + " already exists in graph " + textGraph)
   	  textGraph += edge
   	});
-  	println (textGraph)
+  	//println (textGraph)
   	
   	val firstHopEntities = hypRels.filter( r => Set(r.event.name, r.variable.name).contains(queryEntity) )
   			.flatMap(r => List(r.event.name, r.variable.name)).toSet - queryEntity
-  	println (firstHopEntities)
+  	//println (firstHopEntities)
   	
   	
   	val hypFrom = queryEntity
@@ -229,11 +230,11 @@ class GraphRules {
   	  {
   		  for (textTo <- textToList)
   		  {
-  			  println (textFrom + " -- " + textTo)
+  			  //println (textFrom + " -- " + textTo)
   			  val nodeFrom = textGraph.get(textFrom)
   			  val nodeTo = textGraph.get(textTo)
   			  val sp = nodeFrom shortestPathTo nodeTo
-  			  if (sp.isDefined)
+  			  if (sp.isDefined && sp.get.weight <= Sts.opts.graphRuleLengthLimit)
   			  {
   				  //println ("Path found: " + sp)
   				  //println(sp.get.nodes.flatMap(textEntitiesMap(_)))
@@ -264,7 +265,7 @@ class GraphRules {
   				  })
   				  val ruleLhsDrs = Rules.boxerAtomsToBoxerDrs(ruleLhs.toSet);
   				  val ruleRhsDrs = Rules.boxerAtomsToBoxerDrs(ruleRhs.toSet);
-  				  println (ruleRhs + " <<< " + ruleLhs)
+  				  //(ruleRhs + " <<< " + ruleLhs)
   				  rules +=  ( (ruleLhsDrs, ruleRhsDrs, 1.0/sp.get.weight, RuleType.Implication) )
 
   			  }
