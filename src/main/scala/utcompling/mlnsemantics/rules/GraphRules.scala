@@ -54,6 +54,7 @@ object GraphRules {
 	  println (hypGraph)
 	  * 
 	  */
+    /*
 		val g = Graph(1~2 % 4, 2~3 % 2, 1~>3 % 5, 1~5  % 3,
 		              3~5 % 2, 3~4 % 1, 4~>4 % 1, 4~>5 % 0)
 		def n(outer: Int): g.NodeT = g get outer  // look up a node known to be contained
@@ -76,7 +77,9 @@ object GraphRules {
 		
 		val spNO = n(3) shortestPathTo (n(1)) // Path(3, 2~3 %2, 2, 1~2 %4, 1)
 		val spN = spNO.get                        // here we know spNO is defined
-		println(spN.weight)                                // Long = 6
+		println(spN.weight)      
+		*                           // Long = 6
+		*/
   }
   	
   var isTextNegated:Boolean = false; //set them when GivenNotTextProbabilisticTheoremProver.phase == Phase.notHGivenT
@@ -91,7 +94,7 @@ object GraphRules {
 	    if (Sts.opts.printDiffRules)
 	      println(s)
     }catch {
-      case _ =>
+      case _ : Exception =>
     }
   }
   printDiffRules("[pattern]" + "\t" + "ruleID" + "\t" + "lhsText" + "\t" + "rhsText"+ "\t" + "w" + "\t"+ "gsw" +"\t" + "notSure" + "\t" + "isInWordnet" + "\t" + "ruleEval" + "\t" + "extentionLevel" + "\t" + "pairIndex" + "\t" + "text" + "\t" + "hypothesis" + "\t" + "lhsDrs" + "\t" + "rhsDrs")
@@ -178,12 +181,14 @@ class GraphRules {
   	  //  tmp = hypWords
   	  var y = Set[String]();
 
-  	  if (hypWords.contains("'@placeholder'"))
+  	  if (hypWords.contains("@placeholder"))
   	    y = Sts.qaEntities.keySet intersect (textWords.map (w =>  {
-    	  if (w.startsWith("'") && w.endsWith("'"))
-    		  w.substring(1, w.length()-1);
-    	  else
-    	    w
+    	  
+  	      //Quotes are removed in EditDRSTheoremProver.removeSingleQuote
+  	      //if (w.startsWith("'") && w.endsWith("'"))
+    	  //	  w.substring(1, w.length()-1);
+    	  //else
+    	  w
   	    }))
   	  //println (hypWords.toString + " --- " + textWords.toString + " --- " + x.toString)
   	  ! (x.isEmpty && y.isEmpty)
@@ -191,8 +196,8 @@ class GraphRules {
   	} ))).toMap
   	
   	//println(entityPotentialMatchs)
+  	val rules:ListBuffer[(BoxerDrs, BoxerDrs, Double, RuleType.Value)] = ListBuffer();
 
-  	
   	val hypGraph = scalax.collection.mutable.Graph[String, LUnDiEdge]();
   	hypEntities.foreach( e => hypGraph += e)
   	hypRels.foreach( r => {
@@ -221,8 +226,6 @@ class GraphRules {
   	val hypFrom = queryEntity
   	val textFromList = entityPotentialMatchs(hypFrom)
   	
-  	val rules:ListBuffer[(BoxerDrs, BoxerDrs, Double, RuleType.Value)] = ListBuffer();
-  	
   	firstHopEntities.foreach(hypTo => 
   	{
   	  val textToList = entityPotentialMatchs(hypTo)
@@ -240,12 +243,12 @@ class GraphRules {
   				  //println(sp.get.nodes.flatMap(textEntitiesMap(_)))
   				  //println(sp.get.weight)
   				  //println(sp.get.edges.map(_.label))
-  				  val lhsPred = sp.get.nodes.flatMap(textEntitiesMap(_))
-  				  val lhsRel = sp.get.edges.map(_.label) 
+  				  val lhsPred = sp.get.nodes.flatMap(textEntitiesMap(_)).toList
+  				  val lhsRel = sp.get.edges.map(_.label).toList
   				  val ruleLhs:List[BoxerExpression] = lhsPred.asInstanceOf[List[BoxerExpression]] ++ lhsRel.asInstanceOf[List[BoxerExpression]]
   				  val spRhs = hypGraph.get(hypFrom) shortestPathTo hypGraph.get(hypTo)
-  				  val rhsPred = spRhs.get.nodes.flatMap(hypEntitiesMap(_))
-  				  val rhsRel = spRhs.get.edges.map(_.label)
+  				  val rhsPred = spRhs.get.nodes.flatMap(hypEntitiesMap(_)).toList
+  				  val rhsRel = spRhs.get.edges.map(_.label).toList
   				  var ruleRhs:List[BoxerExpression] = rhsPred.asInstanceOf[List[BoxerExpression]] ++ rhsRel.asInstanceOf[List[BoxerExpression]]
   				  def changeRhsVar (v:BoxerVariable) : BoxerVariable = 
   				  {
@@ -272,6 +275,7 @@ class GraphRules {
   		  }
   	  }
   	})
+
   	return rules.toList;
   	//def n(outer: String, graph): g.NodeT = g get outer  // look up a node known to be contained
 

@@ -49,7 +49,7 @@ class BoxerDiscourseInterpreter[T](
       val doc = inputs(0)(0);
       val docSplits = doc.split(" \\? | \\. | ! | !\\|O | \\?\\|O | \\.\\|O ")
       //println (docSplits)
-      inputs =  List.fromArray(docSplits.map (x => List(x)))
+      inputs =  (docSplits.map (x => List(x))).toList
       //println (">>>>>>>>>>" + inputs )
       newDiscourseIds = (0 until inputs.length).map(_.toString).toList
       extraBoxerArgs = Map[String, String]("--integrate" -> "true")

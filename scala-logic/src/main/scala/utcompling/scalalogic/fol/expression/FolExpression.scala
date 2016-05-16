@@ -6,7 +6,7 @@ import utcompling.scalalogic.top.expression.Expression
 import utcompling.scalalogic.util._
 import utcompling.scalalogic.fol._
 
-abstract case class FolExpression
+abstract class FolExpression
   extends Expression
   with BaseExpression[FolExpression] {
 

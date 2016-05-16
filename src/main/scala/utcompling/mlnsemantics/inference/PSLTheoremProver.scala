@@ -18,7 +18,9 @@ import utcompling.mlnsemantics.run.Sts
 import scala.sys.process.Process
 import scala.sys.process.ProcessLogger
 import java.io.File
-import edu.umd.cs.psl.evaluation.resultui.printer.ListAtomPrintStream
+import edu.umd.cs.psl.evaluation.resultui.printer._
+//import edu.umd.cs.psl.evaluation.resultui.printer.ListAtomPrintStream
+
 import util.PSLInterface
 
 class PSLTheoremProver(
@@ -275,187 +277,185 @@ class PSLTheoremProver(
     //val pslFilePath = System.getProperty("user.dir")+"/psl/run/%s.psl".format(Sts.pairIndex);
     val pslFilePath = FileUtils.mktemp(suffix = ".psl") 
     val pslFile = new java.io.PrintWriter(new File(pslFilePath))
-    try { 
+    
+  //=================Headers      
+	/*pslFile.write(
+		"package psl;\n" +
+		"import edu.umd.cs.psl.groovy.*;\n" +
+		"import edu.umd.cs.psl.database.RDBMS.DatabaseDriver;\n" +
+		"import edu.umd.cs.psl.model.DistanceNorm;\n" +
+		"import edu.umd.cs.psl.model.function.AttributeSimilarityFunction;\n" +
+		"import edu.umd.cs.psl.config.*;\n" +
+		"import edu.umd.cs.psl.model.predicate.type.*;\n" +
+		"import edu.umd.cs.psl.ui.functions.textsimilarity.*;\n" +
+		"println \"Hellooooooooooooo\";\n" );
+	*/
 
-        				
-      //=================Headers      
-    	/*pslFile.write(
-			"package psl;\n" +
-			"import edu.umd.cs.psl.groovy.*;\n" +
-			"import edu.umd.cs.psl.database.RDBMS.DatabaseDriver;\n" +
-			"import edu.umd.cs.psl.model.DistanceNorm;\n" +
-			"import edu.umd.cs.psl.model.function.AttributeSimilarityFunction;\n" +
-			"import edu.umd.cs.psl.config.*;\n" +
-			"import edu.umd.cs.psl.model.predicate.type.*;\n" +
-			"import edu.umd.cs.psl.ui.functions.textsimilarity.*;\n" +
-			"println \"Hellooooooooooooo\";\n" );
-		*/
+	//=================Similarity function
+    /*pslFile.writeLine(
+	"class Sim%s implements AttributeSimilarityFunction {\n".format(PSLTheoremProver.pairIndx) +
+			"private HashMap sim;\n" +
+			"@Override\n" +
+			"public double similarity(String a, String b) {\n" +
+				"Double score = sim.get(a);\n" +
+				"if (score == null)\n" +
+					"throw new Exception(\"score for \" + a + \" not found\");\n" +
+				"else return score.value; }	\n" +
+			"Sim%s (){\n".format(PSLTheoremProver.pairIndx) +
+    			"sim = new HashMap<String, Double>();\n" +
+    			"BufferedReader fr =  new BufferedReader(new FileReader(\"sim/%s.txt\"));\n".format(PSLTheoremProver.pairIndx) +
+    			"String l;\n" +
+    			"while((l = fr.readLine()) != null){\n" +
+    				"String[] splits = l.split(\",\");\n" +
+    				"sim.put(splits[0], splits[1].toDouble());\n" +
+    				"}}}")
+    */
 
-    	//=================Similarity function
-        /*pslFile.writeLine(
-		"class Sim%s implements AttributeSimilarityFunction {\n".format(PSLTheoremProver.pairIndx) +
-				"private HashMap sim;\n" +
-				"@Override\n" +
-				"public double similarity(String a, String b) {\n" +
-					"Double score = sim.get(a);\n" +
-					"if (score == null)\n" +
-						"throw new Exception(\"score for \" + a + \" not found\");\n" +
-					"else return score.value; }	\n" +
-				"Sim%s (){\n".format(PSLTheoremProver.pairIndx) +
-        			"sim = new HashMap<String, Double>();\n" +
-        			"BufferedReader fr =  new BufferedReader(new FileReader(\"sim/%s.txt\"));\n".format(PSLTheoremProver.pairIndx) +
-        			"String l;\n" +
-        			"while((l = fr.readLine()) != null){\n" +
-        				"String[] splits = l.split(\",\");\n" +
-        				"sim.put(splits[0], splits[1].toDouble());\n" +
-        				"}}}")
-        */
+    //=================begining of rules
+    //pslFile.write(
+	//	"PSLModel m = new PSLModel(this);\n" +
+	//	"m.add function: \"sim\" , name1: Text, name2: Text, implementation: new Sim%s();\n".format(PSLTheoremProver.pairIndx) +
+	//	"m.add predicate: \"all\", arg1: Entity;\n");
 
-        //=================begining of rules
-        //pslFile.write(
-		//	"PSLModel m = new PSLModel(this);\n" +
-		//	"m.add function: \"sim\" , name1: Text, name2: Text, implementation: new Sim%s();\n".format(PSLTheoremProver.pairIndx) +
-		//	"m.add predicate: \"all\", arg1: Entity;\n");
-
-       //=================Predicate declarations
-      	pslFile.write("predicate,all_h,1\n")
-      	pslFile.write("predicate,all_t,1\n")
-      	pslFile.write("predicate,all,1\n")
-      	pslFile.write("predicate,dummyPred,1\n")
-      	pslFile.write("predicate,negationPred_r_dh,1\n")
-      	pslFile.write("predicate,negationPred_r_dt,1\n")
-      	declarationNames.foreach {
-      	    																						//1 arg if QA, 0 arg if STS or RTE
-      		case ("entailment_h", varTypes) => pslFile.write("predicate,%s,%s\n".format("entailment_h", (if (Sts.qaRightAnswer != "") 1 else 0) ))
-      	    case ("entailment_t", varTypes) => pslFile.write("predicate,%s,%s\n".format("entailment_t", 0))
-			case (pred, varTypes) => {
-				//pslFile.write("m.add predicate: \"%s\", %s open: true;\n".format(pred, varTypes.indices.map("arg" + _+": Entity, ").mkString(""))) 
-			  pslFile.write("predicate,%s,%s\n".format(pred, varTypes.length))
-			  if((pred.contains("agent")||pred.contains("patient"))&& Sts.opts.funcConst && varTypes.length == 2)
-				  pslFile.write("constraint,%s\n".format(pred))
-			}
-    	}
-       //=================Priors
-		declarationNames.foreach {
-			 //different priors for ent and other predicates
-		    //m.add Prior.Simple, on : ent, weight: 0.01
-
-		  //case ("entailment_h", varTypes) => pslFile.write("m.add Prior.Simple, on: %s, weight: 0.01;\n".format("entailment_h"))
-		  //case ("entailment_t", varTypes) => pslFile.write("m.add Prior.Simple, on: %s, weight: 0.01;\n".format("entailment_t"))
-		  //case ("entailment", varTypes) => pslFile.write("m.add Prior.Simple, on: %s, weight: 0.01;\n".format("entailment"))
-		  //case (pred, varTypes) => pslFile.write("m.add Prior.Simple, on: %s, weight: 0.1;\n".format(pred))
-		    case ("entailment_h", varTypes) => pslFile.write("prior,%s,0.01\n".format("entailment_h"))
-			case ("entailment_t", varTypes) => pslFile.write("prior,%s,0.01\n".format("entailment_t"))
-			case ("entailment", varTypes) => pslFile.write("prior,%s,0.01\n".format("entailment"))
-			case (pred, varTypes) => pslFile.write("prior,%s,0.1\n".format(pred))
+   //=================Predicate declarations
+  	pslFile.write("predicate,all_h,1\n")
+  	pslFile.write("predicate,all_t,1\n")
+  	pslFile.write("predicate,all,1\n")
+  	pslFile.write("predicate,dummyPred,1\n")
+  	pslFile.write("predicate,negationPred_r_dh,1\n")
+  	pslFile.write("predicate,negationPred_r_dt,1\n")
+  	declarationNames.foreach {
+  	    																						//1 arg if QA, 0 arg if STS or RTE
+  		case ("entailment_h", varTypes) => pslFile.write("predicate,%s,%s\n".format("entailment_h", (if (Sts.qaRightAnswer != "") 1 else 0) ))
+  	    case ("entailment_t", varTypes) => pslFile.write("predicate,%s,%s\n".format("entailment_t", 0))
+		case (pred, varTypes) => {
+			//pslFile.write("m.add predicate: \"%s\", %s open: true;\n".format(pred, varTypes.indices.map("arg" + _+": Entity, ").mkString(""))) 
+		  pslFile.write("predicate,%s,%s\n".format(pred, varTypes.length))
+		  //if((pred.contains("agent")||pred.contains("patient"))&& Sts.opts.funcConst && varTypes.length == 2)
+			//  pslFile.write("constraint,%s\n".format(pred))
 		}
-		
-       //=================Inference rules		
-		//var similarityTable: List[(String, Double)] = List(); 
-		//var lastSimilarityID:Integer = 0;
-		assumptions
-        .flatMap {
-          case e @ SoftWeightedExpression(folEx, weight) =>
-            weight match {
-              //case Double.PositiveInfinity => Some(HardWeightedExpression(folEx))
-              case Double.NegativeInfinity => None ;//Some(HardWeightedExpression(-folEx))
-              case _ => Some(e)
+	}
+   //=================Priors
+	declarationNames.foreach {
+		 //different priors for ent and other predicates
+	    //m.add Prior.Simple, on : ent, weight: 0.01
+
+	  //case ("entailment_h", varTypes) => pslFile.write("m.add Prior.Simple, on: %s, weight: 0.01;\n".format("entailment_h"))
+	  //case ("entailment_t", varTypes) => pslFile.write("m.add Prior.Simple, on: %s, weight: 0.01;\n".format("entailment_t"))
+	  //case ("entailment", varTypes) => pslFile.write("m.add Prior.Simple, on: %s, weight: 0.01;\n".format("entailment"))
+	  //case (pred, varTypes) => pslFile.write("m.add Prior.Simple, on: %s, weight: 0.1;\n".format(pred))
+	    case ("entailment_h", varTypes) => pslFile.write("prior,%s,0.01\n".format("entailment_h"))
+		case ("entailment_t", varTypes) => pslFile.write("prior,%s,0.01\n".format("entailment_t"))
+		case ("entailment", varTypes) => pslFile.write("prior,%s,0.01\n".format("entailment"))
+		case (pred, varTypes) => pslFile.write("prior,%s,0.1\n".format(pred))
+	}
+	
+   //=================Inference rules		
+	//var similarityTable: List[(String, Double)] = List(); 
+	//var lastSimilarityID:Integer = 0;
+	assumptions
+    .flatMap {
+      case e @ SoftWeightedExpression(folEx, weight) =>
+        weight match {
+          //case Double.PositiveInfinity => Some(HardWeightedExpression(folEx))
+          case Double.NegativeInfinity => None ;//Some(HardWeightedExpression(-folEx))
+          case _ => Some(e)
+        }
+      case e @ _ => Some(e)
+    }.foreach { e => 
+      e match {
+      	  case PriorExpression(folExp, weight) => 
+            	None
+            	//f.write("%.5f %s\n".format(weight, convert(folExp)))
+          case GoalExpression(folExp, weight) =>
+          {	        	  	            
+        	  if(weight == Double.PositiveInfinity)
+        	  {
+        	    //pslFile.write("rule,avg,%s\n".format(convert(universalifyGoalFormula(breakVariableBinding(first) -> entailmentConsequent_h)))) //normal anding
+        	    pslFile.write("rule,avg,%s,inf\n".format(convert(folExp))) //normal anding
+        	  }
+        	  else
+        		  pslFile.write("rule,and,entailment_h()&entailment_t()>>entailment(),inf\n");
+        	     
+          }
+          case SoftWeightedExpression(folExp, weight) =>
+            var usedWeight = min(weight, 1);
+            usedWeight = max(usedWeight, 0);
+            if (usedWeight  > 0)
+            {
+              removeOuterUnivs(folExp) match {
+                case FolIfExpression(lhs, rhs) => {
+	              val lhsAnds = getAnds(lhs)
+	              val lhsVars = findAllVars(lhs) 
+	              val lhsString = convert(lhs)
+	              val lhsSimString = lhsAnds.flatMap {
+	              	case FolAtom(pred, args @ _*) if (args.length == 1)=> List(pred.name)
+	              	case _ =>None
+	              }.mkString("-")
+	              
+	              val rhsAnds = getAnds(rhs)
+	              val rhsSimString = rhsAnds.flatMap {
+	              	case FolAtom(pred, args @ _*) if (args.length == 1)=> List(pred.name)
+	              	case _ =>None
+	              }.mkString("-")
+	              
+	              //similarityTable ::= (lhsSimString+"#"+rhsSimString, usedWeight) ;
+	              //lastSimilarityID = lastSimilarityID+1;
+	              //similarityTable ::= (lastSimilarityID.toString(), usedWeight) ;
+	              
+	              rhsAnds.foreach(rhsAnd => {
+	            	  val rhsVar = findAllVars(rhsAnd)
+	            	  val missingVars = (rhsVar &~ lhsVars).toSet;
+	            	  var extendedLhsString = lhsString;
+	            	  val allString = rhsAnd match {
+	            	    case FolAtom(pred, args @ _*) if pred.name.endsWith("_dh") => "all_h" 
+	            	    case FolAtom(pred, args @ _*) if pred.name.endsWith("_dt") => "all_t"
+	            	    case _ => throw new RuntimeException("unsupported expression: %s".format(rhsAnd));
+	            	  }
+	            	  
+	            	  missingVars.foreach(v => {
+	            	     //extendedLhsString = "(%s & all(%s))".format(extendedLhsString, v.name.toUpperCase())
+	            	    extendedLhsString = "%s&%s(%s)".format(extendedLhsString, allString, v.name.toUpperCase())
+	            	  })
+	            	  val rhsString = convert(rhsAnd)
+	            	  //pslFile.writeLine("m.add rule: (%s & sim(\"%s\", \"%s\")) >> %s, constraint: true;"
+	            	  pslFile.write("rule,and,%s&sim(\"%s\",\"%s\")>>%s,1\n"
+	            	      //.format(extendedLhsString, lastSimilarityID.toString(), "", rhsString))
+	            	      //.format(extendedLhsString, lhsSimString, rhsSimString, rhsString))
+	            	      .format(extendedLhsString, "%.3f".format(usedWeight), "", rhsString))
+	              })	                  
+                }
+                case _ => throw new RuntimeException("unsupported infernece rule format"); 
+              }
             }
-          case e @ _ => Some(e)
-        }.foreach { e => 
-          e match {
-          	  case PriorExpression(folExp, weight) => 
-	            	None
-	            	//f.write("%.5f %s\n".format(weight, convert(folExp)))
-	          case GoalExpression(folExp, weight) =>
-	          {	        	  	            
-	        	  if(weight == Double.PositiveInfinity)
-	        	  {
-	        	    //pslFile.write("rule,avg,%s\n".format(convert(universalifyGoalFormula(breakVariableBinding(first) -> entailmentConsequent_h)))) //normal anding
-	        	    pslFile.write("rule,avg,%s,inf\n".format(convert(folExp))) //normal anding
-	        	  }
-	        	  else
-	        		  pslFile.write("rule,and,entailment_h()&entailment_t()>>entailment(),inf\n");
-	        	     
-	          }
-	          case SoftWeightedExpression(folExp, weight) =>
-	            var usedWeight = min(weight, 1);
-	            usedWeight = max(usedWeight, 0);
-	            if (usedWeight  > 0)
-	            {
-	              removeOuterUnivs(folExp) match {
-	                case FolIfExpression(lhs, rhs) => {
-		              val lhsAnds = getAnds(lhs)
-		              val lhsVars = findAllVars(lhs) 
-		              val lhsString = convert(lhs)
-		              val lhsSimString = lhsAnds.flatMap {
-		              	case FolAtom(pred, args @ _*) if (args.length == 1)=> List(pred.name)
-		              	case _ =>None
-		              }.mkString("-")
-		              
-		              val rhsAnds = getAnds(rhs)
-		              val rhsSimString = rhsAnds.flatMap {
-		              	case FolAtom(pred, args @ _*) if (args.length == 1)=> List(pred.name)
-		              	case _ =>None
-		              }.mkString("-")
-		              
-		              //similarityTable ::= (lhsSimString+"#"+rhsSimString, usedWeight) ;
-		              //lastSimilarityID = lastSimilarityID+1;
-		              //similarityTable ::= (lastSimilarityID.toString(), usedWeight) ;
-		              
-		              rhsAnds.foreach(rhsAnd => {
-		            	  val rhsVar = findAllVars(rhsAnd)
-		            	  val missingVars = (rhsVar &~ lhsVars).toSet;
-		            	  var extendedLhsString = lhsString;
-		            	  val allString = rhsAnd match {
-		            	    case FolAtom(pred, args @ _*) if pred.name.endsWith("_dh") => "all_h" 
-		            	    case FolAtom(pred, args @ _*) if pred.name.endsWith("_dt") => "all_t"
-		            	    case _ => throw new RuntimeException("unsupported expression: %s".format(rhsAnd));
-		            	  }
-		            	  
-		            	  missingVars.foreach(v => {
-		            	     //extendedLhsString = "(%s & all(%s))".format(extendedLhsString, v.name.toUpperCase())
-		            	    extendedLhsString = "%s&%s(%s)".format(extendedLhsString, allString, v.name.toUpperCase())
-		            	  })
-		            	  val rhsString = convert(rhsAnd)
-		            	  //pslFile.writeLine("m.add rule: (%s & sim(\"%s\", \"%s\")) >> %s, constraint: true;"
-		            	  pslFile.write("rule,and,%s&sim(\"%s\",\"%s\")>>%s,1\n"
-		            	      //.format(extendedLhsString, lastSimilarityID.toString(), "", rhsString))
-		            	      //.format(extendedLhsString, lhsSimString, rhsSimString, rhsString))
-		            	      .format(extendedLhsString, "%.3f".format(usedWeight), "", rhsString))
-		              })	                  
-	                }
-	                case _ => throw new RuntimeException("unsupported infernece rule format"); 
-	              }
-	            }
-	          case HardWeightedExpression(folExp, w) => throw new RuntimeException("only simple inference rules are accepted. %s is not supported".format(folExp));
-         }
-       }
-       
-       var breakVariableBindingCounter = 0;
-	   def breakVariableBinding(e: FolExpression): FolExpression = {
-	     return e;
-	      e match {
-	        case FolParseExpression(exps) => FolParseExpression( exps.map(e=> (breakVariableBinding(e._1) , e._2) ) )
-	        case FolVariableExpression(v) => {
-	          breakVariableBindingCounter = breakVariableBindingCounter + 1;
-	          FolVariableExpression(Variable(v.name+"b"+breakVariableBindingCounter)) 
-	        }
-	        case FolApplicationExpression(fun, arg) => {
-	          fun match {
-	            case FolVariableExpression(v) => FolApplicationExpression(fun, arg)
-	            //case FolApplicationExpression(fun1, arg2) => FolApplicationExpression(FolApplicationExpression(fun1, breakVariableBinding(arg2)), breakVariableBinding(arg)) 
-	            case FolApplicationExpression(fun1, arg2) => FolAndExpression(
-	                FolApplicationExpression(FolApplicationExpression(fun1, arg2), breakVariableBinding(arg)), 
-	                FolApplicationExpression(FolApplicationExpression(fun1, breakVariableBinding(arg2)), arg))
-	          }
-	        }
-	        case _ =>
-	          e.visitStructured(breakVariableBinding, e.construct)
-	      }
-	   }
-        
-       //=================Goal
+          case HardWeightedExpression(folExp, w) => throw new RuntimeException("only simple inference rules are accepted. %s is not supported".format(folExp));
+     }
+   }
+   
+   var breakVariableBindingCounter = 0;
+   def breakVariableBinding(e: FolExpression): FolExpression = {
+     return e;
+      e match {
+        case FolParseExpression(exps) => FolParseExpression( exps.map(e=> (breakVariableBinding(e._1) , e._2) ) )
+        case FolVariableExpression(v) => {
+          breakVariableBindingCounter = breakVariableBindingCounter + 1;
+          FolVariableExpression(Variable(v.name+"b"+breakVariableBindingCounter)) 
+        }
+        case FolApplicationExpression(fun, arg) => {
+          fun match {
+            case FolVariableExpression(v) => FolApplicationExpression(fun, arg)
+            //case FolApplicationExpression(fun1, arg2) => FolApplicationExpression(FolApplicationExpression(fun1, breakVariableBinding(arg2)), breakVariableBinding(arg)) 
+            case FolApplicationExpression(fun1, arg2) => FolAndExpression(
+                FolApplicationExpression(FolApplicationExpression(fun1, arg2), breakVariableBinding(arg)), 
+                FolApplicationExpression(FolApplicationExpression(fun1, breakVariableBinding(arg2)), arg))
+          }
+        }
+        case _ =>
+          e.visitStructured(breakVariableBinding, e.construct)
+      }
+   }
+    
+   //=================Goal
 /*	    Sts.opts.task match {
       	//case "rte" => pslFile.write("m.add rule: %s, constraint: true;\n".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
          case "rte" =>pslFile.write("rule,min,%s\n".format(convert(universalifyGoalFormula(goal -> entailmentConsequent)))) //normal anding
@@ -479,58 +479,57 @@ class PSLTheoremProver(
          }
        }
         */
-        
-
-       //=================Similarity File      
-        /* val simFile = new java.io.PrintWriter(new File("psl/run/%s.sim".format(Sts.pairIndex)))
-         similarityTable.foreach(simEntry =>{
-    	   simFile.write("%s,%s\n".format(simEntry._1, simEntry._2))
-    	})
-    	simFile.close();
-    	  */ 
-       
-
-       //=================Evidences
-       //pslFile.write(
-	   //	"DataStore data = new RelationalDataStore(m);\n" +
-	   //	"data.setup db : DatabaseDriver.H2;\n");
-		 var allConst_h:Set[Int] = Set();
-		 var allConst_t:Set[Int] = Set();
-	     evidence.foreach {
-	        case e @ FolAtom(pred, args @ _*) => 
-	          		pslFile.write(
-	          		    //"data.getInserter(%s).insert(%s);".format(pred.name, args.map(a => {
-	          		    "data,%s,%s\n".format(pred.name, args.map(a => {
-	          					val const = a.name.substring(2).toInt // +1000*min(a.name.charAt(0).toLower - 103, 2);
-	          					if (a.name.charAt(0) == 'h')
-	          						allConst_t += const; //yes, add it to allConst_t not allConst_h. This is not a typo 
-	          					else if (a.name.charAt(0) == 't' )
-	          						allConst_h += const + 4000;
-	          					else throw new RuntimeException("Unknown constant type %s".format(a.name));
-	          					const;
-	          			}).mkString(","))
-	          			);
-	        //case e => throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
-	         case e => LOG.trace( "Non atomic evidence:  '%s' ".format(e));
-	    }
-	    pslFile.write("data,dummyPred,999999\n");
-	    //Generate evidences for predicate "all"
-	     //allConst_h.foreach (const=>pslFile.write("data,all_h,%s\n".format(const)))
-	     //allConst_t.foreach (const=>pslFile.write("data,all_t,%s\n".format(const)))
-       //=================Query
-		pslFile.write(
-		    //"ConfigManager cm = ConfigManager.getManager();\n" +
-		    //"ConfigBundle exampleBundle = cm.getBundle(\"example\");\n" +
-		    //"def result = m.mapInference(data.getDatabase(), exampleBundle);\n" +
-
-		    //"def result = m.mapInference(data.getDatabase());\n" +
-		    //"result.printAtoms(entailment_h, false);")
-		    //"query,entailment_h")
-		    "query.\n")
     
-	   pslFile.close();
+
+   //=================Similarity File      
+    /* val simFile = new java.io.PrintWriter(new File("psl/run/%s.sim".format(Sts.pairIndex)))
+     similarityTable.foreach(simEntry =>{
+	   simFile.write("%s,%s\n".format(simEntry._1, simEntry._2))
+	})
+	simFile.close();
+	  */ 
+   
+
+   //=================Evidences
+   //pslFile.write(
+   //	"DataStore data = new RelationalDataStore(m);\n" +
+   //	"data.setup db : DatabaseDriver.H2;\n");
+	 var allConst_h:Set[Int] = Set();
+	 var allConst_t:Set[Int] = Set();
+     evidence.foreach {
+        case e @ FolAtom(pred, args @ _*) => 
+          		pslFile.write(
+          		    //"data.getInserter(%s).insert(%s);".format(pred.name, args.map(a => {
+          		    "data,%s,%s\n".format(pred.name, args.map(a => {
+          					val const = a.name.substring(2).toInt // +1000*min(a.name.charAt(0).toLower - 103, 2);
+          					if (a.name.charAt(0) == 'h')
+          						allConst_t += const; //yes, add it to allConst_t not allConst_h. This is not a typo 
+          					else if (a.name.charAt(0) == 't' )
+          						allConst_h += const + 4000;
+          					else throw new RuntimeException("Unknown constant type %s".format(a.name));
+          					const;
+          			}).mkString(","))
+          			);
+        //case e => throw new RuntimeException("Only atoms may be evidence.  '%s' is not an atom.".format(e))
+         case e => LOG.trace( "Non atomic evidence:  '%s' ".format(e));
     }
-    pslFilePath;
+    pslFile.write("data,dummyPred,999999\n");
+    //Generate evidences for predicate "all"
+     //allConst_h.foreach (const=>pslFile.write("data,all_h,%s\n".format(const)))
+     //allConst_t.foreach (const=>pslFile.write("data,all_t,%s\n".format(const)))
+   //=================Query
+	pslFile.write(
+	    //"ConfigManager cm = ConfigManager.getManager();\n" +
+	    //"ConfigBundle exampleBundle = cm.getBundle(\"example\");\n" +
+	    //"def result = m.mapInference(data.getDatabase(), exampleBundle);\n" +
+
+	    //"def result = m.mapInference(data.getDatabase());\n" +
+	    //"result.printAtoms(entailment_h, false);")
+	    //"query,entailment_h")
+	    "query.\n")
+
+   pslFile.close();
+   pslFilePath;
     	/*
 
 

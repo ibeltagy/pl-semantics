@@ -10,8 +10,6 @@ import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 import utcompling.mlnsemantics.run.Sts
 import scala.collection.mutable.MutableList
 import utcompling.mlnsemantics.inference.support.GoalExpression
-import scala.actors.Futures._
-import scala.actors.threadpool.TimeoutException
 import utcompling.mlnsemantics.inference.support.GoalExpression
 import org.joda.time.DateTimeUtils
 import org.joda.time.Duration
@@ -22,6 +20,7 @@ import java.util.Arrays
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.Callable
 import java.lang.InterruptedException
+import utcompling.mlnsemantics.util.TimeoutUtil
 
 
 class NoExistProbabilisticTheoremProver(
@@ -145,34 +144,6 @@ class NoExistProbabilisticTheoremProver(
   private def permut[A](as: List[A], k: Int): List[List[A]] = 
     (List.fill(k)(as)).flatten.combinations(k).toList
     
-   def runWithTimeout[T](timeoutMs: Long)(f: => T) : Option[T] = {
-    awaitAll(timeoutMs, future(f)).head.asInstanceOf[Option[T]]
-  }
-
-  def runWithTimeout[T](timeoutMs: Long, default: T)(f: => T) : T = {
-    runWithTimeout(timeoutMs)(f).getOrElse(default)
-  }
-  
-  def runWithTimeoutJava(timeoutMs: Long)(f: => Any) : Int = 
-  {
-		val thread = new Thread 
-		{
-			override def run () = 
-			{
-				f
-			}
-		}
-
-		thread.start()
-		thread.join(timeoutMs)
-		if (thread.isAlive)
-		{
-			//println ("getIr timeoutd <<<<<<<<<<<")
-			thread.stop();
-			return -1;
-		}
-		else return 0
-  }
     
   var varToReplace: List[String] = null;
   var replaceWith: List[String]  = null;
@@ -257,8 +228,8 @@ class NoExistProbabilisticTheoremProver(
         	  }
             })/*END P*/ }) /*END C*/ 
           }
-	      val finish = runWithTimeout(Sts.opts.timeout.get, false) { genPermutes;  true }
-	      if(!finish)
+	      val finish = TimeoutUtil.runWithTimeoutJava(Sts.opts.timeout.get) { genPermutes;  true }
+	      if(finish < 0 )
 	    	  throw PermutTimesout
 
 	       replaceWith = List();
@@ -493,7 +464,7 @@ class NoExistProbabilisticTheoremProver(
   		//if(!finish)
   		//	throw PermutTimesout
   		//genPermutes
-  		val finish = runWithTimeoutJava(5000) { genPermutes; }
+  		val finish = TimeoutUtil.runWithTimeoutJava(5000) { genPermutes; }
   		if (finish < 0)
  			throw PermutTimesout  		
 

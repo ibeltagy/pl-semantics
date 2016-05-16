@@ -10,8 +10,8 @@ import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 import utcompling.mlnsemantics.run.Sts
 import scala.collection.mutable.MutableList
 import utcompling.mlnsemantics.inference.support.GoalExpression
-import scala.actors.Futures._
-import scala.actors.threadpool.TimeoutException
+//import scala.actors.Futures._
+//import scala.actors.threadpool.TimeoutException
 import utcompling.mlnsemantics.inference.support.GoalExpression
 
 

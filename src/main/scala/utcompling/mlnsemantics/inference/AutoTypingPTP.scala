@@ -11,8 +11,7 @@ import utcompling.mlnsemantics.run.Sts
 import scala.collection.mutable.MutableList
 import utcompling.mlnsemantics.inference.support.GoalExpression
 import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
-import scala.actors.Futures._
-import scala.actors.threadpool.TimeoutException
+import utcompling.mlnsemantics.util.TimeoutUtil
 
 
 class AutoTypingPTP(
@@ -40,15 +39,6 @@ class AutoTypingPTP(
   private val NEGATIVE = "N";
   private val BOTH = "B";
   private val INTRODUCTION = "I"
-
-  
-  def runWithTimeout[T](timeoutMs: Long)(f: => T) : Option[T] = {
-          awaitAll(timeoutMs, future(f)).head.asInstanceOf[Option[T]]
-  }
-
-  def runWithTimeout[T](timeoutMs: Long, default: T)(f: => T) : T = {
-      runWithTimeout(timeoutMs)(f).getOrElse(default)
-  }
  
   /**
    * Return the proof, or None if the proof failed
@@ -132,8 +122,8 @@ class AutoTypingPTP(
 		}
 	
 		//findApply
-		val finish = runWithTimeout(10000, false) { findApply ;  true }
-		if(!finish)
+		val finish = TimeoutUtil.runWithTimeoutJava(10000) { findApply ;  true }
+		if(finish < 0)
 			return Seq(-5.0)
     }
     

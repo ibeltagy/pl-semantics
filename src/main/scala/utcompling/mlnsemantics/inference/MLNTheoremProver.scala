@@ -77,7 +77,7 @@ with ProbabilisticTheoremProver[FolExpression]{
 		    var score1 = 0.0;
 		    try {
 		      score1 = out.mkString("").trim().toDouble;
-		    }catch {case _ => score1 = 0 /*empty file means entailment_h is not inferrable and it has a zero probability*/;}
+		    }catch {case _ : Exception => score1 = 0 /*empty file means entailment_h is not inferrable and it has a zero probability*/;}
 		    out.clear();
 		    
 			 var score2 = 0.0;
@@ -93,7 +93,7 @@ with ProbabilisticTheoremProver[FolExpression]{
 						
 					    try {
 					      score2 = out.mkString("").trim().toDouble;
-					    }catch {case _ => score2 = 0 /*empty file means entailment_t is not inferrable and it has a zero probability*/;}
+					    }catch {case _ : Exception => score2 = 0 /*empty file means entailment_t is not inferrable and it has a zero probability*/;}
 						out.clear();
 			 }
 		    

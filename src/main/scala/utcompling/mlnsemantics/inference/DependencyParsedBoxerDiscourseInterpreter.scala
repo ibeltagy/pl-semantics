@@ -18,6 +18,7 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.BoxerE
 import utcompling.scalalogic.discourse.candc.boxer.expression.parse.BoxerExpressionParser
 import dhg.depparse._
 import expression.BoxerExpression
+import utcompling.mlnsemantics.util.DepParseUtil
 
 /**
  * Discourse Interpreter that simply interprets pre-parsed strings
@@ -43,9 +44,10 @@ class DependencyParsedBoxerDiscourseInterpreter[T](
     (inputs zipSafe newDiscourseIds)
       .map {
         case (sentence, discourseId) =>
-          val graph = depParser.apply(sentence.head).head
-          println(graph.graphviz)
-          val boxerExp = predicatesToBoxerExpression(graph.logic, discourseId)
+          //val graph = depParser.apply(sentence.head).head
+          //println(graph.graphviz)
+          //val boxerExp = predicatesToBoxerExpression(graph.logic, discourseId)
+          val boxerExp = DepParseUtil.process(sentence.head, discourseId);
           val listOfExpW = List((boxerExp, 1.0))
           val exp:T = BoxerPrs(listOfExpW).asInstanceOf[T]
           Option(  exp )

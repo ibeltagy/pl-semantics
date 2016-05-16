@@ -6,7 +6,7 @@ export WORDNETHOME=resources/wordnet
 
 hostname
 
-SBT="java -Dfile.encoding=UTF8 -Xdebug -Xmx4096M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:MaxPermSize=256m -jar bin/sbt-launch-*.jar"
+SBT="java -Dfile.encoding=UTF8 -Xdebug -Xmx4096M -Xss1M -XX:+CMSClassUnloadingEnabled -jar bin/sbt-launch-*.jar"
 START="target/start"
 RES="resources"
 
@@ -34,7 +34,7 @@ case $CMD in
 	exit 0
 	;;
   compile)
-	$SBT add-start-script-tasks start-script
+	$SBT compile
 	make -C alchemy/src/ infer
 	#ant -buildfile psl/build.xml
 	exit 0

@@ -1,12 +1,13 @@
-import com.typesafe.startscript.StartScriptPlugin
+import com.typesafe.sbt.SbtStartScript
 
 name := "mln-semantics"
 
 version := "0.0.1"
 
-scalaVersion := "2.9.2"
+scalaVersion := "2.10.6"
 
 resolvers ++= Seq(
+  DefaultMavenRepository,
   "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
   "opennlp sourceforge repo" at "http://opennlp.sourceforge.net/maven2",
   "repo.codahale.com" at "http://repo.codahale.com",
@@ -16,18 +17,18 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "xalan" % "xalan" % "2.7.2",
-  "edu.stanford.nlp" % "stanford-corenlp" % "1.3.4",
+  "edu.stanford.nlp" % "stanford-corenlp" % "3.6.0",
   "commons-logging" % "commons-logging" % "1.1.1",
 	"com.googlecode.aima-java" % "aima-core" % "0.10.5",
-   "com.assembla.scala-incubator" %% "graph-core" % "1.6.3",
+   "com.assembla.scala-incubator" %% "graph-core" % "1.10.0",
   "log4j" % "log4j" % "1.2.16" excludeAll(
     ExclusionRule(organization = "javax.mail"),
     ExclusionRule(organization = "javax.jms"),
     ExclusionRule(organization = "com.sun.jdmk"),
     ExclusionRule(organization = "com.sun.jmx")
   ),
-  "org.scalanlp" % "breeze-core_2.9.2" % "0.2",
-  "org.scalanlp" % "breeze-math_2.9.2" % "0.2",
+  "org.scalanlp" % "breeze-core_2.10" % "0.4",
+  "org.scalanlp" % "breeze-math_2.10" % "0.4",
   "junit" % "junit" % "4.10" % "test")
   //"com.novocode" % "junit-interface" % "0.6" % "test->default") //switch to ScalaTest at some point...
 
@@ -69,7 +70,7 @@ libraryDependencies ++= Seq(
 // END FOR SCRUNCH
 ////////////////////////////////////////////////////////
 
-seq(StartScriptPlugin.startScriptForClassesSettings: _*)
+seq(SbtStartScript.startScriptForClassesSettings: _*)
 
 mainClass in (Compile, run) := Some("utcompling.mlnsemantics.inference.Baseline")
 

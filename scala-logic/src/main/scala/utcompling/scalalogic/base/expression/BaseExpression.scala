@@ -15,7 +15,7 @@ trait BaseExpression[T <: BaseExpression[T]] {
         try {
             return constructors.head.newInstance(parts.asInstanceOf[List[java.lang.Object]]: _*).asInstanceOf[T]
         } catch {
-            case e => throw new RuntimeException("Failure calling constructor for %s with arguments %s".format(this.getClass, parts), e)
+            case e : Exception => throw new RuntimeException("Failure calling constructor for %s with arguments %s".format(this.getClass, parts), e)
         }
     }
 

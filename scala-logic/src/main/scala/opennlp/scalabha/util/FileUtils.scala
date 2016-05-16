@@ -94,7 +94,7 @@ object FileUtils {
       return scala.sys.process.Process(List("which", name)) !!;
     }
     catch {
-      case _ => {
+      case _ : Exception => {
         checked += "which " + name
       }
     }

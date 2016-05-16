@@ -790,6 +790,7 @@ class SetGoalPTP(
 					case "a" => 3;
 					case "r" => 4;
 					case "m" => 5;
+					case "x" => 6;
 					case _ => throw new RuntimeException("Unexpected POS: " + pos);
 				}
 			}

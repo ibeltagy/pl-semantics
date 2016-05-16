@@ -1,11 +1,13 @@
 package utcompling.mlnsemantics.data
 
-import scala.xml._
+//import scala.xml._
 import utcompling.mlnsemantics.datagen.Tokenize
 
-class FracasReader(data: Elem) extends DataReader[RtePair] {
+class FracasReader(data:Int) extends DataReader[RtePair] {
 
   override def read(): Iterator[RtePair] =
+		 throw new RuntimeException("Not implemented")
+  /*
     (for (problem <- (data \ "problem").iterator) yield {
       val Seq(id) = (problem \ "@id").map("fracas-" + _.text)
       val Seq(fracasAnswer) = (problem \ "@fracas_answer").map(_.text)
@@ -28,7 +30,7 @@ class FracasReader(data: Elem) extends DataReader[RtePair] {
       else
         Some(RtePair(id, premise, hypothesis, answer))
     }).flatten
-
+ */
   private def cleanSentence(s: String) = {
     Tokenize(s).mkString(" ")
   }
@@ -38,6 +40,7 @@ class FracasReader(data: Elem) extends DataReader[RtePair] {
 object FracasReader {
 
   def fromFile(path: String = "resources/fracas/fracas.xml") =
-    new FracasReader(XML.loadFile(path))
+    //new FracasReader(XML.loadFile(path))
+    new FracasReader(0)
 
 }

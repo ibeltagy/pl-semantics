@@ -12,7 +12,7 @@ case class FolNegatedExpression(override val term: FolExpression)
 
     override def _pretty(): List[String] = {
         val prettyterm = term._pretty
-        return (FolTokens.NOT + prettyterm.first) +: prettyterm.tail.map("  "+_)
+        return (FolTokens.NOT + prettyterm.head) +: prettyterm.tail.map("  "+_)
     }
 
 }

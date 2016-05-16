@@ -2,7 +2,7 @@ package utcompling.scalalogic.fol.expression
 
 import utcompling.scalalogic.fol._
 
-abstract case class FolBooleanExpression(override val first: FolExpression, override val second: FolExpression)
+abstract class FolBooleanExpression(override val first: FolExpression, override val second: FolExpression)
     extends FolBinaryExpression(first, second) {
 
     override def _pretty(): List[String] = {

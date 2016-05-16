@@ -5,7 +5,7 @@ import utcompling.scalalogic.base.expression.BaseBinaryExpression
 import utcompling.scalalogic.drt.DrtTokens
 import utcompling.scalalogic.util.StringUtils
 
-abstract case class DrtBinaryExpression(val first: DrtExpression, val second: DrtExpression)
+abstract class DrtBinaryExpression(val first: DrtExpression, val second: DrtExpression)
     extends DrtExpression
     with BaseBinaryExpression[DrtExpression] {
 

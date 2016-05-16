@@ -92,8 +92,10 @@ class FromEntToEqvProbabilisticTheoremProver(
          case BoxerOr(discId, indices, first, second) =>  //remove "or"
    	  		  //BoxerProp(discId, indices, BoxerVariable("v"), goSTS(BoxerDrs(first.refs ++ second.refs, first.conds ++ second.conds)))
    	  		  goFlat(BoxerDrs(first.refs ++ second.refs, first.conds ++ second.conds))
-         case BoxerNot(discId, indices, drs) => 
-           if(Sts.opts.task == "rte" )
+         case BoxerNot(discId, indices, drs) =>
+           if (Sts.qaRightAnswer != "") //QA
+             goFlat(drs)
+           else if(Sts.opts.task == "rte" )
         	  BoxerDrs(List(), List());//replace negation with nothing. 
            		//This may result in a completely empty expression, which should be replaced with a single dummy predicate
            else

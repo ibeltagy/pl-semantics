@@ -9,7 +9,7 @@ import utcompling.scalalogic.drt.DrtTokens
 /**
  * This is the base abstract DRT Expression from which every DRT Expression extends.
  */
-abstract case class DrtExpression
+abstract class DrtExpression
     extends Expression
     with BaseExpression[DrtExpression] {
 

@@ -8,6 +8,6 @@ class Lemmatize {
  
 object Lemmatize {
   private val lemmatizer = new Lemmatize()
-  def lemmatizeWord(s: String) = lemmatizer.morphology.stem(s);
+  def lemmatizeWord(s: String):String = lemmatizer.morphology.stem(s);
   def lemmatizeWords(s: String) = s.split(" ").map(lemmatizeWord).mkString(" ");
 }

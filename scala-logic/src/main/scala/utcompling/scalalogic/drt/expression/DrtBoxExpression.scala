@@ -52,7 +52,7 @@ case class DrtBoxExpression(refs: List[Variable], conds: List[DrtExpression], co
     }
 
     override def free(): Set[Variable] = {
-        val conds_free = this.conds.flatMap(_.free).toSet ++ this.consequent.map(_.free).flatten
+        val conds_free = this.conds.flatMap(_.free).toSet ++ this.consequent.map(_.free).toSet.flatten
         return conds_free -- this.refs.toSet
     }
 
@@ -60,7 +60,7 @@ case class DrtBoxExpression(refs: List[Variable], conds: List[DrtExpression], co
         if (recursive)
             (this.refs ++
                 this.conds.map(_.getRefs(true)).flatten ++
-                this.consequent.map(_.getRefs(true)).flatten).toSet
+                this.consequent.map(_.getRefs(true)).toSet.flatten).toSet
         else
             this.refs.toSet
 
@@ -178,7 +178,7 @@ case class DrtBoxExpression(refs: List[Variable], conds: List[DrtExpression], co
 
         val refsAndConds = List(refLine, refDivider, condColumn).mkString("\n")
 
-        val wall = List.make((condColumnHeight + 2), "|").mkString("\n")
+        val wall = (List.fill(condColumnHeight + 2) ("|")).mkString("\n")
 
         val top = " _" + ("_" * condColumnWidth) + "_ "
         val bottom = "|_" + ("_" * condColumnWidth) + "_|"

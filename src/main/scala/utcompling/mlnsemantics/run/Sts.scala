@@ -131,7 +131,7 @@ object Sts {
         }
 
       case Seq("box", stsFile, boxFile) =>
-        val di = new ModalDiscourseInterpreter
+        val di = new ModalDiscourseInterpreter()
         val sentences = readLines(stsFile).flatMap(_.split("\t")).map(Tokenize.separateTokens).toList
         val step = 120; //file is large. It should be partitioned before passed to the parser
         val totalSen = sentences.length;
@@ -235,10 +235,20 @@ object Sts {
     	 //val lemmas = lemmatized.map(_.map(_.map(_._2).mkString(" ")).getOrElse("______parse_failed______"))
 	     val lemmas:List[String] = sentences.map(Lemmatize.lemmatizeWords)
     	 //println(lemmas);
-	     val di = new ModalDiscourseInterpreter
-	     val sen1Box = di.batchInterpret(List(sentences(0)), verbose = LOG.isTraceEnabled());
-	     val sen2Box = di.batchInterpret(List(sentences(1)), verbose = LOG.isTraceEnabled());
-		 val boxes = sen1Box ++ sen2Box
+	     var depParser: dhg.depparse.DepParser = null;
+	     val boxes: List[Option[utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression]] = Sts.opts.logicFormSource match 
+	     {
+				case "dep" => {
+				  //depParser = DepParser.load();
+				  List();
+				}
+				case "box" => {
+				  val di = new ModalDiscourseInterpreter
+				  val sen1Box = di.batchInterpret(List(sentences(0)), verbose = LOG.isTraceEnabled());
+				  val sen2Box = di.batchInterpret(List(sentences(1)), verbose = LOG.isTraceEnabled());
+				  sen1Box ++ sen2Box
+				}
+		 }
 		 //val boxes = di.batchInterpret(sentences);
 	     LOG.trace("boxes: >>>> " + boxes);
 	     val allLemmas = lemmas.flatMap(_.split("\\s+")).toSet
@@ -257,7 +267,6 @@ object Sts {
 	      // Index paraphrase rules into Lucene repository
 	      luceneParaphrases = opts.rulesFile.split(":").map(new Lucene (_)).toList
 	      //luceneParaphrases = new Lucene (opts.rulesFile)
-	      //def depParser = DepParser.load();
 	      Sts.pairIndex = 1;
 	      Sts.text = sen1;
 	      Sts.hypothesis = sen2;
@@ -266,9 +275,9 @@ object Sts {
 	      println(Sts.text)
 	      println(Sts.hypothesis)
 	      val boxPair = boxes.map(x => Option(x.get.toString()));
-         val result = runOnePair(boxPair, vectorSpace, null);
-         println(result)
-         resultOnePair = result;
+          val result = runOnePair(boxPair, vectorSpace, depParser);
+          println(result)
+          resultOnePair = result;
  	}
     
     def runOnePair(boxPair:List[Option[String]], vectorSpace:BowVectorSpace, depParser:DepParser):Seq[Double] = {
@@ -355,10 +364,11 @@ object Sts {
 		// Index paraphrase rules into Lucene repository
 		luceneParaphrases = opts.rulesFile.split(":").map(new Lucene (_)).toList
 	
-		Sts.depParser = opts.logicFormSource match {
+		/*
+		 Sts.depParser = opts.logicFormSource match {
 			case "dep" => DepParser.load();
 			case "box" => null;
-		}	 
+		}*/	 
 		
 		val results =
 	    //for ((((((txt, hyp), boxPair), goldSim), (lemTxt, lemHyp)), i) <- (pairs zipSafe boxPairs zipSafe goldSims zipSafe lemPairs).zipWithIndex if includedPairs(i + 1)) yield {

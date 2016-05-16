@@ -70,7 +70,7 @@ class LogRegLexEntailmentModel(model_file: String) extends LexEntailmentModel {
   }
 
   private def logistic(t: Double): Double = {
-    1. / (1. + math.exp(-t))
+    1.0 / (1.0 + math.exp(-t))
   }
 
 }

@@ -4,7 +4,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import dhg.depparse.ErrorBox._
 import dhg.depparse._
-import edu.stanford.nlp.ling.CyclicCoreLabel
+//import edu.stanford.nlp.ling.CyclicCoreLabel
 import edu.stanford.nlp.ling.Word
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser
 import edu.stanford.nlp.trees.GrammaticalStructure
@@ -27,14 +27,14 @@ class DepParser(
   maxSentenceLength: Int)
   {  //extends Logging {
 
-  private[this] val lp = LexicalizedParser.loadModel(dataLocation, "-maxLength", maxSentenceLength.toString, "-retainTmpSubcategories")
-  private[this] val gsf = new PennTreebankLanguagePack().grammaticalStructureFactory
+  //private[this] val lp = LexicalizedParser.loadModel(dataLocation, "-maxLength", maxSentenceLength.toString, "-retainTmpSubcategories")
+  //private[this] val gsf = new PennTreebankLanguagePack().grammaticalStructureFactory
 
   def apply(sent: String): Option[DepGraph] = parse(Tokens.tokenizeToWords(sent))
   def apply(sent: Seq[String]): Option[DepGraph] = parse(sent.map(new Word(_)))
 
   private[this] def parse(sent: Seq[Word]): Option[DepGraph] = {
-        
+    /*    
     val parsed =
       BooleanAsErrorBox(sent.nonEmpty && sent.length <= maxSentenceLength).errorBox("invalid sentence length")
         .flatMap { _ =>
@@ -62,12 +62,15 @@ class DepParser(
       }
     }
     parsed.get
+    */
+    return None
   }
 
   /**
    * Convert the GrammaticalStructure into a DepNode dependency
    * tree object.
    */
+  /*
   private[this] def makeDepTree(grammaticalStructure: GrammaticalStructure) = {
     val (indexRelations, nodesByIndexSeq) =
       grammaticalStructure.typedDependencies.asScala.toIndexedSeq.map { (td: TypedDependency) =>
@@ -110,11 +113,13 @@ class DepParser(
   private[this] def makeDepNode(label: CyclicCoreLabel) = {
     (label.word, Lemmatize(label.word, label.tag), label.tag, label.index)
   }
+ 
+  */
 }
 
 object DepParser {
   private val mem: mutable.Map[(String, Int), DepParser] = mutable.Map()
 
   def load(dataLocation: String, maxSentenceLength: Int): DepParser = mem.getOrElseUpdate((dataLocation, maxSentenceLength), new DepParser(dataLocation, maxSentenceLength))
-  def load(maxSentenceLength: Int = 50): DepParser = load("resources/englishPCFG.ser.gz", maxSentenceLength)
+  def load(maxSentenceLength: Int = 50): DepParser = load("lib/stanford-english-corenlp-2016-01-10-models.jar", maxSentenceLength)
 }

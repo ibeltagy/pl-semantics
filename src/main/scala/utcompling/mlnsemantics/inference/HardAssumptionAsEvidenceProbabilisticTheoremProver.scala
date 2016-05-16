@@ -10,9 +10,7 @@ import utcompling.mlnsemantics.inference.support.SoftWeightedExpression
 import utcompling.mlnsemantics.run.Sts
 import scala.collection.mutable.MutableList
 import utcompling.mlnsemantics.inference.support.GoalExpression
-import scala.actors.Futures._  
-import scala.actors.threadpool.TimeoutException
-
+import utcompling.mlnsemantics.util.TimeoutUtil
 
 class HardAssumptionAsEvidenceProbabilisticTheoremProver(
   delegate: ProbabilisticTheoremProver[FolExpression])
@@ -142,13 +140,13 @@ class HardAssumptionAsEvidenceProbabilisticTheoremProver(
 	          //Sts.opts.timeout match  //regardless of the timeout parameter, timeout here is always inforced to 30 seconds 
 	          //{
 	          // case Some(t) => 
-	              	val finish = runWithTimeout(3000, false) { 
+	              	val finish = TimeoutUtil.runWithTimeoutJava(3000) { 
 	              		 val evidAndConst = genPermutes (maxUnivConstListLen, univVars.size, skolemPredName: String, univConst, existVars);
 	              		 extraEvid = extraEvid  ++ evidAndConst._1;
 	              		 evidAndConst._2.foreach(x => addConst(x));
 	              		 true;
 	              	}
-	              	if(!finish)
+	              	if(finish < 0)
 	              		throw PermutTimesout
 	          //  case _ => genPermutes; 
 	          //}
@@ -318,11 +316,4 @@ object HardAssumptionAsEvidenceProbabilisticTheoremProver
   //generate permutations
 	private def permut[A](as: List[A], k: Int): List[List[A]] = 
 			(List.fill(k)(as)).flatten.combinations(k).toList
-			
-	def runWithTimeout[T](timeoutMs: Long)(f: => T) : Option[T] = {
-			awaitAll(timeoutMs, future(f)).head.asInstanceOf[Option[T]]
-	}
-	def runWithTimeout[T](timeoutMs: Long, default: T)(f: => T) : T = {
-			runWithTimeout(timeoutMs)(f).getOrElse(default)
-	}
 }

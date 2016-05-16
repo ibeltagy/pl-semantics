@@ -48,16 +48,17 @@ class EditDRSTheoremProver(
   var sentence:String = "";
   def process(e:BoxerExpression, sentence: String) : BoxerExpression =
   {
-  	this.sentence = sentence;
-	addGroupHeadPred(
-	  extendPlaceholder(
-	   setNamedEntities(
-  		replaceCardName(
-			removeTopic(
-				removeDanglingEqualities(
-						removeTheres(
-							corref(
-								applySMerge(e)))))))));
+	this.sentence = sentence;
+		addGroupHeadPred(
+			extendPlaceholder(
+				setNamedEntities(
+					replaceCardName(
+						removeTopic(
+							removeDanglingEqualities(
+								removeTheres(
+									corref(
+										applySMerge(
+											removeSingleQuote(e))))))))));
   }
 
   /////////////////////////////////////////////
@@ -190,8 +191,10 @@ class EditDRSTheoremProver(
 	e match {
     	case BoxerPred(discId, indices, variable, name, pos, sense) => {
     	  var predName = name
-    	  if (predName.startsWith("'") && predName.endsWith("'"))
-    		  predName = predName.substring(1, predName.length()-1);
+    	  
+    	  //Quotes are removed in the function removeSingleQuote
+    	  //if (predName.startsWith("'") && predName.endsWith("'"))
+    	  //	predName = predName.substring(1, predName.length()-1);
     	  
     	  if (Sts.qaEntities.contains(predName))
     	  {
@@ -222,7 +225,7 @@ class EditDRSTheoremProver(
 		}
 		catch 
 		{
-			case _ => BoxerPred(discId, indices, variable, "card_" + num, "n", 0)
+			case _ : Exception => BoxerPred(discId, indices, variable, "card_" + num, "n", 0)
 		}
 		//case BoxerDate(indicesPol, pol, indicesYear, year, indicesMonth, month, indicesDay, day) => 
 		//		BoxerDate(increment(indicesPol), pol, increment(indicesYear), year, increment(indicesMonth), month, increment(indicesDay), day)
@@ -623,5 +626,20 @@ class EditDRSTheoremProver(
 		}
 	})
 	return exp;
+  }
+  ////////////////////////////
+  def removeSingleQuote(e:BoxerExpression) : BoxerExpression =
+  {
+	e match
+	{
+		case BoxerPred(discId, indices, variable, name, pos, sense) =>
+		{
+			var newName = name;
+			if (name.head == ''' && name.last == ''' && name.length() > 2)
+				newName = name.substring(1, name.length()-1);
+			BoxerPred(discId, indices, variable, newName, pos, sense)
+		}
+		case _ => e.visitConstruct(removeSingleQuote)
+	}
   }
 }

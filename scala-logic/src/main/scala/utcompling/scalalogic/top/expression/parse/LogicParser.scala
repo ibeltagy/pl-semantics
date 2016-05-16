@@ -82,7 +82,7 @@ abstract class LogicParser[T] {
             return this.attemptAdjuncts(accum, context)
         } catch {
             case e: ParseException => throw e
-            case e => throw new ParseException(Some(this.currentIndex), "Unparseable Input", e)
+            case e : Exception => throw new ParseException(Some(this.currentIndex), "Unparseable Input", e)
         }
     }
 
@@ -348,13 +348,13 @@ class UnexpectedTokenException(index: Int, unexpected: Option[String] = None, ex
         unexpected match {
             case Some(unexpected) => {
                 if (expected.isEmpty)
-                    format("Unexpected token: '%s'.  %s", unexpected, message.getOrElse(""))
+                    "Unexpected token: '%s'.  %s".format(unexpected, message.getOrElse(""))
                 else if (expected.length == 1)
-                    format("Unexpected token: '%s'.  Expected token '%s'.", unexpected, expected.head)
+                    "Unexpected token: '%s'.  Expected token '%s'.".format(unexpected, expected.head)
                 else
-                    format("Unexpected token: '%s'.  Expected one of %s.", unexpected, expected.mkString("[", ", ", "]"))
+                    "Unexpected token: '%s'.  Expected one of %s.".format(unexpected, expected.mkString("[", ", ", "]"))
             }
-            case None => format("Expected token '%s'.", expected)
+            case None => "Expected token '%s'.".format(expected)
         }, nested)
 
 class ExpectedMoreTokensException(override val index: Option[Int], message: Option[String] = None, override val nested: Throwable = null)

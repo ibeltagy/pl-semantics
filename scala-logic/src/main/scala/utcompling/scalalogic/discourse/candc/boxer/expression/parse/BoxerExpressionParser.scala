@@ -309,7 +309,7 @@ class BoxerExpressionParser(discourseId: String = "0") extends LogicParser[Boxer
             return this.nextToken().toInt
         } catch {
             case pe: ParseException => throw pe
-            case e => throw new UnexpectedTokenException(this.getCurrentIndex - 1, Some(this.getToken(-1)), message = Some("Expected an Integer."), nested = e)
+            case e : Exception => throw new UnexpectedTokenException(this.getCurrentIndex - 1, Some(this.getToken(-1)), message = Some("Expected an Integer."), nested = e)
         }
     }
     
@@ -318,7 +318,7 @@ class BoxerExpressionParser(discourseId: String = "0") extends LogicParser[Boxer
             return this.nextToken().toDouble
         } catch {
             case pe: ParseException => throw pe
-            case e => throw new UnexpectedTokenException(this.getCurrentIndex - 1, Some(this.getToken(-1)), message = Some("Expected a Double."), nested = e)
+            case e : Exception => throw new UnexpectedTokenException(this.getCurrentIndex - 1, Some(this.getToken(-1)), message = Some("Expected a Double."), nested = e)
         }
     }
     

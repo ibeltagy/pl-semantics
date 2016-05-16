@@ -147,7 +147,7 @@ object CollectionUtil {
   implicit def enrich_dropRightWhile_Iterable[A, Repr <: Iterable[A]](self: IterableLike[A, Repr]): Enriched_dropRightWhile_Iterable[A, Repr] =
     new Enriched_dropRightWhile_Iterable(self)
 
-  class Enriched_dropRightWhile_String(self: String) {
+  /*class Enriched_dropRightWhile_String(self: String) {
     def dropRightWhile(p: Char => Boolean): String = {
       val b = stringCanBuildFrom()
       val buffer = mutable.Buffer[Char]()
@@ -163,7 +163,7 @@ object CollectionUtil {
   }
   implicit def enrich_dropRightWhile_String(self: String): Enriched_dropRightWhile_String =
     new Enriched_dropRightWhile_String(self)
-
+  */
   //////////////////////////////////////////////////////
   // splitAt(n: Int) 
   //   - Split this collection at the specified index

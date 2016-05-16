@@ -18,8 +18,8 @@ class FlatPredicateQuotingInterpreter extends FolExpressionInterpreter {
       case FolVariableExpression(Variable(variable)) =>
         FolVariableExpression(Variable(quote(variable, bound)))
 
-      case FolVariableBinderExpression(operator, variable, term) =>
-        e.construct(List(variable, doInterpret(term, bound + variable.name)))
+      //case FolVariableBinderExpression(operator, variable, term) =>
+      //  e.construct(List(variable, doInterpret(term, bound + variable.name)))
 
       case _ =>
         e.visitStructured(doInterpret(_, bound), e.construct)
