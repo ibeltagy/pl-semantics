@@ -781,7 +781,7 @@ class SetGoalPTP(
 				else
 				  pred.name.charAt(pred.name.length()-4) + ""
 			}
-			println (">>>> " + xPos + " -- " + yPos)
+			//println (">>>> " + xPos + " -- " + yPos)
 			def posToRank (pos: String) = {
 				pos match 
 				{

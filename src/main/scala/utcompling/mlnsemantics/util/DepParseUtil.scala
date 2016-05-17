@@ -172,8 +172,8 @@ object DepParseUtil
 		{
 			val existingEntity = entities.filter(x => x.words.contains(word));
 			if (existingEntity.length > 1)
-			assert (existingEntity.length <= 1, "Word " + word +" can not be attached with more than one entity: " + existingEntity);
-			if (existingEntity.length == 1)
+				LOG.error("Word " + word +" can not be attached with more than one entity: " + existingEntity);
+			if (existingEntity.length >= 1)
 				return Some(existingEntity.head)
 			else return None
 		}
@@ -310,8 +310,8 @@ object DepParseUtil
 				case  _ => throw new RuntimeException("Unknown relation: " + rel)
 			}
 		}
-		println ("Entities: " + entities.mkString(", "));
-		println ("Relations: " + rels.mkString(", "));
+		LOG.trace("Entities: " + entities.mkString(", "));
+		LOG.trace("Relations: " + rels.mkString(", "));
 		return (entities.toList, rels.toList);
 	}
 	

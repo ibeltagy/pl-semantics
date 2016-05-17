@@ -20,7 +20,7 @@ libraryDependencies ++= Seq(
   "edu.stanford.nlp" % "stanford-corenlp" % "3.6.0",
   "commons-logging" % "commons-logging" % "1.1.1",
 	"com.googlecode.aima-java" % "aima-core" % "0.10.5",
-   "com.assembla.scala-incubator" %% "graph-core" % "1.10.0",
+   "com.assembla.scala-incubator" %% "graph-core" % "1.7.3",
   "log4j" % "log4j" % "1.2.16" excludeAll(
     ExclusionRule(organization = "javax.mail"),
     ExclusionRule(organization = "javax.jms"),

@@ -34,7 +34,7 @@ case $CMD in
 	exit 0
 	;;
   compile)
-	$SBT compile
+	$SBT add-start-script-tasks start-script
 	make -C alchemy/src/ infer
 	#ant -buildfile psl/build.xml
 	exit 0

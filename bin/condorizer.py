@@ -12,7 +12,7 @@ def condorize (args):
     universe = vanilla
 
     Executable = %s
-    Requirements = (machine =!= "nasil-8.cs.utexas.edu")
+    Requirements = InMastodon && (machine =!= "nasil-8.cs.utexas.edu")
     %s
 
     +Group   = "GRAD"
