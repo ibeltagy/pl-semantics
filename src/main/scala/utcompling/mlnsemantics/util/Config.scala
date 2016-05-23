@@ -94,7 +94,8 @@ class Config(opts: Map[String, String] = Map()) {
 		"-corefOnIR",
 		"-errorCode", 
 		"-removeEq", 
-		"-ner"
+		"-ner",
+		"-baseline"
 	);
   
   val diff = opts.keys.toSet.diff(validArgs.toSet)
@@ -584,6 +585,14 @@ class Config(opts: Map[String, String] = Map()) {
   	if(this.errorCode.isDefined)
   		return errorCode.get
   	return x
+  }
+  
+  //QA baseline or the full system 
+  val baseline = opts.get("-baseline") match {
+     case Some("word") => "word";
+     case Some("dep") => "dep";
+     case Some("full") => "full";
+     case None => "full"
   }
   
 }

@@ -35,6 +35,7 @@ import scalax.collection.edge.LUnDiEdge
 import scalax.collection.edge.LkUnDiEdge
 import org.ujmp.core.doublematrix.calculation.general.statistical.Var
 import scala.collection.mutable.ListBuffer
+import scala.math._
 
 object GraphRules {
   
@@ -129,31 +130,13 @@ class GraphRules {
   		return List();
   	
   	GraphRules; //initialize the object in case it is not initialize yet.	
-  	
-  	//remove "indices" from predicates and relations because many duplicates only differ in the indices
-  	val textPreds = text.getPredicates.map(
-  	{	 
-  		case BoxerPred(discId, indices, variable, name, pos, sense) => BoxerPred(discId, List(), variable, name, pos, sense)
-  	}).toSet.toList
-  	val textRels = text.getRelations.map(
-  	{ 
-  		case BoxerRel(discId, indices, event, variable, name, sense) => BoxerRel(discId, List(), event, variable, name, sense)
-  	}).toSet.toList
-  	val hypPreds = hypothesis.getPredicates.map(
-  	{ 
-  		case BoxerPred(discId, indices, variable, name, pos, sense) => BoxerPred(discId, List(), variable, name, pos, sense)
-  	}).toSet.toList
-  	val hypRels = hypothesis.getRelations.map(
-  	{ 
-  		case BoxerRel(discId, indices, event, variable, name, sense) => BoxerRel(discId, List(), event, variable, name, sense)
-  	}).toSet.toList
-  	
-  	val tmp = hypPreds.filter(_.name.contains("@placeholder")).map(_.variable.name);
-  	if (tmp.length != 1) //
-  	  return List()
-  	  
-  	var queryEntity:String = tmp.head
-  	
+
+	val textPreds = text.getPredicates.groupBy(x => x.name + "#" + x.variable + "#" + x.pos ).map(_._2.head)
+  	val textRels = text.getRelations.groupBy(x => x.name + "#" + x.event + "#" + x.variable ).map(_._2.head)
+  	val hypPreds = hypothesis.getPredicates.groupBy(x => x.name + "#" + x.variable + "#" + x.pos ).map(_._2.head)
+  	val hypRels = hypothesis.getRelations.groupBy(x => x.name + "#" + x.event + "#" + x.variable ).map(_._2.head)
+
+
   	val textEntities = (textPreds.map(_.variable.name) ++ textRels.flatMap(r => List(r.variable.name, r.event.name))).toSet.toList
   	val textEntitiesMap = textEntities.map( e => (e -> textPreds.filter(_.variable.name == e).toSet )).toMap
   	
@@ -182,14 +165,7 @@ class GraphRules {
   	  var y = Set[String]();
 
   	  if (hypWords.contains("@placeholder"))
-  	    y = Sts.qaEntities.keySet intersect (textWords.map (w =>  {
-    	  
-  	      //Quotes are removed in EditDRSTheoremProver.removeSingleQuote
-  	      //if (w.startsWith("'") && w.endsWith("'"))
-    	  //	  w.substring(1, w.length()-1);
-    	  //else
-    	  w
-  	    }))
+  	    y = Sts.qaEntities.keySet intersect textWords
   	  //println (hypWords.toString + " --- " + textWords.toString + " --- " + x.toString)
   	  ! (x.isEmpty && y.isEmpty)
   	  //TODO: add potential matches using WordNet, DistSim and LexicalEnt
@@ -218,63 +194,93 @@ class GraphRules {
   	});
   	//println (textGraph)
   	
+  	
+  	//Rules from entity to the first word
+  	/*
+  	val tmp = hypPreds.filter(_.name.contains("@placeholder")).map(_.variable.name);
+  	if (tmp.length != 1) //
+  	  return List()
+  	var queryEntity:String = tmp.head
   	val firstHopEntities = hypRels.filter( r => Set(r.event.name, r.variable.name).contains(queryEntity) )
   			.flatMap(r => List(r.event.name, r.variable.name)).toSet - queryEntity
   	//println (firstHopEntities)
+	val rhsFromEntity = queryEntity
+	 
+	val textFromList = entityPotentialMatchs(rhsFromEntity)
+	firstHopEntities.foreach(rhsToEntity => 
+	{ */
   	
-  	
-  	val hypFrom = queryEntity
-  	val textFromList = entityPotentialMatchs(hypFrom)
-  	
-  	firstHopEntities.foreach(hypTo => 
+  	//Rules for all edges in hypothesis
+  	hypGraph.edges.foreach( hypPath =>
+	{
+		
+	//Rules for all pairs of entities in hypothesis (not working yet)
+  	/*
+  	hypGraph.nodes.foreach(rhsFromEntity =>
   	{
-  	  val textToList = entityPotentialMatchs(hypTo)
-  	  for (textFrom <- textFromList)
+  	  hypGraph.nodes.foreach(rhsToEntity =>
   	  {
-  		  for (textTo <- textToList)
-  		  {
-  			  //println (textFrom + " -- " + textTo)
-  			  val nodeFrom = textGraph.get(textFrom)
-  			  val nodeTo = textGraph.get(textTo)
-  			  val sp = nodeFrom shortestPathTo nodeTo
-  			  if (sp.isDefined && sp.get.weight <= Sts.opts.graphRuleLengthLimit)
-  			  {
-  				  //println ("Path found: " + sp)
-  				  //println(sp.get.nodes.flatMap(textEntitiesMap(_)))
-  				  //println(sp.get.weight)
-  				  //println(sp.get.edges.map(_.label))
-  				  val lhsPred = sp.get.nodes.flatMap(textEntitiesMap(_)).toList
-  				  val lhsRel = sp.get.edges.map(_.label).toList
-  				  val ruleLhs:List[BoxerExpression] = lhsPred.asInstanceOf[List[BoxerExpression]] ++ lhsRel.asInstanceOf[List[BoxerExpression]]
-  				  val spRhs = hypGraph.get(hypFrom) shortestPathTo hypGraph.get(hypTo)
-  				  val rhsPred = spRhs.get.nodes.flatMap(hypEntitiesMap(_)).toList
-  				  val rhsRel = spRhs.get.edges.map(_.label).toList
-  				  var ruleRhs:List[BoxerExpression] = rhsPred.asInstanceOf[List[BoxerExpression]] ++ rhsRel.asInstanceOf[List[BoxerExpression]]
-  				  def changeRhsVar (v:BoxerVariable) : BoxerVariable = 
-  				  {
-  				    if (v.name == hypFrom)
-  				      return BoxerVariable(textFrom)
-  				    else if (v.name == hypTo)
-  				      return BoxerVariable(textTo)
-  				    else throw new RuntimeException("Variable not found " + v);
-  				  }
-  				  ruleRhs = ruleRhs.map({
+  	   if (rhsFromEntity != rhsToEntity)
+  	   {
+  	   */	 
+  	  	val rhsRel = hypPath.label.asInstanceOf[BoxerRel]
+		val rhsFromEntity = rhsRel.event.name
+		val rhsToEntity = rhsRel.variable.name
+		val rhsPred = List(rhsFromEntity, rhsToEntity).flatMap(hypEntitiesMap(_))
+		val textFromList = entityPotentialMatchs(rhsFromEntity)
+
+		val textToList = entityPotentialMatchs(rhsToEntity)
+		for (textFrom <- textFromList)
+		{
+			for (textTo <- textToList)
+			{
+				//println (textFrom + " -- " + textTo)
+				val nodeFrom = textGraph.get(textFrom)
+				val nodeTo = textGraph.get(textTo)
+				val sp = nodeFrom shortestPathTo nodeTo
+				if (sp.isDefined && sp.get.weight <= Sts.opts.graphRuleLengthLimit)
+				{
+					//println ("Path found: " + sp)
+					//println(sp.get.nodes.flatMap(textEntitiesMap(_)))
+					//println(sp.get.weight)
+					//println(sp.get.edges.map(_.label))
+					val lhsPred = sp.get.nodes.flatMap(textEntitiesMap(_)).toList
+					val lhsText = lhsPred.sortBy(_.indices.apply(0).wordIndex).map(_.name).mkString(" ");
+					val lhsRel = sp.get.edges.map(_.label).toList
+					val ruleLhs:List[BoxerExpression] = lhsPred.asInstanceOf[List[BoxerExpression]] ++ lhsRel.asInstanceOf[List[BoxerExpression]]
+					val spRhs = hypGraph.get(rhsFromEntity) shortestPathTo hypGraph.get(rhsToEntity)
+					val rhsPred = spRhs.get.nodes.flatMap(hypEntitiesMap(_)).toList
+					val rhsText = rhsPred.sortBy(_.indices.apply(0).wordIndex).map(_.name).mkString(" ");
+					val rhsRel = spRhs.get.edges.map(_.label).toList
+					println ("GraphRule ("+sp.get.weight + ") " + lhsText + " -> " + rhsText);
+					var ruleRhs:List[BoxerExpression] = rhsPred.asInstanceOf[List[BoxerExpression]] ++ rhsRel.asInstanceOf[List[BoxerExpression]]
+					def changeRhsVar (v:BoxerVariable) : BoxerVariable = 
+					{
+						if (v.name == rhsFromEntity)
+							return BoxerVariable(textFrom)
+						else if (v.name == rhsToEntity)
+							return BoxerVariable(textTo)
+						else throw new RuntimeException("Variable not found " + v);
+					}
+					ruleRhs = ruleRhs.map(
 					{
 						case BoxerPred(discId, indices, variable, name, pos, sense) => 
 							BoxerPred(discId, indices, changeRhsVar(variable), name, pos, sense)
 						case BoxerRel(discId, indices, event, variable, name, sense) => 
 							BoxerRel(discId, indices, changeRhsVar(event), changeRhsVar(variable), name, sense)
-					}
-  				  })
-  				  val ruleLhsDrs = Rules.boxerAtomsToBoxerDrs(ruleLhs.toSet);
-  				  val ruleRhsDrs = Rules.boxerAtomsToBoxerDrs(ruleRhs.toSet);
-  				  //(ruleRhs + " <<< " + ruleLhs)
-  				  rules +=  ( (ruleLhsDrs, ruleRhsDrs, 1.0/sp.get.weight, RuleType.Implication) )
-
-  			  }
-  		  }
-  	  }
-  	})
+					})
+					val ruleLhsDrs = Rules.boxerAtomsToBoxerDrs(ruleLhs.toSet);
+					val ruleRhsDrs = Rules.boxerAtomsToBoxerDrs(ruleRhs.toSet);
+					
+					//(ruleRhs + " <<< " + ruleLhs)
+					rules +=( (ruleLhsDrs, ruleRhsDrs, 1.0/sp.get.weight, RuleType.Implication) )
+				}
+			}
+		}
+//	})
+//  	   }
+ // 	  })
+	})
 
   	return rules.toList;
   	//def n(outer: String, graph): g.NodeT = g get outer  // look up a node known to be contained

@@ -182,7 +182,7 @@ object Sts {
         	question = question.replace(" ", "|O ");
         	question = question.replace ("@placeholder|O", "@placeholder|I-PER")
          }
-         Sts.qaEntities = Sts.qaEntities + ( "@placeholder" -> "");
+         Sts.qaEntities = Map ( "@placeholder" -> "");
          while(linesReader.hasNext)
          {
             val splits = linesReader.next().split(":");
@@ -210,10 +210,53 @@ object Sts {
 
 		 try
          {
-			 totalCount = totalCount + 1;
-	         parseRunOnePair(context, question)
-	         if (resultOnePair.head == 1.0)
-	           correctCount = correctCount + 1;
+			totalCount = totalCount + 1;
+			if (Sts.opts.baseline == "word")
+			{
+				val words = context.split(" ");
+				val qWords = question.split(" ");
+				var minCost = 0.0
+				var minCostEntity = "";
+				Sts.qaEntities.foreach(ent=>
+				{
+					val e = ent._1; //entity name
+					val entityLoc = words.zipWithIndex.filter(_._1 == e).map(_._2) 
+					var entityCost = 0.0;
+					var placeholderLoc = qWords.indexOf("@placeholder")
+
+					for ( i <- 0 until qWords.length)
+					{
+						val qWord = qWords(i);
+						val wordLoc = words.zipWithIndex.filter(_._1 == qWord).map(_._2)
+						var minDist = 0.0;
+						
+						entityLoc.foreach (idx1 => {
+							wordLoc.foreach (idx2 => {
+								minDist = Math.max(minDist, 1.0/(1+Math.abs(idx1 - idx2 - placeholderLoc + i)))
+								//if ( i == 9):
+								//	log(" >> " + str(minDist) + " " + str(idx1) + " " + str(idx2) + " " + str(placeholderLoc) + " " + str(i))
+							})
+						})
+						//LOG.trace(" >> " + qWord + " " + minDist)
+						entityCost = entityCost + minDist
+					}
+					LOG.trace("## " + e + " " + entityCost)
+					if( entityCost > minCost)
+					{
+						minCost = entityCost
+						minCostEntity = e
+					}
+				})
+				LOG.trace(">> " +  minCostEntity + " - " + minCost)
+				println("GS: " + Sts.qaRightAnswer + " -- " + "Actual: " + minCostEntity)
+				if (minCostEntity == Sts.qaRightAnswer)
+					resultOnePair = Seq(1.0); 
+				else resultOnePair = Seq(0.0);
+			}
+			else
+				parseRunOnePair(context, question)
+	        if (resultOnePair.head == 1.0)
+	          correctCount = correctCount + 1;
          }
 		 catch 
 		 {
@@ -308,6 +351,7 @@ object Sts {
 	            		  											//This is necessary before generating inference rules, because generating inference rules searches vector space
             	new FindEventsProbabilisticTheoremProver(   //3,4<== Find event variables and prop variables. This is important to reduce domain size. 
 				  new GivenNotTextProbabilisticTheoremProver(
+				   new Baseline( //what baseline to run based on Sts.opts.baseline 
             	    new InferenceRuleInjectingProbabilisticTheoremProver( // 6<== Generate Inference rules on the fly + convert the other rules to FOL then add them to the inference problem. 
 		                words => vectorSpace,
 		                new SameLemmaHardClauseRuleWeighter(
@@ -334,7 +378,7 @@ object Sts {
 		                       //new PositiveEqEliminatingProbabilisticTheoremProver( //Apply skolemized positive equalities and remove skolmeized negated equalities.		                          
 		                        new AutoTypingPTP( //generate negative evidence
 		                         new NoExistProbabilisticTheoremProver( //
-		                        softLogicTool))))))))))))))))) // 16<== run Alchemy or PSL
+		                        softLogicTool)))))))))))))))))) // 16<== run Alchemy or PSL
 
           val p = ttp.prove(Sts.text, Sts.hypothesis) //Sts.text and Sts.hypothesis are already tokenized 
           return p;

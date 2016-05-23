@@ -185,7 +185,11 @@ class EditDRSTheoremProver(
 
     LOG.trace("Entities and variables: " +  Sts.qaEntities)
 
-    renameVariables(e)
+    //the "dep" baseline works better with entities not renamed
+    //but keep renaming variables for the goal
+    if (Sts.opts.baseline != "dep" || isProcessingGoal)
+    	renameVariables(e)
+    else e
   }
   def findCorefEntities(e:BoxerExpression):BoxerExpression = {
 	e match {

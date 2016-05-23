@@ -47,6 +47,10 @@ case $CMD in
     $SBT console
     exit 0
    ;;
+  sbt)
+	$SBT
+	exit 0
+	;;
   sen)
     $START utcompling.mlnsemantics.run.Sts sen "$@"
     exit 0

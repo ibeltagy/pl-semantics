@@ -103,7 +103,7 @@ object DepParseUtil
 		lastEntityId = 1;
 		val tokenizer:DocumentPreprocessor = new DocumentPreprocessor(new StringReader(doc));
 		val sentences = tokenizer.iterator();
-		val currentWordCounter = 0;
+		var currentWordCounter = 0;
 		val boxExpRef:ListBuffer[BoxerVariable] = ListBuffer();
 		val boxExpCond:ListBuffer[BoxerExpression] = ListBuffer();
 		while (sentences.hasNext())  
@@ -119,8 +119,9 @@ object DepParseUtil
 			//sorted dependencies to set of entities and relations between them
 			val (e, r) = depToEntityRel(sortedDep)
 			boxExpRef ++= e.map(x => BoxerVariable("x" + x.id))
-			boxExpCond ++= e.flatMap(x => x.words.map(w => BoxerPred(discId, List(), BoxerVariable("x" + x.id), w.lemma(), posMapToBoxerPos(posMap(w.tag())), 0)));
-			boxExpCond ++= r.map(x => BoxerRel(discId, List(), BoxerVariable("x" + x.from.id), BoxerVariable("x" + x.to.id), x.rel.reln().getShortName(), 0)) 
+			boxExpCond ++= e.flatMap(x => x.words.map(w => BoxerPred(discId, List(BoxerIndex(w.index() + currentWordCounter)), BoxerVariable("x" + x.id), w.lemma(), posMapToBoxerPos(posMap(w.tag())), 0)));
+			boxExpCond ++= r.map(x => BoxerRel(discId, List(), BoxerVariable("x" + x.from.id), BoxerVariable("x" + x.to.id), x.rel.reln().getShortName(), 0))
+			currentWordCounter = currentWordCounter + sentence.length;
 		}
 		val ref = boxExpRef.map(x=> (List(), x)).toList
 		val cond = boxExpCond.toList

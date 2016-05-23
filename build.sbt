@@ -72,7 +72,6 @@ libraryDependencies ++= Seq(
 
 seq(SbtStartScript.startScriptForClassesSettings: _*)
 
-mainClass in (Compile, run) := Some("utcompling.mlnsemantics.inference.Baseline")
+mainClass in (Compile, run) := Some("utcompling.mlnsemantics.run.Sts")
 
 scalacOptions ++= Seq("-optimize", "-deprecation", "-unchecked")
-
