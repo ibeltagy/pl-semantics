@@ -243,11 +243,8 @@ class Baseline (delegate: ProbabilisticTheoremProver[BoxerExpression])
 			LOG.info(">> " +  maxScoreEntity + " - " + maxScoreEntity + " - " + maxScore)
 			//val matchingEnt = Sts.qaEntities.filter(_._2 == "h" + maxScoreEntity).toList
 			//maxScoreEntity = matchingEnt.head._1 //use the first. UGLY C&C AND BOXER :@
-			println("GS: " + Sts.qaRightAnswer + " -- " + "Actual: " + maxScoreEntity)
-
-			if (maxScoreEntity == Sts.qaRightAnswer)
-				return Seq(1.0); 
-			else return Seq(0.0);
+			Sts.qaAnswer = maxScoreEntity
+			return Seq(-7.0);
 		}
 		else 
 			return delegate.prove(constants, declarations, evidence, assumptions, goal)

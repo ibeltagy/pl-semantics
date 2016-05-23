@@ -54,6 +54,7 @@ object Sts {
   var goldStandard:Double = 0;	// Gold standard annotation
   var pairIndex = 0;		//Pair index
   var qaRightAnswer = "";		//Correct answer for QA
+  var qaAnswer = "";		//Answer for QA
   var qaEntities = Map[String, String]();		//all entities in the QA pair
   var luceneDistPhrases:Lucene = null;	// Lucene repository of precompiled distributional phrases 
   var luceneParaphrases:List[Lucene] = null;	// Lucene repository of precompiled paraphrases
@@ -248,21 +249,27 @@ object Sts {
 					}
 				})
 				LOG.trace(">> " +  minCostEntity + " - " + minCost)
-				println("GS: " + Sts.qaRightAnswer + " -- " + "Actual: " + minCostEntity)
-				if (minCostEntity == Sts.qaRightAnswer)
-					resultOnePair = Seq(1.0); 
-				else resultOnePair = Seq(0.0);
+				Sts.qaAnswer = minCostEntity;
 			}
 			else
 				parseRunOnePair(context, question)
-	        if (resultOnePair.head == 1.0)
-	          correctCount = correctCount + 1;
+			
+			println("GS: " + Sts.qaRightAnswer + " -- " + "Actual: " + Sts.qaAnswer)
+			if (Sts.qaAnswer == Sts.qaRightAnswer)
+			{
+				println ("QA-result: right " + Sts.resultOnePair)
+				correctCount = correctCount + 1;
+			}
+			else 
+				println ("QA-result: wrong " + Sts.resultOnePair)
          }
 		 catch 
 		 {
          	case e: Throwable =>
 					LOG.error("Unknowen error" + e.printStackTrace());
 					println ("List()")
+					if (Sts.qaRightAnswer != "")
+						println ("QA-result: error")
 		 }
 		}
 		println ("Accuracy: " + correctCount*1.0/totalCount  + ", correct: " + correctCount + ", total: " + totalCount)

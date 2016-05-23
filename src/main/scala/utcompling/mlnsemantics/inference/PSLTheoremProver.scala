@@ -156,6 +156,7 @@ class PSLTheoremProver(
     
     if (Sts.qaRightAnswer != "") //QA Task 
     {
+    	entHscore = -7.0 //special value for QA 
     	val valItr = values.entrySet().iterator()
     	var maxProb = 0.0;
     	var maxEntId = "";
@@ -176,9 +177,7 @@ class PSLTheoremProver(
 	    	  }
     	  }
     	}
-    	println ("GS: " + Sts.qaRightAnswer + " -- " + "Actual: " + maxEntName)
-    	if ( Sts.qaRightAnswer  == maxEntName)
-    	  entHscore = 1.0
+    	Sts.qaAnswer = maxEntName;
     }
     
     if(Sts.opts.task == "rte")
