@@ -27,8 +27,11 @@ libraryDependencies ++= Seq(
     ExclusionRule(organization = "com.sun.jdmk"),
     ExclusionRule(organization = "com.sun.jmx")
   ),
-  "org.scalanlp" % "breeze-core_2.10" % "0.4",
-  "org.scalanlp" % "breeze-math_2.10" % "0.4",
+  //"org.scalanlp" % "breeze-core_2.10" % "0.4",
+  //"org.scalanlp" % "breeze-math_2.10" % "0.4",
+  "org.scalanlp" % "nak" % "1.2.1",
+  "org.scalanlp" % "chalk" % "1.3.0",
+  "de.bwaldvogel" % "liblinear" % "1.95",
   "junit" % "junit" % "4.10" % "test")
   //"com.novocode" % "junit-interface" % "0.6" % "test->default") //switch to ScalaTest at some point...
 

@@ -238,7 +238,7 @@ object Sts {
 								//	log(" >> " + str(minDist) + " " + str(idx1) + " " + str(idx2) + " " + str(placeholderLoc) + " " + str(i))
 							})
 						})
-						//LOG.trace(" >> " + qWord + " " + minDist)
+						LOG.trace(" >> " + qWord + " " + minDist)
 						entityCost = entityCost + minDist
 					}
 					LOG.trace("## " + e + " " + entityCost)

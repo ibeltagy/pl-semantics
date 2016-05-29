@@ -195,39 +195,27 @@ class GraphRules {
   	//println (textGraph)
   	
   	
-  	//Rules from entity to the first word
-  	/*
-  	val tmp = hypPreds.filter(_.name.contains("@placeholder")).map(_.variable.name);
-  	if (tmp.length != 1) //
-  	  return List()
-  	var queryEntity:String = tmp.head
-  	val firstHopEntities = hypRels.filter( r => Set(r.event.name, r.variable.name).contains(queryEntity) )
-  			.flatMap(r => List(r.event.name, r.variable.name)).toSet - queryEntity
-  	//println (firstHopEntities)
-	val rhsFromEntity = queryEntity
-	 
+	//Rules from entity to the first word
+	/*
+	val tmp = hypPreds.filter(_.name.contains("@placeholder")).map(_.variable.name);
+	if (tmp.size != 1) //
+		return List()
+	var rhsFromEntity:String = tmp.head
+	val firstHopEntities = hypRels.filter( r => Set(r.event.name, r.variable.name).contains(rhsFromEntity) )
+			.flatMap(r => List(r.event.name, r.variable.name)).toSet - rhsFromEntity
 	val textFromList = entityPotentialMatchs(rhsFromEntity)
 	firstHopEntities.foreach(rhsToEntity => 
-	{ */
-  	
-  	//Rules for all edges in hypothesis
-  	hypGraph.edges.foreach( hypPath =>
+	{ 
+	*/
+	//Rules for all edges in hypothesis
+	hypGraph.edges.foreach( hypPath =>
 	{
-		
-	//Rules for all pairs of entities in hypothesis (not working yet)
-  	/*
-  	hypGraph.nodes.foreach(rhsFromEntity =>
-  	{
-  	  hypGraph.nodes.foreach(rhsToEntity =>
-  	  {
-  	   if (rhsFromEntity != rhsToEntity)
-  	   {
-  	   */	 
-  	  	val rhsRel = hypPath.label.asInstanceOf[BoxerRel]
+		val rhsRel = hypPath.label.asInstanceOf[BoxerRel]
 		val rhsFromEntity = rhsRel.event.name
 		val rhsToEntity = rhsRel.variable.name
 		val rhsPred = List(rhsFromEntity, rhsToEntity).flatMap(hypEntitiesMap(_))
 		val textFromList = entityPotentialMatchs(rhsFromEntity)
+	//== 
 
 		val textToList = entityPotentialMatchs(rhsToEntity)
 		for (textFrom <- textFromList)
@@ -237,22 +225,22 @@ class GraphRules {
 				//println (textFrom + " -- " + textTo)
 				val nodeFrom = textGraph.get(textFrom)
 				val nodeTo = textGraph.get(textTo)
-				val sp = nodeFrom shortestPathTo nodeTo
-				if (sp.isDefined && sp.get.weight <= Sts.opts.graphRuleLengthLimit)
+				val spLhs = nodeFrom shortestPathTo nodeTo
+				if (spLhs.isDefined && spLhs.get.weight <= Sts.opts.graphRuleLengthLimit)
 				{
-					//println ("Path found: " + sp)
-					//println(sp.get.nodes.flatMap(textEntitiesMap(_)))
-					//println(sp.get.weight)
-					//println(sp.get.edges.map(_.label))
-					val lhsPred = sp.get.nodes.flatMap(textEntitiesMap(_)).toList
+					//println ("Path found: " + spLhs)
+					//println(spLhs.get.nodes.flatMap(textEntitiesMap(_)))
+					//println(spLhs.get.weight)
+					//println(spLhs.get.edges.map(_.label))
+					val lhsPred = spLhs.get.nodes.flatMap(textEntitiesMap(_)).toList
 					val lhsText = lhsPred.sortBy(_.indices.apply(0).wordIndex).map(_.name).mkString(" ");
-					val lhsRel = sp.get.edges.map(_.label).toList
+					val lhsRel = spLhs.get.edges.map(_.label).toList
 					val ruleLhs:List[BoxerExpression] = lhsPred.asInstanceOf[List[BoxerExpression]] ++ lhsRel.asInstanceOf[List[BoxerExpression]]
 					val spRhs = hypGraph.get(rhsFromEntity) shortestPathTo hypGraph.get(rhsToEntity)
 					val rhsPred = spRhs.get.nodes.flatMap(hypEntitiesMap(_)).toList
 					val rhsText = rhsPred.sortBy(_.indices.apply(0).wordIndex).map(_.name).mkString(" ");
 					val rhsRel = spRhs.get.edges.map(_.label).toList
-					println ("GraphRule ("+sp.get.weight + ") " + lhsText + " -> " + rhsText);
+					println ("GraphRule ("+spLhs.get.weight + ") " + lhsText + " -> " + rhsText);
 					var ruleRhs:List[BoxerExpression] = rhsPred.asInstanceOf[List[BoxerExpression]] ++ rhsRel.asInstanceOf[List[BoxerExpression]]
 					def changeRhsVar (v:BoxerVariable) : BoxerVariable = 
 					{
@@ -273,7 +261,7 @@ class GraphRules {
 					val ruleRhsDrs = Rules.boxerAtomsToBoxerDrs(ruleRhs.toSet);
 					
 					//(ruleRhs + " <<< " + ruleLhs)
-					rules +=( (ruleLhsDrs, ruleRhsDrs, 1.0/sp.get.weight, RuleType.Implication) )
+					rules +=( (ruleLhsDrs, ruleRhsDrs, 1.0/(1+spLhs.get.weight), RuleType.Implication) )
 				}
 			}
 		}

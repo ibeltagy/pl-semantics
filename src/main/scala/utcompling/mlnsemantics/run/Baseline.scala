@@ -1,20 +1,15 @@
 package utcompling.mlnsemantics.run
 
 import utcompling.scalalogic.inference.impl.Prover9TheoremProver
-import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.Boxer2DrtExpressionInterpreter
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression
 import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
+import opennlp.scalabha.util.CollectionUtils._
 import opennlp.scalabha.util.FileUtils
 import utcompling.scalalogic.fol.expression.FolExpression
 import utcompling.mlnsemantics.modal.ModalDiscourseInterpreter
 import utcompling.mlnsemantics.vecspace._
-import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.MergingBoxerExpressionInterpreterDecorator
-import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.UnnecessarySubboxRemovingBoxerExpressionInterpreter
-import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.OccurrenceMarkingBoxerExpressionInterpreterDecorator
-import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.BoxerExpressionInterpreter
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
-import utcompling.scalalogic.discourse.candc.boxer.expression.interpreter.impl.PredicateCleaningBoxerExpressionInterpreterDecorator
 import utcompling.mlnsemantics.inference._
 import org.apache.commons.logging.LogFactory
 import utcompling.mlnsemantics.inference.support.WeightedExpression
@@ -28,102 +23,232 @@ import scalax.collection.GraphEdge._
 import scalax.collection.mutable.Graph
 import scalax.collection.edge.LUnDiEdge
 import scalax.collection.edge.LkUnDiEdge
+import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerRel
+import scala.io.Source
+import de.bwaldvogel.liblinear.SolverType
+import de.bwaldvogel.liblinear.Parameter
+import de.bwaldvogel.liblinear.Model
+import de.bwaldvogel.liblinear.Linear
+import java.io.File
+import de.bwaldvogel.liblinear.Feature
+import de.bwaldvogel.liblinear.FeatureNode
+import weka.classifiers.functions.LibSVM
+import libsvm.svm_problem
+import libsvm.svm_node
+import libsvm.svm_parameter
+import libsvm.svm
+import libsvm.svm_model
 
-object Baseline {
+object Baseline
+{
+	def innerFeaturizer(featureString: Array[String], featureIndexShift:Int): List[Feature/*svm_node*/] =   //SVM
+	{
+		val f:List[Feature/*svm_node*/] = featureString  //SVM
+								.toSet[String]
+								.map(relDir => 
+								{
+									val relDirSplits = relDir.split("\\$");
+									var directionShift = 0;
+									if (relDirSplits.length == 1)
+									{
+										assert(relDirSplits(0) == "null");
+									}
+									else
+									{
+										assert(relDirSplits.length == 2)
+										val dir = relDirSplits(1)
+										assert (List("l2r", "r2l").contains(dir));
+										if (dir == "r2l")
+											directionShift = relNames.length
+									}
+									val rel = relDirSplits(0)
+									assert(relNames.contains(rel), rel)
+									val id = relNames.indexOf(rel)
 
-  def main(args: Array[String]) {
-    Logger.getRootLogger.setLevel(Level.INFO)
+									val n = new svm_node ();
+									n.index = id + featureIndexShift + directionShift;
+									n.value = 1.0;
+									n;
+									new FeatureNode(n.index, n.value)
+								})
+								.toList
+								.sortBy(_.index)  //SVM
+		return f;
+	}
 
-    //    val txt = "an architect bought a new red car"
-    //    val hyp = "a person purchased a new vehicle"
+	def featurize(lhsRels:Array[String], rhsRels:Array[String]):Array[Feature/*svm_node*/] =
+	{
+		val conj = lhsRels.toSet.intersect(rhsRels.toSet).toArray;
+		val diff1 = lhsRels.toSet.diff(rhsRels.toSet).toArray;
+		val diff2 = rhsRels.toSet.diff(lhsRels.toSet).toArray;
+		val f:Array[Feature/*svm_node*/] = (innerFeaturizer(lhsRels, 1) 
+							++ innerFeaturizer(rhsRels, 1 + 2*relNames.length) 
+							++ innerFeaturizer(conj, 1 + 4*relNames.length)
+							++ innerFeaturizer(diff1, 1 + 6*relNames.length)
+							++ innerFeaturizer(diff2, 1 + 8*relNames.length)
+							).toArray
+		f
+	}
 
-    val a = List(
-      List("A man is riding a bicycle ."),
-      List("A man is riding a bike ."),
-
-      List("A stadium craze is sweeping the country ."),
-      List("A stadium craze is covering the country ."), // True
-
-      List("He left the children with the nurse ."),
-      List("He entrusted the children to the nurse ."), // False without "all e all x ((leave_v_dt_1002(e) & r_with(e, x)) -> (entrust_v_dh_2002(e) & r_to(e, x)))"
-
-      List("He left the children with the nurse ."),
-      List("He entrusted the children with the nurse ."),
-
-      List("South Korea fails to honor U.S. patents ."),
-      List("South Korea does not observe U.S. patents ."), // True
-
-      List("The U.S. is watching closely as South Korea fails to honor U.S. patents ."),
-      List("South Korea does not observe U.S. patents ."), // False, stuff after "as" is treated as a nested subexpression
-
-      List("We return to the young woman who is reading the Wrigley's wrapping paper ."),
-      List("The young woman reading the Wrigley's wrapping paper is revisited ."), // False, "return to" -> "revisit" since the "to" doesn't get dropped
-
-      //      List("After a fire extinguisher is used, it must always be returned for recharging and its use recorded ."),
-      //      List("A fire extinguisher must always be sent back after using it ."), // ERROR, Boxer doesn't handle "after" right
-
-      List("Joe Robbie could not persuade the mayor , so he built his own coliseum .", "He has used it to turn a healthy profit ."), // NOTE: "couldn't" -> "could not"
-      List("Joe Robbie used a stadium to turn a sizable profit ."), // False, "persuade" doesn't produce a "theme" predicate
-
-      List("The significance of this will be apparent when it is realized that , while the sportsman is trying to get a sight of the tiger , the tiger in all probability is trying to stalk the sportsman ."),
-      List("The tiger is following the sportsman ."),
-
-      List("Mary 's grandfather taught her necessary skills : how to tip my tea into my saucer and blow waves across it until it was cool enough to drink ; how to cut an orange in half crossways and pack a sugar lump into each half and then suck out orange-juice and sugar together ; how to walk along the crazy-paving garden path without stepping on any of the cracks or a tiger would get you ; how to butter the loaf and then clutch it to your chest and then shave off paper-thin slices ; what saint to pray to when you woke up at night and saw the devil moving behind the curtains ."),
-      List("Mary was instructed some useful skills by her grandfather ."))
-
-    //
-    //
-    //
-
-    val vsf1 = (words: (String => Boolean)) => BowVectorSpace.nullVectorSpace
-    val vsf2 = (words: (String => Boolean)) => BowVectorSpace("resources/nytgiga.lem.1m.vc.f2000.m50.wInf", words)
-
-    val ttp =
-      new TextualTheoremProver(
-        new ModalDiscourseInterpreter(),
-        new InferenceRuleInjectingProbabilisticTheoremProver(
-          vsf1,
-          new TopRuleWeighter(
-            new RankingRuleWeighter(
-              new AwithCtxCwithCtxVecspaceRuleWeighter(
-                new SimpleCompositeVectorMaker()))),
-      new TypeConvertingPTP(
-        new BoxerExpressionInterpreter[FolExpression] {
-          def interpret(x: BoxerExpression): FolExpression =
-            new Boxer2DrtExpressionInterpreter().interpret(
-              new OccurrenceMarkingBoxerExpressionInterpreterDecorator().interpret(
-                new MergingBoxerExpressionInterpreterDecorator().interpret(
-                  new UnnecessarySubboxRemovingBoxerExpressionInterpreter().interpret(
-                    new PredicateCleaningBoxerExpressionInterpreterDecorator().interpret(x))))).fol
-        },
-            new FakeProbabilisticTheoremProver(
-              //              new TheoremProver[FolExpression, String] {
-              //                def prove(assumptions: List[FolExpression], goal: Option[FolExpression] = None, verbose: Boolean = false): Option[String] = {
-              //                  assumptions.map(println)
-              //                  println
-              //                  println(goal)
-              //                  println
-              //                  Option("...")
-              //                }
-              //              }))))
-
-              new Prover9TheoremProver(FileUtils.pathjoin(System.getenv("HOME"), "bin/LADR-2009-11A/bin/prover9"), 5, false)))))
-
-    //
-    //
-    //
-
-    for (List(txt, hyp) <- a.grouped(2)) {
-      println(txt.mkString(" "))
-      println(hyp.mkString(" "))
-      println(ttp.prove(txt, hyp))
-    }
-
-    //    def mtpo = new ModalTheoremProver(tpo)
-    //    def vtpo = new VisualizingModalTheoremProverDecorator(mtpo)
-    //    def vwtpo = new VisualizingModalTheoremProverDecorator(new InferenceRuleInjectingProbabilisticTheoremProver(mtpo))
-
-  }
+			
+	def main(args: Array[String]) 
+	{
+		println(args.mkString(", "))
+		Logger.getRootLogger.setLevel(Level.INFO)
+		assert(args.length == 3)
+		val trainOrTest = args(0);
+		assert (List("train", "test").contains(trainOrTest));
+		val modelPath = args(1); //save a model or read a saved model
+		val inputFile = args(2); //could be training or testing file
+		
+		val features:scala.collection.mutable.ListBuffer[Array[Feature/*svm_node*/]] = ListBuffer[Array[Feature/*svm_node*/]]()
+		val labels:scala.collection.mutable.ListBuffer[Double] = ListBuffer()
+		val rand = scala.util.Random
+		for (line <- Source.fromFile(inputFile).getLines) 
+		{
+			val splits = line.split (" - ");
+			assert (splits.length == 4);
+			assert (List("neg", "pos").contains(splits(0)));
+			var label = 0.0;
+			if (splits(0) == "pos")
+				label = 1.0;
+		
+			val f:Array[Feature/*svm_node*/] = featurize(splits(2).split(", "), splits(3).split(", "));
+			
+			
+			if (/*true*/label == 1.0 || rand.nextInt(8) == 0/*I keep only 1/7 of the negative training examples*/) //negative example
+			{
+				println(line)
+				println (f.map(x => x.getIndex() + "-" + x.getValue()).mkString(", "))
+				//println (f.map(x => x.index + "-" + x.value).mkString(", "))
+				features.append(f)
+				labels.+=(label);
+			}
+		}
+		assert(features.length == labels.length)
+		println (features.length + " -- " + labels.length)
+		
+		val problem = new de.bwaldvogel.liblinear.Problem();
+		problem.l = features.length; //number of data points
+		problem.n = relNames.length * 10 + 1; //number of features
+		problem.x = features.toArray //features
+		problem.y = labels.toArray // target values
+		
+		val solver:SolverType = SolverType.L1R_LR// -s 0
+		val C:Double = 1.0;    // cost of constraints violation
+		val eps:Double = 0.0001; // stopping criteria
+		
+		val parameter:Parameter = new Parameter(solver, C, eps);
+		//parameter.setWeights(Array(6.3), Array(1))
+		var model:Model = Linear.train(problem, parameter);
+		val modelFile:File = new File(modelPath);
+		model.save(modelFile);
+		// load model or use it directly
+		model = Model.load(modelFile);
+		/*
+		val problem = new svm_problem();
+		problem.l = features.length; //number of data points
+		//problem.n = relNames.length * 5 + 1; //number of features
+		problem.x = features.toArray //features
+		problem.y = labels.toArray // target values
+		
+		val solver:SolverType = SolverType.L2R_L2LOSS_SVC// -s 0
+		val C:Double = 1.0;    // cost of constraints violation
+		val eps:Double = 0.0001; // stopping criteria
+		
+		//val parameter:svm_parameter = new svm_parameter(solver, C, eps);
+		val parameter:svm_parameter = new svm_parameter();
+		//parameter.kernel_type = 0; //linear
+		
+		//parameter.weight = Array(6.3);
+		//parameter.weight_label = Array(1);
+		//var model:Model = Linear.train(problem, parameter);
+		var model:svm_model = svm.svm_train(problem, parameter);
+		svm.svm_save_model(modelPath, model)
+		// load model or use it directly
+		model = svm.svm_load_model(modelPath)
+		*/
+		/////
+		var correct = 0;
+		var total = 0;
+		var truePositive = 0
+		var predictedPositive = 0;
+		var actualPositive = 0;
+		(problem.x zip problem.y).foreach( t => { 
+			val prediction:Double = Linear.predict(model, t._1);
+			//val prediction:Double = svm.svm_predict(model, t._1);
+			if (prediction == t._2)
+				correct = correct + 1;
+			if (prediction == t._2 && prediction == 1.0)
+				truePositive = truePositive + 1
+			if (prediction == 1.0)
+				predictedPositive = predictedPositive + 1
+			if (t._2 == 1.0)
+				actualPositive = actualPositive + 1
+			total = total + 1;
+			//println ("prediction: " + prediction);
+		})
+		println ("Accuracy: " + correct + " / " + total + " = " + correct*1.0/total)
+		var p = truePositive*1.0/predictedPositive
+		var r = truePositive*1.0/actualPositive
+		println ("Precision: " + truePositive + " / " + predictedPositive + " = " + p)
+		println ("Recall: " + truePositive + " / " + actualPositive + " = " + r)
+		println ("F1: " + 2.0 * p * r / (p + r))
+	}
+	
+	val relNames = List(
+		"null",
+		"acl", //clausal modifier of noun (adjectival clause)
+		"advcl", //adverbial clause modifier
+		"advmod", //adverbial modifier
+		"amod", //adjectival modifier
+		"appos", //appositional modifier
+		"aux", //auxiliary
+		"auxpass", //passive auxiliary
+		"case", //case marking
+		"cc", //coordinating conjunction
+		"ccomp", //clausal complement
+		"compound", //compound
+		"conj", //conjunct
+		"cop", //copula
+		"csubj", //clausal subject
+		"csubjpass", //clausal passive subject
+		"dep", //unspecified dependency
+		"det", //determiner
+		"discourse", //discourse element
+		"dislocated", //dislocated elements
+		"dobj", //direct object
+		"expl", //expletive
+		"foreign", //foreign words
+		"goeswith", //goes with”
+		"iobj", //indirect object
+		"list", //list
+		"mark", //marker
+		"mwe", //multi-word expression
+		"name", //name
+		"neg", //negation modifier
+		"nmod", //nominal modifier
+		"nsubj", //nominal subject
+		"nsubjpass", //passive nominal subject
+		"nummod", //numeric modifier
+		"parataxis", //parataxis
+		"punct", //punctuation
+		"remnant", //remnant in ellipsis
+		"reparandum", //overridden disfluency
+		"root", //root
+		"vocative", //vocative
+		"xcomp", //open clausal complement
+		"nmod:npmod",
+		"nmod:poss",
+		"nmod:tmod",
+		"acl:relcl", 
+		"det:predet",
+		"compound:prt",
+		"ref",
+		"rel"
+	)
+	
+	
 }
 
 
@@ -205,6 +330,10 @@ class Baseline (delegate: ProbabilisticTheoremProver[BoxerExpression])
 			var maxScore = 0.0
 			var maxScoreEntity = "";
 			val placeholderNode = hypGraph.get( hypPreds.filter ( _.name == "@placeholder" ).head.variable.name )
+			
+			var model:Model = null;
+			if (Sts.opts.ruleClsModel.isDefined)
+				model = Model.load(new File(Sts.opts.ruleClsModel.get));
 
 			Sts.qaEntities/*.filter ( e => e._2 != "" && e._1 != "@placeholder" )*/.foreach(ent=>
 			{
@@ -214,8 +343,9 @@ class Baseline (delegate: ProbabilisticTheoremProver[BoxerExpression])
 				{
 					val textWords = entityPotentialMatchs(hypNode.toString)
 					var maxWordScore = 0.0;
+					var maxWordPath:String = "";
 					val hypSp = (hypNode shortestPathTo placeholderNode)
-					if (!hypSp.isEmpty)
+					if (hypNode != placeholderNode && !hypSp.isEmpty )
 					{
 						val hypDist =  hypSp.get.weight
 						textEntityInstances.foreach(te => 
@@ -224,11 +354,58 @@ class Baseline (delegate: ProbabilisticTheoremProver[BoxerExpression])
 							textWords.foreach(textWord => {
 								val textSp = textGraph.get(textWord) shortestPathTo entityNode
 								if (!textSp.isEmpty)
-									maxWordScore = Math.max(maxWordScore, 1.0/(1+Math.abs(textSp.get.weight - hypDist)))
-									
+								{
+									var flag = "neg";
+									if (ent._1 == Sts.qaRightAnswer)
+										flag = "pos"
+									//var lhs = textSp.get.edges.map(x => x.label.asInstanceOf[BoxerRel].name ).toList.sorted.mkString(", ")
+									var lhs = (textSp.get.edges.toList zip textSp.get.nodes.tail.toList)
+											.map(x => {
+												var dir = "";
+												if (x._1.edge._1 == x._2)
+													dir = "r2l";
+												if (x._1.edge._2 == x._2)
+													dir = "l2r";
+												x._1.label.asInstanceOf[BoxerRel].name	+ "$" + dir
+											}).toList.sorted.mkString(", ")
+
+									if (textSp.get.edges.size == 0)
+										lhs = "null";
+									//var rhs = hypSp.get.edges.map(x => x.label.asInstanceOf[BoxerRel].name ).toList.sorted.mkString(", ")
+									var rhs = (hypSp.get.edges.toList zip hypSp.get.nodes.tail.toList)
+											.map(x => {
+												var dir = "";
+												if (x._1.edge._1 == x._2)
+													dir = "r2l";
+												if (x._1.edge._2 == x._2)
+													dir = "l2r";
+												x._1.label.asInstanceOf[BoxerRel].name	+ "$" + dir
+											}).toList.sorted.mkString(", ")
+
+									if (hypSp.get.edges.size == 0)
+										rhs = "null";
+									var path = flag + " - "  + entityNode + " - " + lhs + " - " + rhs;
+									//println (path)
+									var score = 1.0/(1+Math.abs(textSp.get.weight - hypDist));
+									if (model != null) //Get score from the trained model, not from distance
+									{
+										val f = Baseline.featurize(lhs.split(", "), rhs.split(", "));
+										val dec_values = new Array[Double](model.getNrClass());
+										val prediction:Double = Linear.predictProbability(model, f, dec_values);
+										//println(dec_values)
+										score = dec_values(1);
+									}
+									if (score > maxWordScore)
+									{
+										maxWordScore = score
+										maxWordPath = path
+									}
+								}
 							})
 						})
-						//LOG.trace(" >> " + hypEntitiesMap(hypNode).map(_.name).mkString(", ") + " " + maxWordScore)
+						if (maxWordScore > 0)
+							println (maxWordPath)
+						LOG.trace(" >> " + hypEntitiesMap(hypNode).map(_.name).mkString(", ") + " " + maxWordScore)
 						entityScore = entityScore + maxWordScore
 					}
 				})

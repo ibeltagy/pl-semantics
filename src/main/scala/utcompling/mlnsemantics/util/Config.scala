@@ -95,7 +95,8 @@ class Config(opts: Map[String, String] = Map()) {
 		"-errorCode", 
 		"-removeEq", 
 		"-ner",
-		"-baseline"
+		"-baseline",
+		"-ruleClsModel"
 	);
   
   val diff = opts.keys.toSet.diff(validArgs.toSet)
@@ -594,6 +595,12 @@ class Config(opts: Map[String, String] = Map()) {
      case Some("full") => "full";
      case None => "full"
   }
+  //Rule classifier trained model 
+  val ruleClsModel = opts.get("-ruleClsModel") match {
+     case Some(path) => Some(path);
+     case _ => None;
+  }
+  ruleClsModel
   
 }
 
