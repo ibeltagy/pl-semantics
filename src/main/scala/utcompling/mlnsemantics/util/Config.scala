@@ -274,10 +274,14 @@ class Config(opts: Map[String, String] = Map()) {
   }
   
 
-  //Enable or Disable Graph-matching rules
+  //Set graph rules level (same level used for the dep-baseline)
   val graphRules = opts.get("-graphRules") match {
-    case Some("true") => true;
-    case _ => false;
+  	case Some("0") => 0; //no rules 
+  	case Some("1") => 1; //rules between placeholder and first-hop entities only
+  	case Some("2") => 2; //rules for all relations in H
+  	case Some("3") => 2; //rules between pairs: (placeholder, all other entities in H). Short rules are deleted from longer rules containing them
+  	case None => 0; //no rules
+    case Some(x) => throw new RuntimeException("Invalid value " + x + " for argument -graphRules");
   }
   
   //Limit of length of graph rules
@@ -587,8 +591,8 @@ class Config(opts: Map[String, String] = Map()) {
   		return errorCode.get
   	return x
   }
-  
-  //QA baseline or the full system 
+
+  //QA baseline or the full system
   val baseline = opts.get("-baseline") match {
      case Some("word") => "word";
      case Some("dep") => "dep";
@@ -600,8 +604,7 @@ class Config(opts: Map[String, String] = Map()) {
      case Some(path) => Some(path);
      case _ => None;
   }
-  ruleClsModel
-  
+
 }
 
 object Config {

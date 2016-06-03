@@ -29,7 +29,8 @@ trait CompositeVectorMaker {
 
 case class SimpleCompositeVectorMaker() extends CompositeVectorMaker {
   override def make(preds: Iterable[String], vectorspace: BowVectorSpace, sentence: String, lemmatizedSent: String): BowVector = {
-    val toCombine = preds.map(extractWord).flatMap(vectorspace.get)
+  	val words =  preds.map(extractWord).toSet //remove duplicate words
+    val toCombine = words.flatMap(vectorspace.get)
     if (toCombine.isEmpty)
       new SparseBowVector(numDims = vectorspace.numDims)
     else

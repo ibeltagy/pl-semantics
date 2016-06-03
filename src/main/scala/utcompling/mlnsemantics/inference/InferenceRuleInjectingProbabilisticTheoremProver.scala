@@ -190,7 +190,7 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 	}
 	
 	//Generate rules from graph matching
-	val graphRules = if (Sts.opts.graphRules)
+	val graphRules = if (Sts.opts.graphRules>0)
 	  new GraphRules().getRule(assumptions.head.expression, goal, ruleWeighter, vecspaceFactory);
 	else List()
     

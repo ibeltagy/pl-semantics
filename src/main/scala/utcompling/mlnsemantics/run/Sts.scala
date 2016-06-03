@@ -302,7 +302,7 @@ object Sts {
 		 //val boxes = di.batchInterpret(sentences);
 	     LOG.trace("boxes: >>>> " + boxes);
 	     val allLemmas = lemmas.flatMap(_.split("\\s+")).toSet
-	     val fullVsFile = opts.vectorSpace
+	     /*val fullVsFile = opts.vectorSpace
          val tempVSFile = FileUtils.mktemp();
 	      FileUtils.writeUsing(tempVSFile) { f =>
           	for (line <- readLines(fullVsFile)) {
@@ -310,8 +310,8 @@ object Sts {
           		if (allLemmas(word) || allLemmas(word.toLowerCase))
           			f.write(line + "\n")
           	}
-	      }
-	      val vectorSpace = BowVectorSpace(tempVSFile /* "resources/prob/prob.vs"*/)
+	      }*/
+	      val vectorSpace = BowVectorSpace(opts.vectorSpace /* "resources/prob/prob.vs"*/)
 	      // Index distributional phrases into Lucene repository
 	      luceneDistPhrases = new Lucene(opts.phrasesFile )
 	      // Index paraphrase rules into Lucene repository
