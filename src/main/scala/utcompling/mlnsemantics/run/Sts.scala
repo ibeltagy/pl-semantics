@@ -58,7 +58,7 @@ object Sts {
   var qaEntities = Map[String, String]();		//all entities in the QA pair
   var luceneDistPhrases:Lucene = null;	// Lucene repository of precompiled distributional phrases 
   var luceneParaphrases:List[Lucene] = null;	// Lucene repository of precompiled paraphrases
-
+  var vectorSpace:BowVectorSpace = null; //vectorspace
 
   var resultOnePair: Seq[Double] = Seq(); //passing result to the adept code
   var depParser:DepParser = null;
@@ -311,7 +311,7 @@ object Sts {
           			f.write(line + "\n")
           	}
 	      }*/
-	      val vectorSpace = BowVectorSpace(opts.vectorSpace /* "resources/prob/prob.vs"*/)
+	      Sts.vectorSpace = BowVectorSpace(opts.vectorSpace /* "resources/prob/prob.vs"*/)
 	      // Index distributional phrases into Lucene repository
 	      luceneDistPhrases = new Lucene(opts.phrasesFile )
 	      // Index paraphrase rules into Lucene repository
@@ -325,7 +325,7 @@ object Sts {
 	      println(Sts.text)
 	      println(Sts.hypothesis)
 	      val boxPair = boxes.map(x => Option(x.get.toString()));
-          val result = runOnePair(boxPair, vectorSpace, depParser);
+          val result = runOnePair(boxPair, Sts.vectorSpace, depParser);
           println(result)
           resultOnePair = result;
  	}
@@ -394,7 +394,7 @@ object Sts {
     def run(stsFile: String, boxFile: String, lemFile: String, vsFile: String, goldSimFile: String, outputSimFile: String, allLemmas: String => Boolean, includedPairs: Int => Boolean) {
     	val pairs = readLines(stsFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
 		//val lemPairs = readLines(lemFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
-        val vectorSpace = BowVectorSpace(vsFile)
+        Sts.vectorSpace = BowVectorSpace(vsFile)
 
 
 		val boxPairs =
@@ -435,7 +435,7 @@ object Sts {
 			println(Sts.text)
 			println(Sts.hypothesis)
 			
-			val p = runOnePair(boxPair, vectorSpace, depParser)
+			val p = runOnePair(boxPair, Sts.vectorSpace, depParser)
 			println("Some(%s) [actual: %s, gold: %s]".format(p.mkString(":"), p.map(probOfEnt2simScore).map("%1.1f".format(_)).mkString(":"), goldSim))
 			i -> (p.map(probOfEnt2simScore), goldSim)
 	    }

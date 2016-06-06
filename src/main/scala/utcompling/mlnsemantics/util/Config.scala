@@ -96,7 +96,9 @@ class Config(opts: Map[String, String] = Map()) {
 		"-removeEq", 
 		"-ner",
 		"-baseline",
-		"-ruleClsModel"
+		"-ruleClsModel",
+		"-emRandInit",
+		"-emTrainOnBest"
 	);
   
   val diff = opts.keys.toSet.diff(validArgs.toSet)
@@ -604,9 +606,21 @@ class Config(opts: Map[String, String] = Map()) {
      case Some(path) => Some(path);
      case _ => None;
   }
-
+  
+  //Init Expectation Maximization randomly or using reasonable initial values
+  val emRandInit = opts.get("-emRandInit") match {
+     case Some("true") => true;
+     case Some("false") => false;
+     case None => true;
+  }
+  
+  //Rules to train Expectation Maximization are the best rules of every example, or all rules of every example 
+  val emTrainOnBest = opts.get("-emTrainOnBest") match {
+     case Some("true") => true;
+     case Some("false") => false;
+     case None => true;
+  }
 }
-
 object Config {
 	
 }

@@ -37,7 +37,7 @@ class SparseBowVector(vals: TraversableOnce[Double], indx: TraversableOnce[Int],
 
 
 
-class BowVectorSpace(vectorMap: Map[String, BowVector]) {
+class BowVectorSpace(vectorMap: scala.collection.mutable.Map[String, BowVector]) {
   val numDims: Int = if (vectorMap.size == 0) 0; else vectorMap.head._2.length
   val zero: BowVector = new SparseBowVector(List[Double](), List[Int](), numDims)  //new DenseBowVector(new Array[Double](numDims))
   private val LOG = LogFactory.getLog(classOf[BowVectorSpace])
@@ -46,30 +46,36 @@ class BowVectorSpace(vectorMap: Map[String, BowVector]) {
   //a second constructor for Word2vec spaces 
   def this (word2vec:Word2Vec)
   {
-  	this(Map[String, BowVector](("" -> new SparseBowVector(List[Double](), List[Int](), word2vec.dimSize)))); //map with one entry just to set numDims and zero
+  	this(scala.collection.mutable.Map[String, BowVector](("" -> new SparseBowVector(List[Double](), List[Int](), word2vec.dimSize)))); //map with one entry just to set numDims and zero
   	//val dimSize = word2vec.dimSize;
   
     this.word2vecSpace = Some(word2vec);
   }
   
-  def get(word: String): Option[BowVector] = {
-  	if (word2vecSpace.isDefined)
+  def get(word: String): Option[BowVector] = 
+  {
+  	if (word2vecSpace.isDefined && !vectorMap.contains(word)) // if word2vec space && the vector is not in the memory
   	{
+  		//try to read it from the file
   		val vec:Array[Double] = word2vecSpace.get.getVec(word);
-  		if (vec == null)
-  			return None;
-  		else return Some(new DenseBowVector(vec));
-  		None;
+  		if (vec != null)
+  		{
+  			val dVec = new DenseBowVector(vec)
+  			//cache it in memory in case it is needed later
+  			vectorMap.put(word, dVec)
+  		}
   	}
-  	else
-  	{
+  	//read it from the memory
+  	getFromVectorMap(word);
+
+  }
+  def getFromVectorMap(word: String): Option[BowVector] = {
 	    val res = vectorMap.get(word)
 	    res match {
 	      case Some(v) => {}
 	      case None => LOG.warn("Couldn't find '" + word + "'. Returning None.")
 	    }
 	    res
-  	}
   }
 
   def getOrZero(word: String): BowVector = {
@@ -100,7 +106,7 @@ object BowVectorSpace {
 
   def nullVectorSpace: BowVectorSpace = {
     val singleton = new DenseBowVector(Array(1.0))
-    val defaultMap = Map[String, BowVector]().withDefaultValue(singleton)
+    val defaultMap = scala.collection.mutable.Map[String, BowVector]().withDefaultValue(singleton)
     new BowVectorSpace(defaultMap)
   }
 
@@ -112,12 +118,12 @@ object BowVectorSpace {
       case nfe: java.lang.NumberFormatException => false
     }
   }
-  def readSpace(filename: String): Map[String, BowVector] = {
+  def readSpace(filename: String): scala.collection.mutable.Map[String, BowVector] = {
     println("READING VS: ", filename)
     
     val reader = detectFormat(filename)
     val res = reader(filename)
-    res
+    scala.collection.mutable.Map() ++ res
   }
 
   // auto-detects between the dhg format, a dense space and a sparse space
@@ -223,9 +229,12 @@ object BowVectorSpace {
   	val vMan = vs.get("man");
   	val vWoman = vs.get("woman");
   	val vCar = vs.getOrZero("carrrrrr");
+  	val vMan2 = vs.get("man");
   	
   	println(vMan.get cosine vWoman.get)
   	println(vMan.get cosine vCar)
+  	println(vCar cosine vCar)
+  	println(vMan2.get cosine vMan2.get)
   }
 
   

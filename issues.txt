@@ -1,3 +1,6 @@
+new command: 
+qa qa/resources/cnn/validation/ 400  -log OFF   -withNegT false   -negativeEvd false   -softLogic psl -diffRules false  -keepUniv   false  -ner candc  -graphRules 1  -timeout 600000 -graphRuleLengthLimit 5 -logic dep  -baseline dep -coref false -emRandInit false -emTrainOnBest true  -ruleClsModel tmp/model.qa   -vectorSpace ../../GoogleNews-vectors-negative300.bin
+--
 add options: -vsWithPos false -vectorSpace ../../GoogleNews-vectors-negative300.bin to run with word2vec vectorspace
 --
 How to run EM for the dep-baseline. The following steps better be automated in a script
@@ -30,7 +33,7 @@ DONE: Large number of failed optimiation. Why ? Because of the constraint on the
 Not all entities end up having non-zero probability. That is not what I was expecting.
 Boxer parse is really bad. I will have to move to Stanford Dependency at some point
 Equalities should be processed before generating inference rules not after. This is important to find connected entities. Question 8 breaks because of it
-Check EditDRSTheoremProver for the parsing and entity detection problem. Different entities are using the same discorse variable, and similar entities are using different discorse variables. 
+(IMP) ***Check EditDRSTheoremProver for the parsing and entity detection problem. Different entities are using the same discorse variable, and similar entities are using different discorse variables. 
 
 bin/condor submit  /scratch/cluster/beltagy/qa/tmp/pslGraphRules-10min-ruleLimit5 5 qa qa/resources/cnn/validation/ -log OFF  -withNegT false   -negativeEvd false   -softLogic psl -diffRules false  -keepUniv false  -ner gs -coref false -graphRules true  -timeout 600000 -graphRuleLengthLimit 5
 

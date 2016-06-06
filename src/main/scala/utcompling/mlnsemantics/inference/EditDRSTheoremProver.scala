@@ -186,8 +186,9 @@ class EditDRSTheoremProver(
     LOG.trace("Entities and variables: " +  Sts.qaEntities)
 
     //the "dep" baseline works better with entities not renamed
-    //but keep renaming variables for the goal
-    if (Sts.opts.baseline != "dep" || isProcessingGoal)
+    //use the opts.coref option to enable or disable renaming 
+    //but always rename variables for goal
+    if (Sts.opts.coref /*&& (Sts.opts.baseline != "dep"*/ || isProcessingGoal)
     	renameVariables(e)
     else e
   }

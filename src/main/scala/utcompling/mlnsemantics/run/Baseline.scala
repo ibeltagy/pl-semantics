@@ -40,10 +40,21 @@ import libsvm.svm
 import libsvm.svm_model
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerPred
 import scala.collection.mutable.Queue
+import util.Word2Vec
+import scala.collection.mutable.ListBuffer
 
 object Baseline
 {
-	def innerFeaturizer(featureString: Array[String], featureIndexShift:Int): List[Feature/*svm_node*/] =   //SVM
+	def simpleFeature(fValArg:Double): List[Feature/*svm_node*/] = 
+	{
+		var fVal = fValArg;
+		if (List(Double.NaN, Double.NegativeInfinity, Double.PositiveInfinity).contains(fVal))
+			fVal = 0;
+		val f = new FeatureNode(featureIndexShift, fVal)
+		featureIndexShift = featureIndexShift + 1
+		return List(f);
+	}
+	def pathFeatures(featureString: Array[String]): List[Feature/*svm_node*/] =   //SVM
 	{
 		val f:List[Feature/*svm_node*/] = featureString  //SVM
 								.toSet[String]
@@ -75,10 +86,11 @@ object Baseline
 								})
 								.toList
 								.sortBy(_.index)  //SVM
+		featureIndexShift = featureIndexShift + 2*relNames.length
 		return f;
 	}
 
-	def featurize(lhsRels:Array[String], rhsRels:Array[String]):Array[Feature/*svm_node*/] =
+	/*def featurize(lhsRels:Array[String], rhsRels:Array[String]):Array[Feature/*svm_node*/] =
 	{
 		val conj = lhsRels.toSet.intersect(rhsRels.toSet).toArray;
 		val diff1 = lhsRels.toSet.diff(rhsRels.toSet).toArray;
@@ -90,22 +102,111 @@ object Baseline
 							++ innerFeaturizer(diff2, 1 + 8*relNames.length)
 							).toArray
 		f
-	}
+	}*/
+	var p = 0; //max 11
+	var l = 0; //max 30
+	var r = 0; //max 13
+	var featureIndexShift = -1;
+	//open nsubj$l2r NE:hx1001_first => open dep$r2l pioneer nsubj$l2r w-hotel nmod$l2r NE:@placeholder
+	def featurize(rule:String):Array[Feature/*svm_node*/] =
+	{
+		val splits = rule.split(" => ")
+		assert (splits.size == 2)
+		var lhsWords = splits(0).split(" ").zipWithIndex.filter(_._2 % 2 == 0).map(_._1);
+		val lhsRels = splits(0).split(" ").zipWithIndex.filter(_._2 % 2 == 1).map(_._1)
+		assert (lhsWords.length == (1+lhsRels.length))
+		lhsWords = lhsWords.flatMap(_.split("_"))
+		
+		var rhsWords = splits(1).split(" ").zipWithIndex.filter(_._2 % 2 == 0).map(_._1);
+		val rhsRels = splits(1).split(" ").zipWithIndex.filter(_._2 % 2 == 1).map(_._1)
+		assert (rhsWords.length == (1+rhsRels.length))
+		rhsWords = rhsWords.flatMap(_.split("_"))
+		val (pairs, remLhs, remRhs) = align(lhsWords, rhsWords);
+		p = Math.max(p, pairs.length)
+		l = Math.max(l, remLhs.length)
+		r = Math.max(r, remRhs.length)
+		//println (pairs.mkString(" *** "))
+		//println (remLhs.mkString(" *** "))
+		//println (remRhs.mkString(" *** "))
+		
+		featureIndexShift = 1;
+		(  simpleFeature(lhsRels.length)
+		++ simpleFeature(rhsRels.length)
+		++ simpleFeature(lhsRels.toSet.intersect(rhsRels.toSet).toList.length)
+		++ simpleFeature(lhsRels.toSet.diff(rhsRels.toSet).toList.length)
+		++ simpleFeature(rhsRels.toSet.diff(lhsRels.toSet).toList.length)
+		
+		++ simpleFeature(remLhs.length)
+		++ simpleFeature(remRhs.length)
+		
+		++ simpleFeature(remLhs.filter(_.startsWith("NE:")).length)
+		++ simpleFeature(remRhs.filter(_.startsWith("NE:")).length)
+		++ simpleFeature(remLhs.filterNot(_.startsWith("NE:")).length)
+		++ simpleFeature(remRhs.filterNot(_.startsWith("NE:")).length)
 
-			
+		++ simpleFeature(pairs.length)
+		++ simpleFeature((pairs.map(_._3) :+ 0.0).max)
+		++ simpleFeature((pairs.map(_._3) :+ 1.0).min)
+		++ simpleFeature(pairs.map(_._3).sum)
+		//++ simpleFeature(pairs.map(_._3).sum *1.0 / pairs.length)
+		++ pathFeatures(lhsRels) 
+		++ pathFeatures(rhsRels) 
+		++ pathFeatures(lhsRels.toSet.intersect(rhsRels.toSet).toArray)
+		++ pathFeatures(lhsRels.toSet.diff(rhsRels.toSet).toArray)
+		++ pathFeatures(rhsRels.toSet.diff(lhsRels.toSet).toArray)
+		).toArray
+	}
+	def align(lhs:Array[String], rhs:Array[String]):(List[(String, String, Double)], List[String], List[String]) = 
+	{
+		var lhsWords = ListBuffer() ++ lhs
+		var rhsWords = ListBuffer() ++ rhs
+		var continue = true;
+		var pairs:ListBuffer[(String, String, Double)] = ListBuffer();
+		while (continue)
+		{
+			continue = false ;
+			var maxPairIdx = (-1, -1);
+			var maxSim = -1.0;
+			lhsWords.indices.foreach(lhsIdx => {
+				rhsWords.indices.foreach(rhsIdx => {
+					var cosine = vectorSpace.getOrZero(lhsWords(lhsIdx)) cosine vectorSpace.getOrZero(rhsWords(rhsIdx))
+					if (lhsWords(lhsIdx) == rhsWords(rhsIdx) && rhsWords(rhsIdx).startsWith("NE:"))
+						cosine = 1.0;
+					if (cosine > 0.01 && cosine > maxSim)
+					{
+						maxSim = cosine
+						maxPairIdx = (lhsIdx, rhsIdx)
+					}
+				})
+			})
+			if (maxSim > 0)
+			{
+				continue = true; // a match found
+				pairs += ((lhsWords(maxPairIdx._1), rhsWords(maxPairIdx._2), maxSim))
+				lhsWords.remove(maxPairIdx._1)
+				rhsWords.remove(maxPairIdx._2)
+			}
+		}
+		return (pairs.toList, lhsWords.toList, rhsWords.toList);
+	}
+	
+	var vectorSpace:BowVectorSpace = null;
+
 	def main(args: Array[String]) 
 	{
 		println(args.mkString(", "))
-		Logger.getRootLogger.setLevel(Level.INFO)
-		assert(args.length == 3)
+		Logger.getRootLogger.setLevel(Level.OFF)
+		assert(args.length == 4)
 		val trainOrTest = args(0);
 		assert (List("train", "test").contains(trainOrTest));
 		val modelPath = args(1); //save a model or read a saved model
 		val inputFile = args(2); //could be training or testing file
+		val word2vecModelPath = args(3); //save a model or read a saved model
+		vectorSpace = BowVectorSpace(word2vecModelPath)
 		
 		val features:scala.collection.mutable.ListBuffer[Array[Feature/*svm_node*/]] = ListBuffer[Array[Feature/*svm_node*/]]()
 		val labels:scala.collection.mutable.ListBuffer[Double] = ListBuffer()
-		val rand = scala.util.Random
+
 		for (line <- Source.fromFile(inputFile).getLines) 
 		{
 			val splits = line.split (" - ");
@@ -114,13 +215,12 @@ object Baseline
 			var label = 0.0;
 			if (splits(0) == "pos")
 				label = 1.0;
-		
-			val f:Array[Feature/*svm_node*/] = featurize(splits(2).split(", "), splits(3).split(", "));
-			
-			
-			if (/*true*/label == 1.0 || rand.nextInt(8) == 0/*I keep only 1/7 of the negative training examples*/) //negative example
+
+			if (/*true*/label == 1.0 || rand.nextInt(8) == 0/*I only keep 1/7 of the negative training examples*/) //negative example
 			{
 				println(line)
+				val f:Array[Feature/*svm_node*/] = featurize(splits(1));
+				//val f:Array[Feature/*svm_node*/] = featurize(splits(2).split(", "), splits(3).split(", "));
 				println (f.map(x => x.getIndex() + "-" + x.getValue()).mkString(", "))
 				//println (f.map(x => x.index + "-" + x.value).mkString(", "))
 				features.append(f)
@@ -129,10 +229,10 @@ object Baseline
 		}
 		assert(features.length == labels.length)
 		println (features.length + " -- " + labels.length)
-		
+		println (" >>>> " + Baseline.p + ", " + Baseline.l + ", " + Baseline.r  )
 		val problem = new de.bwaldvogel.liblinear.Problem();
 		problem.l = features.length; //number of data points
-		problem.n = relNames.length * 10 + 1; //number of features
+		problem.n = featureIndexShift
 		problem.x = features.toArray //features
 		problem.y = labels.toArray // target values
 		
@@ -147,6 +247,7 @@ object Baseline
 		model.save(modelFile);
 		// load model or use it directly
 		model = Model.load(modelFile);
+		println(model.getFeatureWeights().toList.zipWithIndex.mkString("\n"))
 		/*
 		val problem = new svm_problem();
 		problem.l = features.length; //number of data points
@@ -262,6 +363,7 @@ object Baseline
 	var hypGraph:scalax.collection.mutable.Graph[String, LUnDiEdge] = null;
 	var textGraph:scalax.collection.mutable.Graph[String, LUnDiEdge] = null;
 	var model:Model = null;
+	val rand = scala.util.Random
 	/////
 }
 class Baseline (delegate: ProbabilisticTheoremProver[BoxerExpression])
@@ -287,6 +389,7 @@ class Baseline (delegate: ProbabilisticTheoremProver[BoxerExpression])
 		Baseline.entityPotentialMatchs = null
 		Baseline.hypGraph = null
 		Baseline.textGraph = null
+		Baseline.vectorSpace = Sts.vectorSpace
 		if (Sts.opts.baseline == "dep" || Sts.opts.graphRules > 0) //same data strcuctures will be used in GraphRules. 
 		{
 			initDS (assumptions.head.expression, goal);
@@ -333,9 +436,9 @@ class Baseline (delegate: ProbabilisticTheoremProver[BoxerExpression])
 	}
 	def initDS (text:BoxerExpression, goal:BoxerExpression) = 
 	{
-		Baseline.textPreds = text.getPredicates.groupBy(x => x.name + "#" + x.variable + "#" + x.pos).map(_._2.head)
+		Baseline.textPreds = text.getPredicates.groupBy(x => x.name + "#" + x.variable /*+ "#" + x.pos*/).map(_._2.head) 
 		Baseline.textRels = text.getRelations.groupBy(x => x.name + "#" + x.event + "#" + x.variable).map(_._2.head)
-		Baseline.hypPreds = goal.getPredicates.groupBy(x => x.name + "#" + x.variable + "#" + x.pos).map(_._2.head)
+		Baseline.hypPreds = goal.getPredicates.groupBy(x => x.name + "#" + x.variable /*+ "#" + x.pos*/).map(_._2.head)
 		Baseline.hypRels = goal.getRelations.groupBy(x => x.name + "#" + x.event + "#" + x.variable).map(_._2.head)
 
 		Baseline.textEntities = (Baseline.textPreds.map(_.variable.name) ++ Baseline.textRels.flatMap(r => List(r.variable.name, r.event.name))).toSet.toList
@@ -418,35 +521,46 @@ class Baseline (delegate: ProbabilisticTheoremProver[BoxerExpression])
 						val textSp = textGraph.get(textWord) shortestPathTo entityNode
 						if (!textSp.isEmpty)
 						{
-							var flag = "neg";
-							if (entityToEval == Sts.qaRightAnswer)
-								flag = "pos"
-									
-							val (score, path) = ruleScore (textSp.get, hypSp.get, flag);
+							val (score, path) = ruleScore (textSp.get, hypSp.get);
 							if (score > maxWordScore)
 							{
+								if (maxWordPath != "" && !Sts.opts.emTrainOnBest)
+									println ("neg - " + maxWordPath)
+
 								maxWordScore = score
 								maxWordPath = path
 							}
+							else if (!Sts.opts.emTrainOnBest)
+								println ("neg - " + path)
 						}
 					})
 				})
 				if (maxWordScore > 0)
-					println (maxWordPath)
+				{
+					var flag = "neg";
+					if (entityToEval == Sts.qaRightAnswer)
+						flag = "pos"
+					println (flag + " - "+ maxWordPath)
+				}
 				//LOG.trace(" >> " + Baseline.hypEntitiesMap(hypNode).map(_.name).mkString(", ") + " " + maxWordScore)
 				entityScore = entityScore + maxWordScore
 			}
 		})
 		return entityScore;
 	}
-	def ruleScore(textPath:Graph[String, LUnDiEdge]#Path, hypPath:Graph[String, LUnDiEdge]#Path, flag:String): (Double, String) = 
+	def ruleScore(textPath:Graph[String, LUnDiEdge]#Path, hypPath:Graph[String, LUnDiEdge]#Path): (Double, String) = 
 	{
 		val hypGraph = Baseline.hypGraph
 		val textGraph = Baseline.textGraph
 		val hypSp = hypPath.asInstanceOf[hypGraph.Path]
 		val textSp = textPath.asInstanceOf[textGraph.Path]
-
-		var prettyLhs = Baseline.textEntitiesMap( textSp.nodes.head.value).map(_.name).toList.sorted.mkString("_") //+ "(" + textSp.nodes.head.value + ") "
+		def reanonymize (w:String):String = 
+		{
+			if (Sts.qaEntities.contains(w))
+				"NE:" + Sts.qaEntities(w)
+			else w
+		}
+		var prettyLhs = Baseline.textEntitiesMap( textSp.nodes.head.value).map(w=>reanonymize(w.name)).toList.sorted.mkString("_") //+ "(" + textSp.nodes.head.value + ") "
 		var lhs = (textSp.edges.toList zip textSp.nodes.tail.toList)
 				.map(x => {
 					var dir = "";
@@ -455,13 +569,13 @@ class Baseline (delegate: ProbabilisticTheoremProver[BoxerExpression])
 					if (x._1.edge._2 == x._2)
 						dir = "l2r";
 					val s = x._1.label.asInstanceOf[BoxerRel].name	+ "$" + dir
-					prettyLhs = prettyLhs + " " + s + " " + Baseline.textEntitiesMap( x._2.value).map(_.name).toList.sorted.mkString("_") //+ "(" + x._2.value + ") "
+					prettyLhs = prettyLhs + " " + s + " " + Baseline.textEntitiesMap(x._2.value).map(w=>reanonymize(w.name)).toList.sorted.mkString("_") //+ "(" + x._2.value + ") "
 					s;
 				}).toList.sorted.mkString(", ")
 
 		if (textSp.edges.size == 0)
 			lhs = "null";
-		var prettyRhs = Baseline.hypEntitiesMap( hypSp.nodes.head.value).map(_.name).toList.sorted.mkString("_") // + "(" + hypSp.nodes.head.value + ") "
+		var prettyRhs = Baseline.hypEntitiesMap( hypSp.nodes.head.value).map(w=>reanonymize(w.name)).toList.sorted.mkString("_") // + "(" + hypSp.nodes.head.value + ") "
 		var rhs = (hypSp.edges.toList zip hypSp.nodes.tail.toList)
 				.map(x => {
 					var dir = "";
@@ -471,17 +585,22 @@ class Baseline (delegate: ProbabilisticTheoremProver[BoxerExpression])
 						dir = "l2r";
 					x._1.label.asInstanceOf[BoxerRel].name	+ "$" + dir
 					val s = x._1.label.asInstanceOf[BoxerRel].name	+ "$" + dir
-					prettyRhs = prettyRhs + " " + s + " " + Baseline.hypEntitiesMap( x._2.value).map(_.name).toList.sorted.mkString("_") // + "(" + x._2.value + ") "
+					prettyRhs = prettyRhs + " " + s + " " + Baseline.hypEntitiesMap(x._2.value).map(w=>reanonymize(w.name)).toList.sorted.mkString("_") // + "(" + x._2.value + ") "
 					s;
 				}).toList.sorted.mkString(", ")
  
 		if (hypSp.edges.size == 0)
 			rhs = "null";
-		var path = flag + " - " + prettyLhs + " => " + prettyRhs + " - " + lhs + " - " + rhs 
-		var score = 1.0/(1+Math.abs(textSp.weight - hypSp.weight));
+		var path = prettyLhs + " => " + prettyRhs + " - " + lhs + " - " + rhs 
+		var score:Double = if (Sts.opts.emRandInit)
+			Baseline.rand.nextDouble
+		else 
+			1.0/(1+Math.abs(textSp.weight - hypSp.weight));
+			
 		if (Baseline.model != null) //Get score from the trained model, not from distance
 		{
-			val f = Baseline.featurize(lhs.split(", "), rhs.split(", "));
+			//val f = Baseline.featurize(lhs.split(", "), rhs.split(", "));
+			val f = Baseline.featurize(prettyLhs + " => " + prettyRhs);
 			val dec_values = new Array[Double](Baseline.model.getNrClass());
 			val prediction:Double = Linear.predictProbability(Baseline.model, f, dec_values);
 			//println(dec_values)
@@ -532,10 +651,7 @@ class Baseline (delegate: ProbabilisticTheoremProver[BoxerExpression])
 						val textSp = textGraph.get(textFrom) shortestPathTo textGraph.get(textTo)
 						if (textSp.isDefined)
 						{
-							var flag = "neg";
-							if (entityToEval == Sts.qaRightAnswer)
-								flag = "pos"
-							val (score, path) = ruleScore (textSp.get, hypSp.get, flag);
+							val (score, path) = ruleScore (textSp.get, hypSp.get);
 							
 							if (score > bestRuleScore)
 							{

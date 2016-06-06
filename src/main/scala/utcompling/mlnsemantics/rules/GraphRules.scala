@@ -170,7 +170,8 @@ class GraphRules {
 					val ruleLhsDrs = Rules.boxerAtomsToBoxerDrs(ruleLhs.toSet);
 					val ruleRhsDrs = Rules.boxerAtomsToBoxerDrs(ruleRhs.toSet);
 					var rw = 1.0/(1+spLhs.get.weight) //rule weight based on rule length
-					rw = ruleWeighter.weightForRules(lhsText, List(), Seq((rhsText, List())).toMap, vectorspace).head._2.get; //rule weight based on dist sim
+					if (vectorspace.numDims > 0) // a vectorspace is provided
+						rw = ruleWeighter.weightForRules(lhsText, List(), Seq((rhsText, List())).toMap, vectorspace).head._2.get; //rule weight based on dist sim
 					println ("GraphRule ("+spLhs.get.weight +  ", " + rw + ") " + lhsText + " -> " + rhsText);
 					
 					//(ruleRhs + " <<< " + ruleLhs)
