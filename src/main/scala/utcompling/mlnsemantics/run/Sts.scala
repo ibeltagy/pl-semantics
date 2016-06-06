@@ -311,7 +311,6 @@ object Sts {
           			f.write(line + "\n")
           	}
 	      }*/
-	      Sts.vectorSpace = BowVectorSpace(opts.vectorSpace /* "resources/prob/prob.vs"*/)
 	      // Index distributional phrases into Lucene repository
 	      luceneDistPhrases = new Lucene(opts.phrasesFile )
 	      // Index paraphrase rules into Lucene repository
@@ -325,12 +324,12 @@ object Sts {
 	      println(Sts.text)
 	      println(Sts.hypothesis)
 	      val boxPair = boxes.map(x => Option(x.get.toString()));
-          val result = runOnePair(boxPair, Sts.vectorSpace, depParser);
+          val result = runOnePair(boxPair, depParser);
           println(result)
           resultOnePair = result;
  	}
     
-    def runOnePair(boxPair:List[Option[String]], vectorSpace:BowVectorSpace, depParser:DepParser):Seq[Double] = {
+    def runOnePair(boxPair:List[Option[String]], depParser:DepParser):Seq[Double] = {
 
 			val compositeVectorMaker = opts.compositeVectorMaker match {
 				case "mul" => MultiplicationCompositeVectorMaker();
@@ -347,7 +346,9 @@ object Sts {
 				case "none" => new NoneTheoremProver()
 				case "mln" => new MLNTheoremProver()
 				case "ss" => new SampleSearchTheoremProver()
-			}		
+			}
+			if (Sts.vectorSpace == null) //if vector space not initialized
+				Sts.vectorSpace = BowVectorSpace(opts.vectorSpace) //create one
 			 
           val ttp =
             new TextualTheoremProver( // 1<==
@@ -394,8 +395,6 @@ object Sts {
     def run(stsFile: String, boxFile: String, lemFile: String, vsFile: String, goldSimFile: String, outputSimFile: String, allLemmas: String => Boolean, includedPairs: Int => Boolean) {
     	val pairs = readLines(stsFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
 		//val lemPairs = readLines(lemFile).map(_.split("\t")).map { case Array(a, b) => (a, b) }
-        Sts.vectorSpace = BowVectorSpace(vsFile)
-
 
 		val boxPairs =
 		FileUtils.readLines(boxFile)
@@ -435,7 +434,7 @@ object Sts {
 			println(Sts.text)
 			println(Sts.hypothesis)
 			
-			val p = runOnePair(boxPair, Sts.vectorSpace, depParser)
+			val p = runOnePair(boxPair, depParser)
 			println("Some(%s) [actual: %s, gold: %s]".format(p.mkString(":"), p.map(probOfEnt2simScore).map("%1.1f".format(_)).mkString(":"), goldSim))
 			i -> (p.map(probOfEnt2simScore), goldSim)
 	    }
