@@ -105,4 +105,7 @@ class WordnetImpl(dict: IDictionary) extends Wordnet {
       case _ => Nil
     }
 
+  def synsets(word: String): List[ISynset] =
+  	(synsets(word, POS.ADJECTIVE) ++ synsets(word, POS.ADVERB) ++ synsets(word, POS.NOUN) ++ synsets(word, POS.VERB)).toSet.toList 
+
 }

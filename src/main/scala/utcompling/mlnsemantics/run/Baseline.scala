@@ -42,18 +42,64 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerPred
 import scala.collection.mutable.Queue
 import util.Word2Vec
 import scala.collection.mutable.ListBuffer
+import utcompling.mlnsemantics.wordnet.Wordnet
+import utcompling.mlnsemantics.wordnet.WordnetImpl
 
 object Baseline
 {
-	def simpleFeature(fValArg:Double): List[Feature/*svm_node*/] = 
+	def simpleFeature(fVal:Double): List[Feature/*svm_node*/] = 
 	{
-		var fVal = fValArg;
-		if (List(Double.NaN, Double.NegativeInfinity, Double.PositiveInfinity).contains(fVal))
-			fVal = 0;
 		val f = new FeatureNode(featureIndexShift, fVal)
 		featureIndexShift = featureIndexShift + 1
+		val zeroVals = List(/*Double.NaN,*/Double.NegativeInfinity, Double.PositiveInfinity, 0, -0);
+		if (zeroVals.contains(fVal) || java.lang.Double.isNaN(fVal))
+			return List()
 		return List(f);
 	}
+	def phraseFeatures (feat: List[List[Double]], pairFeatFun:(String, String) =>List[Double], op:List[Double] => Double) : List[Feature] = 
+	{
+		val doubles = 
+		{
+			if (feat.length == 0)
+				pairFeatFun("", "").map( v => Double.NaN) //dummy input just to know the length of the feature vector 
+														//to advance the feature index accordingly
+														//the function simpleFeature will discard the NaN anyway 
+			else
+			{
+				val y = feat.transpose
+				val z = y.map(op)
+				z
+			}
+		}
+		return doubles.flatMap(simpleFeature)
+	}
+	def wordformFeatures(w1: String, w2:String): List[Double] =
+	{
+		val f = ListBuffer[Double]()
+		if (w1 == w2)
+			f += 1.0
+		else f+= 0.0
+		
+		//TODO: POS and singular/plural features 
+		return f.toList
+	}
+
+	def wordnetFeatures(w1: String, w2:String): List[Double] =
+	{
+		val f = ListBuffer[Double]()
+		val w1Synset = if (w1 == "") List() else wordnet.synsets(w1)
+		val w2Synset = if (w2 == "") List() else wordnet.synsets(w2)
+		if (w1Synset.length == 0) f += 1 else f += 0 //OOV
+		if (w2Synset.length == 0) f += 1 else f += 0 //OOV
+		if (!(w1Synset.map(wordnet.allHypernyms) intersect w2Synset).isEmpty) f += 1 else f += 0 //hypernym
+		if (!(w2Synset.map(wordnet.allHypernyms) intersect w1Synset).isEmpty) f += 1 else f += 0 //hyponym
+		if (!(w1Synset intersect w2Synset).isEmpty) f += 1 else f += 0 //same synset
+		if (!(w1Synset.map(wordnet.antonyms) intersect w2Synset).isEmpty) f += 1 else f += 0 //antonyms
+	
+		//TODO: POS and singular/plural features 
+		return f.toList
+	}
+	
 	def pathFeatures(featureString: Array[String]): List[Feature/*svm_node*/] =   //SVM
 	{
 		val f:List[Feature/*svm_node*/] = featureString  //SVM
@@ -81,7 +127,6 @@ object Baseline
 									val n = new svm_node ();
 									n.index = id + featureIndexShift + directionShift;
 									n.value = 1.0;
-									n;
 									new FeatureNode(n.index, n.value)
 								})
 								.toList
@@ -125,16 +170,47 @@ object Baseline
 		p = Math.max(p, pairs.length)
 		l = Math.max(l, remLhs.length)
 		r = Math.max(r, remRhs.length)
-		//println (pairs.mkString(" *** "))
-		//println (remLhs.mkString(" *** "))
-		//println (remRhs.mkString(" *** "))
+		println (pairs.mkString(" *** "))
+		println (remLhs.mkString(" *** "))
+		println (remRhs.mkString(" *** "))
+		
+		//println (remRhs.mkString("\n"))
+		//if (remRhs.contains("") || remRhs.contains(" "))
+		//	println("empty str")
+		def max(a:List[Double]) : Double = 
+			a.max
+		def min(a:List[Double]) : Double = 
+			a.min
+		def avg(a:List[Double]) : Double =
+		{
+			if (a.length == 0)
+				return 0
+			else return a.sum*1.0/a.length
+		}
+		val wordformFeat = pairs.map(p=>wordformFeatures(p._1, p._2));
+		val wordnetFeat = pairs.map(p=>wordnetFeatures(p._1, p._2));
 		
 		featureIndexShift = 1;
 		(  simpleFeature(lhsRels.length)
 		++ simpleFeature(rhsRels.length)
+
+		++ phraseFeatures (wordformFeat, wordformFeatures, max)
+		++ phraseFeatures (wordformFeat, wordformFeatures, min)
+		++ phraseFeatures (wordformFeat, wordformFeatures, avg)
+		
+		++ phraseFeatures (wordnetFeat, wordnetFeatures, max)
+		++ phraseFeatures (wordnetFeat, wordnetFeatures, min)
+		++ phraseFeatures (wordnetFeat, wordnetFeatures, avg)
+
+		
+
 		++ simpleFeature(lhsRels.toSet.intersect(rhsRels.toSet).toList.length)
 		++ simpleFeature(lhsRels.toSet.diff(rhsRels.toSet).toList.length)
 		++ simpleFeature(rhsRels.toSet.diff(lhsRels.toSet).toList.length)
+		
+		++ simpleFeature(lhsWords.length)
+		++ simpleFeature(rhsWords.length)
+		++ simpleFeature(lhsWords.length - rhsWords.length)
 		
 		++ simpleFeature(remLhs.length)
 		++ simpleFeature(remRhs.length)
@@ -145,15 +221,23 @@ object Baseline
 		++ simpleFeature(remRhs.filterNot(_.startsWith("NE:")).length)
 
 		++ simpleFeature(pairs.length)
+
+		++ simpleFeature(pairs.length*2*100.0/(lhsWords.length+rhsWords.length))
+		
+		++ simpleFeature(pairs.length*100.0/lhsWords.length)
+		++ simpleFeature(pairs.length*100.0/rhsWords.length)
+		
 		++ simpleFeature((pairs.map(_._3) :+ 0.0).max)
 		++ simpleFeature((pairs.map(_._3) :+ 1.0).min)
 		++ simpleFeature(pairs.map(_._3).sum)
-		//++ simpleFeature(pairs.map(_._3).sum *1.0 / pairs.length)
+		++ simpleFeature(pairs.map(_._3).sum *1.0 / pairs.length)
+
 		++ pathFeatures(lhsRels) 
 		++ pathFeatures(rhsRels) 
 		++ pathFeatures(lhsRels.toSet.intersect(rhsRels.toSet).toArray)
 		++ pathFeatures(lhsRels.toSet.diff(rhsRels.toSet).toArray)
 		++ pathFeatures(rhsRels.toSet.diff(lhsRels.toSet).toArray)
+
 		).toArray
 	}
 	def align(lhs:Array[String], rhs:Array[String]):(List[(String, String, Double)], List[String], List[String]) = 
@@ -194,6 +278,11 @@ object Baseline
 
 	def main(args: Array[String]) 
 	{
+		//println(wordnetFeatures("", ""))
+		featureIndexShift = 1;
+		//println(simpleFeature(Double.NaN))
+		//println(simpleFeature(0*1.0/0))
+		//return 
 		println(args.mkString(", "))
 		Logger.getRootLogger.setLevel(Level.OFF)
 		assert(args.length == 4)
@@ -218,6 +307,7 @@ object Baseline
 
 			if (/*true*/label == 1.0 || rand.nextInt(8) == 0/*I only keep 1/7 of the negative training examples*/) //negative example
 			{
+				//
 				println(line)
 				val f:Array[Feature/*svm_node*/] = featurize(splits(1));
 				//val f:Array[Feature/*svm_node*/] = featurize(splits(2).split(", "), splits(3).split(", "));
@@ -280,6 +370,7 @@ object Baseline
 		(problem.x zip problem.y).foreach( t => { 
 			val prediction:Double = Linear.predict(model, t._1);
 			//val prediction:Double = svm.svm_predict(model, t._1);
+			println ("### " + prediction)
 			if (prediction == t._2)
 				correct = correct + 1;
 			if (prediction == t._2 && prediction == 1.0)
@@ -364,6 +455,7 @@ object Baseline
 	var textGraph:scalax.collection.mutable.Graph[String, LUnDiEdge] = null;
 	var model:Model = null;
 	val rand = scala.util.Random
+	val wordnet:WordnetImpl = new WordnetImpl();
 	/////
 }
 class Baseline (delegate: ProbabilisticTheoremProver[BoxerExpression])
