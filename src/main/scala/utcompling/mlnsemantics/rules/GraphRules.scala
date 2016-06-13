@@ -212,6 +212,19 @@ class GraphRules {
   	val placeholderNode = Baseline.hypGraph.get( Baseline.hypPreds.filter ( _.name == "@placeholder" ).head.variable.name )
 	val varsSorted  = Baseline.topologicalSort(placeholderNode).map(_.value);
 	LOG.trace("Topological sort of question entities: " + (varsSorted.mkString(", ")))
+	LOG.trace("Number of rules: " + cliques.size)
+	cliques.foreach(c => LOG.trace(c.varVal.mkString(", ")))
+	//collect then print all possible values of each variable
+	val varVals:collection.mutable.Map[String, collection.mutable.Set[String]] = collection.mutable.Map() ++ varsSorted.map(_->collection.mutable.Set[String]())
+	val cliquesIndexHash = cliques.zipWithIndex.toMap
+	cliquesIndexHash.keys.foreach(c =>  c.varVal.foreach(v => {
+		if (varVals.contains(v._1)) //all vars in cliques supposed to be in vars, but because some queries are 
+								//disconnected, and because topological sort keeps just connected nodes,
+								//it happens that some vars in varVals do not exist in vars. 
+			varVals(v._1).add(v._2)
+	}))
+	LOG.trace("\n" + varVals.mkString("\n"));
+	
 	//initializing the queue with all entities
 	Baseline.entityPotentialMatchs(placeholderNode.value).map(v => {
 		val tmp = new Array[String](varsSorted.length)//every possible assignment should have the same length as  varsSorted
@@ -227,7 +240,11 @@ class GraphRules {
 	while (!q.isEmpty)
 	{
 		val assignment = q.dequeue;
-		LOG.trace(cnt + " -- " + "%1.4f".format(assignment._2) + " -- " + assignment._3.length + " -- " + assignment._1.toList.mkString(", ")  )
+		LOG.trace(cnt + " -- " + "%1.4f".format(assignment._2)
+					  + " -- " + assignment._3.length
+					  + " -- " + assignment._1.toList.mkString(", ")
+					  + " -- " + assignment._3.map(c => cliquesIndexHash(c)).mkString(", ") )
+		
 		if (bestAssignmentW < assignment._2 )
 		{
 			bestAssignmentW = assignment._2;
@@ -240,8 +257,7 @@ class GraphRules {
 		//and this clique has not been applied before to this assignment
 		//it does not matter if the clique proposes new values for variables or not. In case the clique does not propose 
 		//new values, at least it will increase the score of the assignment
-
-		cliques.foreach(c => {
+		val proposedAssignments = cliques.flatMap(c => {
 			if (!assignment._3.contains(c)) //this clique has been applied to this assignment before. Do not use it again
 			{
 				var tmpAssignment:Array[String] = new Array[String](assignment._1.length)
@@ -261,9 +277,57 @@ class GraphRules {
 					}
 				})
 				if (compatible && attachementFound)
-					q.enqueue( (tmpAssignment, assignment._2 * Math.exp(c.weight), assignment._3 :+ c) )
+					Some( (tmpAssignment, assignment._2 * Math.exp(c.weight), assignment._3 :+ c) )
+				else None
 			}
-		})
+			else None
+		}).toList
+		//proposedAssignments.foreach(a => q.enqueue(a))
+		for (i <- 0 until proposedAssignments.size)
+		{
+			var enqueu = true //enqueu by defualt unless a better compatible assingment exist
+			//Check all other proposed assignments  
+			for (j <- i+1 until proposedAssignments.size)
+			{
+				//compare proposedAssignments(i), proposedAssignments(j)
+				//check if they are compatible or not
+				var compatible = true;
+				for (k <- 0 until proposedAssignments(i)._1.length)
+				{
+					if (proposedAssignments(i)._1(k) == proposedAssignments(j)._1(k)
+						|| proposedAssignments(i)._1(k) == null
+						|| proposedAssignments(j)._1(k) == null)
+						None //still compatible
+					else compatible = false
+				}
+				
+				if (compatible)
+				{
+					//check which assignment comes first, i or j
+					val ri = proposedAssignments(i)._3 diff proposedAssignments(j)._3 //the additional rule in i
+					val rj = proposedAssignments(j)._3 diff proposedAssignments(i)._3 //the additional rule in j
+					//ri and rj, each should be one Clique, the new clique added in this iteration
+					assert(ri.length == rj.length && ri.length == 1)
+					assert (ri.head != rj.head);
+					if (cliquesIndexHash(ri.head) > cliquesIndexHash(rj.head))
+					{
+						enqueu = false;
+						/*
+						println("DROP" + " -- " + "%1.4f".format(proposedAssignments(i)._2)
+										+ " -- " + proposedAssignments(i)._3.length
+										+ " -- " + proposedAssignments(i)._1.toList.mkString(", ")
+										+ " -- " + proposedAssignments(i)._3.map(c => cliquesIndexHash(c)).mkString(", ") )
+						println("BCSF" + " -- " + "%1.4f".format(proposedAssignments(j)._2)
+										+ " -- " + proposedAssignments(j)._3.length
+										+ " -- " + proposedAssignments(j)._1.toList.mkString(", ")
+										+ " -- " + proposedAssignments(j)._3.map(c => cliquesIndexHash(c)).mkString(", ") )
+						*/
+					}
+				}
+			}
+			if (enqueu)
+				q.enqueue(proposedAssignments(i))
+		}
 	}
 	val matchingEnt = Sts.qaEntities.filter(x => x._2 == "h" + bestEntity).toList
 	Sts.qaAnswer = matchingEnt.head._1

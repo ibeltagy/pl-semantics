@@ -542,7 +542,7 @@ object Baseline
 			// add currentVar to visited
 			visitedNodes += currentNode;
 			//find not visited neighbor nodes of currentNode
-			val nextNodes = currentNode.neighbors.diff(visitedNodes.toSet);
+			val nextNodes = currentNode.neighbors.diff(visitedNodes.toSet).diff(nodeQueue.toSet)
 			//enqueue nextNodes
 			nextNodes.foreach(nodeQueue.enqueue(_));
 		}
