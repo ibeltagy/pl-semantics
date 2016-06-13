@@ -39,6 +39,7 @@ import scala.math._
 import utcompling.mlnsemantics.run.Baseline
 import utcompling.mlnsemantics.inference.AwithCvecspaceWithSpellingSimilarityRuleWeighter
 import utcompling.mlnsemantics.inference.SimpleCompositeVectorMaker
+import scala.collection.mutable.PriorityQueue
 
 object GraphRules {
   
@@ -85,8 +86,13 @@ object GraphRules {
 		*                           // Long = 6
 		*/
   }
+  val newEntity:String = "N";
 }
 
+class Clique (val rule:String, val weight: Double, val varVal:List[(String, String)] /*List(MRF variable, possible value)*/)
+{
+	override def toString(): String = rule;
+}
 class GraphRules {
   private val LOG = LogFactory.getLog(classOf[GraphRules])
   
@@ -110,6 +116,7 @@ class GraphRules {
 	{ 
 	*/
   	val rules:ListBuffer[(BoxerDrs, BoxerDrs, Double, RuleType.Value)] = ListBuffer();
+  	val cliques:ListBuffer[Clique] = ListBuffer();
 	//Rules for all edges in hypothesis
   	val hypGraph = Baseline.hypGraph 
   	val textGraph = Baseline.textGraph
@@ -148,40 +155,126 @@ class GraphRules {
 					val ruleLhs:List[BoxerExpression] = lhsPred.asInstanceOf[List[BoxerExpression]] ++ lhsRel.asInstanceOf[List[BoxerExpression]]
 					val spRhs = hypGraph.get(rhsFromEntity) shortestPathTo hypGraph.get(rhsToEntity)
 					val rhsPred = spRhs.get.nodes.flatMap(Baseline.hypEntitiesMap(_)).toList
+					val rhsVars = spRhs.get.nodes.map(_.value).toList
 					val rhsText = rhsPred.sortBy(_.indices.apply(0).wordIndex).map(predToString).mkString(" ");
 					val rhsRel = spRhs.get.edges.map(_.label).toList
 					
 					var ruleRhs:List[BoxerExpression] = rhsPred.asInstanceOf[List[BoxerExpression]] ++ rhsRel.asInstanceOf[List[BoxerExpression]]
-					def changeRhsVar (v:BoxerVariable) : BoxerVariable = 
+					def changeRhsVar (v:String) : String = 
 					{
-						if (v.name == rhsFromEntity)
-							return BoxerVariable(textFrom)
-						else if (v.name == rhsToEntity)
-							return BoxerVariable(textTo)
-						else throw new RuntimeException("Variable not found " + v);
+						if (v == rhsFromEntity)
+							return textFrom
+						else if (v == rhsToEntity)
+							return textTo
+						else return GraphRules.newEntity //new entity that does not exist in the text 
 					}
 					ruleRhs = ruleRhs.map(
 					{
 						case BoxerPred(discId, indices, variable, name, pos, sense) => 
-							BoxerPred(discId, indices, changeRhsVar(variable), name, pos, sense)
+							BoxerPred(discId, indices, BoxerVariable(changeRhsVar(variable.name)), name, pos, sense)
 						case BoxerRel(discId, indices, event, variable, name, sense) => 
-							BoxerRel(discId, indices, changeRhsVar(event), changeRhsVar(variable), name, sense)
+							BoxerRel(discId, indices, BoxerVariable(changeRhsVar(event.name)), BoxerVariable(changeRhsVar(variable.name)), name, sense)
 					})
 					val ruleLhsDrs = Rules.boxerAtomsToBoxerDrs(ruleLhs.toSet);
 					val ruleRhsDrs = Rules.boxerAtomsToBoxerDrs(ruleRhs.toSet);
-					var rw = 1.0/(1+spLhs.get.weight) //rule weight based on rule length
-					if (vectorspace.numDims > 0) // a vectorspace is provided
-						rw = ruleWeighter.weightForRules(lhsText, List(), Seq((rhsText, List())).toMap, vectorspace).head._2.get; //rule weight based on dist sim
-					println ("GraphRule ("+spLhs.get.weight +  ", " + rw + ") " + lhsText + " -> " + rhsText);
-					
+					var (rw, path) = Baseline.ruleScore (spLhs.get, spRhs.get);
+					val rhsVarsVals = rhsVars.map(v => (v, changeRhsVar(v)))//List((hypGraphNode, possible value))
+					//println (rw + " -- " + rhsVarsVals)
+					cliques += new Clique(path, rw, rhsVarsVals)
+					//if (vectorspace.numDims > 0) // a vectorspace is provided
+					//	rw = ruleWeighter.weightForRules(lhsText, List(), Seq((rhsText, List())).toMap, vectorspace).head._2.get; //rule weight based on dist sim
+					//println ("GraphRule ("+spLhs.get.weight +  ", " + rw + ") " + lhsText + " -> " + rhsText);
 					//(ruleRhs + " <<< " + ruleLhs)
 					rules +=( (ruleLhsDrs, ruleRhsDrs, rw, RuleType.Implication) )
 				}
 			}
 		}
 	})
+	if (Sts.opts.baseline == "search")
+		mapInfer(cliques.toSet);
 
-  	return rules.toList;
+	return rules.toList;
+  }
+
+  val beamSize = 100;
+  
+  def mapInfer(cliques:Set[Clique]) = 
+  {
+	
+  	implicit def ordering[A <: (Array[String], Double, List[Clique])]: Ordering[A] = new Ordering[A]
+	{
+		override def compare(x: A, y: A): Int = {
+			x._2.compareTo(y._2)
+		}
+	}
+	val q:PriorityQueue[(Array[String], Double, List[Clique])] = PriorityQueue[(Array[String], Double, List[Clique])]();
+	
+  	val placeholderNode = Baseline.hypGraph.get( Baseline.hypPreds.filter ( _.name == "@placeholder" ).head.variable.name )
+	val varsSorted  = Baseline.topologicalSort(placeholderNode).map(_.value);
+	LOG.trace("Topological sort of question entities: " + (varsSorted.mkString(", ")))
+	//initializing the queue with all entities
+	Baseline.entityPotentialMatchs(placeholderNode.value).map(v => {
+		val tmp = new Array[String](varsSorted.length)//every possible assignment should have the same length as  varsSorted
+		tmp(0) = v //set a value for the first variable in the assingment
+		tmp
+	}).foreach(assignment => q+= ((assignment, 1.0, List())))
+
+	var cnt = 0
+	var bestAssignmentW = 0.0;
+	var bestAssignmentCliques = List[Clique]();
+	var bestEntity = "";
+
+	while (!q.isEmpty)
+	{
+		val assignment = q.dequeue;
+		LOG.trace(cnt + " -- " + "%1.4f".format(assignment._2) + " -- " + assignment._3.length + " -- " + assignment._1.toList.mkString(", ")  )
+		if (bestAssignmentW < assignment._2 )
+		{
+			bestAssignmentW = assignment._2;
+			bestAssignmentCliques = assignment._3
+			bestEntity = assignment._1.head
+		}
+		cnt = cnt + 1;
+		
+		//try to apply all cliques. A clique is applicable if it is connected to at least one value in the assignment
+		//and this clique has not been applied before to this assignment
+		//it does not matter if the clique proposes new values for variables or not. In case the clique does not propose 
+		//new values, at least it will increase the score of the assignment
+
+		cliques.foreach(c => {
+			if (!assignment._3.contains(c)) //this clique has been applied to this assignment before. Do not use it again
+			{
+				var tmpAssignment:Array[String] = new Array[String](assignment._1.length)
+				Array.copy(assignment._1, 0, tmpAssignment, 0, assignment._1.length);
+				var compatible = true;
+				var attachementFound = false;
+				c.varVal.foreach( varVal =>{ //for each variable-value pair in the clique
+					val varIndex = varsSorted.indexOf(varVal._1); //get index of variable in the assignment (a hashmap would be faster) 
+					if (varIndex > -1) // if the variable is not in varsSorted, do nothing. This happens of the hypGraph is not connected
+					{
+						if (tmpAssignment(varIndex) == null)
+							tmpAssignment(varIndex) = varVal._2  //add it to the tmp assignment
+						else if (tmpAssignment(varIndex) == varVal._2)
+							attachementFound = true  //at least one attachement point found
+						else
+							compatible = false;  //not compatible
+					}
+				})
+				if (compatible && attachementFound)
+					q.enqueue( (tmpAssignment, assignment._2 * Math.exp(c.weight), assignment._3 :+ c) )
+			}
+		})
+	}
+	val matchingEnt = Sts.qaEntities.filter(x => x._2 == "h" + bestEntity).toList
+	Sts.qaAnswer = matchingEnt.head._1
+	cliques.diff(bestAssignmentCliques.toSet).foreach(x => println ("neg - " + x.rule))
+	bestAssignmentCliques.foreach(x => println ("pos - " + x.rule))
+	//println ("Best rules:\n" + bestAssignmentCliques.mkString("\n"))
+	println ("Number of rules: " + cliques.size)
+	println ("Number of positive rules: " + bestAssignmentCliques.size)
+	println ("Number of steps: " + cnt)
+	println ("Best Weight: " + "%1.4f".format(bestAssignmentW));
+	println ("Best Entity: " + bestEntity + " = " + Sts.qaAnswer);
   }
 }
 

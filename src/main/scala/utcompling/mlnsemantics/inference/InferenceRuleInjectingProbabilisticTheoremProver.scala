@@ -193,7 +193,10 @@ class InferenceRuleInjectingProbabilisticTheoremProver(
 	val graphRules = if (Sts.opts.graphRules>0)
 	  new GraphRules().getRule(assumptions.head.expression, goal, ruleWeighter, vecspaceFactory);
 	else List()
-    
+	if (Sts.opts.baseline == "search")
+		//Inference is tree search performed in GraphRules and result is in Sts.qaAnswer
+		return Seq(-7.0)
+
 	var newConstants: Map[String, Set[String]] = constants;
 	def addConst(varName: String) =
 		newConstants += (varName.substring(0, 2) -> (newConstants.apply(varName.substring(0, 2)) + varName))

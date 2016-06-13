@@ -275,7 +275,6 @@ object Baseline
 	}
 	
 	var vectorSpace:BowVectorSpace = null;
-
 	def main(args: Array[String]) 
 	{
 		//println(wordnetFeatures("", ""))
@@ -292,10 +291,11 @@ object Baseline
 		val inputFile = args(2); //could be training or testing file
 		val word2vecModelPath = args(3); //save a model or read a saved model
 		vectorSpace = BowVectorSpace(word2vecModelPath)
+		var positiveCounter = 0;
 		
 		val features:scala.collection.mutable.ListBuffer[Array[Feature/*svm_node*/]] = ListBuffer[Array[Feature/*svm_node*/]]()
 		val labels:scala.collection.mutable.ListBuffer[Double] = ListBuffer()
-
+		val featureLabelMap:scala.collection.mutable.Map[String, (Int, Int)] = scala.collection.mutable.Map[String, (Int, Int)]();
 		for (line <- Source.fromFile(inputFile).getLines) 
 		{
 			val splits = line.split (" - ");
@@ -305,21 +305,32 @@ object Baseline
 			if (splits(0) == "pos")
 				label = 1.0;
 
-			if (/*true*/label == 1.0 || rand.nextInt(8) == 0/*I only keep 1/7 of the negative training examples*/) //negative example
+			if (/*true*/label == 1.0 || true/*rand.nextInt(8) == 0*//*I only keep 1/7 of the negative training examples*/) //negative example
 			{
 				//
 				println(line)
 				val f:Array[Feature/*svm_node*/] = featurize(splits(1));
 				//val f:Array[Feature/*svm_node*/] = featurize(splits(2).split(", "), splits(3).split(", "));
-				println (f.map(x => x.getIndex() + "-" + x.getValue()).mkString(", "))
+				val featString = f.map(x => x.getIndex() + "-" + "%1.4f".format(x.getValue())).mkString(", ")
+				var stat = featureLabelMap.getOrElse(featString, (0, 0));
+				if (label == 1.0)
+					stat = (stat._1+1, stat._2)
+				else if (label == 0.0)
+					stat = (stat._1, stat._2+1)
+				else throw new RuntimeException("Unexpected label: " + label)
+				featureLabelMap.put(featString, (stat._1, stat._2))
+				println ("F ("+label+"):" + featString)
 				//println (f.map(x => x.index + "-" + x.value).mkString(", "))
 				features.append(f)
 				labels.+=(label);
+				if (label == 1.0)
+					positiveCounter = positiveCounter + 1;
 			}
 		}
 		assert(features.length == labels.length)
 		println (features.length + " -- " + labels.length)
 		println (" >>>> " + Baseline.p + ", " + Baseline.l + ", " + Baseline.r  )
+		println(featureLabelMap.values.mkString("\n"))
 		val problem = new de.bwaldvogel.liblinear.Problem();
 		problem.l = features.length; //number of data points
 		problem.n = featureIndexShift
@@ -331,7 +342,7 @@ object Baseline
 		val eps:Double = 0.0001; // stopping criteria
 		
 		val parameter:Parameter = new Parameter(solver, C, eps);
-		//parameter.setWeights(Array(6.3), Array(1))
+		parameter.setWeights(Array(1.0/positiveCounter, 1.0/(features.length - positiveCounter)), Array(1, 0))
 		var model:Model = Linear.train(problem, parameter);
 		val modelFile:File = new File(modelPath);
 		model.save(modelFile);
@@ -457,6 +468,87 @@ object Baseline
 	val rand = scala.util.Random
 	val wordnet:WordnetImpl = new WordnetImpl();
 	/////
+	def ruleScore(textPath:Graph[String, LUnDiEdge]#Path, hypPath:Graph[String, LUnDiEdge]#Path): (Double, String) = 
+	{
+		val hypGraph = Baseline.hypGraph
+		val textGraph = Baseline.textGraph
+		val hypSp = hypPath.asInstanceOf[hypGraph.Path]
+		val textSp = textPath.asInstanceOf[textGraph.Path]
+		def reanonymize (w:String):String = 
+		{
+			if (Sts.qaEntities.contains(w))
+				"NE:" + Sts.qaEntities(w)
+			else w
+		}
+		var prettyLhs = Baseline.textEntitiesMap( textSp.nodes.head.value).map(w=>reanonymize(w.name)).toList.sorted.mkString("_") //+ "(" + textSp.nodes.head.value + ") "
+		var lhs = (textSp.edges.toList zip textSp.nodes.tail.toList)
+				.map(x => {
+					var dir = "";
+					if (x._1.edge._1 == x._2)
+						dir = "r2l";
+					if (x._1.edge._2 == x._2)
+						dir = "l2r";
+					val s = x._1.label.asInstanceOf[BoxerRel].name	+ "$" + dir
+					prettyLhs = prettyLhs + " " + s + " " + Baseline.textEntitiesMap(x._2.value).map(w=>reanonymize(w.name)).toList.sorted.mkString("_") //+ "(" + x._2.value + ") "
+					s;
+				}).toList.sorted.mkString(", ")
+
+		if (textSp.edges.size == 0)
+			lhs = "null";
+		var prettyRhs = Baseline.hypEntitiesMap( hypSp.nodes.head.value).map(w=>reanonymize(w.name)).toList.sorted.mkString("_") // + "(" + hypSp.nodes.head.value + ") "
+		var rhs = (hypSp.edges.toList zip hypSp.nodes.tail.toList)
+				.map(x => {
+					var dir = "";
+					if (x._1.edge._1 == x._2)
+						dir = "r2l";
+					if (x._1.edge._2 == x._2)
+						dir = "l2r";
+					x._1.label.asInstanceOf[BoxerRel].name	+ "$" + dir
+					val s = x._1.label.asInstanceOf[BoxerRel].name	+ "$" + dir
+					prettyRhs = prettyRhs + " " + s + " " + Baseline.hypEntitiesMap(x._2.value).map(w=>reanonymize(w.name)).toList.sorted.mkString("_") // + "(" + x._2.value + ") "
+					s;
+				}).toList.sorted.mkString(", ")
+ 
+		if (hypSp.edges.size == 0)
+			rhs = "null";
+		var path = prettyLhs + " => " + prettyRhs + " - " + lhs + " - " + rhs 
+		var score:Double = if (Sts.opts.emRandInit)
+			Baseline.rand.nextDouble
+		else 
+			1.0/(1+Math.abs(textSp.weight - hypSp.weight));
+			
+		if (Baseline.model != null) //Get score from the trained model, not from distance
+		{
+			//val f = Baseline.featurize(lhs.split(", "), rhs.split(", "));
+			val f = Baseline.featurize(prettyLhs + " => " + prettyRhs);
+			val dec_values = new Array[Double](Baseline.model.getNrClass());
+			val prediction:Double = Linear.predictProbability(Baseline.model, f, dec_values);
+			//println(dec_values)
+			score = dec_values(1);
+		}
+		return (score, path)
+	}
+	//
+	//topological sort of entities of hypGraph starting from placeholderNode
+	def topologicalSort (placeholderNode:Graph[String, LUnDiEdge]#NodeT) : List[Graph[String, LUnDiEdge]#NodeT] =
+	{
+		val hypGraph = Baseline.hypGraph
+		val nodeQueue = new Queue[hypGraph.NodeT];
+		val visitedNodes = new ListBuffer[hypGraph.NodeT];
+		nodeQueue.enqueue(placeholderNode.asInstanceOf[hypGraph.NodeT]);
+		while (!nodeQueue.isEmpty)
+		{
+			val currentNode = nodeQueue.dequeue();
+			// add currentVar to visited
+			visitedNodes += currentNode;
+			//find not visited neighbor nodes of currentNode
+			val nextNodes = currentNode.neighbors.diff(visitedNodes.toSet);
+			//enqueue nextNodes
+			nextNodes.foreach(nodeQueue.enqueue(_));
+		}
+		return visitedNodes.toList.asInstanceOf[List[Graph[String, LUnDiEdge]#NodeT]];
+	}
+
 }
 class Baseline (delegate: ProbabilisticTheoremProver[BoxerExpression])
 	extends ProbabilisticTheoremProver[BoxerExpression] 
@@ -496,7 +588,7 @@ class Baseline (delegate: ProbabilisticTheoremProver[BoxerExpression])
 			val placeholderNode = Baseline.hypGraph.get( Baseline.hypPreds.filter ( _.name == "@placeholder" ).head.variable.name )
 			var hypEntitiesSorted:List[Graph[String, LUnDiEdge]#NodeT] = null;
 			if (Sts.opts.graphRules == 2)
-				hypEntitiesSorted = topologicalSort(placeholderNode)
+				hypEntitiesSorted = Baseline.topologicalSort(placeholderNode)
 			
 			Sts.qaEntities/*.filter ( e => e._2 != "" && e._1 != "@placeholder" )*/.foreach(ent=>
 			{
@@ -613,7 +705,7 @@ class Baseline (delegate: ProbabilisticTheoremProver[BoxerExpression])
 						val textSp = textGraph.get(textWord) shortestPathTo entityNode
 						if (!textSp.isEmpty)
 						{
-							val (score, path) = ruleScore (textSp.get, hypSp.get);
+							val (score, path) = Baseline.ruleScore (textSp.get, hypSp.get);
 							if (score > maxWordScore)
 							{
 								if (maxWordPath != "" && !Sts.opts.emTrainOnBest)
@@ -640,66 +732,7 @@ class Baseline (delegate: ProbabilisticTheoremProver[BoxerExpression])
 		})
 		return entityScore;
 	}
-	def ruleScore(textPath:Graph[String, LUnDiEdge]#Path, hypPath:Graph[String, LUnDiEdge]#Path): (Double, String) = 
-	{
-		val hypGraph = Baseline.hypGraph
-		val textGraph = Baseline.textGraph
-		val hypSp = hypPath.asInstanceOf[hypGraph.Path]
-		val textSp = textPath.asInstanceOf[textGraph.Path]
-		def reanonymize (w:String):String = 
-		{
-			if (Sts.qaEntities.contains(w))
-				"NE:" + Sts.qaEntities(w)
-			else w
-		}
-		var prettyLhs = Baseline.textEntitiesMap( textSp.nodes.head.value).map(w=>reanonymize(w.name)).toList.sorted.mkString("_") //+ "(" + textSp.nodes.head.value + ") "
-		var lhs = (textSp.edges.toList zip textSp.nodes.tail.toList)
-				.map(x => {
-					var dir = "";
-					if (x._1.edge._1 == x._2)
-						dir = "r2l";
-					if (x._1.edge._2 == x._2)
-						dir = "l2r";
-					val s = x._1.label.asInstanceOf[BoxerRel].name	+ "$" + dir
-					prettyLhs = prettyLhs + " " + s + " " + Baseline.textEntitiesMap(x._2.value).map(w=>reanonymize(w.name)).toList.sorted.mkString("_") //+ "(" + x._2.value + ") "
-					s;
-				}).toList.sorted.mkString(", ")
-
-		if (textSp.edges.size == 0)
-			lhs = "null";
-		var prettyRhs = Baseline.hypEntitiesMap( hypSp.nodes.head.value).map(w=>reanonymize(w.name)).toList.sorted.mkString("_") // + "(" + hypSp.nodes.head.value + ") "
-		var rhs = (hypSp.edges.toList zip hypSp.nodes.tail.toList)
-				.map(x => {
-					var dir = "";
-					if (x._1.edge._1 == x._2)
-						dir = "r2l";
-					if (x._1.edge._2 == x._2)
-						dir = "l2r";
-					x._1.label.asInstanceOf[BoxerRel].name	+ "$" + dir
-					val s = x._1.label.asInstanceOf[BoxerRel].name	+ "$" + dir
-					prettyRhs = prettyRhs + " " + s + " " + Baseline.hypEntitiesMap(x._2.value).map(w=>reanonymize(w.name)).toList.sorted.mkString("_") // + "(" + x._2.value + ") "
-					s;
-				}).toList.sorted.mkString(", ")
- 
-		if (hypSp.edges.size == 0)
-			rhs = "null";
-		var path = prettyLhs + " => " + prettyRhs + " - " + lhs + " - " + rhs 
-		var score:Double = if (Sts.opts.emRandInit)
-			Baseline.rand.nextDouble
-		else 
-			1.0/(1+Math.abs(textSp.weight - hypSp.weight));
-			
-		if (Baseline.model != null) //Get score from the trained model, not from distance
-		{
-			//val f = Baseline.featurize(lhs.split(", "), rhs.split(", "));
-			val f = Baseline.featurize(prettyLhs + " => " + prettyRhs);
-			val dec_values = new Array[Double](Baseline.model.getNrClass());
-			val prediction:Double = Linear.predictProbability(Baseline.model, f, dec_values);
-			//println(dec_values)
-			score = dec_values(1);
-		}
-		return (score, path)
-	}
+	
 	
 	def entityScoreLevel2 (entityToEval:String, hypEntitiesSortedInput:List[Graph[String, LUnDiEdge]#NodeT]) : Double =  
 	{
@@ -743,7 +776,7 @@ class Baseline (delegate: ProbabilisticTheoremProver[BoxerExpression])
 						val textSp = textGraph.get(textFrom) shortestPathTo textGraph.get(textTo)
 						if (textSp.isDefined)
 						{
-							val (score, path) = ruleScore (textSp.get, hypSp.get);
+							val (score, path) = Baseline.ruleScore (textSp.get, hypSp.get);
 							
 							if (score > bestRuleScore)
 							{
@@ -771,26 +804,5 @@ class Baseline (delegate: ProbabilisticTheoremProver[BoxerExpression])
 		return sumRulesScores;
 	}
 	val rulesSet:scala.collection.mutable.Set[String] = scala.collection.mutable.Set();
-
-	//topological sort of entities of hypGraph starting from placeholderNode
-	def topologicalSort (placeholderNode:Graph[String, LUnDiEdge]#NodeT) : List[Graph[String, LUnDiEdge]#NodeT] =
-	{
-		val hypGraph = Baseline.hypGraph
-		val nodeQueue = new Queue[hypGraph.NodeT];
-		val visitedNodes = new ListBuffer[hypGraph.NodeT];
-		nodeQueue.enqueue(placeholderNode.asInstanceOf[hypGraph.NodeT]);
-		while (!nodeQueue.isEmpty)
-		{
-			val currentNode = nodeQueue.dequeue();
-			// add currentVar to visited
-			visitedNodes += currentNode;
-			//find not visited neighbor nodes of currentNode
-			val nextNodes = currentNode.neighbors.diff(visitedNodes.toSet);
-			//enqueue nextNodes
-			nextNodes.foreach(nodeQueue.enqueue(_));
-		}
-		return visitedNodes.toList.asInstanceOf[List[Graph[String, LUnDiEdge]#NodeT]];
-	}
-
 
 }

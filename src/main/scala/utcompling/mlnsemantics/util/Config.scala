@@ -599,6 +599,7 @@ class Config(opts: Map[String, String] = Map()) {
      case Some("word") => "word";
      case Some("dep") => "dep";
      case Some("full") => "full";
+     case Some("search") => "search";
      case None => "full"
   }
   //Rule classifier trained model 
