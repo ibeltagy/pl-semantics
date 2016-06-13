@@ -544,7 +544,7 @@ object Baseline
 			//find not visited neighbor nodes of currentNode
 			val nextNodes = currentNode.neighbors.diff(visitedNodes.toSet).diff(nodeQueue.toSet)
 			//enqueue nextNodes
-			nextNodes.foreach(nodeQueue.enqueue(_));
+			nextNodes.toList.sortBy(_.value).foreach(nodeQueue.enqueue(_));
 		}
 		return visitedNodes.toList.asInstanceOf[List[Graph[String, LUnDiEdge]#NodeT]];
 	}
