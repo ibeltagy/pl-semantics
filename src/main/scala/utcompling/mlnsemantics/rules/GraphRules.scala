@@ -93,6 +93,10 @@ class Clique (val rule:String, val weight: Double, val varVal:List[(String, Stri
 {
 	override def toString(): String = rule;
 }
+class Assignment (val vals:Array[String], val weight: Double, val cliques:List[(Clique)])
+{
+	override def toString(): String = vals.toList.mkString(", ");
+}
 class GraphRules {
   private val LOG = LogFactory.getLog(classOf[GraphRules])
   
@@ -199,13 +203,13 @@ class GraphRules {
   def mapInfer(cliquesSet:Set[Clique]) = 
   {
 	
-  	implicit def ordering[A <: (Array[String], Double, List[Clique])]: Ordering[A] = new Ordering[A]
+  	implicit def ordering[A <: Assignment]: Ordering[A] = new Ordering[A]
 	{
 		override def compare(x: A, y: A): Int = {
-			x._2.compareTo(y._2)
+			x.weight.compareTo(y.weight)
 		}
 	}
-	val q:PriorityQueue[(Array[String], Double, List[Clique])] = PriorityQueue[(Array[String], Double, List[Clique])]();
+	val q:PriorityQueue[Assignment] = PriorityQueue[Assignment]();
 	
   	val placeholderNode = Baseline.hypGraph.get( Baseline.hypPreds.filter ( _.name == "@placeholder" ).head.variable.name )
 	val varsSorted  = Baseline.topologicalSort(placeholderNode).map(_.value);
@@ -213,6 +217,7 @@ class GraphRules {
 	LOG.trace("Number of rules: " + cliquesSet.size)
 	//collect then print all possible values of each variable
 	val varVals:collection.mutable.Map[String, collection.mutable.Set[String]] = collection.mutable.Map() ++ varsSorted.map(_->collection.mutable.Set[String]())
+	cliquesSet.foreach(c => assert(c.varVal.length == 2))//all cliques should be of length 2
 	val cliquesList  = cliquesSet.toList.sortWith((a, b) => { //sort it for reproducibility of runs
 		if (a.weight == b.weight)
 		{
@@ -236,9 +241,9 @@ class GraphRules {
 	//initializing the queue with all entities
 	Baseline.entityPotentialMatchs(placeholderNode.value).sorted /*sorted for reproducibility of runs*/.map(v => {
 		val tmp = new Array[String](varsSorted.length)//every possible assignment should have the same length as  varsSorted
-		tmp(0) = v //set a value for the first variable in the assingment
+		tmp(0) = v //set a value for the first variable in the assignment
 		tmp
-	}).foreach(assignment => q+= ((assignment, 1.0, List())))
+	}).foreach(assignment => q+= new Assignment(assignment, 1.0, List[Clique]()))
 
 	var cnt = 0
 	var bestAssignmentW = 0.0;
@@ -248,27 +253,68 @@ class GraphRules {
 	while (!q.isEmpty)
 	{
 		val assignment = q.dequeue;
-		LOG.trace(cnt + " -- " + "%1.4f".format(assignment._2)
-					  + " -- " + assignment._3.length
-					  + " -- " + assignment._1.toList.mkString(", ")
-					  + " -- " + assignment._3.map(c => cliquesIndexHash(c)).mkString(", ") )
+		LOG.trace(cnt + " -- " + "%1.4f".format(assignment.weight)
+					  + " -- " + assignment.cliques.length
+					  + " -- " + assignment.vals.toList.mkString(", ")
+					  + " -- " + assignment.cliques.map(c => cliquesIndexHash(c)).mkString(", ") )
 		
-		if (bestAssignmentW < assignment._2 )
+		//TODO: find all fillable leaves and fill them now because this local decision is globally 
+		//optimal. Do not wait to try them as proposed assignments. 
+
+		if (bestAssignmentW < assignment.weight )
 		{
-			bestAssignmentW = assignment._2;
-			bestAssignmentCliques = assignment._3
-			bestEntity = assignment._1.head
+			bestAssignmentW = assignment.weight;
+			bestAssignmentCliques = assignment.cliques
+			bestEntity = assignment.vals.head
 		}
 		cnt = cnt + 1;
 		
+		val proposedAssignments = cliquesList.flatMap(c => {
+			if (!assignment.cliques.contains(c)) //this clique has been applied to this assignment before. Do not use it again
+			{
+				var tmpAssignment:Array[String] = new Array[String](assignment.vals.length)
+				Array.copy(assignment.vals, 0, tmpAssignment, 0, assignment.vals.length);
+				var compatible = true;
+				var attachementFound = false;
+				var newVarIndex = -1
+				c.varVal.foreach( varVal =>{ //for each variable-value pair in the clique
+					val varIndex = varsSorted.indexOf(varVal._1); //get index of variable in the assignment (a hashmap would be faster) 
+					if (varIndex > -1) // if the variable is not in varsSorted, do nothing. This happens of the hypGraph is not connected
+					{
+						if (tmpAssignment(varIndex) == null)
+						{
+							tmpAssignment(varIndex) = varVal._2  //add it to the tmp assignment
+							//assert (newVarIndex == -1) //all cliques are of length 2 
+							newVarIndex = varIndex
+						}
+						else if (tmpAssignment(varIndex) == varVal._2)
+							attachementFound = true  //at least one attachment point found
+						else
+							compatible = false;  //not compatible
+					}
+				})
+				if (compatible && attachementFound)
+					Some( (new Assignment(tmpAssignment, assignment.weight * Math.exp(c.weight), assignment.cliques :+ c), newVarIndex) )
+				else None
+			}
+			else None
+		}).groupBy(_._2)  // group by the index of the new variable (or -1 if all variables already have values
+		.toList   //change it to a list 
+		.sortBy(_._1) //sort it by the index of the new variable
+		.headOption.getOrElse( (0, List[(Assignment, Int)]() )) //get the top or an empty list 
+		._2.unzip._1 //keep only the list of Assignments. Remove groupId, and remove newVarIndex. All of the assignments should be affecting the same variable 
+		
+		proposedAssignments.foreach(a => q.enqueue(a))
+
+		/*
 		//try to apply all cliques. A clique is applicable if it is connected to at least one value in the assignment
 		//and this clique has not been applied before to this assignment
 		//It does not matter if the clique proposes new values for variables or not. In case the clique does not propose 
 		//new values, at least it will increase the score of the assignment
 		
 		//ProposedAssingments are generated by **reverse** order of cliques. This is very important to avoid 
-		//generating the same combination of cliques more than once. 
-		val proposedAssignments = cliquesList.reverse.flatMap(c => {
+		//generating the same combination of cliques more than once.
+		val proposedAssignments = cliquesList.flatMap(c => {
 			if (!assignment._3.contains(c)) //this clique has been applied to this assignment before. Do not use it again
 			{
 				var tmpAssignment:Array[String] = new Array[String](assignment._1.length)
@@ -282,7 +328,7 @@ class GraphRules {
 						if (tmpAssignment(varIndex) == null)
 							tmpAssignment(varIndex) = varVal._2  //add it to the tmp assignment
 						else if (tmpAssignment(varIndex) == varVal._2)
-							attachementFound = true  //at least one attachement point found
+							attachementFound = true  //at least one attachment point found
 						else
 							compatible = false;  //not compatible
 					}
@@ -337,8 +383,9 @@ class GraphRules {
 				}
 			}
 			if (enqueu)
-				q.enqueue(proposedAssignments(i))
+				q.enqueue(proposedAssignments(i)) 
 		}
+		*/
 	}
 	val matchingEnt = Sts.qaEntities.filter(x => x._2 == "h" + bestEntity).toList
 	Sts.qaAnswer = matchingEnt.head._1
