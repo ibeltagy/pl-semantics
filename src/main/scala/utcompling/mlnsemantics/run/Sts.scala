@@ -55,7 +55,7 @@ object Sts {
   var pairIndex = 0;		//Pair index
   var qaRightAnswer = "";		//Correct answer for QA
   var qaAnswer = "";		//Answer for QA
-  var qaEntities = Map[String, String]();		//all entities in the QA pair
+  var qaEntities = Map[String, Set[String]]();		//all entities in the QA pair entityname->List(entity IDs)
   var luceneDistPhrases:Lucene = null;	// Lucene repository of precompiled distributional phrases 
   var luceneParaphrases:List[Lucene] = null;	// Lucene repository of precompiled paraphrases
   var vectorSpace:BowVectorSpace = null; //vectorspace
@@ -183,7 +183,7 @@ object Sts {
         	question = question.replace(" ", "|O ");
         	question = question.replace ("@placeholder|O", "@placeholder|I-PER")
          }
-         Sts.qaEntities = Map ( "@placeholder" -> "");
+         Sts.qaEntities = Map ( "@placeholder" -> Set());
          while(linesReader.hasNext)
          {
             val splits = linesReader.next().split(":");
@@ -192,7 +192,7 @@ object Sts {
             entityName = entityName.replace(" ", "-").toLowerCase();
             if (entityId == rightAnswer)
             	Sts.qaRightAnswer = entityName
-            Sts.qaEntities = Sts.qaEntities + (entityName -> "" )
+            Sts.qaEntities = Sts.qaEntities + (entityName -> Set() )
             if (opts.ner == "gs")
             {
             	entityId = entityId + "|O";

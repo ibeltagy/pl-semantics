@@ -116,7 +116,7 @@ class EditDRSTheoremProver(
           val pred = BoxerPred(discId, indices, newVar, name, pos, sense)
           val refs = List((List[BoxerIndex](), newVar)) ;
           val drs = BoxerDrs(refs, List(rel, pred));
-          Sts.qaEntities = Sts.qaEntities + ("@placeholder" -> ("h" + FindEventsProbabilisticTheoremProver.newName(newVar.name)))
+          Sts.qaEntities = Sts.qaEntities + ("@placeholder" -> Set( ("h" + FindEventsProbabilisticTheoremProver.newName(newVar.name))) )
           drs
         }else e
       }
@@ -126,51 +126,31 @@ class EditDRSTheoremProver(
   var entityVarMap: collection.mutable.Map[String, collection.mutable.ListBuffer[String]] =  collection.mutable.Map()
   def setNamedEntities(e:BoxerExpression):BoxerExpression = 
   {
-    entityVarMap.clear();
+	e.getPredicates.foreach(p => {
+		if(Sts.qaEntities.contains(p.name))
+			if(!isProcessingGoal || p.name == "@placeholder") //do not add entities from goal other than the placeholder entity
+				Sts.qaEntities = Sts.qaEntities + ( p.name -> Sts.qaEntities(p.name).+("h" + FindEventsProbabilisticTheoremProver.newName(p.variable.name)) )
+	})
+	
+	val exp = if (isProcessingGoal)
+	{
+		//make sure I have only one entity for the query. This should be the case by default, but mis-parses could result into multiple placeholders
+		renamePair.clear()
+		val placeholderEntities = Sts.qaEntities("@placeholder").toList
+		placeholderEntities.foreach(y => renamePair = renamePair + (y -> placeholderEntities.head))
+		Sts.qaEntities = Sts.qaEntities + ( "@placeholder" -> Set().+(placeholderEntities.head) )
+		renameVariables(e)
+	}
+	else
+		e
+	LOG.trace("Entities and variables: " +  Sts.qaEntities)
+	exp
+	
+	/*
+  	entityVarMap.clear();
     findCorefEntities(e)
     renamePair.clear()
-    //println("++++" + entityVarMap)
-    
-    /*   //TODO: parsing and entity detection is sooo messed up, but fixing this will take a lot of work 
-    val entityVarList = ListBuffer.empty ++ entityVarMap.toList
-    
-    var extraEntityCounter = 900; 
-    for( i <- 0 until entityVarList.length)
-    {
-    	var iVarList = entityVarList(i)._2
-	    for( j <- 0 until entityVarList.length)
-	    {
-	    	val jVarList = entityVarList(j)._2
-	    	if (i != j)
-	    	{
-	    		if (!(iVarList intersect jVarList).isEmpty)
-	    		{
-	    			if (iVarList.length >= jVarList.length)
-	    			{
-	    				iVarList = iVarList -- jVarList;
-	    				if (iVarList.isEmpty)
-	    				{
-	    					iVarList += ("x" + extraEntityCounter)
-	    					extraEntityCounter = extraEntityCounter + 1
-	    				}
-	    			}
-	    		}
-	    	}
-	    	
-	    }
-    	entityVarList(i) = (entityVarList(i)._1, iVarList);
-    }
-    
-    println(entityVarList)
-    
-    entityVarMap.foreach(first => {
-    	var listOfVars = first._2
-    	entityVarMap.foreach(second => {
-    		if (first != second)
-    			require ((first._2 intersect second._2).isEmpty, "The intersection of two entity variables is not empty: " + first.toString + " ---" + second.toString)
-    	})
-    })
-    */
+	
     entityVarMap.foreach(x => 
       {
         val entityName = x._1
@@ -183,15 +163,17 @@ class EditDRSTheoremProver(
       })
     //println("++++" + renamePair)
 
-    LOG.trace("Entities and variables: " +  Sts.qaEntities)
+    
 
     //the "dep" baseline works better with entities not renamed
     //use the opts.coref option to enable or disable renaming 
-    //but always rename variables for goal
-    if (Sts.opts.coref /*&& (Sts.opts.baseline != "dep"*/ || isProcessingGoal)
+    //but always rename variables for goal and for running with PSL
+    if ((Sts.opts.coref && Sts.opts.baseline != "full") || Sts.opts.baseline == "full" || isProcessingGoal)
     	renameVariables(e)
     else e
+    */
   }
+
   def findCorefEntities(e:BoxerExpression):BoxerExpression = {
 	e match {
     	case BoxerPred(discId, indices, variable, name, pos, sense) => {

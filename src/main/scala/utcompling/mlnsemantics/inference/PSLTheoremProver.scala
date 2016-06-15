@@ -165,7 +165,7 @@ class PSLTheoremProver(
     	while (valItr.hasNext())
     	{
     	  val entry = valItr.next();
-    	  val matchingEnt = Sts.qaEntities.filter(x => x._2 == "hx" + entry.getKey().replace("entailment_h(", "").replace(")", "")).toList
+    	  val matchingEnt = Sts.qaEntities.filter(x => x._2.contains("hx" + entry.getKey().replace("entailment_h(", "").replace(")", "") )).toList
     	  LOG.trace (entry + ":" + matchingEnt)
     	  if (matchingEnt.size > 0)
     	  {

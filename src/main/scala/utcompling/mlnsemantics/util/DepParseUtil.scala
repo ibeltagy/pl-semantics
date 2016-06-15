@@ -25,6 +25,7 @@ import java.util.Properties
 import edu.stanford.nlp.pipeline.StanfordCoreNLP
 import edu.stanford.nlp.pipeline.Annotation
 import edu.stanford.nlp.process.Morphology
+import utcompling.mlnsemantics.run.Sts
 
 object DepParseUtil 
 {
@@ -113,7 +114,10 @@ object DepParseUtil
 			val tagged = tagger.tagCoreLabelsOrHasWords(sentence, morphology, true)
 			//println("POS: " + tagged);
 			val gs:GrammaticalStructure = parser.predict(tagged);
-			val depStruct = gs.typedDependenciesCCprocessed().toList;
+			val depStruct = ( if (Sts.opts.treeDep) gs.typedDependenciesCollapsedTree()
+							  else gs.typedDependenciesCCprocessed()
+							).toList;
+			
 			val sortedDep = sortDep(depStruct);
 			LOG.trace("Sorted DEP: " + sortedDep);
 			//sorted dependencies to set of entities and relations between them
@@ -187,6 +191,11 @@ object DepParseUtil
 		}
 		def mergeEntity (rel:TypedDependency) : Option[Entity] = 
 		{
+			//if (Sts.qaEntities.contains(rel.gov().word()) && Sts.qaEntities.contains(rel.dep().word()))
+			//	return Some(newEntity(rel)) //both words are named entities. They can not be merged into one entity
+			if (Sts.opts.noMergeEntity)
+				return Some(newEntity(rel))
+
 			val existingEntity = findEntity(rel.gov());
 			if (existingEntity.isEmpty)
 			{

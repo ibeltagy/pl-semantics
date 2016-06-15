@@ -33,7 +33,7 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
 
     //Rename variable of @placeholder based on equalities found on the goal
     if (Sts.qaRightAnswer != "")
-    	Sts.qaEntities = Sts.qaEntities + ("@placeholder" -> applyEq(Sts.qaEntities("@placeholder")))
+    	Sts.qaEntities = Sts.qaEntities + ("@placeholder" -> Sts.qaEntities("@placeholder").map(applyEq) )
 
     //Remove it only from the Text because that help generating the evidence.
     //No need to do it for the hypothesis 
@@ -52,7 +52,7 @@ class PositiveEqEliminatingProbabilisticTheoremProver(
 					if (p._1 == "@placeholder")
 						Sts.qaEntities = Sts.qaEntities + (p._1 -> p._2)
 					else
-						Sts.qaEntities = Sts.qaEntities + (p._1 -> applyEq(p._2))
+						Sts.qaEntities = Sts.qaEntities + (p._1 -> p._2.map(applyEq))
 				})
 			}
 			newE //This is text

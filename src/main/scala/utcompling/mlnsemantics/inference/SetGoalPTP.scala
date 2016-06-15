@@ -83,7 +83,7 @@ class SetGoalPTP(
     	var entVarName = ""
     	if (Sts.qaRightAnswer != "") //this is QA not RTE
     	{
-    		entVarName = Sts.qaEntities.get("@placeholder").get + "_q"
+    		entVarName = Sts.qaEntities.get("@placeholder").get.head + "_q"
     		modifiedGoal = sortPreds(modifiedGoal, entVarName);
     	}
         val ent_h = FolApplicationExpression(FolVariableExpression(Variable("entailment_h")), FolVariableExpression(Variable(entVarName)));

@@ -305,7 +305,7 @@ object Baseline
 			if (splits(0) == "pos")
 				label = 1.0;
 
-			if (/*true*/label == 1.0 || true/*rand.nextInt(8) == 0*//*I only keep 1/7 of the negative training examples*/) //negative example
+			if (/*true*/label == 1.0 || true /*rand.nextInt(5) == 0*/ /*I only keep 1/7 of the negative training examples*/) //negative example
 			{
 				//
 				println(line)
@@ -330,7 +330,41 @@ object Baseline
 		assert(features.length == labels.length)
 		println (features.length + " -- " + labels.length)
 		println (" >>>> " + Baseline.p + ", " + Baseline.l + ", " + Baseline.r  )
-		println(featureLabelMap.values.mkString("\n"))
+		var bestCorrect = 0;
+		var bestTotal = 0;
+		var bestTruePositive = 0
+		var bestPredictedPositive = 0;
+		var bestActualPositive = 0;
+		//Map(rule -> (count of positive, count of negative))
+		featureLabelMap.foreach( f => {
+			val posCnt = f._2._1 
+			val negCnt = f._2._2
+			if (posCnt > negCnt) //positive more than negative 
+			{
+				//==> predict positive
+				bestCorrect = bestCorrect + posCnt;
+				bestTruePositive = bestTruePositive + posCnt
+				bestPredictedPositive = bestPredictedPositive + posCnt
+				bestActualPositive = bestActualPositive + posCnt;
+			}
+			else //negative more than or equal positive 
+			{
+				//==> predict negative
+				bestCorrect = bestCorrect + negCnt;
+				bestTruePositive = bestTruePositive + 0
+				bestPredictedPositive = bestPredictedPositive + 0
+				bestActualPositive = bestActualPositive + posCnt;
+			}
+			bestTotal = bestTotal + posCnt + negCnt;
+		})
+		println ("Best Accuracy: " + bestCorrect + " / " + bestTotal + " = " + bestCorrect*1.0/bestTotal)
+		var bestP = bestTruePositive*1.0/bestPredictedPositive
+		var bestR = bestTruePositive*1.0/bestActualPositive
+		println ("Best Precision: " + bestTruePositive + " / " + bestPredictedPositive + " = " + bestP)
+		println ("Best Recall: " + bestTruePositive + " / " + bestActualPositive + " = " + bestR)
+		println ("Best F1: " + 2.0 * bestP * bestR / (bestP + bestR))
+
+
 		val problem = new de.bwaldvogel.liblinear.Problem();
 		problem.l = features.length; //number of data points
 		problem.n = featureIndexShift
@@ -381,7 +415,7 @@ object Baseline
 		(problem.x zip problem.y).foreach( t => { 
 			val prediction:Double = Linear.predict(model, t._1);
 			//val prediction:Double = svm.svm_predict(model, t._1);
-			println ("### " + prediction)
+			//println ("### " + prediction)
 			if (prediction == t._2)
 				correct = correct + 1;
 			if (prediction == t._2 && prediction == 1.0)
@@ -466,6 +500,7 @@ object Baseline
 	var textGraph:scalax.collection.mutable.Graph[String, LUnDiEdge] = null;
 	var model:Model = null;
 	val rand = scala.util.Random
+	rand.setSeed(42)
 	val wordnet:WordnetImpl = new WordnetImpl();
 	/////
 	def ruleScore(textPath:Graph[String, LUnDiEdge]#Path, hypPath:Graph[String, LUnDiEdge]#Path): (Double, String) = 
@@ -477,7 +512,7 @@ object Baseline
 		def reanonymize (w:String):String = 
 		{
 			if (Sts.qaEntities.contains(w))
-				"NE:" + Sts.qaEntities(w)
+				"NE:" + Sts.qaEntities(w).toList.sorted.head
 			else w
 		}
 		var prettyLhs = Baseline.textEntitiesMap( textSp.nodes.head.value).map(w=>reanonymize(w.name)).toList.sorted.mkString("_") //+ "(" + textSp.nodes.head.value + ") "
@@ -574,15 +609,15 @@ class Baseline (delegate: ProbabilisticTheoremProver[BoxerExpression])
 		Baseline.hypGraph = null
 		Baseline.textGraph = null
 		Baseline.vectorSpace = Sts.vectorSpace
-		if (Sts.opts.baseline == "dep" || Sts.opts.graphRules > 0) //same data strcuctures will be used in GraphRules. 
-		{
-			initDS (assumptions.head.expression, goal);
-		}
+		
+		//same data structures will be used in GraphRules. 
+		initDS (assumptions.head.expression, goal);
+		if (Sts.opts.ruleClsModel.isDefined)
+			Baseline.model = Model.load(new File(Sts.opts.ruleClsModel.get));
+		////
+
 		if (Sts.opts.baseline == "dep")
 		{
-			if (Sts.opts.ruleClsModel.isDefined)
-				Baseline.model = Model.load(new File(Sts.opts.ruleClsModel.get));
-
 			var maxScore = 0.0
 			var maxScoreEntity = "";
 			val placeholderNode = Baseline.hypGraph.get( Baseline.hypPreds.filter ( _.name == "@placeholder" ).head.variable.name )

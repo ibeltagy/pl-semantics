@@ -157,6 +157,8 @@ class GraphRules {
 					val lhsText = lhsPred.sortBy(_.indices.apply(0).wordIndex).map(predToString).mkString(" ");
 					val lhsRel = spLhs.get.edges.map(_.label).toList
 					val ruleLhs:List[BoxerExpression] = lhsPred.asInstanceOf[List[BoxerExpression]] ++ lhsRel.asInstanceOf[List[BoxerExpression]]
+					if (rhsFromEntity == rhsToEntity)
+						println("weird rule")
 					val spRhs = hypGraph.get(rhsFromEntity) shortestPathTo hypGraph.get(rhsToEntity)
 					val rhsPred = spRhs.get.nodes.flatMap(Baseline.hypEntitiesMap(_)).toList
 					val rhsVars = spRhs.get.nodes.map(_.value).toList
@@ -217,7 +219,7 @@ class GraphRules {
 	LOG.trace("Number of rules: " + cliquesSet.size)
 	//collect then print all possible values of each variable
 	val varVals:collection.mutable.Map[String, collection.mutable.Set[String]] = collection.mutable.Map() ++ varsSorted.map(_->collection.mutable.Set[String]())
-	cliquesSet.foreach(c => assert(c.varVal.length == 2))//all cliques should be of length 2
+	cliquesSet.foreach(c => assert(c.varVal.length < 3))//all cliques should be of length 2 (and few are of length 1 for a weird special case
 	val cliquesList  = cliquesSet.toList.sortWith((a, b) => { //sort it for reproducibility of runs
 		if (a.weight == b.weight)
 		{
@@ -387,7 +389,7 @@ class GraphRules {
 		}
 		*/
 	}
-	val matchingEnt = Sts.qaEntities.filter(x => x._2 == "h" + bestEntity).toList
+	val matchingEnt = Sts.qaEntities.filter(x => x._2.contains("h" + bestEntity)).toList
 	Sts.qaAnswer = matchingEnt.head._1
 	cliquesSet.diff(bestAssignmentCliques.toSet).foreach(x => println ("neg - " + x.rule))
 	bestAssignmentCliques.foreach(x => println ("pos - " + x.rule))

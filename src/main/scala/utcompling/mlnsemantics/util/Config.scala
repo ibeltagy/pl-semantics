@@ -98,7 +98,9 @@ class Config(opts: Map[String, String] = Map()) {
 		"-baseline",
 		"-ruleClsModel",
 		"-emRandInit",
-		"-emTrainOnBest"
+		"-emTrainOnBest",
+		"-noMergeEntity",
+		"-treeDep"
 	);
   
   val diff = opts.keys.toSet.diff(validArgs.toSet)
@@ -620,6 +622,20 @@ class Config(opts: Map[String, String] = Map()) {
      case Some("true") => true;
      case Some("false") => false;
      case None => true;
+  }
+  
+  //Always generate new entities or allow merging them  
+  val noMergeEntity = opts.get("-noMergeEntity") match {
+     case Some("true") => true;
+     case Some("false") => false;
+     case None => false;
+  }
+  
+  //Tree or graph dependencies  
+  val treeDep = opts.get("-treeDep") match {
+     case Some("true") => true;
+     case Some("false") => false;
+     case None => false;
   }
 }
 object Config {
