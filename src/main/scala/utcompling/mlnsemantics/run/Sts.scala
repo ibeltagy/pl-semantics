@@ -165,11 +165,12 @@ object Sts {
 		for (qFileIndex <- range)
 		{
 			val qFile = qFiles(qFileIndex - 1)
-         println("=============\nQuestion %s\n%s\n=============".format(qFileIndex, qFile))
+			Sts.pairIndex = qFileIndex;
+			println("=============\nQuestion %s\n%s\n=============".format(qFileIndex, qFile))
 			val linesReader = readLines(qFile)
-         val title = linesReader.next()
-         linesReader.next()
-         var context = linesReader.next() + " "; //add a space to the end of text to make sure 
+			val title = linesReader.next()
+			linesReader.next()
+			var context = linesReader.next() + " "; //add a space to the end of text to make sure 
 									//that each token ends with a space. This makes replacing
 									//@entityXX with the entity name easier
          linesReader.next()
@@ -189,7 +190,8 @@ object Sts {
             val splits = linesReader.next().split(":");
             var entityId = splits(0)
             var entityName = splits(1)
-            entityName = entityName.replace(" ", "-").toLowerCase();
+            //entityName = entityName.replace(" ", "-").toLowerCase();
+            entityName = entityId;
             if (entityId == rightAnswer)
             	Sts.qaRightAnswer = entityName
             Sts.qaEntities = Sts.qaEntities + (entityName -> Set() )
@@ -206,8 +208,8 @@ object Sts {
          context = context.trim() //a space at the end of the line upsets C&C
          question = question.trim() //a space at the end of the line upsets C&C
          
-         assert(Sts.qaRightAnswer != "", "name of the answer entity is not found")
-         assert(!context.contains("@entity") && !question.contains("@entity"), "Context or Question have anonymous entities")
+         //assert(Sts.qaRightAnswer != "", "name of the answer entity is not found")
+         //assert(!context.contains("@entity") && !question.contains("@entity"), "Context or Question have anonymous entities")
 
 		 try
          {
@@ -316,7 +318,6 @@ object Sts {
 	      // Index paraphrase rules into Lucene repository
 	      luceneParaphrases = opts.rulesFile.split(":").map(new Lucene (_)).toList
 	      //luceneParaphrases = new Lucene (opts.rulesFile)
-	      Sts.pairIndex = 1;
 	      Sts.text = sen1;
 	      Sts.hypothesis = sen2;
 	      Sts.textLemma = lemmas(0);

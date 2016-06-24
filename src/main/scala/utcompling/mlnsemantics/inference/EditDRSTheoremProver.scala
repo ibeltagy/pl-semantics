@@ -142,7 +142,18 @@ class EditDRSTheoremProver(
 		renameVariables(e)
 	}
 	else
+	{
+		Sts.qaEntities.foreach( e1 => {
+			Sts.qaEntities.foreach( e2 => {
+				if (e1._1 != e2._1)
+				{
+					if (e1._2.intersect(e2._2).size > 0)
+						LOG.error ("Nonezero Overlap: " + e1._1 + " - " + e2._1)
+				}
+			})	
+		})
 		e
+	}
 	LOG.trace("Entities and variables: " +  Sts.qaEntities)
 	exp
 	

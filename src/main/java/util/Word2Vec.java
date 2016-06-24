@@ -37,9 +37,9 @@ public class Word2Vec {
 			System.out.println("Done indexing .. " + (System.currentTimeMillis() - start)/1000 + "s" );
 		}
 		long start = System.currentTimeMillis();
-		System.out.println("Reading index ... ");
+		System.err.println("Reading index ... ");
 		this.readIndex(indexPath);
-		System.out.println("Done reading index .. " + (System.currentTimeMillis() - start)/1000 + "s" );
+		System.err.println("Done reading index .. " + (System.currentTimeMillis() - start)/1000 + "s" );
 		this.modelFileReader = new RandomAccessFile(modelPath, "r");
 	}
 

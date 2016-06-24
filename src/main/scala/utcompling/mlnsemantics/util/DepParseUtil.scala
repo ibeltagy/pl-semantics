@@ -102,6 +102,8 @@ object DepParseUtil
 		if(!DepParseUtil.isLoaded)
 			DepParseUtil.load();
 		lastEntityId = 1;
+		val docTokensCnt = doc.split(" ").length;
+		var docTokensCntIncreamental = 0;
 		val tokenizer:DocumentPreprocessor = new DocumentPreprocessor(new StringReader(doc));
 		val sentences = tokenizer.iterator();
 		var currentWordCounter = 0;
@@ -110,6 +112,9 @@ object DepParseUtil
 		while (sentences.hasNext())  
 		{
 			val sentence = sentences.next();
+			docTokensCntIncreamental = docTokensCntIncreamental + sentence.length;
+			//if (sentence.contains("everest"))
+			//	println(sentence)
 			//val tagged = tagger.tagSentence(sentence);
 			val tagged = tagger.tagCoreLabelsOrHasWords(sentence, morphology, true)
 			//println("POS: " + tagged);
@@ -123,10 +128,16 @@ object DepParseUtil
 			//sorted dependencies to set of entities and relations between them
 			val (e, r) = depToEntityRel(sortedDep)
 			boxExpRef ++= e.map(x => BoxerVariable("x" + x.id))
-			boxExpCond ++= e.flatMap(x => x.words.map(w => BoxerPred(discId, List(BoxerIndex(w.index() + currentWordCounter)), BoxerVariable("x" + x.id), w.lemma(), posMapToBoxerPos(posMap(w.tag())), 0)));
+			boxExpCond ++= e.flatMap(x => x.words.map(w => {
+				val predName = if (Sts.qaEntities.contains(w.word()))  w.word //this is the name of an entity
+								else w.lemma(); 
+				BoxerPred(discId, List(BoxerIndex(w.index() + currentWordCounter)), BoxerVariable("x" + x.id), predName, posMapToBoxerPos(posMap(w.tag())), 0)
+			}));
+			
 			boxExpCond ++= r.map(x => BoxerRel(discId, List(), BoxerVariable("x" + x.from.id), BoxerVariable("x" + x.to.id), x.rel.reln().getShortName(), 0))
 			currentWordCounter = currentWordCounter + sentence.length;
 		}
+		//assert (docTokensCntIncreamental == docTokensCnt);
 		val ref = boxExpRef.map(x=> (List(), x)).toList
 		val cond = boxExpCond.toList
 		return BoxerDrs(ref, cond);
@@ -189,10 +200,17 @@ object DepParseUtil
 			entities.append(e);
 			return e;
 		}
+		def dropEntity (rel:TypedDependency)  = 
+		{
+			//Do nothing unless it is a named entity
+			/*if (Sts.qaEntities.contains(rel.dep().word()))
+			{
+				println ("A NAMED ENTITY SAVED") 
+				newEntity(rel) //new entity
+			}*/
+		}
 		def mergeEntity (rel:TypedDependency) : Option[Entity] = 
 		{
-			//if (Sts.qaEntities.contains(rel.gov().word()) && Sts.qaEntities.contains(rel.dep().word()))
-			//	return Some(newEntity(rel)) //both words are named entities. They can not be merged into one entity
 			if (Sts.opts.noMergeEntity)
 				return Some(newEntity(rel))
 
@@ -204,6 +222,15 @@ object DepParseUtil
 			}
 			else
 			{
+				if (Sts.qaEntities.contains(rel.dep().word()))
+				{
+					if (existingEntity.get.words.map(_.word()).toSet.intersect(Sts.qaEntities.keys.toSet).size > 0)
+					{
+						LOG.trace ("New entity created inseat of merging")
+						return Some (newEntity(rel));
+					}
+				}
+					
 				existingEntity.get.words.append(rel.dep());
 				return existingEntity
 			}
@@ -252,7 +279,7 @@ object DepParseUtil
 				case "nmod" => newRel(rel);
 	/*English*/	case "nmod:npmod" => mergeEntity(rel)
 	/*English*/	case "nmod:poss" => if(posMap(rel.dep().tag()) == "NOUN" || posMap(rel.dep().tag()) ==  "PROPN") newRel(rel); 
-									else None  //TODO: A man is driving **his** car 
+									else dropEntity(rel)  //TODO: A man is driving **his** car 
 	/*English*/	case "nmod:tmod" => newRel(rel);
 				
 				case "acl" => newRel(rel); //TODO: better representation if we have support for nested scopes
@@ -260,11 +287,11 @@ object DepParseUtil
 				
 				
 				case "amod" => mergeEntity(rel);
-				case "det" => ; //TODO: WH question and generalized quantifiers
-	/*English*/	case "det:predet" => ; //TODO: Generalized quantifiers
-				case "neg" => ; //TODO: negations
+				case "det" => dropEntity(rel); //TODO: WH question and generalized quantifiers
+	/*English*/	case "det:predet" => dropEntity(rel); //TODO: Generalized quantifiers
+				case "neg" => dropEntity(rel); //TODO: negations
 
-				case "case" =>  //TODO: this is more involved. The best thing to do now is to drop it
+				case "case" =>  dropEntity(rel); //TODO: this is more involved. The best thing to do now is to drop it
 				
 				//case "nmod" =>;
 				
@@ -282,29 +309,29 @@ object DepParseUtil
 				case "goeswith" =>  mergeEntity(rel);
 				
 				case "list" => newRel(rel)
-				case "dislocated" => ; //TODO: not sure what this is. I will drop it
+				case "dislocated" => dropEntity(rel); //TODO: not sure what this is. I will drop it
 				
 				case "parataxis" => newRel(rel) //TODO: check again
 				
-				case "remnant" => ; //TODO 
+				case "remnant" => dropEntity(rel); //TODO 
 				case "reparandum" => newRel(rel); //TODO: maybe it is better to drop it
 				
 				case "vocative" => newRel(rel);
-				case "discourse" => ; 
+				case "discourse" => dropEntity(rel); 
 				case "expl" => newRel(rel);
 				
-				case "aux" => //assert(posMap(rel.dep().tag()) == "VERB"); 
-				case "auxpass" => //assert(posMap(rel.dep().tag()) == "VERB");
-				case "cop" => //assert(posMap(rel.dep().tag()) == "VERB");
+				case "aux" => dropEntity(rel)//assert(posMap(rel.dep().tag()) == "VERB"); 
+				case "auxpass" => dropEntity(rel)//assert(posMap(rel.dep().tag()) == "VERB");
+				case "cop" => dropEntity(rel)//assert(posMap(rel.dep().tag()) == "VERB");
 				
-				case "mark" => //TODO: for now, ignoring it is the best thing to do
-				case "punct" => ; //assert(posMap(rel.dep().tag()) == "PUNCT");
+				case "mark" => dropEntity(rel)//TODO: for now, ignoring it is the best thing to do
+				case "punct" => dropEntity(rel); //assert(posMap(rel.dep().tag()) == "PUNCT");
 
-				case "conj" => ; newRel(rel)//typedDependenciesCCprocessed adds additional dependencies 
+				case "conj" => newRel(rel);//typedDependenciesCCprocessed adds additional dependencies 
 								//from conjuncts to the gov word. The "conj" relations are generally useless
 								//but sometimes the dependencies processing fails and they become needed.
-				case "cc" => ;
-	/*English*/	case "cc:preconj" => ;
+				case "cc" => dropEntity(rel);
+	/*English*/	case "cc:preconj" => dropEntity(rel);
 				
 				//case "punct" =>;
 				
@@ -315,7 +342,7 @@ object DepParseUtil
 				
 				//Relations that are in the Universal Dependencies
 				//I do not know where they come from
-				case "ref" => 
+				case "ref" => dropEntity(rel)
 				
 				case  _ => throw new RuntimeException("Unknown relation: " + rel)
 			}

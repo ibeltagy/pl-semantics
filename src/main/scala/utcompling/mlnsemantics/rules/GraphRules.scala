@@ -86,12 +86,21 @@ object GraphRules {
 		*                           // Long = 6
 		*/
   }
-  val newEntity:String = "N";
 }
 
 class Clique (val rule:String, val weight: Double, val varVal:List[(String, String)] /*List(MRF variable, possible value)*/)
 {
-	override def toString(): String = rule;
+	override def toString(): String = rule + ", " + varVal.map(p => p._1 +"_"+ p._2).sorted.mkString(", ");
+	override def equals(o: Any) =
+	{
+		o match
+		{
+			case that: Clique => this.toString == that.toString
+			case _ => false
+		}
+	}
+	override def hashCode = this.toString.hashCode()
+
 }
 class Assignment (val vals:Array[String], val weight: Double, val cliques:List[(Clique)])
 {
@@ -99,14 +108,99 @@ class Assignment (val vals:Array[String], val weight: Double, val cliques:List[(
 }
 class GraphRules {
   private val LOG = LogFactory.getLog(classOf[GraphRules])
+
+  var rules:ListBuffer[(BoxerDrs, BoxerDrs, Double, RuleType.Value)] = null;
+  var cliques:ListBuffer[Clique] = null;
+  var entityIdCounter:Int = 0;
+
+  def predToString(pred:BoxerPred) : String = 
+  {
+		pred.name + "-" + pred.pos + "-" + pred.indices.applyOrElse(0, "0")
+  }
   
+  //Generate all possible rules of the form: potentialMatchs(rhsFrom) shortestpath potentialMatchs(rhsTo)  => rhsFrom shortestpath rhsTo
+  //if textFromListInput isDefined, then the rules are of the form: textFromListInput shortestpath potentialMatchs(rhsTo)  => rhsFrom shortestpath rhsTo
+  //The second setting is useful to override the default Baseline.entityPotentialMatchs and replace it with a more strict set of potential matchs
+  def hypEntityPairToRule (rhsFrom:String, rhsTo:String, textFromListInput:Option[Set[String]]) : Int = //returns number of rules added
+  {
+	val hypGraph = Baseline.hypGraph 
+	val textGraph = Baseline.textGraph
+	if (rhsFrom == rhsTo) //useless rule. It should not be generated in the first place
+		return 0;
+	val spRhs = hypGraph.get(rhsFrom) shortestPathTo hypGraph.get(rhsTo)
+	if (spRhs.isEmpty)
+		return 0;
+	val rhsPred = spRhs.get.nodes.flatMap(Baseline.hypEntitiesMap(_)).toList
+	val rhsVars = spRhs.get.nodes.map(_.value).toList
+	//val rhsText = rhsPred.sortBy(_.indices.apply(0).wordIndex).map(predToString).mkString(" ");
+	val rhsRel = spRhs.get.edges.map(_.label).toList
+	
+	var textFromList =	if (textFromListInput.isDefined) textFromListInput.get.toList
+						else Baseline.entityPotentialMatchs(rhsFrom)
+	val textToList = Baseline.entityPotentialMatchs(rhsTo)
+	var additionalRulesCount = 0;
+	for (textFrom <- textFromList)
+	{
+		for (textTo <- textToList)
+		{
+			if (!textGraph.contains(textFrom))
+				println (textFrom)
+			val nodeFrom = textGraph.get(textFrom)
+			val nodeTo = textGraph.get(textTo)
+			val spLhs = nodeFrom shortestPathTo nodeTo
+			if (spLhs.isDefined && spLhs.get.weight <= Sts.opts.graphRuleLengthLimit)
+			{
+				val lhsPred = spLhs.get.nodes.flatMap(Baseline.textEntitiesMap(_)).toList
+				val lhsRel = spLhs.get.edges.map(_.label).toList
+				//val lhsText = lhsPred.sortBy(_.indices.apply(0).wordIndex).map(predToString).mkString(" ");
+				
+				val ruleLhs:List[BoxerExpression] = lhsPred.asInstanceOf[List[BoxerExpression]] ++ lhsRel.asInstanceOf[List[BoxerExpression]]
+				//new copy of ruleRhs every iteration because it changes with ruleLhs
+				var ruleRhs:List[BoxerExpression] = rhsPred.asInstanceOf[List[BoxerExpression]] ++ rhsRel.asInstanceOf[List[BoxerExpression]]
+				def changeRhsVar (v:String) : String = 
+				{
+					if (v == rhsFrom)
+						return textFrom
+					else if (v == rhsTo)
+						return textTo
+					else {
+						entityIdCounter =  entityIdCounter + 1;
+						return "n" + entityIdCounter;
+					}
+						//throw new RuntimeException("not implemented yet") //new entity that does not exist in the text
+				}
+				val rhsVarsVals = rhsVars.map(v => (v, changeRhsVar(v)))//List((hypGraphNode, possible value))
+				val rhsVarsValsMap = rhsVarsVals.toMap
+				ruleRhs = ruleRhs.map(
+				{
+					case BoxerPred(discId, indices, variable, name, pos, sense) => 
+						BoxerPred(discId, indices, BoxerVariable(rhsVarsValsMap(variable.name)), name, pos, sense)
+					case BoxerRel(discId, indices, event, variable, name, sense) => 
+						BoxerRel(discId, indices, BoxerVariable(rhsVarsValsMap(event.name)), BoxerVariable(rhsVarsValsMap(variable.name)), name, sense)
+				})
+				val ruleLhsDrs = Rules.boxerAtomsToBoxerDrs(ruleLhs.toSet);
+				val ruleRhsDrs = Rules.boxerAtomsToBoxerDrs(ruleRhs.toSet);
+				
+				var (rw, path) = Baseline.ruleScore (spLhs.get, spRhs.get);
+				
+				cliques += new Clique(path, rw, rhsVarsVals)
+				rules +=( (ruleLhsDrs, ruleRhsDrs, rw, RuleType.Implication) )
+				additionalRulesCount = additionalRulesCount + 1;
+			}
+		}
+	}
+	return additionalRulesCount;
+  }
+
   def getRule(text: BoxerExpression, hypothesis: BoxerExpression, ruleWeighter: RuleWeighter,
     vecspaceFactory: ((String => Boolean) => BowVectorSpace)) : List[(BoxerDrs, BoxerDrs, Double, RuleType.Value)] =
   {
-  	if (Sts.opts.graphRules == 0)
-  		return List();
-  	val vectorspace = vecspaceFactory( _ => true );
+	if (Sts.opts.graphRules == 0)
+		return List();
 
+	rules = ListBuffer();
+	cliques = ListBuffer();
+	entityIdCounter = 0;
 	//Rules from entity to the first word
 	/*
 	val tmp = hypPreds.filter(_.name.contains("@placeholder")).map(_.variable.name);
@@ -119,92 +213,73 @@ class GraphRules {
 	firstHopEntities.foreach(rhsToEntity => 
 	{ 
 	*/
-  	val rules:ListBuffer[(BoxerDrs, BoxerDrs, Double, RuleType.Value)] = ListBuffer();
-  	val cliques:ListBuffer[Clique] = ListBuffer();
-	//Rules for all edges in hypothesis
-  	val hypGraph = Baseline.hypGraph 
-  	val textGraph = Baseline.textGraph
-  	
+	if (Sts.opts.graphRules == 1)
+		graphRulesLvl1
+	else if (Sts.opts.graphRules == 2)
+		graphRulesLvl2
+	else throw new RuntimeException("Not supported graphRules level: " + Sts.opts.graphRules)
+	
+	if (Sts.opts.baseline == "search")
+	{
+		mapInfer(cliques.toSet, true);
+		mapInfer(cliques.toSet, false);
+	}
+	return rules.toList;
+  }
+  
+  def graphRulesLvl1 =
+  {
+	val hypGraph = Baseline.hypGraph
 	hypGraph.edges.foreach( hypPath =>
 	{
 		val rhsRel = hypPath.label.asInstanceOf[BoxerRel]
 		val rhsFromEntity = rhsRel.event.name
 		val rhsToEntity = rhsRel.variable.name
-		val rhsPred = List(rhsFromEntity, rhsToEntity).flatMap(Baseline.hypEntitiesMap(_))
-		val textFromList = Baseline.entityPotentialMatchs(rhsFromEntity)
-	//== 
-
-		val textToList = Baseline.entityPotentialMatchs(rhsToEntity)
-		for (textFrom <- textFromList)
-		{
-			for (textTo <- textToList)
-			{
-				//println (textFrom + " -- " + textTo)
-				val nodeFrom = textGraph.get(textFrom)
-				val nodeTo = textGraph.get(textTo)
-				val spLhs = nodeFrom shortestPathTo nodeTo
-				if (spLhs.isDefined && spLhs.get.weight <= Sts.opts.graphRuleLengthLimit)
-				{
-					//println ("Path found: " + spLhs)
-					//println(spLhs.get.nodes.flatMap(textEntitiesMap(_)))
-					//println(spLhs.get.weight)
-					//println(spLhs.get.edges.map(_.label))
-					def predToString(pred:BoxerPred) : String = 
-					{
-						pred.name + "-" + pred.pos + "-" + pred.indices.applyOrElse(0, "0")
-					}
-					val lhsPred = spLhs.get.nodes.flatMap(Baseline.textEntitiesMap(_)).toList
-					val lhsText = lhsPred.sortBy(_.indices.apply(0).wordIndex).map(predToString).mkString(" ");
-					val lhsRel = spLhs.get.edges.map(_.label).toList
-					val ruleLhs:List[BoxerExpression] = lhsPred.asInstanceOf[List[BoxerExpression]] ++ lhsRel.asInstanceOf[List[BoxerExpression]]
-					if (rhsFromEntity == rhsToEntity)
-						println("weird rule")
-					val spRhs = hypGraph.get(rhsFromEntity) shortestPathTo hypGraph.get(rhsToEntity)
-					val rhsPred = spRhs.get.nodes.flatMap(Baseline.hypEntitiesMap(_)).toList
-					val rhsVars = spRhs.get.nodes.map(_.value).toList
-					val rhsText = rhsPred.sortBy(_.indices.apply(0).wordIndex).map(predToString).mkString(" ");
-					val rhsRel = spRhs.get.edges.map(_.label).toList
-					
-					var ruleRhs:List[BoxerExpression] = rhsPred.asInstanceOf[List[BoxerExpression]] ++ rhsRel.asInstanceOf[List[BoxerExpression]]
-					def changeRhsVar (v:String) : String = 
-					{
-						if (v == rhsFromEntity)
-							return textFrom
-						else if (v == rhsToEntity)
-							return textTo
-						else return GraphRules.newEntity //new entity that does not exist in the text 
-					}
-					ruleRhs = ruleRhs.map(
-					{
-						case BoxerPred(discId, indices, variable, name, pos, sense) => 
-							BoxerPred(discId, indices, BoxerVariable(changeRhsVar(variable.name)), name, pos, sense)
-						case BoxerRel(discId, indices, event, variable, name, sense) => 
-							BoxerRel(discId, indices, BoxerVariable(changeRhsVar(event.name)), BoxerVariable(changeRhsVar(variable.name)), name, sense)
-					})
-					val ruleLhsDrs = Rules.boxerAtomsToBoxerDrs(ruleLhs.toSet);
-					val ruleRhsDrs = Rules.boxerAtomsToBoxerDrs(ruleRhs.toSet);
-					var (rw, path) = Baseline.ruleScore (spLhs.get, spRhs.get);
-					val rhsVarsVals = rhsVars.map(v => (v, changeRhsVar(v)))//List((hypGraphNode, possible value))
-					//println (rw + " -- " + rhsVarsVals)
-					cliques += new Clique(path, rw, rhsVarsVals)
-					//if (vectorspace.numDims > 0) // a vectorspace is provided
-					//	rw = ruleWeighter.weightForRules(lhsText, List(), Seq((rhsText, List())).toMap, vectorspace).head._2.get; //rule weight based on dist sim
-					//println ("GraphRule ("+spLhs.get.weight +  ", " + rw + ") " + lhsText + " -> " + rhsText);
-					//(ruleRhs + " <<< " + ruleLhs)
-					rules +=( (ruleLhsDrs, ruleRhsDrs, rw, RuleType.Implication) )
-				}
-			}
-		}
+		hypEntityPairToRule(rhsFromEntity, rhsToEntity, None)
 	})
-	if (Sts.opts.baseline == "search")
-		mapInfer(cliques.toSet);
-
-	return rules.toList;
   }
-
-  def mapInfer(cliquesSet:Set[Clique]) = 
+  def graphRulesLvl2 =
   {
+	val hypGraph = Baseline.hypGraph
+	val textGraph = Baseline.textGraph
+	val placeholderNode = Baseline.hypGraph.get( Baseline.hypPreds.filter ( _.name == "@placeholder" ).head.variable.name )
+	val hypEntitiesSorted = Baseline.topologicalSort(placeholderNode).asInstanceOf[List[hypGraph.NodeT]];
+	val hypFrom = hypEntitiesSorted.head; //first node is the placeholder
 	
+	//TODO: uncomment to unlock alignment algorithm 2
+	Sts.qaEntities.keys.filterNot(_.equals("@placeholder")).foreach(ne =>  //for each named entity in the document
+	{
+		val anchorNodes = new scala.collection.mutable.HashSet[hypGraph.NodeT];
+		anchorNodes.add(hypFrom) //add the placeholder entity to the anchor nodes. 
+		hypEntitiesSorted.tail.foreach(hypTo =>  //loop over all other nodes
+		{
+			var hypSp = hypTo.shortestPathTo(hypFrom)
+			if (!hypSp.isEmpty)
+			{
+				//loop over rhsSp.get.nodes.tail until an anchor node is found
+				//it can loop until it reaches the placeholder
+				val path = hypSp.get.nodes.toList
+				assert (path.length >= 2)
+				var currentIdx = 1;
+				var continue = true;
+				while(!anchorNodes.contains(path(currentIdx)) )
+					currentIdx = currentIdx + 1;
+	
+				var potentialMatches = if (currentIdx == path.length - 1)    //TODO: uncomment to unlock alignment algorithm 2
+					Some(Sts.qaEntities(ne).map(_.substring(1))) //remove the leading "h" in the variable name. I do not even know what this "h" is for
+									//if the fromNode is the placeholder, then replace the set of
+									//potential matches with entities of one named entity
+				else None
+	
+				val count = hypEntityPairToRule(path(currentIdx), hypTo, potentialMatches)
+				if (count > 0) //rules added for hypTo ==> hypTo is an anchor node 
+					anchorNodes.add(hypTo)
+			}
+		})
+	})
+  }
+  def mapInfer(cliquesSet:Set[Clique], solved:Boolean) =
+  {
   	implicit def ordering[A <: Assignment]: Ordering[A] = new Ordering[A]
 	{
 		override def compare(x: A, y: A): Int = {
@@ -219,7 +294,6 @@ class GraphRules {
 	LOG.trace("Number of rules: " + cliquesSet.size)
 	//collect then print all possible values of each variable
 	val varVals:collection.mutable.Map[String, collection.mutable.Set[String]] = collection.mutable.Map() ++ varsSorted.map(_->collection.mutable.Set[String]())
-	cliquesSet.foreach(c => assert(c.varVal.length < 3))//all cliques should be of length 2 (and few are of length 1 for a weird special case
 	val cliquesList  = cliquesSet.toList.sortWith((a, b) => { //sort it for reproducibility of runs
 		if (a.weight == b.weight)
 		{
@@ -241,7 +315,14 @@ class GraphRules {
 	LOG.trace("\n" + varVals.mkString("\n"));
 	
 	//initializing the queue with all entities
-	Baseline.entityPotentialMatchs(placeholderNode.value).sorted /*sorted for reproducibility of runs*/.map(v => {
+	val namedEntities = if (solved)
+		// initialize the queue with entities of the right answer only. This is to find rules for training the lexical entailment
+		Baseline.textPreds.filter ( _.name == Sts.qaRightAnswer).map(_.variable.name).toList
+	else
+		//initialize the queue with all named entities
+		Baseline.entityPotentialMatchs(placeholderNode.value) 
+	
+	namedEntities.sorted /*sorted for reproducibility of runs*/.map(v => {
 		val tmp = new Array[String](varsSorted.length)//every possible assignment should have the same length as  varsSorted
 		tmp(0) = v //set a value for the first variable in the assignment
 		tmp
@@ -262,6 +343,8 @@ class GraphRules {
 		
 		//TODO: find all fillable leaves and fill them now because this local decision is globally 
 		//optimal. Do not wait to try them as proposed assignments. 
+		//TODO: suggestion above is wrong. Better use a recursive search algorithm
+		//Comment above is true, but things are fast already, so no need for the optimization
 
 		if (bestAssignmentW < assignment.weight )
 		{
@@ -281,13 +364,18 @@ class GraphRules {
 				var newVarIndex = -1
 				c.varVal.foreach( varVal =>{ //for each variable-value pair in the clique
 					val varIndex = varsSorted.indexOf(varVal._1); //get index of variable in the assignment (a hashmap would be faster) 
-					if (varIndex > -1) // if the variable is not in varsSorted, do nothing. This happens of the hypGraph is not connected
+					if (varIndex > -1) // if the variable is not in varsSorted, do nothing. This happens if the hypGraph is not connected
 					{
 						if (tmpAssignment(varIndex) == null)
 						{
 							tmpAssignment(varIndex) = varVal._2  //add it to the tmp assignment
 							//assert (newVarIndex == -1) //all cliques are of length 2 
-							newVarIndex = varIndex
+							if (newVarIndex != -1)
+							{
+								newVarIndex = Math.min(newVarIndex, varIndex); //Even though the clique will be assigning values to more than 
+																			//one variable, we use the smallest index 
+							}
+							else newVarIndex = varIndex
 						}
 						else if (tmpAssignment(varIndex) == varVal._2)
 							attachementFound = true  //at least one attachment point found
@@ -391,14 +479,21 @@ class GraphRules {
 	}
 	val matchingEnt = Sts.qaEntities.filter(x => x._2.contains("h" + bestEntity)).toList
 	Sts.qaAnswer = matchingEnt.head._1
-	cliquesSet.diff(bestAssignmentCliques.toSet).foreach(x => println ("neg - " + x.rule))
-	bestAssignmentCliques.foreach(x => println ("pos - " + x.rule))
+	val allRulesSet = cliquesSet.map(_.rule).toSet;
+	val posRulesSet = bestAssignmentCliques.map(_.rule).toSet;
+	if (solved)
+	{
+		if (Sts.qaAnswer != Sts.qaRightAnswer)
+			println("Could not infer the right answer")
+		allRulesSet.diff(posRulesSet).foreach(x => println ("neg\t" + Sts.pairIndex + "\t"  + x))
+		posRulesSet.foreach(x => println ("pos\t" + Sts.pairIndex + "\t"  + x))
+	}
 	//println ("Best rules:\n" + bestAssignmentCliques.mkString("\n"))
-	println ("Number of rules: " + cliquesSet.size)
-	println ("Number of positive rules: " + bestAssignmentCliques.size)
-	println ("Number of steps: " + cnt)
-	println ("Best Weight: " + "%1.4f".format(bestAssignmentW));
-	println ("Best Entity: " + bestEntity + " = " + Sts.qaAnswer);
+	println ("Number of rules (%s): ".format(solved) + allRulesSet.size)
+	println ("Number of positive rules (%s): ".format(solved) + posRulesSet.size)
+	println ("Number of steps (%s): ".format(solved) + cnt)
+	println ("Best Weight (%s): ".format(solved) + "%1.4f".format(bestAssignmentW));
+	println ("Best Entity (%s): ".format(solved) + bestEntity + " = " + Sts.qaAnswer);
   }
 }
 

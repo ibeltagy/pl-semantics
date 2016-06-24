@@ -53,6 +53,7 @@ class Config(opts: Map[String, String] = Map()) {
 		"-wordnet",
 		"-graphRules",
 		"-graphRuleLengthLimit",
+		"-graphRulesFile",
 		"-diffRules",
 		"-printDiffRules",
 		"-diffRulesSimpleText",
@@ -192,6 +193,12 @@ class Config(opts: Map[String, String] = Map()) {
   val rulesFile = opts.get("-rules") match {
     case Some(rulesFile) => rulesFile;
     case _ => "";
+  }
+  
+  //file contains graphRules already evaluated
+  val graphRulesFile = opts.get("-graphRulesFile") match {
+    case Some(fname) => Some(fname);
+    case _ => None;
   }
   
   //Match paraphrases with the sentence or with the lemmatized sentnece ?

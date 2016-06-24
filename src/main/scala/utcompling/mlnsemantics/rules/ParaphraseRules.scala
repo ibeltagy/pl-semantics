@@ -20,7 +20,7 @@ class ParaphraseRules extends Rules{
 			else
 				Sts.luceneParaphrases.map(_.query(Sts.text  , Sts.hypothesis )).flatten
 
-				LOG.trace("Paraphrase rules before filtring: ");
+		LOG.trace("Paraphrase rules before filtring: ");
 		returnedRules.foreach(rule => LOG.trace(rule))
 
 
