@@ -124,9 +124,20 @@ class EditDRSTheoremProver(
 	}
   }
   var entityVarMap: collection.mutable.Map[String, collection.mutable.ListBuffer[String]] =  collection.mutable.Map()
-  def setNamedEntities(e:BoxerExpression):BoxerExpression = 
+  def setNamedEntities(inputE:BoxerExpression):BoxerExpression = 
   {
-	e.getPredicates.foreach(p => {
+  	var e = inputE;
+	var preds = e.getPredicates;
+	if (preds.filter(_.name == "@placeholder").size == 0 && isProcessingGoal && Sts.qaRightAnswer != "") //QA question without a placeholder
+	{
+		val newVar = BoxerVariable("x1");
+		val pred = BoxerPred("h", List(), newVar, "@placeholder", "n", 0)
+		val refs = List((List[BoxerIndex](), newVar)) ;
+		e = BoxerDrs(refs, List(pred, e));
+		preds = e.getPredicates();
+	}
+
+	preds.foreach(p => {
 		if(Sts.qaEntities.contains(p.name))
 			if(!isProcessingGoal || p.name == "@placeholder") //do not add entities from goal other than the placeholder entity
 				Sts.qaEntities = Sts.qaEntities + ( p.name -> Sts.qaEntities(p.name).+("h" + FindEventsProbabilisticTheoremProver.newName(p.variable.name)) )
@@ -136,7 +147,7 @@ class EditDRSTheoremProver(
 	{
 		//make sure I have only one entity for the query. This should be the case by default, but mis-parses could result into multiple placeholders
 		renamePair.clear()
-		val placeholderEntities = Sts.qaEntities("@placeholder").toList
+		var placeholderEntities = Sts.qaEntities("@placeholder").toList
 		placeholderEntities.foreach(y => renamePair = renamePair + (y -> placeholderEntities.head))
 		Sts.qaEntities = Sts.qaEntities + ( "@placeholder" -> Set().+(placeholderEntities.head) )
 		renameVariables(e)

@@ -214,16 +214,22 @@ class GraphRules {
 	{ 
 	*/
 	if (Sts.opts.graphRules == 1)
+	{
 		graphRulesLvl1
+		if (Sts.opts.baseline == "search")
+		{
+			mapInfer(cliques.toSet, Some(Sts.qaRightAnswer));
+			val answer = mapInfer(cliques.toSet, None);
+			Sts.qaAnswer = answer._1;
+		}
+
+	}
 	else if (Sts.opts.graphRules == 2)
+	{
 		graphRulesLvl2
+	}
 	else throw new RuntimeException("Not supported graphRules level: " + Sts.opts.graphRules)
 	
-	if (Sts.opts.baseline == "search")
-	{
-		mapInfer(cliques.toSet, true);
-		mapInfer(cliques.toSet, false);
-	}
 	return rules.toList;
   }
   
@@ -245,12 +251,18 @@ class GraphRules {
 	val placeholderNode = Baseline.hypGraph.get( Baseline.hypPreds.filter ( _.name == "@placeholder" ).head.variable.name )
 	val hypEntitiesSorted = Baseline.topologicalSort(placeholderNode).asInstanceOf[List[hypGraph.NodeT]];
 	val hypFrom = hypEntitiesSorted.head; //first node is the placeholder
-	
+	var bestEntity = ""
+	var bestEntityW = 0.0;
 	//TODO: uncomment to unlock alignment algorithm 2
-	Sts.qaEntities.keys.filterNot(_.equals("@placeholder")).foreach(ne =>  //for each named entity in the document
+	val allCliques:collection.mutable.Set[Clique] = collection.mutable.Set()
+	val posCliques:collection.mutable.Set[Clique] = collection.mutable.Set()
+	(Sts.qaRightAnswer :: Sts.qaEntities.keys.toList.sorted.filterNot(e => e.equals("@placeholder") || e.equals(Sts.qaRightAnswer)).toList).foreach(ne =>  //for each named entity in the document
 	{
+		cliques.clear(); //remove all cliques 
+
 		val anchorNodes = new scala.collection.mutable.HashSet[hypGraph.NodeT];
 		anchorNodes.add(hypFrom) //add the placeholder entity to the anchor nodes. 
+
 		hypEntitiesSorted.tail.foreach(hypTo =>  //loop over all other nodes
 		{
 			var hypSp = hypTo.shortestPathTo(hypFrom)
@@ -276,9 +288,25 @@ class GraphRules {
 					anchorNodes.add(hypTo)
 			}
 		})
+		allCliques ++= cliques;
+		val answer = mapInfer(cliques.toSet, Some(ne));
+		
+		if (Sts.qaRightAnswer == ne)
+			posCliques ++= answer._3;
+			
+		if (answer._2 > bestEntityW)
+		{
+			bestEntity = answer._1
+			bestEntityW = answer._2
+		}
 	})
+	val allRulesSet = allCliques.map(_.rule).toSet;
+	val posRulesSet = posCliques.map(_.rule).toSet;
+	allRulesSet.diff(posRulesSet).foreach(x => println ("neg\t" + Sts.pairIndex + "\t"  + x))
+	posRulesSet.foreach(x => println ("pos\t" + Sts.pairIndex + "\t"  + x))
+	Sts.qaAnswer = bestEntity
   }
-  def mapInfer(cliquesSet:Set[Clique], solved:Boolean) =
+  def mapInfer(cliquesSet:Set[Clique], entity:Option[String]) : (String, Double, Set[Clique]) = 
   {
   	implicit def ordering[A <: Assignment]: Ordering[A] = new Ordering[A]
 	{
@@ -315,9 +343,9 @@ class GraphRules {
 	LOG.trace("\n" + varVals.mkString("\n"));
 	
 	//initializing the queue with all entities
-	val namedEntities = if (solved)
+	val namedEntities = if (entity.isDefined)
 		// initialize the queue with entities of the right answer only. This is to find rules for training the lexical entailment
-		Baseline.textPreds.filter ( _.name == Sts.qaRightAnswer).map(_.variable.name).toList
+		Baseline.textPreds.filter ( _.name == entity.get).map(_.variable.name).toList
 	else
 		//initialize the queue with all named entities
 		Baseline.entityPotentialMatchs(placeholderNode.value) 
@@ -326,12 +354,12 @@ class GraphRules {
 		val tmp = new Array[String](varsSorted.length)//every possible assignment should have the same length as  varsSorted
 		tmp(0) = v //set a value for the first variable in the assignment
 		tmp
-	}).foreach(assignment => q+= new Assignment(assignment, 1.0, List[Clique]()))
+	}).foreach(assignment => q+= new Assignment(assignment, 0.0, List[Clique]()))
 
 	var cnt = 0
 	var bestAssignmentW = 0.0;
 	var bestAssignmentCliques = List[Clique]();
-	var bestEntity = "";
+	var bestEntityAssignment = new Array[String](varVals.size)
 
 	while (!q.isEmpty)
 	{
@@ -350,7 +378,7 @@ class GraphRules {
 		{
 			bestAssignmentW = assignment.weight;
 			bestAssignmentCliques = assignment.cliques
-			bestEntity = assignment.vals.head
+			bestEntityAssignment = assignment.vals
 		}
 		cnt = cnt + 1;
 		
@@ -362,6 +390,7 @@ class GraphRules {
 				var compatible = true;
 				var attachementFound = false;
 				var newVarIndex = -1
+				var newVarAssignmentsCount = 0;
 				c.varVal.foreach( varVal =>{ //for each variable-value pair in the clique
 					val varIndex = varsSorted.indexOf(varVal._1); //get index of variable in the assignment (a hashmap would be faster) 
 					if (varIndex > -1) // if the variable is not in varsSorted, do nothing. This happens if the hypGraph is not connected
@@ -369,6 +398,7 @@ class GraphRules {
 						if (tmpAssignment(varIndex) == null)
 						{
 							tmpAssignment(varIndex) = varVal._2  //add it to the tmp assignment
+							newVarAssignmentsCount = newVarAssignmentsCount + 1;
 							//assert (newVarIndex == -1) //all cliques are of length 2 
 							if (newVarIndex != -1)
 							{
@@ -384,7 +414,7 @@ class GraphRules {
 					}
 				})
 				if (compatible && attachementFound)
-					Some( (new Assignment(tmpAssignment, assignment.weight * Math.exp(c.weight), assignment.cliques :+ c), newVarIndex) )
+					Some( (new Assignment(tmpAssignment, assignment.weight + /*newVarAssignmentsCount*/c.weight, assignment.cliques :+ c), newVarIndex) )
 				else None
 			}
 			else None
@@ -477,23 +507,65 @@ class GraphRules {
 		}
 		*/
 	}
-	val matchingEnt = Sts.qaEntities.filter(x => x._2.contains("h" + bestEntity)).toList
-	Sts.qaAnswer = matchingEnt.head._1
-	val allRulesSet = cliquesSet.map(_.rule).toSet;
-	val posRulesSet = bestAssignmentCliques.map(_.rule).toSet;
-	if (solved)
+	
+	/*
+	if (bestAssignmentW == 0)
 	{
-		if (Sts.qaAnswer != Sts.qaRightAnswer)
-			println("Could not infer the right answer")
-		allRulesSet.diff(posRulesSet).foreach(x => println ("neg\t" + Sts.pairIndex + "\t"  + x))
-		posRulesSet.foreach(x => println ("pos\t" + Sts.pairIndex + "\t"  + x))
+		if (entity.isDefined)
+		{
+			println  ("%s\t%s\t%d\t%1.4f\t%d\t%d\t%d\t%d".format(entity.get == Sts.qaRightAnswer, entity.get, varsSorted.length,
+				0.0, 0, varsSorted.length, allRulesSet.size, 0))
+			return (entity.get, 0)
+		}
+		else
+			return (null, 0)
+	}*/
+	val answer:String = if (bestEntityAssignment.head == null)
+	{
+		if (entity.isDefined)
+			entity.get
+		else null
+	}
+	else
+		Sts.qaEntities.filter(x => x._2.contains("h" + bestEntityAssignment.head)).toList.head._1
+	if (entity.isDefined)
+	{
+		if (answer != entity.get)
+			println("Could not infer the required entity")
+		var nullCounter = 0;
+		var newEntityCounter = 0;
+		bestEntityAssignment.foreach( e => {
+			if (e == null)
+				nullCounter = nullCounter + 1;
+			else if (e.startsWith("n")) 
+				newEntityCounter = newEntityCounter + 1;
+		})
+		println  ("%d qid:%d 1:%d 2:%1.4f 3:%d 4:%d 5:%d 6:%d 7:%1.4f 8:%1.4f 9:%1.4f 10:%1.4f 11:%d #%s".format(
+					if(entity.get == Sts.qaRightAnswer) 1 else 0,
+					Sts.pairIndex,
+					//entity.get,
+					varsSorted.length,	//1
+					bestAssignmentW,	//2
+					newEntityCounter,	//3
+					nullCounter,		//4 
+					cliquesSet.size, 	//5 
+					bestAssignmentCliques.size, 	//6
+					if (varsSorted.length == nullCounter) 0.0 else 1.0*bestAssignmentW/(varsSorted.length - nullCounter),	//7
+					1.0*newEntityCounter/varsSorted.length,	//8
+					1.0*nullCounter/varsSorted.length,		//9
+					1.0*bestAssignmentW/varsSorted.length,	//10
+					if (bestEntityAssignment.head != null) 1 else 0, //11  //inferable entity
+					entity.get
+					))
+		
 	}
 	//println ("Best rules:\n" + bestAssignmentCliques.mkString("\n"))
-	println ("Number of rules (%s): ".format(solved) + allRulesSet.size)
-	println ("Number of positive rules (%s): ".format(solved) + posRulesSet.size)
-	println ("Number of steps (%s): ".format(solved) + cnt)
-	println ("Best Weight (%s): ".format(solved) + "%1.4f".format(bestAssignmentW));
-	println ("Best Entity (%s): ".format(solved) + bestEntity + " = " + Sts.qaAnswer);
+	//println ("Number of rules (%s): ".format(solved) + allRulesSet.size)
+	//println ("Number of positive rules (%s): ".format(solved) + posRulesSet.size)
+	//println ("Number of steps (%s): ".format(solved) + cnt)
+	//println ("Best Weight (%s): ".format(solved) + "%1.4f".format(bestAssignmentW));
+	//println ("Best Entity (%s): ".format(solved) + bestEntity + " = " + Sts.qaAnswer);
+	return (answer, bestAssignmentW, bestAssignmentCliques.toSet)
   }
 }
 

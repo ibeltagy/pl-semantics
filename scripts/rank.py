@@ -132,12 +132,12 @@ pretrainLangFile = "pretrain.txt"
 
 #############################  Read ARGS ######################
 if __name__ == '__main__':
-	print  (sys.argv)
+	#print  (sys.argv)
+	''
 
 parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", choices=[TRAIN, TEST, DEV], default=TEST, help="mode: train or test on the test set or test on the dev set")
-parser.add_argument("modelFile", help="model file")
 parser.add_argument("inputFile", help="precomputed features file")
 parser.add_argument("-verbose", help="increase output verbosity", action="store_true")
 parser.add_argument("-nThread", type=int, default=-1, help="Number of threads to use [-1]")
@@ -185,52 +185,12 @@ if args.model == NN and args.mode == TRAIN : # if NN, clear the command line arg
 
 # process args 
 
-if args.foldCnt > 0: 
-	assert not args.paraphrase
-	assert not args.intel
-	assert args.featFreq == 0
-	assert args.model != RNN
-	assert args.foldIdx >= 0 and  args.foldIdx < args.foldCnt
-	args.modelFile = args.modelFile + "_" + str(args.foldCnt) + "_" + str(args.foldIdx)
-	
-if args.model == RNN:	#in RNN, 
-	args.graph = 0		#assume for now that no dependencies between the edges
-	args.limitFeat = True	#we use the charNgram features only
-	
-deps = graphs[args.graph]
-
-if args.intel == True and (args.mode not in [TEST, TRAIN]):
-	 raise Exception("running on intelligible entries is only available on the train and test modes")
-if args.mode in [TRAIN, DEV]:  #if dev, then test on the dev set. 
-								#if train, then I need the dev set for the NN training
-	testCodeFile = "new/dev/code_columns.txt"
-	testLangFile = "new/dev/lang.txt"
-
-##The lines below should be commented
-#if args.mode in [TRAIN]:  #if train, then I need the dev set for the NN training
-#	testCodeFile = "new/test/code_columns.txt"
-#	testLangFile = "new/test/lang.txt"
-
-if args.mode == DEV:  #if dev, then change the mode to test 
-	args.mode = TEST
-
-traversalOrder = structures[args.struct]
 
 if args.log:
 	logging.basicConfig(filename=args.modelFile + ".log", level="DEBUG", format="%(asctime)s:%(name)s:%(levelname)s:%(funcName)s:%(lineno)d - %(message)s")
 else:
 	climate.enable_default_logging()
 	
-if args.model in [NN, RNN]:
-	if args.gpu != "cpu":
-		import theano.sandbox.cuda
-		theano.sandbox.cuda.use(args.gpu)	
-	import theanets
-	import theano	
-
-if not os.path.exists(args.modelFile):
-    os.makedirs(args.modelFile)
-
 seeder = np.random.RandomState() #Random
 if args.seed: #initilized the random number generators with a fixed seed. This way, we always get the same output for the sake of debugging 
 	seeder = np.random.RandomState(42)
@@ -285,88 +245,24 @@ def lexEnt():
 	#print "Lex Ent";
 	
 	inputFile = open(args.inputFile)
-	featuresDict = []
-	labels = []
-
-	positiveStrings = Set()
-	if args.mode == TRAIN:
-		for line in inputFile:
-			splits = line.strip().split(" ", 1); #+/-1 idx:val idx:val  ... 
-			label = splits[0]
-			features = splits[1]
-			if (label == "1.0"):
-				positiveStrings.add(features)
-		print 'Number of positive entries: ' + str(len(positiveStrings));
-
-		inputFile.seek(0)
-	
-	deletedNegatives = 0;
+	lastGroupId = 0
+	rowIndex = 0
+	answerAtIndex = -1;
 	for line in inputFile:
-		splits = line.strip().split(" ",1); #+/-1 idx:val idx:val  ... 
-		label = splits[0]
-		featureString = splits[1]
-		if featureString in positiveStrings and label == "-1.0":
-			deletedNegatives = deletedNegatives + 1;
-			continue;
-		features = featureString.split(" ")
+		splits = line.strip().split(" "); #groupID, weight, entityIndex
+		groupID = splits[0]
+		weight = splits[1]
+		entityIndex = splits[2]  # right answer has entityIndex = 0
+		if groupID != lastGroupId:
+			if lastGroupId != 0:
+				print str(lastGroupId) + " -- " + str(answerAtIndex)
+			rowIndex = 0
+			lastGroupId = groupID
 
-		row = dict()
-		for f in features:
-			idxVal = f.split(":");
-			row[idxVal[0]] = float(idxVal[1])
-		labels.append(label)
-		featuresDict.append(row)
-		#print label + " -- " + str(features)
-	inputFile.close();
-	print len(labels)
-	print len(featuresDict)
-	print "deletedNegatives: " + str(deletedNegatives)
-	
-	dictVectorizerModelPath = args.modelFile  + '/DictVectorizer'
-	classifierModelPath = args.modelFile  + '/classifier'
-	if args.mode == TRAIN:
-		v = DictVectorizer(sparse=True)
-		X = v.fit_transform(featuresDict)
-		joblib.dump(v, dictVectorizerModelPath)
-		#maxabs_scale(X, copy=False)
-		Y = np.array(labels)
-		#classifier = SVC(verbose=True,class_weight='balanced',cache_size=500,max_iter=1000)
-		classifier = LogisticRegression(verbose=1,class_weight='balanced',penalty='l2')
-		#classifier = tree.DecisionTreeClassifier(class_weight='balanced')
-		#classifier = RandomForestClassifier(n_estimators=20, class_weight='balanced')
-		#classifier = GradientBoostingClassifier(n_estimators=100, learning_rate=1.0, random_state=0)
-		#classifier = AdaBoostClassifier(n_estimators=100,base_estimator=RandomForestClassifier())
-
-		classifier.fit(X, Y);
-		joblib.dump(classifier, classifierModelPath)
-		logging.info ("training accuracy: " + str(classifier.score(X, Y)))
-		predictions = classifier.predict(X);
-		logging.info ("\n" + metrics.classification_report (Y, predictions) );
-
-		#skf = StratifiedKFold(Y, 4)
-		#for train, test in skf:
-		#	classifier.fit(X[train], Y[train]);	
-		#	logging.info ("training accuracy: " + str(classifier.score(X[train], Y[train])))
-		#	predictions = classifier.predict(X[test]);
-		#	logging.info ("\n" + metrics.classification_report (Y[test], predictions) );
-	elif args.mode == TEST:
-		print 'testing'
-		v = joblib.load(dictVectorizerModelPath)
-		X = v.transform(featuresDict)
-		Y = np.array(labels)
-		classifier = joblib.load(classifierModelPath)
-		predictions = classifier.predict(X);
-		predictionProbas = classifier.predict_proba(X);
-		for p in predictionProbas:
-			#if (p == '1.0'):
-			#	print 'Hi: 1'
-			#else: 
-			#	print 'Hi: 0'
-			print ('Hi: ' +  str(p[1]))
-		print str(classifier.classes_)
-		logging.info ("\n" + metrics.classification_report (Y, predictions) );
-
-	#pdb.set_trace()
+		if entityIndex == "0":
+			answerAtIndex = rowIndex
+		rowIndex = rowIndex + 1;
+	print str(groupID) + " -- " + str(answerAtIndex)
 
 lexEnt();
 sys.exit();

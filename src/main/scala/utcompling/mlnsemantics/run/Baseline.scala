@@ -658,13 +658,20 @@ object Baseline
 			w
 		}
 		var prettyLhs = Baseline.textEntitiesMap( textSp.nodes.head.value).map(w=>reanonymize(w.name)).toList.sorted.mkString("_") //+ "(" + textSp.nodes.head.value + ") "
+		var lhsLen = 0
 		var lhs = (textSp.edges.toList zip textSp.nodes.tail.toList)
 				.map(x => {
 					var dir = "";
 					if (x._1.edge._1 == x._2)
+					{
 						dir = "r2l";
+						lhsLen = lhsLen + 1 //take direction into account 
+					}
 					if (x._1.edge._2 == x._2)
+					{
 						dir = "l2r";
+						lhsLen = lhsLen - 1
+					}
 					val s = x._1.label.asInstanceOf[BoxerRel].name	+ "$" + dir
 					prettyLhs = prettyLhs + " " + s + " " + Baseline.textEntitiesMap(x._2.value).map(w=>reanonymize(w.name)).toList.sorted.mkString("_") //+ "(" + x._2.value + ") "
 					s;
@@ -673,13 +680,20 @@ object Baseline
 		if (textSp.edges.size == 0)
 			lhs = "null";
 		var prettyRhs = Baseline.hypEntitiesMap( hypSp.nodes.head.value).map(w=>reanonymize(w.name)).toList.sorted.mkString("_") // + "(" + hypSp.nodes.head.value + ") "
+		var rhsLen = 0
 		var rhs = (hypSp.edges.toList zip hypSp.nodes.tail.toList)
 				.map(x => {
 					var dir = "";
 					if (x._1.edge._1 == x._2)
+					{
 						dir = "r2l";
+						rhsLen = rhsLen + 1
+					}
 					if (x._1.edge._2 == x._2)
+					{
 						dir = "l2r";
+						rhsLen = rhsLen - 1
+					}
 					x._1.label.asInstanceOf[BoxerRel].name	+ "$" + dir
 					val s = x._1.label.asInstanceOf[BoxerRel].name	+ "$" + dir
 					prettyRhs = prettyRhs + " " + s + " " + Baseline.hypEntitiesMap(x._2.value).map(w=>reanonymize(w.name)).toList.sorted.mkString("_") // + "(" + x._2.value + ") "
@@ -697,7 +711,7 @@ object Baseline
 		if (Sts.opts.emRandInit)
 			Baseline.rand.nextDouble
 		else 
-			1.0/(1+Math.abs(textSp.weight - hypSp.weight));
+			1.0/(1+Math.abs(lhsLen - rhsLen));
 		
 		if (Baseline.preEvalGraphRules != null)
 		{
@@ -869,7 +883,6 @@ class Baseline (delegate: ProbabilisticTheoremProver[BoxerExpression])
 		Baseline.textRels = text.getRelations.groupBy(x => x.name + "#" + x.event + "#" + x.variable).map(_._2.head)
 		Baseline.hypPreds = goal.getPredicates.groupBy(x => x.name + "#" + x.variable /*+ "#" + x.pos*/).map(_._2.head)
 		Baseline.hypRels = goal.getRelations.groupBy(x => x.name + "#" + x.event + "#" + x.variable).map(_._2.head)
-
 		Baseline.textEntities = (Baseline.textPreds.map(_.variable.name) ++ Baseline.textRels.flatMap(r => List(r.variable.name, r.event.name))).toSet.toList
 		Baseline.textEntitiesMap = Baseline.textEntities.map(e => (e -> Baseline.textPreds.filter(_.variable.name == e).toSet)).toMap
 
@@ -889,13 +902,19 @@ class Baseline (delegate: ProbabilisticTheoremProver[BoxerExpression])
 		//find potential matched entities 
 		Baseline.entityPotentialMatchs = Baseline.hypEntities.map(hypE => (hypE -> Baseline.textEntities.filter(textE => {
 			//two entities match if they share a predicate with the same lemma
-			val textWords = Baseline.textEntitiesMap(textE).map(_.name)
-			val hypWords = Baseline.hypEntitiesMap(hypE).map(_.name)
+			val textWords:Set[String] = Baseline.textEntitiesMap(textE).flatMap( p =>
+				if (Sts.opts.logicFormSource == "word" && p.pos == "r") None
+				else Some(p.name))
+			val hypWords:Set[String] = Baseline.hypEntitiesMap(hypE).flatMap( p =>
+				if (Sts.opts.logicFormSource == "word" && p.pos == "r") None
+				else Some(p.name))
 			
-			val cosineSimilarities = textWords.flatMap(t => {
+			
+			val cosineSimilarities = List() /*textWords.flatMap(t => {
 				val vt =  Baseline.vectorSpace.getOrZero(t);
 				hypWords.map(h => Baseline.vectorSpace.getOrZero(h).cosine(vt))
 			}).toList.filter(_ > 1)
+			*/
 			
 			var x = textWords intersect hypWords
 			x = x -- Set("male", "female", "topic") //ignore meta words

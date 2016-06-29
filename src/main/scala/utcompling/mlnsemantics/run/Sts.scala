@@ -166,7 +166,7 @@ object Sts {
 		{
 			val qFile = qFiles(qFileIndex - 1)
 			Sts.pairIndex = qFileIndex;
-			println("=============\nQuestion %s\n%s\n=============".format(qFileIndex, qFile))
+			println("============\n# Question %s\n%s\n=============".format(qFileIndex, qFile))
 			val linesReader = readLines(qFile)
 			val title = linesReader.next()
 			linesReader.next()
@@ -220,9 +220,10 @@ object Sts {
 				val qWords = question.split(" ");
 				var minCost = 0.0
 				var minCostEntity = "";
-				Sts.qaEntities.foreach(ent=>
+				(Sts.qaRightAnswer :: Sts.qaEntities.keys.toList.sorted.filterNot(e => e.equals("@placeholder") || e.equals(Sts.qaRightAnswer)).toList).foreach(e =>  //for each named entity in the document 
+				//Sts.qaEntities.keys.foreach(e=>
 				{
-					val e = ent._1; //entity name
+					//================================
 					val entityLoc = words.zipWithIndex.filter(_._1 == e).map(_._2) 
 					var entityCost = 0.0;
 					var placeholderLoc = qWords.indexOf("@placeholder")
@@ -249,6 +250,57 @@ object Sts {
 						minCost = entityCost
 						minCostEntity = e
 					}
+					//================================
+					val exists = if((context+" ").contains(e + " ")) 1 else 0;
+					//================================
+					val existsInQ = if((question + " ").contains(e + " ")) 1 else 0;
+					//================================
+					val frequency = words.filter( _ == e).length
+					//================================
+					val position = words.indexOf(e);
+					//================================
+					var leftUnigram = 0
+					var leftBigram = 0
+					var rightUnigram = 0
+					var rightBigram = 0
+					val y = (" " + question + " ").split("@placeholder", 2).map(s => {
+						val splits = s.trim().split(" ")
+						(splits, splits.indices.tail.map( i => splits(i-1) + " " + splits(i) ))
+					})
+					if (y.length != 2)
+						println(y)
+					val Array (qLeft, qRight) = y
+					val sentences = context.split("\\.")
+					sentences.filter(_.contains(e + " ")).foreach(s => 
+						{
+							val x = (" " + s + " ").split(e + " ", 2).map(_.trim())
+							if (x.length != 2)
+								println (x)
+							val Array(left, right) = x
+							leftUnigram = Math.max(leftUnigram, qLeft._1.filter( left.contains(_)).size)
+							leftBigram = Math.max(leftBigram, qLeft._2.filter( left.contains(_)).size)
+							rightUnigram = Math.max(rightUnigram, qRight._1.filter( right.contains(_)).size)
+							rightBigram = Math.max(rightBigram, qRight._2.filter( right.contains(_)).size)
+						})
+						leftUnigram = Math.min(leftUnigram, 1)
+						leftBigram = Math.min(leftBigram, 1)
+						rightUnigram = Math.min(rightUnigram, 1)
+						rightBigram = Math.min(rightBigram, 1)
+					//================================
+					println  ("%d qid:%d 1:%d 2:%d 3:%d 4:%d 5:%d 6:%d 7:%d 8:%d 9:%f #%s".format(
+						if(e == Sts.qaRightAnswer) 1 else 0,
+						Sts.pairIndex,
+						exists,  //1
+						existsInQ, //2
+						frequency, //3
+						position, //4
+						leftUnigram, //5
+						leftBigram, //6
+						rightUnigram, //7
+						rightBigram, //8
+						1.0*entityCost/qWords.length, //9
+						e
+						))
 				})
 				LOG.trace(">> " +  minCostEntity + " - " + minCost)
 				Sts.qaAnswer = minCostEntity;
@@ -290,10 +342,8 @@ object Sts {
 	     var depParser: dhg.depparse.DepParser = null;
 	     val boxes: List[Option[utcompling.scalalogic.discourse.candc.boxer.expression.BoxerExpression]] = Sts.opts.logicFormSource match 
 	     {
-				case "dep" => {
-				  //depParser = DepParser.load();
-				  List();
-				}
+				case "dep" => List();
+				case "word" => List();
 				case "box" => {
 				  val di = new ModalDiscourseInterpreter
 				  val sen1Box = di.batchInterpret(List(sentences(0)), verbose = LOG.isTraceEnabled());
@@ -322,8 +372,11 @@ object Sts {
 	      Sts.hypothesis = sen2;
 	      Sts.textLemma = lemmas(0);
 	      Sts.hypothesisLemma = lemmas(1);
-	      println(Sts.text)
-	      println(Sts.hypothesis)
+	      if (Sts.qaRightAnswer == "") //print only if this is not a QA task
+	      {
+	    	  println(Sts.text)
+	    	  println(Sts.hypothesis)
+	      }
 	      val boxPair = boxes.map(x => Option(x.get.toString()));
           val result = runOnePair(boxPair, depParser);
           println(result)
@@ -338,7 +391,8 @@ object Sts {
 				case "ngram" => NgramCompositeVectorMaker(opts.ngramN, opts.ngramAlpha);
 			}
 			val logicFormSource: DiscourseInterpreter[BoxerExpression] = opts.logicFormSource match {
-				case "dep" => new DependencyParsedBoxerDiscourseInterpreter(depParser);
+				case "dep" => new DependencyParsedBoxerDiscourseInterpreter(depParser, false);
+				case "word" => new DependencyParsedBoxerDiscourseInterpreter(depParser, true);
 				case "box" => new PreparsedBoxerDiscourseInterpreter(boxPair, new PassthroughBoxerExpressionInterpreter());
 			}			
 			

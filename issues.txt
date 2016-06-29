@@ -1,3 +1,22 @@
+- row text alignment instead of dependency 
+
+- in case of conflict between positive and negative, remove the negative example
+- Weight of a clique should increase by length of clique
+- Try alignment algorithm 2 is commented out. It generats so many additional rules, so I am not using it right now. 
+- Alignment algorithms 2: evaluate it on number of new entities per alignment vs algorithm 1
+- Alignment algorithm 2 should change to do MAP inference for each entity separatly, then for each entity print number of aligned entities, number of null entites, number of best rules, rules weights. 
+These are all features for the classifier 
+- Increase chances of an alignment using cosine similarity and wordent not just perfect matchs. 
+
+22% because of rules that are both, positive and negative. 
+(not sure) 17         at utcompling.mlnsemantics.inference.EditDRSTheoremProver.setNamedEntities(EditDRSTheoremProver.scala:141)
+(different name before and after parsing) 46         at utcompling.mlnsemantics.rules.GraphRules.mapInfer(GraphRules.scala:403)
+(two named entities assigned the same entity ID) 26         at utcompling.mlnsemantics.run.Baseline$.utcompling$mlnsemantics$run$Baseline$$reanonymize$1(Baseline.scala:515)
+38,55,67,93,159,189,237,240,318,321,333,364,398,495,513,593,603,673,776,816,881,885,888,1036,1074,1097,1193,1229,1321,1356,1467,1491,1585,1714,1717,1786,1799,1960,1994,2027,2072,2181,2198,2333,2391,2399,2404,2422,2467,2610,2613,2626,2676,2735,2754,2758,2778,2790,2811,2872,2896,2909,2923,2935,2994,3026,3029,3043,3062,3120,3161,3183,3196,3218,3234,3271,3282,3461,3465,3478,3487,3494,3520,3570,3753,3785,3796,3867,3872
+
+new command: 
+bin/mlnsem qa qa/resources/cnn/validation/  1-500  -log OFF  -withNegT false   -negativeEvd false   -softLogic psl -diffRules false  -keepUniv   false  -ner candc  -graphRules 2  -timeout 600000 -graphRuleLengthLimit 5 -logic dep  -baseline search -coref false  -emRandInit false -emTrainOnBest false  -treeDep true  -noMergeEntity false -vectorSpace ../../GoogleNews-vectors-negative300.bin -graphRulesFile tmp/rulesLexent
+
 new command: 
 qa qa/resources/cnn/validation/ 400  -log OFF   -withNegT false   -negativeEvd false   -softLogic psl -diffRules false  -keepUniv   false  -ner candc  -graphRules 1  -timeout 600000 -graphRuleLengthLimit 5 -logic dep  -baseline dep -coref false -emRandInit false -emTrainOnBest true  -ruleClsModel tmp/model.qa   -vectorSpace ../../GoogleNews-vectors-negative300.bin
 --

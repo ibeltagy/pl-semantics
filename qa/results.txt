@@ -1,0 +1,10 @@
+search-dep
+search-dep-scored
+search-dep-scored-ranked
+search-word						1845						1511
+search-word-scored 				1763 						1468						lexEnt: 0.24, 0.84, 0.37
+search-word-scored-ranked		2065	(+401+163)	52.63	1356	(+409+174)	42.40
+word							2494	(+405+155)	63.56	1892	(+375+162)	59.16
+ensumble-3						2809	(+311+87)	71.59	1931	(+339+139)	60.38
+total							3924						3198
+

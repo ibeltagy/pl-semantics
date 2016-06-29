@@ -385,6 +385,7 @@ class Config(opts: Map[String, String] = Map()) {
   val logicFormSource = opts.get("-logic") match {
     case Some("dep") => "dep";
     case Some("box") => "box";
+    case Some("word") => "word";
     case None => "box";
     case Some(x) => throw new RuntimeException("Invalid value " + x + " for argument -logic");
   }

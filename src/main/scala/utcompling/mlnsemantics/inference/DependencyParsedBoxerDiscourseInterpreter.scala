@@ -24,7 +24,8 @@ import utcompling.mlnsemantics.util.DepParseUtil
  * Discourse Interpreter that simply interprets pre-parsed strings
  */
 class DependencyParsedBoxerDiscourseInterpreter[T](
-    depParser: DepParser)
+    depParser: DepParser,
+    wordSequence:Boolean=false)
   extends DiscourseInterpreter[T] {
 
   private val LOG = LogFactory.getLog(classOf[DependencyParsedBoxerDiscourseInterpreter[T]])
@@ -47,7 +48,7 @@ class DependencyParsedBoxerDiscourseInterpreter[T](
           //val graph = depParser.apply(sentence.head).head
           //println(graph.graphviz)
           //val boxerExp = predicatesToBoxerExpression(graph.logic, discourseId)
-          val boxerExp = DepParseUtil.process(sentence.head, discourseId);
+          val boxerExp = DepParseUtil.process(sentence.head, discourseId, wordSequence);
           val listOfExpW = List((boxerExp, 1.0))
           val exp:T = BoxerPrs(listOfExpW).asInstanceOf[T]
           Option(  exp )

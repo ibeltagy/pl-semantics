@@ -286,13 +286,13 @@ object FindEventsProbabilisticTheoremProver
   {
     var add : Int = name.charAt(0) match 
     {
-        case 'x' => 1000;
-        case 'e' => 2000;
-        case 'p' => 3000;
-        case 's' => 4000;
+        case 'x' => 10000;
+        case 'e' => 20000;
+        case 'p' => 30000;
+        case 's' => 40000;
         case _ => throw new RuntimeException("Unsupported variable type (" + name.charAt(0) + ")" );
     }
-    assert (name.length() <= 4, "Variable "+name+" has index greater than 999")
+    assert (name.length() <= 5, "Variable "+name+" has index greater than 9999")
     "x" + (add + name.substring(1).toInt)
   }
 }

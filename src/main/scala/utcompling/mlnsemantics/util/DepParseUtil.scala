@@ -26,6 +26,7 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP
 import edu.stanford.nlp.pipeline.Annotation
 import edu.stanford.nlp.process.Morphology
 import utcompling.mlnsemantics.run.Sts
+import edu.stanford.nlp.ling.CoreLabel
 
 object DepParseUtil 
 {
@@ -47,7 +48,7 @@ object DepParseUtil
 				"Liam Neeson, Ed Harris and Joel Kinnaman star in director Jaume Collet-Serra's crime film about a hit man trying to save his estranged son from a revenge plot. ", 
 				"Sanaa, Yemen (CNN) In just a few weeks' time, good relations with neighbors have become a matter of survival for Yemen President Abdu Rabu Mansour Hadi. "
 				).mkString(" ");
-		process(text, "h")
+		process(text, "h", false)
 
 		// creates a StanfordCoreNLP object, with POS tagging, lemmatization, NER, parsing, and coreference resolution 
 		//val props = new Properties();
@@ -97,7 +98,7 @@ object DepParseUtil
 		morphology = new Morphology();
 		isLoaded = true;
 	}
-	def process(doc: String, discId: String) : BoxerExpression = 
+	def process(doc: String, discId: String, wordSequence:Boolean) : BoxerExpression = 
 	{
 		if(!DepParseUtil.isLoaded)
 			DepParseUtil.load();
@@ -113,28 +114,64 @@ object DepParseUtil
 		{
 			val sentence = sentences.next();
 			docTokensCntIncreamental = docTokensCntIncreamental + sentence.length;
-			//if (sentence.contains("everest"))
-			//	println(sentence)
-			//val tagged = tagger.tagSentence(sentence);
-			val tagged = tagger.tagCoreLabelsOrHasWords(sentence, morphology, true)
-			//println("POS: " + tagged);
-			val gs:GrammaticalStructure = parser.predict(tagged);
-			val depStruct = ( if (Sts.opts.treeDep) gs.typedDependenciesCollapsedTree()
-							  else gs.typedDependenciesCCprocessed()
-							).toList;
 			
-			val sortedDep = sortDep(depStruct);
-			LOG.trace("Sorted DEP: " + sortedDep);
-			//sorted dependencies to set of entities and relations between them
-			val (e, r) = depToEntityRel(sortedDep)
+			val tagged = tagger.tagCoreLabelsOrHasWords(sentence, morphology, true)
+			val (e, r) = if (wordSequence)
+			{
+				val stopWords = List("a", "the", "and", "or", ".", ",", "!", "?", "am", "is", "are", "have", "has", "been", "will");
+				val e: ListBuffer[utcompling.mlnsemantics.util.DepParseUtil.Entity] = ListBuffer();
+				val r: ListBuffer[utcompling.mlnsemantics.util.DepParseUtil.Rel] = ListBuffer();
+				var entityIdx  = 1;
+				var lastEntity:Entity = null
+				tagged.foreach( w =>
+				{
+					val word = w.asInstanceOf[CoreLabel];
+					//println (word.category() + " - " + word.word() + " - " + word.after() + " - " + word.index() + " - " + word.sentIndex())
+					if (posMapToBoxerPos(posMap(word.tag())) != "x" || word.word() =="@placeholder") //TODO: and not in stop words
+					{
+						val idxWord = new IndexedWord(word);
+						idxWord.setIndex(entityIdx);
+						//idxWord.setLemma( word.word());
+						//idxWord.setWord(word.word());
+						//idxWord.setTag("NN");
+						val newEnt = new Entity(idxWord.index() + currentWordCounter, ListBuffer(idxWord))
+						e.add(newEnt);
+						
+						if (lastEntity != null)
+						{
+							val grmRel = GrammaticalRelation.DEPENDENT
+							val tDep = new TypedDependency(grmRel, newEnt.words.head, lastEntity.words.head);
+							val newRel = new Rel(tDep, newEnt, lastEntity);
+							r.add(newRel);
+						}
+
+						lastEntity = newEnt
+						entityIdx = entityIdx + 1;
+					}
+				})
+				(e,r)
+			}
+			else
+			{
+				//println("POS: " + tagged);
+				val gs:GrammaticalStructure = parser.predict(tagged);
+				val depStruct = ( if (Sts.opts.treeDep) gs.typedDependenciesCollapsedTree()
+								  else gs.typedDependenciesCCprocessed()
+								).toList;
+				
+				val sortedDep = sortDep(depStruct);
+				LOG.trace("Sorted DEP: " + sortedDep);
+				//sorted dependencies to set of entities and relations between them
+				depToEntityRel(sortedDep)
+			}
 			boxExpRef ++= e.map(x => BoxerVariable("x" + x.id))
 			boxExpCond ++= e.flatMap(x => x.words.map(w => {
 				val predName = if (Sts.qaEntities.contains(w.word()))  w.word //this is the name of an entity
 								else w.lemma(); 
 				BoxerPred(discId, List(BoxerIndex(w.index() + currentWordCounter)), BoxerVariable("x" + x.id), predName, posMapToBoxerPos(posMap(w.tag())), 0)
 			}));
-			
 			boxExpCond ++= r.map(x => BoxerRel(discId, List(), BoxerVariable("x" + x.from.id), BoxerVariable("x" + x.to.id), x.rel.reln().getShortName(), 0))
+
 			currentWordCounter = currentWordCounter + sentence.length;
 		}
 		//assert (docTokensCntIncreamental == docTokensCnt);
@@ -415,14 +452,16 @@ object DepParseUtil
 		"NOUN"	->	"n",
 		"PROPN"	->	"n",
 		"VERB"	->	"v",
+		////
 		"ADP"	->	"r",
-		"AUX"	->	"v",
+		"AUX"	->	"x",
 		"CONJ"->	"r",
 		"DET"	->	"x",
 		"NUM"	->	"n",
-		"PART"->	"x",
+		"PART"->	"r",
 		"PRON"	->	"n",
-		"SCONJ"->	"r",
+		"SCONJ"->	"x",
+		///
 		"PUNCT"->	"x",
 		"SYM"	->	"x",
 		"X"	->	"x"
