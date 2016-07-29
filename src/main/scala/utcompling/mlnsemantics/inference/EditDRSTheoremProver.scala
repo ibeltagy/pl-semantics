@@ -126,6 +126,9 @@ class EditDRSTheoremProver(
   var entityVarMap: collection.mutable.Map[String, collection.mutable.ListBuffer[String]] =  collection.mutable.Map()
   def setNamedEntities(inputE:BoxerExpression):BoxerExpression = 
   {
+  	if (Sts.qaRightAnswer == "") //if not QA task
+  		return inputE
+  		
   	var e = inputE;
 	var preds = e.getPredicates;
 	if (preds.filter(_.name == "@placeholder").size == 0 && isProcessingGoal && Sts.qaRightAnswer != "") //QA question without a placeholder
