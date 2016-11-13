@@ -23,16 +23,6 @@ class BoxerImpl extends  Boxer {
         FileUtils.writeUsing(tmpInFilename) { f =>
             f.write(candcOut)
         }
-        
-        /*val out = new ListBuffer[String]
-		val err = new StringBuilder
-	 
-	    var command = "grep '%  score = ' "+ tempFilename
-	    Process("/bin/sh", Seq("-c", command)) ! (ProcessLogger(l => out.append(l), System.err.println(_)))
-	    
-	    //println (out.mkString("\n"))
-	     */
-
         val defaultArgs = Map[String, String](
             "--input" -> tmpInFilename,
             "--output" -> tmpOutFilename)

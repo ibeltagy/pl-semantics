@@ -80,6 +80,9 @@ case $DS in
   par) dsPath="$RES/sts/STS.MSRpar" ;;
   frc) dsPath="$RES/fracas/fracas" ;;
   syn) dsPath="$RES/synthetic/synthetic" ;;
+  snli-train) dsPath="$RES/snli/snli-train" ;;
+  snli-dev) dsPath="$RES/snli/snli-dev" ;;
+  snli-test) dsPath="$RES/snli/snli-test" ;;
   sick-rte) dsPath="$RES/sick/sick-rte" ;;
   sick-sts) dsPath="$RES/sick/sick-sts" ;;
   sick-test) dsPath="$RES/sick/sick-test" ;;
