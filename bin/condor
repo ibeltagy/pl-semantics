@@ -9,23 +9,23 @@ case $CMD in
 		exit 0
 		;;
 	remove)
-      /lusr/opt/condor/bin/condor_rm -all
+		/lusr/opt/condor/bin/condor_rm -all
 		exit 0
 		;;
 esac
 
 expDir=$2
 if [ -z "$expDir" ]; then
-   echo "Experiment directory can not be empty"
-   exit 1
+	echo "Experiment directory can not be empty"
+	exit 1
 fi
 
 outputDir="$expDir/"
 
 #step=$3
 #if [ -z "$step" ] || [ "$step" -le "0" ]; then
-#   echo "step can not be zero or empty"
-#   exit 1
+#	echo "step can not be zero or empty"
+#	exit 1
 #fi
 
 #total=$(( 5000+$step-1 ))
@@ -36,73 +36,71 @@ outputDir="$expDir/"
 #shift
 
 case $CMD in
-   submit | print)
-	  	step=$3
-	  	if [ -z "$step" ] || [ "$step" -le "0" ]; then
-		  echo "step can not be zero or empty"
-		  exit 1
-	  	fi
+	submit | print)
+		step=$3
+		if [ -z "$step" ] || [ "$step" -le "0" ]; then
+			echo "step can not be zero or empty"
+			exit 1
+		fi
 
 		DS=$4
 		case $DS in
-			 vid) 
+			vid)
 				dsSize=1500 
 				task=sts
 				gs="resources/sts/STS.MSRvid.gs"
 				;;
-			 par) 
+			par) 
 				dsSize=1500
 				task=sts
 				gs="resources/sts/STS.MSRpar.gs"
 				;;
-			 sick-rte)
+			sick-rte)
 				dsSize=5000
 				task=rte
 				gs="resources/sick/sick-rte.gs"
 				;;
-			 sick-sts) 
+			sick-sts) 
 				dsSize=5000
 				task=sts
 				gs="resources/sick/sick-sts.gs"
 				;;
-			 sick-rte-test) 
+			sick-rte-test) 
 				dsSize=4927
 				task=rte
 				gs="resources/sick/sick-test-rte.gs"
 				DS=sick-test
 				;;
-			 sick-sts-test) 
+			sick-sts-test) 
 				dsSize=4927
 				task=sts
 				gs="resources/sick/sick-test-sts.gs"
 				DS=sick-test
 				;;
-          rte1)
-            dsSize=1367
-            task=rte
-            gs="resources/rte1/RTE1.gs"
-            DS="rte 1"
-            ;;
-          qa)
-            qDir=$5
+			rte1)
+				dsSize=1367
+				task=rte
+				gs="resources/rte1/RTE1.gs"
+				DS="rte 1"
+				;;
+			qa)
+				qDir=$5
 				shift
-            task=rte
-            DS="qa "$qDir
+				task=rte
+				DS="qa "$qDir
 				dsSize=$(ls -all $qDir | grep question | wc -l)
 				echo "Dataset: "$DS
 				echo "Dataset size: "$dsSize	
 				;;
-          *)
+			*)
 				echo "$DS dataset is not supported"
 				exit 1
-			 ;;
+			;;
 		esac
-
-
-	  	total=$(( $dsSize+$step-1 ))
-	  	total=$(( $total / $step ))
-	  	echo "Number of jobs $total"
-	  	shift #CMD
+		total=$(( $dsSize+$step-1 ))
+		total=$(( $total / $step ))
+		echo "Number of jobs $total"
+		shift #CMD
 		shift #outputDir
 		shift #step
 		shift #DS
@@ -113,18 +111,18 @@ case $CMD in
 			rm $outputDir -r
 			mkdir $outputDir
 			echo  $step  > $outputDir/config
-      	echo  $total >> $outputDir/config
-         echo  $gs >> $outputDir/config
-         echo  $task >> $outputDir/config
-	      echo "$args" >> $outputDir/config
+			echo  $total >> $outputDir/config
+			echo  $gs >> $outputDir/config
+			echo  $task >> $outputDir/config
+			echo "$args" >> $outputDir/config
 		fi
 		;;
 	fix | collect | eval)
 		step=$(head -n 1 $outputDir/config)
-	   total=$(head -n 2 $outputDir/config| tail -n 1)
-      gs=$(head -n 3 $outputDir/config| tail -n 1)
-      task=$(head -n 4 $outputDir/config| tail -n 1)
-	   args=$(tail  -n 1 $outputDir/config)
+		total=$(head -n 2 $outputDir/config| tail -n 1)
+		gs=$(head -n 3 $outputDir/config| tail -n 1)
+		task=$(head -n 4 $outputDir/config| tail -n 1)
+		args=$(tail  -n 1 $outputDir/config)
 		echo "step: $step"
 		echo "total: $total"
 		echo "args: $args"
@@ -141,43 +139,43 @@ for (( i=1; i<=$total; i++ ))
 do
  outputFile=$outputDir$i
  case $CMD in
-   print)
-      echo "bin/mlnsem run-condor $step $i $args $outputFile"
-      ;;
-   submit)
-      echo "bin/mlnsem run-condor $step $i $args $outputFile" 
-      bin/mlnsem run-condor $step $i $args $outputFile
-      ;;
+	print)
+		echo "bin/mlnsem run-condor $step $i $args $outputFile"
+		;;
+	submit)
+		echo "bin/mlnsem run-condor $step $i $args $outputFile" 
+		bin/mlnsem run-condor $step $i $args $outputFile
+		;;
 	*)
-      b=$(tail $outputFile.out -n 5 | head -n 1)
-      len=$(expr length "$b")
-      len=$(expr $len - 2);
-      firstChar=$(expr substr "$b" 1 1)
-      if [[ "$firstChar" == "[" ]]; then
-      	b=$(expr substr "$b" 2 $len)
-      else
-      	b="ERROR"
+		b=$(tail $outputFile.out -n 5 | head -n 1)
+		len=$(expr length "$b")
+		len=$(expr $len - 2);
+		firstChar=$(expr substr "$b" 1 1)
+		if [[ "$firstChar" == "[" ]]; then
+			b=$(expr substr "$b" 2 $len)
+		else
+			b="ERROR"
 			errorCnt=$(($errorCnt + 1))
-      fi
+		fi
 		;;
  esac
  case $CMD in
 	collect)
-      echo "$outputFile: $b"
-      if [[ "$i" == 1 ]]; then
-         echo "$outputFile: $b" > $outputDir/result
-      else
-         echo "$outputFile: $b" >> $outputDir/result
-      fi
-      collectBuffer="$collectBuffer $b"
+		echo "$outputFile: $b"
+		if [[ "$i" == 1 ]]; then
+			echo "$outputFile: $b" > $outputDir/result
+		else
+			echo "$outputFile: $b" >> $outputDir/result
+		fi
+		collectBuffer="$collectBuffer $b"
 
 		;;
 	fix)
 		if [ "$b" == "ERROR" ]; then
 			echo "RESUBMIT bin/mlnsem run-condor $step $i $args $outputFile"
-         #bin/mlnsem run-condor $step $i $args $outputFile
+			#bin/mlnsem run-condor $step $i $args $outputFile
 		else
-		  	echo "$i is ok"
+			echo "$i is ok"
 		fi
 		;;
 	eval)
@@ -189,21 +187,21 @@ done
 
 case $CMD in 
 	collect)
-   echo "Errors found: $errorCnt"
-   echo  "Errors found: $errorCnt"  >> $outputDir/result
-   collectBuffer="[$collectBuffer]"
+	echo "Errors found: $errorCnt"
+	echo  "Errors found: $errorCnt"  >> $outputDir/result
+	collectBuffer="[$collectBuffer]"
 	echo $collectBuffer >> $outputDir/result
 	;;
-   fix)
+	fix)
 	echo "Errors resubmitted: $errorCnt"
-   ;;
-   eval)
-      if [ "$task" == "rte" ]; then
-		   tail -n 1 $outputDir/result | bin/weka.sh classify $gs 4
-      else
-		   tail -n 1 $outputDir/result | bin/weka.sh regress $gs
-      fi
-   ;;
+	;;
+	eval)
+		if [ "$task" == "rte" ]; then
+			tail -n 1 $outputDir/result | bin/weka.sh classify $gs 4
+		else
+			tail -n 1 $outputDir/result | bin/weka.sh regress $gs
+		fi
+	;;
 esac
 
 
