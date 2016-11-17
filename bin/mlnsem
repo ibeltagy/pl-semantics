@@ -4,8 +4,6 @@ export CANDCHOME=candc/bin
 #export ALCHEMYHOME=alchemy/bin
 export WORDNETHOME=resources/wordnet
 
-hostname
-
 SBT="java -Dfile.encoding=UTF8 -Xdebug -Xmx4096M -Xss1M -XX:+CMSClassUnloadingEnabled -jar bin/sbt-launch-*.jar"
 START="target/start"
 RES="resources"
@@ -144,14 +142,13 @@ if [ "$CMD" == "run-condor" ]; then
 	rngFrom=$(( $index - 1 ))
 	rngFrom=$(( $rngFrom * $step + 1))
 	if [ "$DS" == "qa" ]; then
-		echo QA
-		./bin/condorizer.py $START utcompling.mlnsemantics.run.Sts qa $dsPath $rngFrom-$rngTo "$@"
+		$START utcompling.mlnsemantics.run.Sts qa $dsPath $rngFrom-$rngTo "$@"
 	else
 		if [ "$rngFrom" -gt "$rowsCnt" ]; then
-			echo "range $rngFrom-$rngTo beyond dataset size"
+			echo "range $rngFrom-$rngTo beyond dataset size" >&2
 			exit 1
 		fi
-		./bin/condorizer.py $START utcompling.mlnsemantics.run.Sts run $txt $box $lem $vs $gs $out $rngFrom-$rngTo "$@"
+		$START utcompling.mlnsemantics.run.Sts run $txt $box $lem $vs $gs $out $rngFrom-$rngTo "$@"
 	fi
 fi
 
