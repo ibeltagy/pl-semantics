@@ -21,7 +21,6 @@ psl/run
 *.class
 *~
 lib/ws4j-1.0.1.jar
-temp-*.mln
 *.arff
 easyccg/bin/
 easyccg/model.tar.gz
@@ -33,3 +32,4 @@ resources/*.idx/
 resources/ppdb/*.idx
 results
 .DS_Store
+tmp-*
