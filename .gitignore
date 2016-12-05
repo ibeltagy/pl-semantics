@@ -33,3 +33,6 @@ resources/ppdb/*.idx
 results
 .DS_Store
 tmp-*
+resources/snli
+boxdebug
+predictions

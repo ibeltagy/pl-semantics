@@ -128,8 +128,12 @@ case $CMD in
 esac
 
 
-collectBuffer=""
+export collectBuffer=""
 errorCnt=0
+if [ "$CMD" == "collect" ]; then
+	echo -n > $outputDir/result
+fi
+
 for (( i=1; i<=$total; i++ ))
 do
 	outputFile=$outputDir/out.$(( $i - 1 ))
@@ -137,37 +141,9 @@ do
 	print | submit)
 		echo "bin/mlnsem run-condor $step $i $args"
 		;;
-	*)
-		b=$(tail $outputFile -n 5 | head -n 1)
-		len=$(expr length "$b")
-		len=$(expr $len - 2);
-		firstChar=$(expr substr "$b" 1 1)
-		if [[ "$firstChar" == "[" ]]; then
-			b=$(expr substr "$b" 2 $len)
-		else
-			b="ERROR"
-			errorCnt=$(($errorCnt + 1))
-		fi
-		;;
-	esac
-	case $CMD in
 	collect)
-		#echo "$outputFile: $b"
-		if [[ "$i" == 1 ]]; then
-			echo "$outputFile: $b" > $outputDir/result
-		else
-			echo "$outputFile: $b" >> $outputDir/result
-		fi
-		collectBuffer="$collectBuffer $b"
-		;;
-	fix)
-		if [ "$b" == "ERROR" ]; then
-			echo "RESUBMIT bin/mlnsem run-condor $step $i $args"
-			#bin/mlnsem run-condor $step $i $args $outputFile
-		# be silent when everything is okay.
-		#else
-		#	echo "$i is ok"
-		fi
+		b="$(grep '^\[' $outputFile | head -n1 | tr '][ ' '  \n')"
+		echo "$b" >> $outputDir/result
 		;;
 	eval)
 		break
@@ -180,6 +156,7 @@ done | case $CMD in
 			-o $outputDir \
 			--wait \
 			bash
+		rm -f /scratch/cluster/roller/rtesystem/pl-semantics/tmp-*
 		;;
 	*)
 		cat -
@@ -187,20 +164,18 @@ done | case $CMD in
 esac
 
 case $CMD in 
-	collect)
-		echo "Errors found: $errorCnt"
-		echo  "Errors found: $errorCnt"  >> $outputDir/result
-		collectBuffer="[$collectBuffer]"
-		echo $collectBuffer >> $outputDir/result
-		;;
 	fix)
 		echo "Errors resubmitted: $errorCnt"
 		;;
 	eval)
 		if [ "$task" == "rte" ]; then
-			tail -n 1 $outputDir/result | bin/weka.sh classify $gs 4
+			echo "Running Posthoc Classifier"
+			echo "--------------------------------------------------"
+			python bin/classifier.py --train $outputDir/result --gold-train $gs
+			echo "--------------------------------------------------"
 		else
-			tail -n 1 $outputDir/result | bin/weka.sh regress $gs
+			echo "No longer implemented."
+			#tail -n 1 $outputDir/result | bin/weka.sh regress $gs
 		fi
 		;;
 esac
