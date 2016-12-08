@@ -61,14 +61,15 @@ def cv_eval(clf, X, Y):
     full_eval(Y, Yhat)
 
 def main():
-    parser = argparse.ArgumentParser('description')
+    parser = argparse.ArgumentParser('Post-hoc classifier')
     parser.add_argument('--train', '-t', type=argparse.FileType('r'), help='Training input')
     parser.add_argument('--gold-train', '-g', type=argparse.FileType('r'), help='Training gold')
     parser.add_argument('--test', '-T', type=argparse.FileType('r'), help='Test input (optional)')
     parser.add_argument('--gold-test', '-G', type=argparse.FileType('r'), help='Test gold')
+    parser.add_argument('--arff', action='store_true')
     args = parser.parse_args()
 
-    print args
+    #print args
 
     #clf = sklearn.svm.SVC(class_weight='balanced')
     clf = sklearn.svm.SVC()
@@ -76,8 +77,20 @@ def main():
     Xtrain = read_features(args.train)
     Ytrain = read_gold(args.gold_train)
 
-    print "X:", Xtrain.shape
-    print "Y:", Ytrain.shape
+    if args.arff:
+        print "@relation rte"
+        for i in xrange(Xtrain.shape[1]):
+            print "@ATTRIBUTE feat%d NUMERIC" % (i)
+        print "@ATTRIBUTE class {ent,neu,con}"
+        print
+        print "@DATA"
+        lookup = np.array(["con","neu","ent"])
+        for i in xrange(Xtrain.shape[0]):
+            print "%s,%s" % (",".join(map(str, Xtrain[i])), lookup[Ytrain[i]])
+        return
+
+    #print "X:", Xtrain.shape
+    #print "Y:", Ytrain.shape
 
     #print "### TRAINING FIT ###"
     #clf.fit(Xtrain, Ytrain)
@@ -88,9 +101,9 @@ def main():
     print "### TRAINING (%d-fold CV) ###" % NUM_CV
     cv_eval(clf, Xtrain, Ytrain)
 
-    print
-    print "### TESTING ###"
     if args.test:
+        print
+        print "### TESTING ###"
         Xtest = read_features(args.test)
         Ytest = read_gold(args.gold_test)
         clf.fit(Xtrain, Ytrain)
