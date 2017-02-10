@@ -21,6 +21,7 @@ import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerPred
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerRel
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerDrs
 import utcompling.scalalogic.discourse.candc.boxer.expression.BoxerIndex
+import utcompling.mlnsemantics.util.Config
 import java.util.Properties
 import edu.stanford.nlp.pipeline.StanfordCoreNLP
 import edu.stanford.nlp.pipeline.Annotation
@@ -39,7 +40,9 @@ object DepParseUtil
 	def main(args: Array[String]) 
 	{
 		System.err.println("host: ");
-		//val text = "I can almost always tell when movies use fake dinosaurs. All of them are. A man is walking to the car. A man bought an apple and an orange. ";
+		if (Sts.opts == null)
+			Sts.opts = new Config()
+	//val text = "I can almost always tell when movies use fake dinosaurs. All of them are. A man is walking to the car. A man bought an apple and an orange. ";
 		val text = List(
 				"Sue is in shape. ",
 				"A man is driving Mary's red car fast. ",
