@@ -1,7 +1,7 @@
 #!/bin/bash
 read line
 wekaJarPath="lib/weka.jar"
-libsvmPath="lib/libsvm/libsvm.jar:lib/LibSVM.jar"
+libsvmPath="lib/LibSVM-weka.jar:lib/LibSVM.jar"
 act=$line
 CMD=$1
 gs=$2

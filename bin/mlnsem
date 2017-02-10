@@ -4,66 +4,64 @@ export CANDCHOME=candc/bin
 #export ALCHEMYHOME=alchemy/bin
 export WORDNETHOME=resources/wordnet
 
-hostname
-
 SBT="java -Dfile.encoding=UTF8 -Xdebug -Xmx4096M -Xss1M -XX:+CMSClassUnloadingEnabled -jar bin/sbt-launch-*.jar"
 START="target/start"
 RES="resources"
 
-CMD=$1  #install, compile, boxer, run, box, lem, vs, gen, all, vecadd, vecmull, run-condor
+CMD=$1 #install, compile, boxer, run, box, lem, vs, gen, all, vecadd, vecmull, run-condor
 shift
 case $CMD in
-  download)
-	wget -O lib/ws4j-1.0.1.jar https://ws4j.googlecode.com/files/ws4j-1.0.1.jar	
-	mkdir candc/models
-	echo "Please download C&C model manually from http://svn.ask.it.usyd.edu.au/trac/candc/wiki/Download and save it to candc/models."
+	download)
+		wget -O lib/ws4j-1.0.1.jar https://ws4j.googlecode.com/files/ws4j-1.0.1.jar	
+		mkdir candc/models
+		echo "Please download C&C model manually from http://svn.ask.it.usyd.edu.au/trac/candc/wiki/Download and save it to candc/models."
 	;;
-  install)
-   #ln -s /u/beltagy/workspace/deft/mln-semantics/lib/ws4j-1.0.1.jar lib/ws4j-1.0.1.jar
-   #ln -s /u/beltagy/workspace/deft/mln-semantics/candc/models candc/models
-   #ln -s /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt resources/full.vs
-   #ln -s /u/dhg/Corpora/wordnet-3.0/ resources/wordnet
-   #ln -s /u/beltagy/workspace/deft/mln-semantics/resources/englishPCFG.ser.gz resources/englishPCFG.ser.gz
-   #ln -s /u/beltagy/workspace/deft/mln-semantics/resources/rules resources/rules
-   #ln -s /u/beltagy/workspace/deft/mln-semantics/resources/phrase-vectors resources/phrase-vectors
-	make -C candc/
-	make -C candc/ bin/boxer
-	git checkout candc/src/lib/version.cc
-	git checkout candc/src/prolog/boxer/version.pl
-   #make -C alchemy/src/ depend
-	exit 0
+	install)
+		#ln -s /u/beltagy/workspace/deft/mln-semantics/lib/ws4j-1.0.1.jar lib/ws4j-1.0.1.jar
+		#ln -s /u/beltagy/workspace/deft/mln-semantics/candc/models candc/models
+		#ln -s /u/dhg/Corpora/nytgiga.lem.vc.f2000.m50.wInf.txt resources/full.vs
+		#ln -s /u/dhg/Corpora/wordnet-3.0/ resources/wordnet
+		#ln -s /u/beltagy/workspace/deft/mln-semantics/resources/englishPCFG.ser.gz resources/englishPCFG.ser.gz
+		#ln -s /u/beltagy/workspace/deft/mln-semantics/resources/rules resources/rules
+		#ln -s /u/beltagy/workspace/deft/mln-semantics/resources/phrase-vectors resources/phrase-vectors
+		make -C candc/
+		make -C candc/ bin/boxer
+		git checkout candc/src/lib/version.cc
+		git checkout candc/src/prolog/boxer/version.pl
+		#make -C alchemy/src/ depend
+		exit 0
 	;;
-  compile)
-	$SBT add-start-script-tasks start-script
-	make -C alchemy/src/ infer
-	#ant -buildfile psl/build.xml
-	exit 0
-   ;;
-  boxer)
-	$START utcompling.mlnsemantics.run.BoxerCli "$@"
-	exit 0
-   ;;
-  console)
-    $SBT console
-    exit 0
-   ;;
-  sbt)
-	$SBT
-	exit 0
+	compile)
+		$SBT add-start-script-tasks start-script
+		make -C alchemy/src/ infer
+		#ant -buildfile psl/build.xml
+		exit 0
 	;;
-  sen)
-    $START utcompling.mlnsemantics.run.Sts sen "$@"
-    exit 0
-   ;;
-  qa)
-    $START utcompling.mlnsemantics.run.Sts qa "$@"
-    exit 0
-   ;;
-  run-condor)
-   step=$1
-   shift
-   index=$1
-   shift
+	boxer)
+		$START utcompling.mlnsemantics.run.BoxerCli "$@"
+		exit 0
+	;;
+	console)
+		$SBT console
+		exit 0
+	;;
+	sbt)
+		$SBT
+		exit 0
+	;;
+	sen)
+		$START utcompling.mlnsemantics.run.Sts sen "$@"
+		exit 0
+	;;
+	qa)
+		$START utcompling.mlnsemantics.run.Sts qa "$@"
+		exit 0
+	;;
+	run-condor)
+		step=$1
+		shift
+		index=$1
+		shift
 	;;
 esac
 
@@ -75,31 +73,30 @@ DS=$1	#prb, vid, par, frc, rte
 shift
 
 case $DS in
-  prb) dsPath="$RES/prob/prob" ;;
-  vid) dsPath="$RES/sts/STS.MSRvid" ;;
-  par) dsPath="$RES/sts/STS.MSRpar" ;;
-  frc) dsPath="$RES/fracas/fracas" ;;
-  syn) dsPath="$RES/synthetic/synthetic" ;;
-  sick-rte) dsPath="$RES/sick/sick-rte" ;;
-  sick-sts) dsPath="$RES/sick/sick-sts" ;;
-  sick-test) dsPath="$RES/sick/sick-test" ;;
-  rte) 
-	rte_ver=$1	#rte 1, 2, 3, 4, 5, 6, 7
-	shift
-
-#	rte_mode=$1    #test or train
-#	shift
-
-	dsPath="$RES/rte$rte_ver/RTE$rte_ver" #.$rte_mode"
-  ;;
-  qa)
-  dsPath=$1
-  shift
-  ;;
-  *) 
-    echo "$DS is a wrong dataset"
-    exit 1
-  ;;
+	prb) dsPath="$RES/prob/prob" ;;
+	vid) dsPath="$RES/sts/STS.MSRvid" ;;
+	par) dsPath="$RES/sts/STS.MSRpar" ;;
+	frc) dsPath="$RES/fracas/fracas" ;;
+	syn) dsPath="$RES/synthetic/synthetic" ;;
+	snli-train) dsPath="$RES/snli/snli-train" ;;
+	snli-dev) dsPath="$RES/snli/snli-dev" ;;
+	snli-test) dsPath="$RES/snli/snli-test" ;;
+	sick-rte) dsPath="$RES/sick/sick-rte" ;;
+	sick-sts) dsPath="$RES/sick/sick-sts" ;;
+	sick-test) dsPath="$RES/sick/sick-test" ;;
+	rte) 
+		rte_ver=$1 #rte 1, 2, 3, 4, 5, 6, 7
+		shift
+		dsPath="$RES/rte$rte_ver/RTE$rte_ver" #.$rte_mode"
+	;;
+	qa)
+		dsPath=$1
+		shift
+	;;
+	*) 
+		echo "$DS is a wrong dataset"
+		exit 1
+	;;
 esac
 
 txt="$dsPath.txt"
@@ -108,7 +105,7 @@ lem="$dsPath.lem"
 vs="$dsPath.vs"
 gs="$dsPath.gs"
 out="$dsPath.out"
-rowsCnt=$(wc -l "$txt" | awk  '{print $1}')
+rowsCnt=$(wc -l "$txt" | awk	'{print $1}')
 
 if [ "$CMD" == "all" ] || [ "$CMD" == "gen" ] || [ "$CMD" == "box" ]; then
 	echo "Start parsing"
@@ -124,7 +121,7 @@ fi
 
 if [ "$CMD" == "all" ] || [ "$CMD" == "gen" ] || [ "$CMD" == "vs" ]; then
 	echo "Start extracting vector space"
-	$START utcompling.mlnsemantics.run.Sts vs  $txt $vs "$@"   #Use the txt file to extract lemmas. no Separate lem file
+	$START utcompling.mlnsemantics.run.Sts vs	$txt $vs "$@" #Use the txt file to extract lemmas. no Separate lem file
 	echo "Done extracting vector space"
 fi
 
@@ -133,27 +130,27 @@ if [ "$CMD" == "all" ] || [ "$CMD" == "run" ]; then
 fi
 
 if [ "$CMD" == "vecadd" ]; then
-   $START VsPairwise  $lem $vs add "$@"
+	$START VsPairwise	$lem $vs add "$@"
 fi
 
 if [ "$CMD" == "vecmul" ]; then
-   $START VsPairwise  $lem $vs mul "$@"
+	$START VsPairwise	$lem $vs mul "$@"
 fi
 
 if [ "$CMD" == "run-condor" ]; then
 	rngTo=$(( $step * index ))
 	rngFrom=$(( $index - 1 ))
 	rngFrom=$(( $rngFrom * $step + 1))
-   if [ "$DS" == "qa" ]; then
-		echo QA
-		./bin/condorizer.py $START utcompling.mlnsemantics.run.Sts qa $dsPath $rngFrom-$rngTo "$@"
+	if [ "$DS" == "qa" ]; then
+		$START utcompling.mlnsemantics.run.Sts qa $dsPath $rngFrom-$rngTo "$@"
 	else
 		if [ "$rngFrom" -gt "$rowsCnt" ]; then
-			echo "range $rngFrom-$rngTo beyond dataset size"
+			echo "range $rngFrom-$rngTo beyond dataset size" >&2
 			exit 1
 		fi
-   	./bin/condorizer.py $START utcompling.mlnsemantics.run.Sts run $txt $box $lem $vs $gs $out $rngFrom-$rngTo "$@"
+		$START utcompling.mlnsemantics.run.Sts run $txt $box $lem $vs $gs $out $rngFrom-$rngTo "$@"
 	fi
 fi
 
 exit 0
+

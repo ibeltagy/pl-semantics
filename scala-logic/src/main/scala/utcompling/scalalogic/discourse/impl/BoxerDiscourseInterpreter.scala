@@ -82,7 +82,6 @@ class BoxerDiscourseInterpreter[T](
       "--elimeq" -> "true",
       "--format" -> "prolog",
       "--instantiate" -> "true")
-    //val (boxerOut, scores) = this.boxer.callBoxer(candcOut, boxerArgs.toMap, verbose = verbose)
     val boxerOut = this.boxer.callBoxer(candcOut, boxerArgs.toMap ++ extraBoxerArgs, verbose = verbose)
     
     val drsDict = this.parseBoxerOutput(boxerOut, candcOut, extraBoxerArgs.getOrElse("--integrate", "false").toBoolean)//(boxerOut, scores)
@@ -97,75 +96,69 @@ class BoxerDiscourseInterpreter[T](
         }
         case _ => Some (this.boxerExpressionInterpreter.interpret( BoxerPrs()) ) 
       }
-       
     }).toList
     //println ("res >>>>>>>" + res.toString )
     return res
   }
 
   private def parseBoxerOutput(boxerOut: String, candcOut: String, integrate: Boolean): Map[String, ListBuffer[(T, Double)]] = {
-    //val drsDict = new MapBuilder[String, List[T], Map[String, List[T]]](Map[String, List[T]]())
-    //println(candcOut)
-    //println("boxerOut  >> " + boxerOut)
-    val ccgs = candcOut.split("ccg\\(");
+    // drop the first because it's header stuff
+    val ccgs = candcOut.split("ccg\\(").drop(1)
+    val ccg_ids = ccgs map (l => l.split(",")(0).toInt)
+    var ccg_lookup = (ccg_ids zip ccgs).toMap
+
     val drsDict:Map[String, ListBuffer[(T, Double)]] = Map();
     val singleQuotedRe = """^'(.*)'$""".r
-    //val scoresItr = scores.iterator;
+
     val lines = boxerOut.split("\n")
     val linesItr = lines.iterator
-    //println (lines);
-    //println (ccgs.mkString("\n"));
-    assert (((ccgs.size - 1) * 4 == lines.size - 6) || integrate, "ccgs count: " + ccgs.size +", boxerLinesCounts: " + lines.size );
-    var i:Int = 0;
+
     val IdLineRe = """^id\((\S+),\s*(\d+)\)\.$""".r
     val SemLineRe = """^sem\((\d+),$""".r
     for (line <- linesItr.map(_.trim)) {
-      //println(line)
       line match {
         case IdLineRe(discourseIdWithScore, drsId) =>
-          //lines.next.trim match { case SemLineRe(drsId2) => require(drsId == drsId2, "%s != %s".format(drsId, drsId2)) }
-          //lines.next.trim match { case l if l.startsWith("[word(") => }
-          //lines.next.trim match { case l if l.startsWith("[pos(") => }
-          //lines.next.trim match { case l if l.startsWith("[") => }
           linesItr.next.trim match { case l if l.startsWith("sem(") => }
           val drsInput = linesItr.next.trim.stripSuffix(").")
           val idWithScoreSplits = discourseIdWithScore.split("-", 2);
           val discourseId = idWithScoreSplits.apply(0)
-          val score = if (idWithScoreSplits.length == 2)idWithScoreSplits.apply(1).replace("'", "").toDouble
-                      else 1.0
-          //val cleanDiscourseId = singleQuotedRe.findFirstMatchIn(discourseId).map(_.group(1)).getOrElse(discourseId)
-          val discourseIdNum = discourseId.replace("[", "").replace("]", "").toInt
-          var cleanDiscourseId = "" + ((discourseIdNum/100) - 1)  
-          if (integrate)
-            cleanDiscourseId = "" + (discourseIdNum - 1)  
-          var parsed = this.parseOutputDrs(drsInput, cleanDiscourseId)
-          val ccg = ccgs(i+1 /* +1 is because the first is just the header*/); 
-          i = i+1;
-          //println(parsed)
-          if (BoxerDiscourseInterpreter.applyNegation)
-          {
-        	  parsed  = this.applyNegation (parsed , ccg)
-        	  println(parsed)
+
+          val score = if (idWithScoreSplits.length == 2) {
+            idWithScoreSplits.apply(1).replace("'", "").toDouble
+          } else {
+            1.0
           }
 
-          /*if (!scoresItr.hasNext)
-            throw new RuntimeException("number of parsing scores is less than number of parses"); 
-          val scoreLine = scoresItr.next;
-          println (scoreLine)
-          val scoreSplits = scoreLine.split(',');
-          val score = scoreSplits.apply(0).substring(11).toDouble;
-          val scoreId = scoreSplits.apply(1).substring(5, scoreSplits.apply(1).length()-2)
-          if (scoreId != cleanDiscourseId)
-            throw new RuntimeException("score's ID does not match Boxer's ID");
-           */
+          val discourseIdNum = discourseId.replace("[", "").replace("]", "").toInt
+          var cleanDiscourseId = "" + ((discourseIdNum/100) - 1)
+          if (integrate)
+            cleanDiscourseId = "" + (discourseIdNum - 1)
+          var parsed = this.parseOutputDrs(drsInput, cleanDiscourseId)
+
+          val ccg = ccg_lookup(discourseIdWithScore.toInt);
+          // this ccg is boxed, remove it's lookup
+          ccg_lookup -= discourseIdWithScore.toInt;
+
+          if (BoxerDiscourseInterpreter.applyNegation)
+          {
+            parsed  = this.applyNegation(parsed, ccg)
+            println(parsed)
+          }
+
           drsDict.find(x => x._1 == cleanDiscourseId) match {
             case Some((id, l)) => l += ((this.boxerExpressionInterpreter.interpret(parsed), score));
             case _ => drsDict += cleanDiscourseId -> ListBuffer((this.boxerExpressionInterpreter.interpret(parsed), score)) 
           }
-          
         case _ =>
       }
     }
+
+    for (v <- ccg_lookup.values) {
+        println("*^*^*^*^* UNUSED PARSE *^*^*^*^*")
+        println(v)
+        println("*=*=*=*=* END UNUSED *=*=*=*=*")
+    }
+
     return drsDict
   }
   

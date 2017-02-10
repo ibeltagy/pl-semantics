@@ -134,7 +134,7 @@ object Sts {
       case Seq("box", stsFile, boxFile) =>
         val di = new ModalDiscourseInterpreter()
         val sentences = readLines(stsFile).flatMap(_.split("\t")).map(Tokenize.separateTokens).toList
-        val step = 120; //file is large. It should be partitioned before passed to the parser
+        val step = 200; //file is large. It should be partitioned before passed to the parser
         val totalSen = sentences.length;
         val itrCount = (ceil (totalSen*1.0 / step)).intValue();   
         writeUsing(boxFile) { f =>

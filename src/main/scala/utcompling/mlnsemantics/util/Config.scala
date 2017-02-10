@@ -40,7 +40,7 @@ class Config(opts: Map[String, String] = Map()) {
 		"-phraseVecs",
 		"-rulesWeight",
 		"-rules",
-		"-rulesMatchLemma",		
+		"-rulesMatchLemma",
 		"-vectorMaker",
 		"-vsWithPos",
 		"-alpha",
